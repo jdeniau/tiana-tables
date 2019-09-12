@@ -1,65 +1,54 @@
 import * as React from 'react';
-import { createConnection, Connection, RowDataPacket } from  'mysql';
+import { createConnection, Connection } from 'mysql';
+import Layout from './component/Layout';
+import ConnectionContext from './ConnectionContext';
 
 interface AppProps {
 }
 
-export class App extends React.Component<undefined, undefined> {
-  connection: ?Connection;
+interface AppState {
+  currentConnection: Connection | null;
+}
+
+export class App extends React.PureComponent<AppProps, AppState> {
+  connection: Connection | null;
+  state: AppState;
 
   constructor(props: AppProps) {
     super(props);
 
-    this.connection = null;
-
     this.state = {
-      tableStatus: null,
+      currentConnection: null,
     };
   }
 
   componentDidMount() {
-    this.connection = createConnection({
-      host : 'localhost',
-      port: 52880,
-      user : 'root',
-      password : '',
-      database : 'ticketing',
+    const currentConnection = createConnection({
+      host: null,
+      port: null,
+      user: null,
+      password: null,
+      database: null,
     });
 
-    this.connection.connect();
+    currentConnection.connect();
 
-    this.connection.query('SHOW TABLE STATUS FROM `ticketing`;', (err, result, fields) => {
-      console.log(result);
-      this.setState({
-        tableStatus: result,
-      });
-    });
+    this.setState({ currentConnection });
   }
 
   componentWillUnmount() {
-    this.connection.end();
+    if (this.state.currentConnection) {
+      this.state.currentConnection.end();
+      this.forceUpdate();
+    }
   }
 
   render() {
-    const { tableStatus } = this.state;
-
-    if (!tableStatus) {
-      return null;
-    }
-
+    const { currentConnection } = this.state;
     return (
-      <div>
-        <h2>Welcome to Fuzzy Potato !</h2>
-
-      <ul>
-        {tableStatus.map((rowDataPacket: RowDataPacket) => (
-          <li key={rowDataPacket.Name}>
-          {rowDataPacket.Name}
-          </li>
-        )}
-      </ul>
-
-      </div>
+      <ConnectionContext.Provider value={currentConnection}>
+        <Layout />
+      </ConnectionContext.Provider>
     );
   }
 }
