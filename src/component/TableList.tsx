@@ -3,60 +3,61 @@ import ConnectionContext from '../ConnectionContext';
 import { Connection, RowDataPacket } from 'mysql';
 
 interface TableListProps {
-    connection: Connection;
+  connection: Connection;
 }
 
 interface TableListState {
-    tableStatus: null | RowDataPacket[];
+  tableStatus: null | RowDataPacket[];
 }
 
 class TableList extends React.PureComponent<TableListProps, {}> {
-    state: TableListState;
+  state: TableListState;
 
-    constructor(props: TableListProps) {
-        super(props);
+  constructor(props: TableListProps) {
+    super(props);
 
-        this.state = {
-            tableStatus: null,
-        };
-    }
+    this.state = {
+      tableStatus: null,
+    };
+  }
 
-    componentDidMount() {
-        const { connection } = this.props;
+  componentDidMount() {
+    const { connection } = this.props;
 
-        connection.query('SHOW TABLE STATUS FROM `ticketing`;', (err, result, fields) => {
-            console.log(result);
-            this.setState({
-                tableStatus: result,
-            });
+    connection.query(
+      'SHOW TABLE STATUS FROM `ticketing`;',
+      (err, result, fields) => {
+        console.log(result);
+        this.setState({
+          tableStatus: result,
         });
-    }
+      }
+    );
+  }
 
-    render() {
-        const { tableStatus } = this.state;
+  render() {
+    const { tableStatus } = this.state;
 
-        return (
-            <div>
-                {tableStatus && (
-                    <ul>
-                        {tableStatus.map((rowDataPacket: RowDataPacket) => (
-                            <li key={rowDataPacket.Name}>
-                                {rowDataPacket.Name}
-                            </li>
-                        )}
-                    </ul>
-                )}
-            </div>
-        );
-    }
-};
+    return (
+      <div>
+        {tableStatus && (
+          <ul>
+            {tableStatus.map((rowDataPacket: RowDataPacket) => (
+              <li key={rowDataPacket.Name}>{rowDataPacket.Name}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+}
 
 export default function TableListWithContext(props: object) {
-    const connectionConsumer = React.useContext(ConnectionContext);
+  const connectionConsumer = React.useContext(ConnectionContext);
 
-    if (!connectionConsumer) {
-        return null;
-    }
+  if (!connectionConsumer) {
+    return null;
+  }
 
-    return <TableList connection={connectionConsumer} {...props} />;
+  return <TableList connection={connectionConsumer} {...props} />;
 }

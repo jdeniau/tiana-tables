@@ -3,8 +3,7 @@ import { createConnection, Connection } from 'mysql';
 import Layout from './component/Layout';
 import ConnectionContext from './ConnectionContext';
 
-interface AppProps {
-}
+interface AppProps {}
 
 interface AppState {
   currentConnection: Connection | null;
