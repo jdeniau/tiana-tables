@@ -1,6 +1,8 @@
 import * as React from 'react';
 import styled from 'styled-components';
+import { MemoryRouter as Router, Route, Link, Switch } from 'react-router-dom';
 import TableList from './TableList';
+import TableGrid from './TableGrid';
 
 const LayoutDiv = styled.div`
   width: 100%;
@@ -14,29 +16,33 @@ const ContentDiv = styled.div`
   flex-grow: 1;
 `;
 const LeftPanelDiv = styled.div`
-  background: salmon;
   min-width: 200px;
   overflow: auto;
 `;
 const RightPanelDiv = styled.div`
-  background: green;
   flex-grow: 1;
   overflow: auto;
 `;
 
 const Layout = () => {
   return (
-    <LayoutDiv>
-      <HeaderDiv>
-        <h2>Welcome to Fuzzy Potato !</h2>
-      </HeaderDiv>
-      <ContentDiv>
-        <LeftPanelDiv>
-          <TableList />
-        </LeftPanelDiv>
-        <RightPanelDiv>right panel</RightPanelDiv>
-      </ContentDiv>
-    </LayoutDiv>
+    <Router>
+      <LayoutDiv>
+        <HeaderDiv>
+          <h2>Welcome to Fuzzy Potato !</h2>
+        </HeaderDiv>
+        <ContentDiv>
+          <LeftPanelDiv>
+            <TableList />
+          </LeftPanelDiv>
+          <RightPanelDiv>
+            <Switch>
+              <Route exact path="/tables/:tableName" component={TableGrid} />
+            </Switch>
+          </RightPanelDiv>
+        </ContentDiv>
+      </LayoutDiv>
+    </Router>
   );
 };
 

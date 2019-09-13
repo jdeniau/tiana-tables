@@ -54,6 +54,7 @@
     "react": "^16.8.4",
     "react-dom": "npm:@hot-loader/react-dom",
     "react-hot-loader": "^4.8.0",
+    "react-router-dom": "^5.0.1",
     "styled-components": "^4.3.2",
     "tslib": "^1.4.0"
   },
@@ -62,6 +63,7 @@
     "@types/mysql": "^2.15.5",
     "@types/react": "^16.8.8",
     "@types/react-dom": "^16.8.2",
+    "@types/react-router-dom": "^4.3.5",
     "@types/styled-components": "^4.1.19",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-preset-env": "^1.7.0",

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { createConnection, Connection } from 'mysql';
 import Layout from './component/Layout';
-import ConnectionContext from './ConnectionContext';
+import { ConnectionContext } from './Contexts';
 
 interface AppProps {}
 
@@ -44,6 +44,7 @@ export class App extends React.PureComponent<AppProps, AppState> {
 
   render() {
     const { currentConnection } = this.state;
+
     return (
       <ConnectionContext.Provider value={currentConnection}>
         <Layout />
