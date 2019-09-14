@@ -9,7 +9,9 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "tslint --project tsconfig.json --type-check --force"
+    "lint": "tslint --project tsconfig.json --type-check --force",
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook"
   },
   "keywords": [],
   "author": "jdeniau",
@@ -59,18 +61,31 @@
     "tslib": "^1.4.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.6.0",
+    "@storybook/addon-actions": "^5.2.0",
+    "@storybook/addon-info": "^5.2.0",
+    "@storybook/addon-links": "^5.2.0",
+    "@storybook/addons": "^5.2.0",
+    "@storybook/react": "^5.2.0",
     "@types/electron-devtools-installer": "^2.0.2",
+    "@types/jest": "^24.0.18",
     "@types/mysql": "^2.15.5",
     "@types/react": "^16.8.8",
     "@types/react-dom": "^16.8.2",
     "@types/react-router-dom": "^4.3.5",
+    "@types/storybook__react": "^4.0.2",
     "@types/styled-components": "^4.1.19",
+    "awesome-typescript-loader": "^5.2.1",
+    "babel-loader": "^8.0.6",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
     "electron-forge": "^5.2.4",
     "electron-prebuilt-compile": "4.0.0",
+    "jest": "^24.9.0",
+    "react-docgen-typescript-loader": "^3.2.0",
+    "ts-jest": "^24.1.0",
     "tslint": "^5.14.0",
-    "typescript": "^3.3"
+    "typescript": "^3.6.3"
   }
 }
