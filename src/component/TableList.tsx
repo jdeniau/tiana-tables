@@ -1,14 +1,18 @@
 import * as React from 'react';
 import { ConnectionContext } from '../Contexts';
-import { Connection, RowDataPacket } from 'mysql';
+import { Connection } from 'mysql';
 import { NavLink } from 'react-router-dom';
 
 interface TableListProps {
   connection: Connection;
 }
 
+interface TableStatusRow {
+  Name: string;
+}
+
 interface TableListState {
-  tableStatus: null | RowDataPacket[];
+  tableStatus: null | TableStatusRow[];
 }
 
 class TableList extends React.PureComponent<TableListProps, {}> {
@@ -27,7 +31,7 @@ class TableList extends React.PureComponent<TableListProps, {}> {
 
     connection.query(
       'SHOW TABLE STATUS FROM `ticketing`;',
-      (err, result, fields) => {
+      (_err, result) => {
         this.setState({
           tableStatus: result,
         });
@@ -42,11 +46,11 @@ class TableList extends React.PureComponent<TableListProps, {}> {
       <div>
         {tableStatus && (
           <ul>
-            {tableStatus.map((rowDataPacket: RowDataPacket) => (
+            {tableStatus.map((rowDataPacket: TableStatusRow) => (
               <li key={rowDataPacket.Name}>
                 <NavLink
                   to={`/tables/${rowDataPacket.Name}`}
-                  activeClassName="active"
+                  activeClassName='active'
                 >
                   {rowDataPacket.Name}
                 </NavLink>

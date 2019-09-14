@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { Types, Connection, FieldsPacket, RowDataPacket } from 'mysql';
-import { ConnectionContext } from '../Contexts';
+import { Connection, FieldInfo } from 'mysql';
 import styled from 'styled-components';
+import { ConnectionContext } from '../Contexts';
+import Cell from './Cell';
 
 const Table = styled.table`
   border: 3px solid black;
@@ -30,8 +31,8 @@ interface TableNameProps {
 }
 
 interface TableNameState {
-  result: null | RowDataPacket[];
-  fields: null | FieldsPacket[];
+  result: null | object[];
+  fields: null | FieldInfo[];
 }
 
 class TableGrid extends React.PureComponent<TableNameProps> {
@@ -63,7 +64,7 @@ class TableGrid extends React.PureComponent<TableNameProps> {
 
     connection.query(
       `SELECT * FROM ${tableName} LIMIT 10;`,
-      (err, result, fields) => {
+      (_err, result, fields) => {
         this.setState({
           result,
           fields,
@@ -95,9 +96,7 @@ class TableGrid extends React.PureComponent<TableNameProps> {
                 <tr>
                   {fields.map(field => (
                     <Td>
-                      {Types.DATETIME === field.type
-                        ? 'ceci est une date'
-                        : row[field.name]}
+                      <Cell type={field.type} value={row[field.name]} />
                     </Td>
                   ))}
                 </tr>
@@ -112,23 +111,27 @@ class TableGrid extends React.PureComponent<TableNameProps> {
 
 interface TableNameWithRouterProps {
   match: { params: { tableName: string } };
+  connection: Connection;
 }
 
 const TableGridWithRouter = ({
   match: {
     params: { tableName },
   },
-  ...rest
-}: TableNameWithRouterProps) => <TableGrid tableName={tableName} {...rest} />;
+  connection
+}: TableNameWithRouterProps) => <TableGrid tableName={tableName} connection={connection} />;
 
-function TableGridWithConnection(props: object) {
+interface TableNameWithRouterProps {
+  match: { params: { tableName: string } };
+}
+function TableGridWithConnection({ match }: TableNameWithRouterProps) {
   const connectionConsumer = React.useContext(ConnectionContext);
 
   if (!connectionConsumer) {
     return null;
   }
 
-  return <TableGridWithRouter connection={connectionConsumer} {...props} />;
+  return <TableGridWithRouter connection={connectionConsumer} match={match} />;
 }
 
 export default TableGridWithConnection;
