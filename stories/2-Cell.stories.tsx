@@ -1,6 +1,8 @@
 import * as React from 'react';
+import { storiesOf } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
-// import Cell from '../src/component/Cell';
+import { Types } from 'mysql';
+import Cell from '../src/component/Cell';
 
 
 export default {
@@ -18,3 +20,11 @@ export const emoji = () => (
     </span>
   </span>
 );
+
+storiesOf('Cell', module)
+  .add('with VARCHAR', () => (
+    <Cell type={Types.VARCHAR} value='SQL Value' />
+  ))
+  .add('with DATETIME', () => (
+    <Cell type={Types.DATETIME} value={new Date()} />
+  ));

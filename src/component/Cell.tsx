@@ -1,16 +1,28 @@
-// import * as React from 'react';
+import * as React from 'react';
 import { Types } from 'mysql';
 
-interface TableCellProps {
+interface TableCellFactoryProps {
     type: number;
     value: any;
-};
-
-const TableCell = ({ type, value }: TableCellProps) => {
-
-    return Types.DATETIME === type
-        ? 'ceci est une date'
-        : value;
+}
+interface TableCellProps {
+    value: any;
 }
 
-export default TableCell;
+function DatetimeCell({ value }: { value: Date }) {
+    return <>{value.toTimeString()}</>;
+}
+
+function VarcharCell({ value }: TableCellProps) {
+    return value;
+}
+
+function TableCellFactory({ type, value }: TableCellFactoryProps) {
+
+    return (<>
+        {Types.DATETIME === type
+            ? <DatetimeCell value={value} />
+            : <VarcharCell value={value} />}
+    </>);
+}
+export default TableCellFactory;
