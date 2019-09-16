@@ -3,12 +3,15 @@ import styled from 'styled-components';
 import { MemoryRouter as Router, Route, Switch } from 'react-router-dom';
 import TableList from './TableList';
 import TableGrid from './TableGrid';
+import { getSetting } from '../theme/parser';
 
 const LayoutDiv = styled.div`
   width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
+  background: ${getSetting('background')};
+  color: ${getSetting('foreground')};
 `;
 const HeaderDiv = styled.header``;
 const ContentDiv = styled.div`

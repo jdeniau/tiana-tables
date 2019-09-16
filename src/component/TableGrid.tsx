@@ -3,26 +3,26 @@ import { Connection, FieldInfo } from 'mysql';
 import styled from 'styled-components';
 import { ConnectionContext } from '../Contexts';
 import Cell from './Cell';
+import { getSetting } from '../theme/parser';
 
 const Table = styled.table`
-  border: 3px solid black;
+  border: 3px solid ${getSetting('caret')};
   width: 100%;
   border-collapse: collapse;
 `;
 
 const Td = styled.td`
-  border: 1px solid black;
+  border: 1px solid ${getSetting('caret')};
   padding: 5px 4px;
 `;
 
 const Th = styled.th`
-  border: 1px solid black;
+  border: 1px solid ${getSetting('caret')};
   padding: 5px 4px;
 `;
 
 const Thead = styled.thead`
-  background: #cfcfcf;
-  border-bottom: 3px solid black;
+  border-bottom: 3px solid ${getSetting('caret')};
 `;
 
 interface TableNameProps {
@@ -118,8 +118,10 @@ const TableGridWithRouter = ({
   match: {
     params: { tableName },
   },
-  connection
-}: TableNameWithRouterProps) => <TableGrid tableName={tableName} connection={connection} />;
+  connection,
+}: TableNameWithRouterProps) => (
+  <TableGrid tableName={tableName} connection={connection} />
+);
 
 interface TableNameWithRouterProps {
   match: { params: { tableName: string } };

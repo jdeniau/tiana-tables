@@ -2,6 +2,12 @@ import * as React from 'react';
 import { ConnectionContext } from '../Contexts';
 import { Connection } from 'mysql';
 import { NavLink } from 'react-router-dom';
+import styled from 'styled-components';
+import { getColor } from '../theme/parser';
+
+const StyledNavLink = styled(NavLink)`
+  color: ${getColor('support.type', 'foreground')};
+`;
 
 interface TableListProps {
   connection: Connection;
@@ -29,14 +35,11 @@ class TableList extends React.PureComponent<TableListProps, {}> {
   componentDidMount() {
     const { connection } = this.props;
 
-    connection.query(
-      'SHOW TABLE STATUS FROM `ticketing`;',
-      (_err, result) => {
-        this.setState({
-          tableStatus: result,
-        });
-      }
-    );
+    connection.query('SHOW TABLE STATUS FROM `ticketing`;', (_err, result) => {
+      this.setState({
+        tableStatus: result,
+      });
+    });
   }
 
   render() {
@@ -48,12 +51,12 @@ class TableList extends React.PureComponent<TableListProps, {}> {
           <ul>
             {tableStatus.map((rowDataPacket: TableStatusRow) => (
               <li key={rowDataPacket.Name}>
-                <NavLink
+                <StyledNavLink
                   to={`/tables/${rowDataPacket.Name}`}
-                  activeClassName='active'
+                  activeClassName="active"
                 >
                   {rowDataPacket.Name}
-                </NavLink>
+                </StyledNavLink>
               </li>
             ))}
           </ul>
