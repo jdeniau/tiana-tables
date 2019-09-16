@@ -3,10 +3,10 @@ import { ConnectionContext } from '../Contexts';
 import { Connection } from 'mysql';
 import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
-import { getColor } from '../theme/parser';
+import { getColor } from '../theme';
 
 const StyledNavLink = styled(NavLink)`
-  color: ${getColor('support.type', 'foreground')};
+  color: ${props => getColor(props.theme, 'support.type', 'foreground')};
 `;
 
 interface TableListProps {

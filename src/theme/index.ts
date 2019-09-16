@@ -1,21 +1,14 @@
-import * as dracula from './dracula.json';
-import * as visualStudio from './visualStudio.json';
+import * as dracula from '../theme/dracula.json';
+import * as visualStudio from '../theme/visualStudio.json';
 
-let currentTheme = dracula;
+const THEME_LIST_AS_ARRAY = [dracula, visualStudio];
 
-export function setCurrentTheme(theme: string) {
-  console.log(theme);
-  switch (theme) {
-    case 'dracula':
-      currentTheme = dracula;
-      break;
+export let THEME_LIST = {};
+THEME_LIST_AS_ARRAY.forEach(t => {
+  THEME_LIST[t.name] = t;
+});
 
-    case 'visualStudio':
-      currentTheme = visualStudio;
-      break;
-  }
-  console.log(currentTheme.name);
-}
+export const DEFAULT_THEME = THEME_LIST_AS_ARRAY[0];
 
 interface TmThemeSetting {
   scope?: string | string[];
@@ -30,7 +23,11 @@ function isUnscopedSetting(o: { scope?: any; settings?: any }): boolean {
   return !o.scope && o.settings;
 }
 
-export function getColor(scopeToFind: string, settingToFind: string): string {
+export function getColor(
+  currentTheme: object,
+  scopeToFind: string,
+  settingToFind: string
+): string {
   const item = currentTheme.settings
     .filter(isScopedSetting)
     .find(({ scope }: TmThemeSetting) => {
@@ -44,17 +41,15 @@ export function getColor(scopeToFind: string, settingToFind: string): string {
     throw new Error(`color not found for scope "${scopeToFind}"`);
   }
 
-  console.log(item.settings[settingToFind]);
   return item.settings[settingToFind];
 }
 
-export function getSetting(key: string): string {
+export function getSetting(currentTheme: object, key: string): string {
   const settings = currentTheme.settings.filter(isUnscopedSetting);
 
   if (!settings) {
     throw new Error(`color not found settings`);
   }
-  console.log(settings[0]);
 
   return settings[0].settings[key];
 }

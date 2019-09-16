@@ -3,26 +3,26 @@ import { Connection, FieldInfo } from 'mysql';
 import styled from 'styled-components';
 import { ConnectionContext } from '../Contexts';
 import Cell from './Cell';
-import { getSetting } from '../theme/parser';
+import { getSetting } from '../theme';
 
 const Table = styled.table`
-  border: 3px solid ${getSetting('caret')};
+  border: 3px solid ${props => getSetting(props.theme, 'caret')};
   width: 100%;
   border-collapse: collapse;
 `;
 
 const Td = styled.td`
-  border: 1px solid ${getSetting('caret')};
+  border: 1px solid ${props => getSetting(props.theme, 'caret')};
   padding: 5px 4px;
 `;
 
 const Th = styled.th`
-  border: 1px solid ${getSetting('caret')};
+  border: 1px solid ${props => getSetting(props.theme, 'caret')};
   padding: 5px 4px;
 `;
 
 const Thead = styled.thead`
-  border-bottom: 3px solid ${getSetting('caret')};
+  border-bottom: 3px solid ${props => getSetting(props.theme, 'caret')};
 `;
 
 interface TableNameProps {

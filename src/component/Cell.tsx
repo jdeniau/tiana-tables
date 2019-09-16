@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Types } from 'mysql';
 import styled from 'styled-components';
-import { getColor } from '../theme/parser';
+import { getColor } from '../theme';
 
 interface TableCellFactoryProps {
   type: Types;
@@ -9,7 +9,7 @@ interface TableCellFactoryProps {
 }
 
 const NullSpan = styled.span`
-  color: ${getColor('constant.language', 'foreground')};
+  color: ${props => getColor(props.theme, 'constant.language', 'foreground')};
 `;
 
 function NullCell() {
@@ -21,14 +21,14 @@ function DatetimeCell({ value }: { value: Date }) {
 }
 
 const StringSpan = styled.span`
-  color: ${getColor('string', 'foreground')};
+  color: ${props => getColor(props.theme, 'string', 'foreground')};
 `;
 function StringCell({ value }: { value: string }) {
   return <StringSpan>{value}</StringSpan>;
 }
 
 const NumberSpan = styled.span`
-  color: ${getColor('constant.numeric', 'foreground')};
+  color: ${props => getColor(props.theme, 'constant.numeric', 'foreground')};
 `;
 function NumberCell({ value }: { value: number }) {
   return <NumberSpan>{value}</NumberSpan>;

@@ -4,15 +4,15 @@ import { MemoryRouter as Router, Route, Switch } from 'react-router-dom';
 import TableList from './TableList';
 import TableGrid from './TableGrid';
 import ThemeSelector from './ThemeSelector';
-import { getSetting } from '../theme/parser';
+import { getSetting } from '../theme';
 
 const LayoutDiv = styled.div`
   width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: ${getSetting('background')};
-  color: ${getSetting('foreground')};
+  background: ${props => getSetting(props.theme, 'background')};
+  color: ${props => getSetting(props.theme, 'foreground')};
 `;
 const HeaderDiv = styled.header``;
 const ContentDiv = styled.div`
@@ -28,7 +28,10 @@ const RightPanelDiv = styled.div`
   overflow: auto;
 `;
 
-const Layout = () => {
+interface LayoutProps {
+  onChangeTheme: (theme: object) => void;
+}
+const Layout = ({ onChangeTheme }: LayoutProps) => {
   return (
     <Router>
       <LayoutDiv>
@@ -36,7 +39,7 @@ const Layout = () => {
           <h2>Welcome to Fuzzy Potato !</h2>
           <div>
             Theme:
-            <ThemeSelector />
+            <ThemeSelector onChangeTheme={onChangeTheme} />
           </div>
         </HeaderDiv>
         <ContentDiv>

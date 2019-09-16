@@ -1,14 +1,15 @@
 import * as React from 'react';
 import { createConnection, Connection } from 'mysql';
+import { ThemeProvider } from 'styled-components';
 import Layout from './component/Layout';
-import { ConnectionContext, ThemeContext } from './Contexts';
-import { setCurrentTheme } from './theme/parser';
+import { ConnectionContext } from './Contexts';
+import { DEFAULT_THEME } from './theme';
 
 interface AppProps {}
 
 interface AppState {
   currentConnection: Connection | null;
-  currentTheme: string;
+  currentTheme: object;
 }
 
 export class App extends React.PureComponent<AppProps, AppState> {
@@ -22,7 +23,7 @@ export class App extends React.PureComponent<AppProps, AppState> {
 
     this.state = {
       currentConnection: null,
-      currentTheme: 'dracula',
+      currentTheme: DEFAULT_THEME,
     };
   }
 
@@ -47,13 +48,10 @@ export class App extends React.PureComponent<AppProps, AppState> {
     }
   }
 
-  handleChangeTheme(theme: string) {
+  handleChangeTheme(theme: object) {
     this.setState({
       currentTheme: theme,
     });
-
-    setCurrentTheme(theme);
-    this.forceUpdate();
   }
 
   render() {
@@ -61,11 +59,9 @@ export class App extends React.PureComponent<AppProps, AppState> {
 
     return (
       <ConnectionContext.Provider value={currentConnection}>
-        <ThemeContext.Provider
-          value={{ theme: currentTheme, changeTheme: this.handleChangeTheme }}
-        >
-          <Layout />
-        </ThemeContext.Provider>
+        <ThemeProvider theme={currentTheme}>
+          <Layout onChangeTheme={this.handleChangeTheme} />
+        </ThemeProvider>
       </ConnectionContext.Provider>
     );
   }

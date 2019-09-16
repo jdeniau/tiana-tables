@@ -1,23 +1,26 @@
 import * as React from 'react';
-import { ThemeContext } from '../Contexts';
+import { ThemeContext } from 'styled-components';
+import { THEME_LIST } from '../theme';
 
-const THEME_LIST = ['dracula', 'visualStudio'];
+interface ThemeSelectorProps {
+  onChangeTheme: (theme: object) => void;
+}
 
-export default function ThemeSelector() {
+export default function ThemeSelector({ onChangeTheme }: ThemeSelectorProps) {
+  const themeContext = React.useContext(ThemeContext);
+
   return (
-    <ThemeContext.Consumer>
-      {({ theme, changeTheme }) => (
-        <select
-          onChange={e => {
-            changeTheme(e.target.value);
-          }}
-          value={theme}
-        >
-          {THEME_LIST.map(innerTheme => (
-            <option key={innerTheme}>{innerTheme}</option>
-          ))}
-        </select>
-      )}
-    </ThemeContext.Consumer>
+    <select
+      onChange={e => {
+        onChangeTheme(THEME_LIST[e.target.value]);
+      }}
+      value={themeContext.name}
+    >
+      {Object.keys(THEME_LIST).map(key => (
+        <option key={key} value={key}>
+          {key}
+        </option>
+      ))}
+    </select>
   );
 }
