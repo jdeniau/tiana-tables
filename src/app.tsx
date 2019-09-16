@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { createConnection, Connection } from 'mysql';
 import Layout from './component/Layout';
-import { ConnectionContext } from './Contexts';
+import { ConnectionContext, ThemeContext } from './Contexts';
+import { setCurrentTheme } from './theme/parser';
 
 interface AppProps {}
 
 interface AppState {
   currentConnection: Connection | null;
+  currentTheme: string;
 }
 
 export class App extends React.PureComponent<AppProps, AppState> {
@@ -16,8 +18,11 @@ export class App extends React.PureComponent<AppProps, AppState> {
   constructor(props: AppProps) {
     super(props);
 
+    this.handleChangeTheme = this.handleChangeTheme.bind(this);
+
     this.state = {
       currentConnection: null,
+      currentTheme: 'dracula',
     };
   }
 
@@ -42,12 +47,25 @@ export class App extends React.PureComponent<AppProps, AppState> {
     }
   }
 
+  handleChangeTheme(theme: string) {
+    this.setState({
+      currentTheme: theme,
+    });
+
+    setCurrentTheme(theme);
+    this.forceUpdate();
+  }
+
   render() {
-    const { currentConnection } = this.state;
+    const { currentConnection, currentTheme } = this.state;
 
     return (
       <ConnectionContext.Provider value={currentConnection}>
-        <Layout />
+        <ThemeContext.Provider
+          value={{ theme: currentTheme, changeTheme: this.handleChangeTheme }}
+        >
+          <Layout />
+        </ThemeContext.Provider>
       </ConnectionContext.Provider>
     );
   }

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { MemoryRouter as Router, Route, Switch } from 'react-router-dom';
 import TableList from './TableList';
 import TableGrid from './TableGrid';
+import ThemeSelector from './ThemeSelector';
 import { getSetting } from '../theme/parser';
 
 const LayoutDiv = styled.div`
@@ -33,6 +34,10 @@ const Layout = () => {
       <LayoutDiv>
         <HeaderDiv>
           <h2>Welcome to Fuzzy Potato !</h2>
+          <div>
+            Theme:
+            <ThemeSelector />
+          </div>
         </HeaderDiv>
         <ContentDiv>
           <LeftPanelDiv>
