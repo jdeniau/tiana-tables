@@ -4,12 +4,13 @@ import { ConnectionContext } from '../Contexts';
 class ConnectionForm extends React.PureComponent {
   constructor(props) {
     super(props);
+    console.log(process.env);
     this.state = {
-      host: '',
-      port: '',
-      user: '',
-      password: '',
-      database: '',
+      host: process.env.DEBUG_DB_HOST,
+      port: process.env.DEBUG_DB_PORT,
+      user: process.env.DEBUG_DB_USER,
+      password: process.env.DEBUG_DB_PASSWORD,
+      database: process.env.DEBUG_DB_DATABASE,
     };
 
     this.handleInputChange = this.handleInputChange.bind(this);
