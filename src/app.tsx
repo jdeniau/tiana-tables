@@ -20,6 +20,7 @@ export class App extends React.PureComponent<AppProps, AppState> {
     super(props);
 
     this.handleChangeTheme = this.handleChangeTheme.bind(this);
+    this.handleConnectTo = this.handleConnectTo.bind(this);
 
     this.state = {
       currentConnection: null,
@@ -27,24 +28,13 @@ export class App extends React.PureComponent<AppProps, AppState> {
     };
   }
 
-  componentDidMount() {
-    const currentConnection = createConnection({
-      host: null,
-      port: null,
-      user: null,
-      password: null,
-      database: null,
-    });
-
-    currentConnection.connect();
-
-    this.setState({ currentConnection });
+  componentWillUnmount() {
+    this.disconnect();
   }
 
-  componentWillUnmount() {
+  disconnect() {
     if (this.state.currentConnection) {
       this.state.currentConnection.end();
-      this.forceUpdate();
     }
   }
 
@@ -54,11 +44,26 @@ export class App extends React.PureComponent<AppProps, AppState> {
     });
   }
 
+  handleConnectTo(params: object) {
+    this.disconnect();
+
+    const currentConnection = createConnection(params);
+
+    currentConnection.connect();
+
+    this.setState({ currentConnection });
+  }
+
   render() {
     const { currentConnection, currentTheme } = this.state;
 
     return (
-      <ConnectionContext.Provider value={currentConnection}>
+      <ConnectionContext.Provider
+        value={{
+          connection: currentConnection,
+          connectTo: this.handleConnectTo,
+        }}
+      >
         <ThemeProvider theme={currentTheme}>
           <Layout onChangeTheme={this.handleChangeTheme} />
         </ThemeProvider>

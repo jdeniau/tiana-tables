@@ -1,7 +1,17 @@
 import { createContext } from 'react';
 import { Connection } from 'mysql';
 
-export const ConnectionContext = createContext<Connection | null>(null);
+interface ConnectToFunc {
+  (params: object): void;
+}
+interface ConnexionContextProps {
+  connection: Connection | null;
+  connectTo: ConnectToFunc;
+}
+export const ConnectionContext = createContext<ConnexionContextProps>({
+  connection: null,
+  connectTo: () => {},
+});
 
 interface ChangeThemeFunc {
   (theme: string): void;

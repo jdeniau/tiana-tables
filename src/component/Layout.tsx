@@ -5,6 +5,7 @@ import TableList from './TableList';
 import TableGrid from './TableGrid';
 import ThemeSelector from './ThemeSelector';
 import { getSetting } from '../theme';
+import Connection from './Connection';
 
 const LayoutDiv = styled.div`
   width: 100%;
@@ -14,7 +15,16 @@ const LayoutDiv = styled.div`
   background: ${props => getSetting(props.theme, 'background')};
   color: ${props => getSetting(props.theme, 'foreground')};
 `;
-const HeaderDiv = styled.header``;
+const HeaderDiv = styled.header`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+const ConnectionForm = styled.form`
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+`;
 const ContentDiv = styled.div`
   display: flex;
   flex-grow: 1;
@@ -42,6 +52,7 @@ const Layout = ({ onChangeTheme }: LayoutProps) => {
             <ThemeSelector onChangeTheme={onChangeTheme} />
           </div>
         </HeaderDiv>
+        <Connection />
         <ContentDiv>
           <LeftPanelDiv>
             <TableList />

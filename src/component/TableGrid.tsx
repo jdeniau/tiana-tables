@@ -127,13 +127,13 @@ interface TableNameWithRouterProps {
   match: { params: { tableName: string } };
 }
 function TableGridWithConnection({ match }: TableNameWithRouterProps) {
-  const connectionConsumer = React.useContext(ConnectionContext);
+  const { connection } = React.useContext(ConnectionContext);
 
-  if (!connectionConsumer) {
+  if (!connection) {
     return null;
   }
 
-  return <TableGridWithRouter connection={connectionConsumer} match={match} />;
+  return <TableGridWithRouter connection={connection} match={match} />;
 }
 
 export default TableGridWithConnection;
