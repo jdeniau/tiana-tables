@@ -42,6 +42,10 @@ export function getColor(
   scopeToFind: string,
   settingToFind: string
 ): string {
+  // if (!currentTheme || !currentTheme.settings) {
+  //   return '';
+  // }
+
   const item = <TmThemeScopedSetting>(
     currentTheme.settings
       .filter(isScopedSetting)

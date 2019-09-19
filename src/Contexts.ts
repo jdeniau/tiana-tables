@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 import { Connection } from 'mysql';
 
-interface ConnectToFunc {
+export interface ConnectToFunc {
   (params: object): void;
 }
 interface ConnexionContextProps {
@@ -10,6 +10,7 @@ interface ConnexionContextProps {
 }
 export const ConnectionContext = createContext<ConnexionContextProps>({
   connection: null,
+  // tslint:disable-next-line: no-empty
   connectTo: () => {},
 });
 
@@ -22,5 +23,6 @@ interface ThemeContextProps {
 }
 export const ThemeContext = createContext<ThemeContextProps>({
   theme: 'dracula',
+  // tslint:disable-next-line: no-empty
   changeTheme: () => {},
 });

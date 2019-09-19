@@ -20,11 +20,6 @@ const HeaderDiv = styled.header`
   justify-content: space-between;
   align-items: center;
 `;
-const ConnectionForm = styled.form`
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-`;
 const ContentDiv = styled.div`
   display: flex;
   flex-grow: 1;

@@ -1,37 +1,55 @@
 import * as React from 'react';
-import { ConnectionContext } from '../Contexts';
+import { ConnectionContext, ConnectToFunc } from '../Contexts';
 
-class ConnectionForm extends React.PureComponent {
-  constructor(props) {
+interface ConnectionFormProps {
+  connectTo: ConnectToFunc;
+}
+interface ConnectionFormState {
+  host: string;
+  port: number;
+  user: string;
+  password: string;
+  database: string;
+}
+class ConnectionForm extends React.PureComponent<
+  ConnectionFormProps,
+  ConnectionFormState
+> {
+  constructor(props: ConnectionFormProps) {
     super(props);
-    console.log(process.env);
     this.state = {
-      host: process.env.DEBUG_DB_HOST,
-      port: process.env.DEBUG_DB_PORT,
-      user: process.env.DEBUG_DB_USER,
-      password: process.env.DEBUG_DB_PASSWORD,
-      database: process.env.DEBUG_DB_DATABASE,
+      host: process.env.DEBUG_DB_HOST || 'localhost',
+      port: process.env.DEBUG_DB_PORT
+        ? parseInt(process.env.DEBUG_DB_PORT, 10)
+        : 3306,
+      user: process.env.DEBUG_DB_USER || '',
+      password: process.env.DEBUG_DB_PASSWORD || '',
+      database: process.env.DEBUG_DB_DATABASE || '',
     };
 
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleInputChange(event: Event): void {
+  handleInputChange(event: React.ChangeEvent<HTMLInputElement>): void {
     const target = event.target;
-    if (!target) {
-      return;
-    }
 
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
 
+    if (!Object.keys(this.state).includes(name)) {
+      throw new Error(
+        `Unable to assign state key ${name} as it is not defined in the state`
+      );
+    }
+
+    // @ts-ignore: name is in state due to previous line
     this.setState({
       [name]: value,
     });
   }
 
-  handleSubmit(event) {
+  handleSubmit(event: React.FormEvent) {
     event.preventDefault();
 
     this.props.connectTo(this.state);
@@ -93,10 +111,10 @@ class ConnectionForm extends React.PureComponent {
   }
 }
 
-function ConnectionFormWithContext(props) {
+function ConnectionFormWithContext() {
   const { connectTo } = React.useContext(ConnectionContext);
 
-  return <ConnectionForm connectTo={connectTo} {...props} />;
+  return <ConnectionForm connectTo={connectTo} />;
 }
 
 export default ConnectionFormWithContext;
