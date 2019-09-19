@@ -10,9 +10,23 @@ THEME_LIST_AS_ARRAY.forEach(t => {
 
 export const DEFAULT_THEME = THEME_LIST_AS_ARRAY[0];
 
+interface TmTheme {
+  readonly name: string;
+  readonly author?: string;
+  readonly settings: TmThemeSetting[];
+}
+
 interface TmThemeSetting {
-  scope?: string | string[];
-  settings?: Object;
+  readonly scope?: string | string[];
+  readonly settings: Object;
+}
+
+interface TmThemeScopedSetting extends TmThemeSetting {
+  readonly scope: string | string[];
+}
+
+interface TmThemeGlobalSetting extends TmThemeSetting {
+  readonly scope: undefined;
 }
 
 function isScopedSetting(o: { scope?: any; settings?: any }): boolean {
@@ -24,18 +38,20 @@ function isUnscopedSetting(o: { scope?: any; settings?: any }): boolean {
 }
 
 export function getColor(
-  currentTheme: object,
+  currentTheme: TmTheme,
   scopeToFind: string,
   settingToFind: string
 ): string {
-  const item = currentTheme.settings
-    .filter(isScopedSetting)
-    .find(({ scope }: TmThemeSetting) => {
-      if (Array.isArray(scope)) {
-        return scope.includes(scopeToFind);
-      }
-      return scope === scopeToFind;
-    });
+  const item = <TmThemeScopedSetting>(
+    currentTheme.settings
+      .filter(isScopedSetting)
+      .find(({ scope }: TmThemeSetting) => {
+        if (Array.isArray(scope)) {
+          return scope.includes(scopeToFind);
+        }
+        return scope === scopeToFind;
+      })
+  );
 
   if (!item) {
     throw new Error(`color not found for scope "${scopeToFind}"`);
@@ -44,8 +60,10 @@ export function getColor(
   return item.settings[settingToFind];
 }
 
-export function getSetting(currentTheme: object, key: string): string {
-  const settings = currentTheme.settings.filter(isUnscopedSetting);
+export function getSetting(currentTheme: TmTheme, key: string): string {
+  const settings = <TmThemeGlobalSetting[]>(
+    currentTheme.settings.filter(isUnscopedSetting)
+  );
 
   if (!settings) {
     throw new Error(`color not found settings`);
