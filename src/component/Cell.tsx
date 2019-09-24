@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Types } from 'mysql';
 import styled from 'styled-components';
-import { getColor } from '../theme';
+import { getColor, getSetting } from '../theme';
 
 interface TableCellFactoryProps {
   type: Types;
@@ -16,8 +16,12 @@ function NullCell() {
   return <NullSpan>(NULL)</NullSpan>;
 }
 
+const ForegroundSpan = styled.span`
+  color: ${props => getSetting(props.theme, 'foreground')};
+`;
+
 function DatetimeCell({ value }: { value: Date }) {
-  return <>{value.toISOString()}</>;
+  return <ForegroundSpan>{value.toISOString()}</ForegroundSpan>;
 }
 
 const StringSpan = styled.span`
@@ -35,15 +39,15 @@ function NumberCell({ value }: { value: number }) {
 }
 
 function BlobCell({ value }: { value: string }) {
-  return <>{value}</>;
+  return <ForegroundSpan>{value}</ForegroundSpan>;
 }
 
 function JsonCell({ value }: { value: string }) {
-  return <>{value}</>;
+  return <ForegroundSpan>{value}</ForegroundSpan>;
 }
 
 function EnumCell({ value }: { value: string }) {
-  return <>{value}</>;
+  return <ForegroundSpan>{value}</ForegroundSpan>;
 }
 
 function TableCellFactory({ type, value }: TableCellFactoryProps) {

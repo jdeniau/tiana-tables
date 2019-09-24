@@ -37,25 +37,23 @@ function isUnscopedSetting(o: { scope?: any; settings?: any }): boolean {
   return !o.scope && o.settings;
 }
 
+function coalesceTheme(currentTheme: TmTheme | null): TmTheme {
+  return currentTheme && currentTheme.settings ? currentTheme : DEFAULT_THEME;
+}
+
 export function getColor(
-  currentTheme: TmTheme,
+  currentTheme: TmTheme | null,
   scopeToFind: string,
   settingToFind: string
 ): string {
-  // if (!currentTheme || !currentTheme.settings) {
-  //   return '';
-  // }
-
-  const item = <TmThemeScopedSetting>(
-    currentTheme.settings
-      .filter(isScopedSetting)
-      .find(({ scope }: TmThemeSetting) => {
-        if (Array.isArray(scope)) {
-          return scope.includes(scopeToFind);
-        }
-        return scope === scopeToFind;
-      })
-  );
+  const item = <TmThemeScopedSetting>coalesceTheme(currentTheme)
+    .settings.filter(isScopedSetting)
+    .find(({ scope }: TmThemeSetting) => {
+      if (Array.isArray(scope)) {
+        return scope.includes(scopeToFind);
+      }
+      return scope === scopeToFind;
+    });
 
   if (!item) {
     throw new Error(`color not found for scope "${scopeToFind}"`);
@@ -64,9 +62,9 @@ export function getColor(
   return item.settings[settingToFind];
 }
 
-export function getSetting(currentTheme: TmTheme, key: string): string {
+export function getSetting(currentTheme: TmTheme | null, key: string): string {
   const settings = <TmThemeGlobalSetting[]>(
-    currentTheme.settings.filter(isUnscopedSetting)
+    coalesceTheme(currentTheme).settings.filter(isUnscopedSetting)
   );
 
   if (!settings) {
