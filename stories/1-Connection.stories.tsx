@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
-import Connection from '../src/component/Connection';
+import Connection from '../src/component/Connection/ConnectionForm';
 import { ConnectionContext } from '../src/Contexts';
 
 const stories = storiesOf('Connection Block', module);

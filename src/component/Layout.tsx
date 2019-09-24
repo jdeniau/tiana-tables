@@ -1,11 +1,12 @@
 import * as React from 'react';
 import styled from 'styled-components';
-import { MemoryRouter as Router, Route, Switch } from 'react-router-dom';
+import { Route, Switch } from 'react-router-dom';
 import TableList from './TableList';
 import TableGrid from './TableGrid';
 import ThemeSelector from './ThemeSelector';
 import { getSetting } from '../theme';
-import Connection from './Connection';
+import ConnectionNav from './Connection/Nav';
+import ConnectionForm from './Connection/ConnectionForm';
 
 const LayoutDiv = styled.div`
   width: 100%;
@@ -38,28 +39,33 @@ interface LayoutProps {
 }
 const Layout = ({ onChangeTheme }: LayoutProps) => {
   return (
-    <Router>
-      <LayoutDiv>
-        <HeaderDiv>
-          <h2>Welcome to Fuzzy Potato !</h2>
-          <div>
-            Theme:
-            <ThemeSelector onChangeTheme={onChangeTheme} />
-          </div>
-        </HeaderDiv>
-        <Connection />
-        <ContentDiv>
-          <LeftPanelDiv>
-            <TableList />
-          </LeftPanelDiv>
-          <RightPanelDiv>
-            <Switch>
-              <Route exact path="/tables/:tableName" component={TableGrid} />
-            </Switch>
-          </RightPanelDiv>
-        </ContentDiv>
-      </LayoutDiv>
-    </Router>
+    <LayoutDiv>
+      <HeaderDiv>
+        <h2>Welcome to Fuzzy Potato !</h2>
+        <div>
+          Theme:
+          <ThemeSelector onChangeTheme={onChangeTheme} />
+        </div>
+      </HeaderDiv>
+      <ConnectionNav />
+      <ContentDiv>
+        <Switch>
+          <Route exact path="/connect">
+            <ConnectionForm />
+          </Route>
+          <Route>
+            <LeftPanelDiv>
+              <TableList />
+            </LeftPanelDiv>
+            <RightPanelDiv>
+              <Switch>
+                <Route exact path="/tables/:tableName" component={TableGrid} />
+              </Switch>
+            </RightPanelDiv>
+          </Route>
+        </Switch>
+      </ContentDiv>
+    </LayoutDiv>
   );
 };
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ConnectionContext, ConnectToFunc } from '../Contexts';
+import { ConnectionContext, ConnectToFunc } from '../../Contexts';
 
 interface ConnectionFormProps {
   connectTo: ConnectToFunc;
