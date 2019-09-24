@@ -1,0 +1,26 @@
+import * as React from 'react';
+import { storiesOf } from '@storybook/react';
+import { action } from '@storybook/addon-actions';
+import Connection from '../src/component/Connection';
+import { ConnectionContext } from '../src/Contexts';
+
+const stories = storiesOf('Connection Block', module);
+
+// stories.addDecorator(story => (
+//   <div style={{ width: '100px', margin: 'auto', background: 'red' }}>
+//     {story()}
+//   </div>
+// ));
+
+stories.add('Connection Block', () => {
+  return (
+    <ConnectionContext.Provider
+      value={{
+        connection: null,
+        connectTo: action('connectTo'),
+      }}
+    >
+      <Connection />
+    </ConnectionContext.Provider>
+  );
+});
