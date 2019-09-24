@@ -58,54 +58,65 @@ class ConnectionForm extends React.PureComponent<
   render() {
     return (
       <form onSubmit={this.handleSubmit}>
-        <label>
-          host
+        <div className="form-group">
+          <label htmlFor="Connection__host">host</label>
           <input
+            id="Connection__host"
             name="host"
             type="text"
+            className="form-control"
             value={this.state.host}
             onChange={this.handleInputChange}
           />
-        </label>
-        <label>
-          port
+        </div>
+        <div className="form-group">
+          <label htmlFor="Connection__port">port</label>
           <input
+            id="Connection__port"
             name="port"
             type="number"
+            className="form-control"
             value={this.state.port}
             onChange={this.handleInputChange}
           />
-        </label>
-        <label>
-          user
+        </div>
+        <div className="form-group">
+          <label htmlFor="Connection__user">user</label>
           <input
+            id="Connection__user"
             name="user"
             type="text"
+            className="form-control"
             value={this.state.user}
             onChange={this.handleInputChange}
           />
-        </label>
-        <label>
-          password
+        </div>
+        <div className="form-group">
+          <label htmlFor="Connection__password">password</label>
           <input
+            id="Connection__password"
             name="password"
             type="text"
+            className="form-control"
             value={this.state.password}
             onChange={this.handleInputChange}
           />
-        </label>
-        <label>
-          database
+        </div>
+        <div className="form-group">
+          <label htmlFor="Connection__database">database</label>
           <input
+            id="Connection__database"
             name="database"
             type="text"
+            className="form-control"
             value={this.state.database}
             onChange={this.handleInputChange}
           />
-        </label>
-        <div>
-          <input type="submit" value="connect" />
         </div>
+
+        <button className="btn btn-primary" type="submit">
+          connect
+        </button>
       </form>
     );
   }
