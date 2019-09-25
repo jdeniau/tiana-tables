@@ -16,8 +16,10 @@ stories.add('Connection Block', () => {
   return (
     <ConnectionContext.Provider
       value={{
-        connection: null,
+        currentConnection: null,
+        connectionList: [],
         connectTo: action('connectTo'),
+        setCurrentConnection: action('setCurrentConnection'),
       }}
     >
       <Connection />

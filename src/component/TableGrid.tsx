@@ -133,7 +133,13 @@ function TableGridWithConnection({ match }: TableNameWithRouterProps) {
     return null;
   }
 
-  return <TableGridWithRouter connection={currentConnection} match={match} />;
+  return (
+    <TableGridWithRouter
+      key={currentConnection.threadId || undefined}
+      connection={currentConnection}
+      match={match}
+    />
+  );
 }
 
 export default TableGridWithConnection;

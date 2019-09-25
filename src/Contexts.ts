@@ -8,12 +8,15 @@ interface ConnexionContextProps {
   currentConnection: Connection | null;
   connectionList: Connection[];
   connectTo: ConnectToFunc;
+  setCurrentConnection: (connection: Connection) => void;
 }
 export const ConnectionContext = createContext<ConnexionContextProps>({
   currentConnection: null,
   connectionList: [],
   // tslint:disable-next-line: no-empty
   connectTo: () => {},
+  // tslint:disable-next-line: no-empty
+  setCurrentConnection: () => {},
 });
 
 interface ChangeThemeFunc {

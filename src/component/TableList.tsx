@@ -73,5 +73,11 @@ export default function TableListWithContext(props: object) {
     return null;
   }
 
-  return <TableList connection={currentConnection} {...props} />;
+  return (
+    <TableList
+      key={currentConnection.threadId || undefined}
+      connection={currentConnection}
+      {...props}
+    />
+  );
 }
