@@ -3,15 +3,15 @@ import { NavLink } from 'react-router-dom';
 import { ConnectionContext } from '../../Contexts';
 
 export default function Nav() {
-  const { connection } = React.useContext(ConnectionContext);
+  const { connectionList, setCurrentConnection, currentConnection } = React.useContext(ConnectionContext);
   return (
     <div>
       <ul className="nav nav-tabs">
-        {connection && (
-          <li className="nav-item">
-            <NavLink className="nav-link" activeClassName="active" to="/">
-              Active
-            </NavLink>
+        {connectionList.map((connection, i) => (
+          <li className="nav-item" key={i}>
+            <a className={`nav-link ${connection === currentConnection ? ' active': ''}`} onClick={() => {setCurrentConnection(connection)}} href="#">
+              {connection.config.host}
+            </a>
           </li>
         )}
         <li className="nav-item">

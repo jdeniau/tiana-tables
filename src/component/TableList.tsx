@@ -67,11 +67,11 @@ class TableList extends React.PureComponent<TableListProps, {}> {
 }
 
 export default function TableListWithContext(props: object) {
-  const { connection } = React.useContext(ConnectionContext);
+  const { currentConnection } = React.useContext(ConnectionContext);
 
-  if (!connection) {
+  if (!currentConnection) {
     return null;
   }
 
-  return <TableList connection={connection} {...props} />;
+  return <TableList connection={currentConnection} {...props} />;
 }

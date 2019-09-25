@@ -5,11 +5,13 @@ export interface ConnectToFunc {
   (params: object): void;
 }
 interface ConnexionContextProps {
-  connection: Connection | null;
+  currentConnection: Connection | null;
+  connectionList: Connection[];
   connectTo: ConnectToFunc;
 }
 export const ConnectionContext = createContext<ConnexionContextProps>({
-  connection: null,
+  currentConnection: null,
+  connectionList: [],
   // tslint:disable-next-line: no-empty
   connectTo: () => {},
 });
