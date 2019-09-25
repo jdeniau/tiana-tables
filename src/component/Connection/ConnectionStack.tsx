@@ -1,11 +1,16 @@
 import * as React from 'react';
 import { Connection } from 'mysql';
 import { createConnection } from 'mysql';
-import { withRouter, RouteComponentProps } from 'react-router';
+import { useHistory } from 'react-router';
+import { History } from 'history';
 import { ConnectionContext } from '../../Contexts';
 
-interface Props extends RouteComponentProps {
+interface PropsWithoutHistory {
   children: React.ReactNode;
+}
+
+interface Props extends PropsWithoutHistory {
+  history: History;
 }
 
 interface State {
@@ -80,4 +85,10 @@ class ConnectionStack extends React.PureComponent<Props, State> {
   }
 }
 
-export default withRouter(ConnectionStack);
+function ConnectionStackWithHistory(props: PropsWithoutHistory) {
+  const history = useHistory();
+
+  return <ConnectionStack history={history} {...props} />;
+}
+
+export default ConnectionStackWithHistory;
