@@ -13,9 +13,7 @@ interface ConnexionContextProps {
 export const ConnectionContext = createContext<ConnexionContextProps>({
   currentConnection: null,
   connectionList: [],
-  // tslint:disable-next-line: no-empty
   connectTo: () => {},
-  // tslint:disable-next-line: no-empty
   setCurrentConnection: () => {},
 });
 
@@ -28,6 +26,5 @@ interface ThemeContextProps {
 }
 export const ThemeContext = createContext<ThemeContextProps>({
   theme: 'dracula',
-  // tslint:disable-next-line: no-empty
   changeTheme: () => {},
 });

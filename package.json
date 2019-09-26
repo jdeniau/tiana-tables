@@ -79,6 +79,8 @@
     "@types/react-router-dom": "^5.1.0",
     "@types/storybook__react": "^4.0.2",
     "@types/styled-components": "^4.1.19",
+    "@typescript-eslint/eslint-plugin": "^2.3.1",
+    "@typescript-eslint/parser": "^2.3.1",
     "awesome-typescript-loader": "^5.2.1",
     "babel-loader": "^8.0.6",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
@@ -86,11 +88,13 @@
     "babel-preset-react": "^6.24.1",
     "electron-forge": "^5.2.4",
     "electron-prebuilt-compile": "4.0.0",
+    "eslint": "^6.4.0",
+    "eslint-config-prettier": "^6.3.0",
+    "eslint-plugin-react": "^7.14.3",
     "jest": "^24.9.0",
     "react-docgen-typescript-loader": "^3.2.1",
     "ts-jest": "^24.1.0",
     "ts-sinon": "^1.0.24",
-    "tslint": "^5.14.0",
     "typescript": "^3.6.3"
   }
 }
