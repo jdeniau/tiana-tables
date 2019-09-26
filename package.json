@@ -9,7 +9,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "tslint --project tsconfig.json --type-check --force",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx src/",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
@@ -91,6 +91,7 @@
     "eslint": "^6.4.0",
     "eslint-config-prettier": "^6.3.0",
     "eslint-plugin-react": "^7.14.3",
+    "eslint-plugin-react-hooks": "^2.0.1",
     "jest": "^24.9.0",
     "react-docgen-typescript-loader": "^3.2.1",
     "ts-jest": "^24.1.0",

@@ -5,7 +5,7 @@ import { getColor, getSetting } from '../theme';
 
 interface TableCellFactoryProps {
   type: Types;
-  value: any;
+  value: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 const NullSpan = styled.span`

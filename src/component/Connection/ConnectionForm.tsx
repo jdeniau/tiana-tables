@@ -43,6 +43,7 @@ class ConnectionForm extends React.PureComponent<
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore: name is in state due to previous line
     this.setState({
       [name]: value,

@@ -79,7 +79,7 @@ class ConnectionStack extends React.PureComponent<Props, State> {
           setCurrentConnection: this.handleSetCurrentConnection,
         }}
       >
-        {children}>
+        {children}
       </ConnectionContext.Provider>
     );
   }

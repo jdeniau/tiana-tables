@@ -3,7 +3,7 @@ import * as visualStudio from '../theme/visualStudio.json';
 
 const THEME_LIST_AS_ARRAY = [dracula, visualStudio];
 
-export let THEME_LIST = {};
+export const THEME_LIST = {};
 THEME_LIST_AS_ARRAY.forEach(t => {
   THEME_LIST[t.name] = t;
 });
@@ -18,7 +18,7 @@ interface TmTheme {
 
 interface TmThemeSetting {
   readonly scope?: string | string[];
-  readonly settings: Object;
+  readonly settings: Record<string, string>;
 }
 
 interface TmThemeScopedSetting extends TmThemeSetting {
@@ -29,10 +29,12 @@ interface TmThemeGlobalSetting extends TmThemeSetting {
   readonly scope: undefined;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isScopedSetting(o: { scope?: any; settings?: any }): boolean {
   return o.scope && o.settings;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isUnscopedSetting(o: { scope?: any; settings?: any }): boolean {
   return !o.scope && o.settings;
 }
@@ -42,16 +44,14 @@ export function getColor(
   scopeToFind: string,
   settingToFind: string
 ): string {
-  const item = <TmThemeScopedSetting>(
-    currentTheme.settings
-      .filter(isScopedSetting)
-      .find(({ scope }: TmThemeSetting) => {
-        if (Array.isArray(scope)) {
-          return scope.includes(scopeToFind);
-        }
-        return scope === scopeToFind;
-      })
-  );
+  const item = currentTheme.settings
+    .filter(isScopedSetting)
+    .find(({ scope }: TmThemeSetting) => {
+      if (Array.isArray(scope)) {
+        return scope.includes(scopeToFind);
+      }
+      return scope === scopeToFind;
+    }) as TmThemeScopedSetting;
 
   if (!item) {
     throw new Error(`color not found for scope "${scopeToFind}"`);
@@ -61,9 +61,9 @@ export function getColor(
 }
 
 export function getSetting(currentTheme: TmTheme, key: string): string {
-  const settings = <TmThemeGlobalSetting[]>(
-    currentTheme.settings.filter(isUnscopedSetting)
-  );
+  const settings = currentTheme.settings.filter(
+    isUnscopedSetting
+  ) as TmThemeGlobalSetting[];
 
   if (!settings) {
     throw new Error(`color not found settings`);

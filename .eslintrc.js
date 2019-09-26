@@ -8,6 +8,7 @@ module.exports = {
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    'plugin:react/recommended',
     'prettier',
     'prettier/@typescript-eslint',
   ],
@@ -25,6 +26,29 @@ module.exports = {
     project: './tsconfig.json',
     tsconfigRootDir: './',
   },
-  plugins: ['react', '@typescript-eslint'],
-  rules: {},
+  settings: {
+    react: {
+      version: 'detect',
+      linkComponents: [
+        // Components used as alternatives to <a> for linking, eg. <Link to={ url } />
+        { name: 'Link', linkAttribute: 'to' },
+        { name: 'NavLink', linkAttribute: 'to' },
+      ],
+    },
+  },
+  plugins: ['react', '@typescript-eslint', 'react-hooks'],
+  rules: {
+    '@typescript-eslint/prefer-regexp-exec': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/no-misused-promises': [
+      'error',
+      {
+        checksVoidReturn: false,
+      },
+    ],
+    '@typescript-eslint/unbound-method': 'off',
+    '@typescript-eslint/no-empty-interface': 'off',
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+  },
 };

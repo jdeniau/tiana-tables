@@ -85,13 +85,15 @@ class TableGrid extends React.PureComponent<TableNameProps> {
             <Thead>
               <tr>
                 {fields.map(field => (
-                  <Th>{field.name}</Th>
+                  <Th key={field.name}>{field.name}</Th>
                 ))}
               </tr>
             </Thead>
           )}
           {result && fields && (
             <tbody>
+              {/* eslint-disable react/jsx-key */}
+              {/* TODO : use the table primary key to make a real key */}
               {result.map((row: object) => (
                 <tr>
                   {fields.map(field => (
@@ -101,6 +103,7 @@ class TableGrid extends React.PureComponent<TableNameProps> {
                   ))}
                 </tr>
               ))}
+              {/* eslint-enable react/jsx-key */}
             </tbody>
           )}
         </Table>
