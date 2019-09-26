@@ -2,10 +2,11 @@ import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import { MemoryRouter as Router } from 'react-router';
+import { stubInterface } from 'ts-sinon';
 import ConnectionForm from '../src/component/Connection/ConnectionForm';
 import ConnectionNav from '../src/component/Connection/Nav';
 import { ConnectionContext } from '../src/Contexts';
-import { createConnection } from 'mysql';
+import { Connection } from 'mysql';
 
 const stories = storiesOf('Connection Block', module);
 
@@ -21,7 +22,9 @@ stories.add('Connection Block', () => {
       value={{
         currentConnection: null,
         connectionList: [],
-        connectTo: action('connectTo'),
+        connectTo: (connection: Connection) => {
+          action('connectTo')(connection.config);
+        },
         setCurrentConnection: action('setCurrentConnection'),
       }}
     >
@@ -31,20 +34,25 @@ stories.add('Connection Block', () => {
 });
 
 stories.add('Connection nav', () => {
-  const stubbedConnection = createConnection({
-    host: 'example.org',
-    user: 'bob',
-    password: 'secret',
-  });
+  const stubbedConnection = stubInterface<Connection>();
+  stubbedConnection.config = {
+    host: 'foo.bar',
+  };
+  const stubbedConnection2 = stubInterface<Connection>();
+  stubbedConnection2.config = {
+    host: 'mysql.baz',
+  };
 
   return (
     <Router>
       <ConnectionContext.Provider
         value={{
-          currentConnection: null,
-          connectionList: [stubbedConnection],
+          currentConnection: stubbedConnection2,
+          connectionList: [stubbedConnection, stubbedConnection2],
           connectTo: action('connectTo'),
-          setCurrentConnection: action('setCurrentConnection'),
+          setCurrentConnection: (connection: Connection) => {
+            action('setCurrentConnection')(connection.config);
+          },
         }}
       >
         <ConnectionNav />

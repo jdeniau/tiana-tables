@@ -89,6 +89,7 @@
     "jest": "^24.9.0",
     "react-docgen-typescript-loader": "^3.2.1",
     "ts-jest": "^24.1.0",
+    "ts-sinon": "^1.0.24",
     "tslint": "^5.14.0",
     "typescript": "^3.6.3"
   }
