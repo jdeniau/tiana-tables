@@ -9,30 +9,30 @@ export default function Nav() {
     currentConnection,
   } = React.useContext(ConnectionContext);
   return (
-    <div>
-      <ul className="nav nav-tabs">
-        {connectionList.map((connection, i) => (
-          <li className="nav-item" key={i}>
-            <a
-              className={`nav-link ${
-                connection === currentConnection ? ' active' : ''
-              }`}
-              onClick={e => {
-                e.preventDefault();
-                setCurrentConnection(connection);
-              }}
-              href="#"
-            >
-              {connection.config.host}
-            </a>
-          </li>
-        ))}
-        <li className="nav-item">
-          <NavLink className="nav-link" activeClassName="active" to="/connect">
-            Connect to…
+    <nav className="nav nav-pills flex-column">
+      {connectionList.map((connection, i) => (
+        <div
+          key={i}
+          className={`nav-link${
+            connection === currentConnection ? ' active' : ''
+          }`}
+        >
+          <NavLink
+            onClick={() => {
+              setCurrentConnection(connection);
+            }}
+            to="/"
+            isActive={() => connection === currentConnection}
+            activeStyle={{ color: '#fff' }}
+          >
+            {connection.config.host &&
+              connection.config.host.substr(0, 1).toUpperCase()}
           </NavLink>
-        </li>
-      </ul>
-    </div>
+        </div>
+      ))}
+      <NavLink className="nav-link" activeClassName="active" to="/connect">
+        +
+      </NavLink>
+    </nav>
   );
 }

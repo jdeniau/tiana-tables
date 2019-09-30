@@ -20,6 +20,7 @@ const HeaderDiv = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 46px;
 `;
 const ContentDiv = styled.div`
   display: flex;
@@ -47,8 +48,9 @@ const Layout = ({ onChangeTheme }: LayoutProps) => {
           <ThemeSelector onChangeTheme={onChangeTheme} />
         </div>
       </HeaderDiv>
-      <ConnectionNav />
+
       <ContentDiv>
+        <ConnectionNav />
         <Switch>
           <Route exact path="/connect">
             <ConnectionForm />
