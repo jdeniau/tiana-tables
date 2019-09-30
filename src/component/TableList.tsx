@@ -21,7 +21,7 @@ interface TableListState {
   tableStatus: null | TableStatusRow[];
 }
 
-class TableList extends React.PureComponent<TableListProps, {}> {
+class TableList extends React.PureComponent<TableListProps, TableListState> {
   state: TableListState;
 
   constructor(props: TableListProps) {

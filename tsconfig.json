@@ -27,6 +27,6 @@
     "indentSize": 2,
     "tabSize": 2
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "stories/**/*"],
   "exclude": ["node_modules", "build", "scripts"]
 }
