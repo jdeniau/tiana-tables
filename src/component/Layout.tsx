@@ -1,6 +1,7 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import { Route, Switch } from 'react-router-dom';
+import DatabaseSelector from './DatabaseSelector';
 import TableList from './TableList';
 import TableGrid from './TableGrid';
 import ThemeSelector from './ThemeSelector';
@@ -57,6 +58,7 @@ const Layout = ({ onChangeTheme }: LayoutProps) => {
           </Route>
           <Route>
             <LeftPanelDiv>
+              <DatabaseSelector />
               <TableList />
             </LeftPanelDiv>
             <RightPanelDiv>

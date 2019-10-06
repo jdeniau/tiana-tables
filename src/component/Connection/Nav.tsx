@@ -11,24 +11,21 @@ export default function Nav() {
   return (
     <nav className="nav nav-pills flex-column">
       {connectionList.map((connection, i) => (
-        <div
+        <NavLink
           key={i}
           className={`nav-link${
             connection === currentConnection ? ' active' : ''
-          }`}
+            }`}
+          onClick={() => {
+            setCurrentConnection(connection);
+          }}
+          to="/"
+          isActive={() => connection === currentConnection}
+          activeStyle={{ color: '#fff' }}
         >
-          <NavLink
-            onClick={() => {
-              setCurrentConnection(connection);
-            }}
-            to="/"
-            isActive={() => connection === currentConnection}
-            activeStyle={{ color: '#fff' }}
-          >
-            {connection.config.host &&
-              connection.config.host.substr(0, 1).toUpperCase()}
-          </NavLink>
-        </div>
+          {connection.config.host &&
+            connection.config.host.substr(0, 1).toUpperCase()}
+        </NavLink>
       ))}
       <NavLink className="nav-link" activeClassName="active" to="/connect">
         +
