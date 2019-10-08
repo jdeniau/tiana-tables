@@ -17,6 +17,19 @@ export const ConnectionContext = createContext<ConnexionContextProps>({
   setCurrentConnection: () => {},
 });
 
+export interface SetDatabaseFunc {
+  (theme: string): void;
+}
+interface DatabaseContextProps {
+  database: string | null;
+  setDatabase: SetDatabaseFunc;
+}
+
+export const DatabaseContext = createContext<DatabaseContextProps>({
+  database: null,
+  setDatabase: () => {},
+});
+
 interface ChangeThemeFunc {
   (theme: string): void;
 }

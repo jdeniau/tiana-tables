@@ -9,7 +9,6 @@ interface ConnectionFormState {
   port: number;
   user: string;
   password: string;
-  database: string;
 }
 class ConnectionForm extends React.PureComponent<
   ConnectionFormProps,
@@ -24,7 +23,6 @@ class ConnectionForm extends React.PureComponent<
         : 3306,
       user: process.env.DEBUG_DB_USER || '',
       password: process.env.DEBUG_DB_PASSWORD || '',
-      database: process.env.DEBUG_DB_DATABASE || '',
     };
 
     this.handleInputChange = this.handleInputChange.bind(this);
@@ -100,17 +98,6 @@ class ConnectionForm extends React.PureComponent<
             type="text"
             className="form-control"
             value={this.state.password}
-            onChange={this.handleInputChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="Connection__database">database</label>
-          <input
-            id="Connection__database"
-            name="database"
-            type="text"
-            className="form-control"
-            value={this.state.database}
             onChange={this.handleInputChange}
           />
         </div>

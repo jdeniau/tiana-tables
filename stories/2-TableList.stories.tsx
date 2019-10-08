@@ -4,7 +4,7 @@ import { stubInterface } from 'ts-sinon';
 import { MemoryRouter as Router } from 'react-router';
 import { Connection, Query, queryCallback } from 'mysql';
 import TableList from '../src/component/TableList';
-import { ConnectionContext } from '../src/Contexts';
+import { ConnectionContext, DatabaseContext } from '../src/Contexts';
 
 const stories = storiesOf('Table list', module);
 
@@ -15,7 +15,7 @@ stories.add('Table List', () => {
     (option: string, callback: queryCallback) => {
       console.table({ option, callback });
       switch (option) {
-        case 'SHOW TABLE STATUS FROM `ticketing`;':
+        case 'SHOW TABLE STATUS FROM `mocked-db`;':
           callback(null, [{ Name: 'foo' }, { Name: 'bar' }, { Name: 'baz' }]);
           break;
       }
@@ -33,7 +33,14 @@ stories.add('Table List', () => {
           setCurrentConnection: () => {},
         }}
       >
-        <TableList />
+        <DatabaseContext.Provider
+          value={{
+            database: 'mocked-db',
+            setDatabase: () => {},
+          }}
+        >
+          <TableList />
+        </DatabaseContext.Provider>
       </ConnectionContext.Provider>
     </Router>
   );

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ConnectionContext } from '../Contexts';
+import { ConnectionContext, DatabaseContext } from '../Contexts';
 import { Connection } from 'mysql';
 import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
@@ -11,6 +11,7 @@ const StyledNavLink = styled(NavLink)`
 
 interface TableListProps {
   connection: Connection;
+  database: string;
 }
 
 interface TableStatusRow {
@@ -33,13 +34,20 @@ class TableList extends React.PureComponent<TableListProps, TableListState> {
   }
 
   componentDidMount() {
-    const { connection } = this.props;
+    const { connection, database } = this.props;
 
-    connection.query('SHOW TABLE STATUS FROM `ticketing`;', (_err, result) => {
-      this.setState({
-        tableStatus: result,
-      });
-    });
+    connection.query(
+      `SHOW TABLE STATUS FROM \`${database}\`;`,
+      (err, result) => {
+        if (err) {
+          throw err;
+        }
+
+        this.setState({
+          tableStatus: result,
+        });
+      }
+    );
   }
 
   render() {
@@ -68,15 +76,17 @@ class TableList extends React.PureComponent<TableListProps, TableListState> {
 
 export default function TableListWithContext(props: object) {
   const { currentConnection } = React.useContext(ConnectionContext);
+  const { database } = React.useContext(DatabaseContext);
 
-  if (!currentConnection) {
+  if (!currentConnection || !database) {
     return null;
   }
 
   return (
     <TableList
-      key={currentConnection.threadId || undefined}
+      key={`${currentConnection.threadId}|${database}` || undefined}
       connection={currentConnection}
+      database={database}
       {...props}
     />
   );

@@ -1,29 +1,53 @@
-import * as React from "react";
-import { Connection } from "mysql";
-import { ConnectionContext } from "../Contexts";
+import * as React from 'react';
+import { Connection } from 'mysql';
+import { ConnectionContext, DatabaseContext } from '../Contexts';
 
-interface TableListProps {
+interface TableListWithoutConnectionProps {}
+
+interface TableListProps extends TableListWithoutConnectionProps {
   connection: Connection;
 }
+
+interface DatabaseRow {
+  Database: string;
+}
+
 function DatabaseSelector({ connection }: TableListProps) {
-  const [databaseList, setDatabaseList] = React.useState([]);
+  const [databaseList, setDatabaseList]: [
+    DatabaseRow[],
+    Function
+  ] = React.useState([]);
+
+  const { database, setDatabase } = React.useContext(DatabaseContext);
 
   React.useEffect(() => {
-    connection.query("SHOW DATABASES;", (_err, result) => {
-      setDatabaseList(result);
+    connection.query('SHOW DATABASES;', (err, result: DatabaseRow[]) => {
+      if (err) {
+        throw err;
+      }
+      if (result) {
+        setDatabaseList(result);
+        setDatabase(result[0].Database);
+      }
     });
-  }, [connection.threadId]);
+  }, [connection.threadId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setDatabase(event.target.value);
+  };
 
   return (
-    <select>
-      {databaseList.map((row: { Database: string }) => (
+    <select onChange={handleChange} value={database || undefined}>
+      {databaseList.map((row: DatabaseRow) => (
         <option key={row.Database}>{row.Database}</option>
       ))}
     </select>
   );
 }
 
-export default function DatabaseSelectorWithContext(props: object) {
+export default function DatabaseSelectorWithContext(
+  props: TableListWithoutConnectionProps
+) {
   const { currentConnection } = React.useContext(ConnectionContext);
 
   if (!currentConnection) {

@@ -3,7 +3,7 @@ import { Connection } from 'mysql';
 import { createConnection } from 'mysql';
 import { useHistory } from 'react-router';
 import { History } from 'history';
-import { ConnectionContext } from '../../Contexts';
+import { ConnectionContext, DatabaseContext } from '../../Contexts';
 
 interface PropsWithoutHistory {
   children: React.ReactNode;
@@ -16,6 +16,7 @@ interface Props extends PropsWithoutHistory {
 interface State {
   currentConnection: Connection | null;
   connectionList: Connection[];
+  database: string | null;
 }
 
 class ConnectionStack extends React.PureComponent<Props, State> {
@@ -27,9 +28,12 @@ class ConnectionStack extends React.PureComponent<Props, State> {
     this.handleSetCurrentConnection = this.handleSetCurrentConnection.bind(
       this
     );
+    this.handleSetDatabase = this.handleSetDatabase.bind(this);
+
     this.state = {
       currentConnection: null,
       connectionList: [],
+      database: null,
     };
   }
 
@@ -42,6 +46,12 @@ class ConnectionStack extends React.PureComponent<Props, State> {
   handleSetCurrentConnection(currentConnection: Connection) {
     this.setState({
       currentConnection,
+    });
+  }
+
+  handleSetDatabase(database: string) {
+    this.setState({
+      database,
     });
   }
 
@@ -69,7 +79,7 @@ class ConnectionStack extends React.PureComponent<Props, State> {
 
   render() {
     const { children } = this.props;
-    const { connectionList, currentConnection } = this.state;
+    const { connectionList, currentConnection, database } = this.state;
     return (
       <ConnectionContext.Provider
         value={{
@@ -79,7 +89,14 @@ class ConnectionStack extends React.PureComponent<Props, State> {
           setCurrentConnection: this.handleSetCurrentConnection,
         }}
       >
-        {children}
+        <DatabaseContext.Provider
+          value={{
+            database,
+            setDatabase: this.handleSetDatabase,
+          }}
+        >
+          {children}
+        </DatabaseContext.Provider>
       </ConnectionContext.Provider>
     );
   }

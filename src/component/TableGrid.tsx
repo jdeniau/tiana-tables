@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Connection, FieldInfo } from 'mysql';
 import styled from 'styled-components';
-import { ConnectionContext } from '../Contexts';
+import { ConnectionContext, DatabaseContext } from '../Contexts';
 import Cell from './Cell';
 import { getSetting } from '../theme';
 
@@ -28,6 +28,7 @@ const Thead = styled.thead`
 interface TableNameProps {
   tableName: string;
   connection: Connection;
+  database: string;
 }
 
 interface TableNameState {
@@ -60,10 +61,10 @@ class TableGrid extends React.PureComponent<TableNameProps> {
   }
 
   fetchTableData() {
-    const { connection, tableName } = this.props;
+    const { connection, tableName, database } = this.props;
 
     connection.query(
-      `SELECT * FROM ${tableName} LIMIT 10;`,
+      `SELECT * FROM ${database}.${tableName} LIMIT 10;`,
       (_err, result, fields) => {
         this.setState({
           result,
@@ -115,6 +116,7 @@ class TableGrid extends React.PureComponent<TableNameProps> {
 interface TableNameWithRouterProps {
   match: { params: { tableName: string } };
   connection: Connection;
+  database: string;
 }
 
 const TableGridWithRouter = ({
@@ -122,8 +124,13 @@ const TableGridWithRouter = ({
     params: { tableName },
   },
   connection,
+  database,
 }: TableNameWithRouterProps) => (
-  <TableGrid tableName={tableName} connection={connection} />
+  <TableGrid
+    tableName={tableName}
+    connection={connection}
+    database={database}
+  />
 );
 
 interface TableNameWithRouterProps {
@@ -131,8 +138,9 @@ interface TableNameWithRouterProps {
 }
 function TableGridWithConnection({ match }: TableNameWithRouterProps) {
   const { currentConnection } = React.useContext(ConnectionContext);
+  const { database } = React.useContext(DatabaseContext);
 
-  if (!currentConnection) {
+  if (!currentConnection || !database) {
     return null;
   }
 
@@ -140,6 +148,7 @@ function TableGridWithConnection({ match }: TableNameWithRouterProps) {
     <TableGridWithRouter
       key={currentConnection.threadId || undefined}
       connection={currentConnection}
+      database={database}
       match={match}
     />
   );
