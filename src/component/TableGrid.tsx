@@ -34,6 +34,8 @@ interface TableNameProps {
 interface TableNameState {
   result: null | object[];
   fields: null | FieldInfo[];
+  error: null | Error;
+  currentOffset: number;
 }
 
 class TableGrid extends React.PureComponent<TableNameProps> {
@@ -45,9 +47,12 @@ class TableGrid extends React.PureComponent<TableNameProps> {
     this.state = {
       result: null,
       fields: null,
+      error: null,
+      currentOffset: 0,
     };
 
     this.fetchTableData = this.fetchTableData.bind(this);
+    this.handleLoadMoreClick = this.handleLoadMoreClick.bind(this);
   }
 
   componentDidMount() {
@@ -56,27 +61,46 @@ class TableGrid extends React.PureComponent<TableNameProps> {
 
   componentDidUpdate(prevProps: Readonly<TableNameProps>) {
     if (prevProps.tableName !== this.props.tableName) {
+      this.setState({
+        result: null,
+        fields: null,
+      });
       this.fetchTableData();
     }
   }
 
-  fetchTableData() {
+  fetchTableData(offset = 0, limit = 10) {
     const { connection, tableName, database } = this.props;
 
     connection.query(
-      `SELECT * FROM ${database}.${tableName} LIMIT 10;`,
-      (_err, result, fields) => {
-        this.setState({
-          result,
+      `SELECT * FROM ${database}.${tableName} LIMIT ${limit} OFFSET ${offset};`,
+      (err, result, fields) => {
+        if (err) {
+          this.setState({ error: err });
+          return;
+        }
+
+        this.setState((prevState: TableNameState) => ({
+          result: prevState.result ? prevState.result.concat(result) : result,
           fields,
-        });
+          currentOffset: offset,
+        }));
       }
     );
   }
 
+  handleLoadMoreClick() {
+    const { currentOffset } = this.state;
+    this.fetchTableData(currentOffset + 10);
+  }
+
   render() {
     const { tableName } = this.props;
-    const { fields, result } = this.state;
+    const { error, fields, result } = this.state;
+
+    if (error) {
+      return <div>{error.message}</div>;
+    }
 
     return (
       <div>
@@ -108,6 +132,8 @@ class TableGrid extends React.PureComponent<TableNameProps> {
             </tbody>
           )}
         </Table>
+
+        <button onClick={this.handleLoadMoreClick}>Load more</button>
       </div>
     );
   }

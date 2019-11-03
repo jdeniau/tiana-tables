@@ -6,7 +6,7 @@ import { Connection, Query, queryCallback } from 'mysql';
 import TableList from '../src/component/TableList';
 import { ConnectionContext, DatabaseContext } from '../src/Contexts';
 
-const stories = storiesOf('Table list', module);
+const stories = storiesOf('Table', module);
 
 stories.add('Table List', () => {
   const stubbedConnection = stubInterface<Connection>();

@@ -95,7 +95,7 @@ class ConnectionForm extends React.PureComponent<
           <input
             id="Connection__password"
             name="password"
-            type="text"
+            type="password"
             className="form-control"
             value={this.state.password}
             onChange={this.handleInputChange}

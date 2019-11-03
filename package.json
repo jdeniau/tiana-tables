@@ -93,6 +93,7 @@
     "eslint-plugin-react": "^7.14.3",
     "eslint-plugin-react-hooks": "^2.0.1",
     "jest": "^24.9.0",
+    "prettier": "^1.18.2",
     "react-docgen-typescript-loader": "^3.2.1",
     "ts-jest": "^24.1.0",
     "ts-sinon": "^1.0.24",
