@@ -38,7 +38,7 @@ class ConnectionStack extends React.PureComponent<Props, State> {
   }
 
   componentWillUnmount() {
-    this.state.connectionList.forEach(connection => {
+    this.state.connectionList.forEach((connection) => {
       connection.end();
     });
   }
@@ -65,7 +65,7 @@ class ConnectionStack extends React.PureComponent<Props, State> {
     // this.disconnect();
     const currentConnection = createConnection(params);
     currentConnection.connect();
-    this.setState(prevState => {
+    this.setState((prevState) => {
       const { connectionList } = prevState;
 
       connectionList.push(currentConnection);

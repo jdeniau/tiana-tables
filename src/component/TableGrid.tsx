@@ -6,23 +6,23 @@ import Cell from './Cell';
 import { getSetting } from '../theme';
 
 const Table = styled.table`
-  border: 3px solid ${props => getSetting(props.theme, 'caret')};
+  border: 3px solid ${(props) => getSetting(props.theme, 'caret')};
   width: 100%;
   border-collapse: collapse;
 `;
 
 const Td = styled.td`
-  border: 1px solid ${props => getSetting(props.theme, 'caret')};
+  border: 1px solid ${(props) => getSetting(props.theme, 'caret')};
   padding: 5px 4px;
 `;
 
 const Th = styled.th`
-  border: 1px solid ${props => getSetting(props.theme, 'caret')};
+  border: 1px solid ${(props) => getSetting(props.theme, 'caret')};
   padding: 5px 4px;
 `;
 
 const Thead = styled.thead`
-  border-bottom: 3px solid ${props => getSetting(props.theme, 'caret')};
+  border-bottom: 3px solid ${(props) => getSetting(props.theme, 'caret')};
 `;
 
 interface TableNameProps {
@@ -109,7 +109,7 @@ class TableGrid extends React.PureComponent<TableNameProps> {
           {fields && (
             <Thead>
               <tr>
-                {fields.map(field => (
+                {fields.map((field) => (
                   <Th key={field.name}>{field.name}</Th>
                 ))}
               </tr>
@@ -121,7 +121,7 @@ class TableGrid extends React.PureComponent<TableNameProps> {
               {/* TODO : use the table primary key to make a real key */}
               {result.map((row: object) => (
                 <tr>
-                  {fields.map(field => (
+                  {fields.map((field) => (
                     <Td>
                       <Cell type={field.type} value={row[field.name]} />
                     </Td>

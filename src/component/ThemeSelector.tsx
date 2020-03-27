@@ -11,12 +11,12 @@ export default function ThemeSelector({ onChangeTheme }: ThemeSelectorProps) {
 
   return (
     <select
-      onChange={e => {
+      onChange={(e) => {
         onChangeTheme(THEME_LIST[e.target.value]);
       }}
       value={themeContext.name}
     >
-      {Object.keys(THEME_LIST).map(key => (
+      {Object.keys(THEME_LIST).map((key) => (
         <option key={key} value={key}>
           {key}
         </option>

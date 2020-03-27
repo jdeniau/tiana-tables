@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { getColor } from '../theme';
 
 const StyledNavLink = styled(NavLink)`
-  color: ${props => getColor(props.theme, 'support.type', 'foreground')};
+  color: ${(props) => getColor(props.theme, 'support.type', 'foreground')};
 `;
 
 interface TableListProps {

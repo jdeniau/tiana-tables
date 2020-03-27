@@ -14,8 +14,8 @@ const LayoutDiv = styled.div`
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: ${props => getSetting(props.theme, 'background')};
-  color: ${props => getSetting(props.theme, 'foreground')};
+  background: ${(props) => getSetting(props.theme, 'background')};
+  color: ${(props) => getSetting(props.theme, 'foreground')};
 `;
 const HeaderDiv = styled.header`
   display: flex;

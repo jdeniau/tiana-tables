@@ -5,7 +5,7 @@ import * as active4d from '../theme/active4d.json';
 const THEME_LIST_AS_ARRAY = [dracula, visualStudio, active4d];
 
 export const THEME_LIST = {};
-THEME_LIST_AS_ARRAY.forEach(t => {
+THEME_LIST_AS_ARRAY.forEach((t) => {
   THEME_LIST[t.name] = t;
 });
 

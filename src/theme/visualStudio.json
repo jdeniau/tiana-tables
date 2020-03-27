@@ -14,10 +14,7 @@
     },
     {
       "name": "Diff insertion",
-      "scope": [
-        "markup.inserted.diff",
-        "meta.diff.header.to-file"
-      ],
+      "scope": ["markup.inserted.diff", "meta.diff.header.to-file"],
       "settings": {
         "foreground": "#eefff8",
         "background": "#2f8963"
@@ -25,10 +22,7 @@
     },
     {
       "name": "Diff deletion",
-      "scope": [
-        "markup.deleted.diff",
-        "meta.diff.header.from-file"
-      ],
+      "scope": ["markup.deleted.diff", "meta.diff.header.from-file"],
       "settings": {
         "foreground": "#fff3ee",
         "background": "#c86a44"
@@ -100,10 +94,7 @@
     },
     {
       "name": "String interpolation",
-      "scope": [
-        "constant.character.escape",
-        "string source"
-      ],
+      "scope": ["constant.character.escape", "string source"],
       "settings": {
         "fontStyle": "",
         "foreground": "#26B31A"
@@ -127,10 +118,7 @@
     },
     {
       "name": "Function name",
-      "scope": [
-        "entity.name.function",
-        "keyword.other.name-of-parameter.objc"
-      ],
+      "scope": ["entity.name.function", "keyword.other.name-of-parameter.objc"],
       "settings": {
         "fontStyle": "",
         "foreground": "#000000"
@@ -202,10 +190,7 @@
     },
     {
       "name": "Library object",
-      "scope": [
-        "support.class",
-        "support.type"
-      ],
+      "scope": ["support.class", "support.type"],
       "settings": {
         "fontStyle": "",
         "foreground": "#000000"
@@ -250,20 +235,14 @@
     },
     {
       "name": "Embedded source",
-      "scope": [
-        "text source",
-        "string.unquoted"
-      ],
+      "scope": ["text source", "string.unquoted"],
       "settings": {
         "background": "#427FF530"
       }
     },
     {
       "name": "Markup XML declaration",
-      "scope": [
-        "meta.xml-processing",
-        "declaration.xml-processing"
-      ],
+      "scope": ["meta.xml-processing", "declaration.xml-processing"],
       "settings": {
         "fontStyle": "",
         "foreground": "#68685B"
@@ -271,10 +250,7 @@
     },
     {
       "name": "Markup DOCTYPE",
-      "scope": [
-        "meta.doctype",
-        "declaration.doctype"
-      ],
+      "scope": ["meta.doctype", "declaration.doctype"],
       "settings": {
         "fontStyle": "",
         "foreground": "#A31515"
@@ -282,20 +258,14 @@
     },
     {
       "name": "Markup DTD",
-      "scope": [
-        "meta.doctype.DTD",
-        "declaration.doctype.DTD"
-      ],
+      "scope": ["meta.doctype.DTD", "declaration.doctype.DTD"],
       "settings": {
         "fontStyle": ""
       }
     },
     {
       "name": "Markup tag",
-      "scope": [
-        "meta.tag",
-        "declaration.tag"
-      ],
+      "scope": ["meta.tag", "declaration.tag"],
       "settings": {
         "fontStyle": "",
         "foreground": "#0000FF"
@@ -319,10 +289,7 @@
     },
     {
       "name": "Markup: Attribute Value",
-      "scope": [
-        "string.quoted.double.xml",
-        "string.quoted.double.html"
-      ],
+      "scope": ["string.quoted.double.xml", "string.quoted.double.html"],
       "settings": {
         "fontStyle": "",
         "foreground": "#0000FF"

@@ -65,18 +65,12 @@
     },
     {
       "name": "User-defined constant",
-      "scope": [
-        "constant.character",
-        "constant.other"
-      ],
+      "scope": ["constant.character", "constant.other"],
       "settings": {}
     },
     {
       "name": "Date/time literal",
-      "scope": [
-        "constant.other.date",
-        "constant.other.time"
-      ],
+      "scope": ["constant.other.date", "constant.other.time"],
       "settings": {
         "fontStyle": "bold",
         "foreground": "#66CCFF"
@@ -194,10 +188,7 @@
     },
     {
       "name": "Library class/type",
-      "scope": [
-        "support.type",
-        "support.class"
-      ],
+      "scope": ["support.type", "support.class"],
       "settings": {
         "foreground": "#A535AE"
       }

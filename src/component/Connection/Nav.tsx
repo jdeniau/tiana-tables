@@ -15,7 +15,7 @@ export default function Nav() {
           key={i}
           className={`nav-link${
             connection === currentConnection ? ' active' : ''
-            }`}
+          }`}
           onClick={() => {
             setCurrentConnection(connection);
           }}

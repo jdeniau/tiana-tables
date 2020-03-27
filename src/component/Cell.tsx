@@ -9,7 +9,7 @@ interface TableCellFactoryProps {
 }
 
 const NullSpan = styled.span`
-  color: ${props => getColor(props.theme, 'constant.language', 'foreground')};
+  color: ${(props) => getColor(props.theme, 'constant.language', 'foreground')};
 `;
 
 function NullCell() {
@@ -17,7 +17,7 @@ function NullCell() {
 }
 
 const ForegroundSpan = styled.span`
-  color: ${props => getSetting(props.theme, 'foreground')};
+  color: ${(props) => getSetting(props.theme, 'foreground')};
 `;
 
 function DatetimeCell({ value }: { value: Date }) {
@@ -25,14 +25,14 @@ function DatetimeCell({ value }: { value: Date }) {
 }
 
 const StringSpan = styled.span`
-  color: ${props => getColor(props.theme, 'string', 'foreground')};
+  color: ${(props) => getColor(props.theme, 'string', 'foreground')};
 `;
 function StringCell({ value }: { value: string }) {
   return <StringSpan>{value}</StringSpan>;
 }
 
 const NumberSpan = styled.span`
-  color: ${props => getColor(props.theme, 'constant.numeric', 'foreground')};
+  color: ${(props) => getColor(props.theme, 'constant.numeric', 'foreground')};
 `;
 function NumberCell({ value }: { value: number }) {
   return <NumberSpan>{value}</NumberSpan>;
