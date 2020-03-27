@@ -74,7 +74,8 @@ class ConnectionStack extends React.PureComponent<Props, State> {
         connectionList,
       };
     });
-    this.props.history.push('/');
+
+    this.props.history.push('/tables');
   }
 
   render() {

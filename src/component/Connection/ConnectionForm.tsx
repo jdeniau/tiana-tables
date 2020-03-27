@@ -103,7 +103,7 @@ class ConnectionForm extends React.PureComponent<
         </div>
 
         <button className="btn btn-primary" type="submit">
-          connect
+          Connect
         </button>
       </form>
     );

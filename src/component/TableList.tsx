@@ -18,24 +18,14 @@ interface TableStatusRow {
   Name: string;
 }
 
-interface TableListState {
-  tableStatus: null | TableStatusRow[];
-}
-
-class TableList extends React.PureComponent<TableListProps, TableListState> {
-  state: TableListState;
-
-  constructor(props: TableListProps) {
-    super(props);
-
-    this.state = {
-      tableStatus: null,
-    };
-  }
-
-  componentDidMount() {
-    const { connection, database } = this.props;
-
+function ConnectedTableList({
+  connection,
+  database,
+}: TableListProps): React.ReactElement | null {
+  const [tableStatus, setTableStatus] = React.useState<TableStatusRow[] | null>(
+    null
+  );
+  React.useEffect(() => {
     connection.query(
       `SHOW TABLE STATUS FROM \`${database}\`;`,
       (err, result) => {
@@ -43,38 +33,32 @@ class TableList extends React.PureComponent<TableListProps, TableListState> {
           throw err;
         }
 
-        this.setState({
-          tableStatus: result,
-        });
+        setTableStatus(result);
       }
     );
+  }, [connection, database]);
+
+  if (!tableStatus) {
+    return null;
   }
 
-  render() {
-    const { tableStatus } = this.state;
-
-    return (
-      <div>
-        {tableStatus && (
-          <ul>
-            {tableStatus.map((rowDataPacket: TableStatusRow) => (
-              <li key={rowDataPacket.Name}>
-                <StyledNavLink
-                  to={`/tables/${rowDataPacket.Name}`}
-                  activeClassName="active"
-                >
-                  {rowDataPacket.Name}
-                </StyledNavLink>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    );
-  }
+  return (
+    <div>
+      {tableStatus.map((rowDataPacket: TableStatusRow) => (
+        <div key={rowDataPacket.Name}>
+          <StyledNavLink
+            to={`/tables/${rowDataPacket.Name}`}
+            activeClassName="active"
+          >
+            {rowDataPacket.Name}
+          </StyledNavLink>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-export default function TableListWithContext(props: object) {
+export default function TableList(props: object): React.ReactElement | null {
   const { currentConnection } = React.useContext(ConnectionContext);
   const { database } = React.useContext(DatabaseContext);
 
@@ -83,7 +67,7 @@ export default function TableListWithContext(props: object) {
   }
 
   return (
-    <TableList
+    <ConnectedTableList
       key={`${currentConnection.threadId}|${database}` || undefined}
       connection={currentConnection}
       database={database}

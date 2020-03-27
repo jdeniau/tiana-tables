@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styled from 'styled-components';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Switch, Link } from 'react-router-dom';
 import DatabaseSelector from './DatabaseSelector';
 import TableList from './TableList';
 import TableGrid from './TableGrid';
@@ -30,16 +30,25 @@ const ContentDiv = styled.div`
 const LeftPanelDiv = styled.div`
   min-width: 200px;
   overflow: auto;
+  padding: 0 10px;
+  border-left: 1px solid ${(props) => getSetting(props.theme, 'foreground')};
+  border-right: 1px solid ${(props) => getSetting(props.theme, 'foreground')};
 `;
 const RightPanelDiv = styled.div`
   flex-grow: 1;
   overflow: auto;
+  padding: 0 10px;
+`;
+const ModalLike = styled.div`
+  width: 50%;
+  min-width: 400px;
+  align-self: center;
 `;
 
 interface LayoutProps {
   onChangeTheme: (theme: object) => void;
 }
-const Layout = ({ onChangeTheme }: LayoutProps) => {
+function Layout({ onChangeTheme }: LayoutProps): React.ReactElement {
   return (
     <LayoutDiv>
       <HeaderDiv>
@@ -50,13 +59,22 @@ const Layout = ({ onChangeTheme }: LayoutProps) => {
         </div>
       </HeaderDiv>
 
-      <ContentDiv>
-        <ConnectionNav />
-        <Switch>
-          <Route exact path="/connect">
+      <Switch>
+        <Route exact path="/">
+          <div>
+            <p>Welcome to Fuzzy Potato ! </p>
+
+            <Link to="/connect">Please connect</Link>
+          </div>
+        </Route>
+        <Route exact path="/connect">
+          <ModalLike>
             <ConnectionForm />
-          </Route>
-          <Route>
+          </ModalLike>
+        </Route>
+        <Route path="/tables">
+          <ContentDiv>
+            <ConnectionNav />
             <LeftPanelDiv>
               <DatabaseSelector />
               <TableList />
@@ -66,11 +84,11 @@ const Layout = ({ onChangeTheme }: LayoutProps) => {
                 <Route exact path="/tables/:tableName" component={TableGrid} />
               </Switch>
             </RightPanelDiv>
-          </Route>
-        </Switch>
-      </ContentDiv>
+          </ContentDiv>
+        </Route>
+      </Switch>
     </LayoutDiv>
   );
-};
+}
 
 export default Layout;

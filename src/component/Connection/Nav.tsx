@@ -2,12 +2,13 @@ import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 import { ConnectionContext } from '../../Contexts';
 
-export default function Nav() {
+export default function Nav(): React.ReactElement {
   const {
     connectionList,
     setCurrentConnection,
     currentConnection,
   } = React.useContext(ConnectionContext);
+
   return (
     <nav className="nav nav-pills flex-column">
       {connectionList.map((connection, i) => (
@@ -19,7 +20,7 @@ export default function Nav() {
           onClick={() => {
             setCurrentConnection(connection);
           }}
-          to="/"
+          to="/tables"
           isActive={() => connection === currentConnection}
           activeStyle={{ color: '#fff' }}
         >
