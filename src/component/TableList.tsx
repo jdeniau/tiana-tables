@@ -48,7 +48,9 @@ function ConnectedTableList({
         <div key={rowDataPacket.Name}>
           <StyledNavLink
             to={`/tables/${rowDataPacket.Name}`}
-            activeClassName="active"
+            activeStyle={{
+              fontWeight: 'bold',
+            }}
           >
             {rowDataPacket.Name}
           </StyledNavLink>

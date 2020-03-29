@@ -8,6 +8,7 @@ import ThemeSelector from './ThemeSelector';
 import { getSetting } from '../theme';
 import ConnectionNav from './Connection/Nav';
 import ConnectionForm from './Connection/ConnectionForm';
+import Debug from './Debug';
 
 const LayoutDiv = styled.div`
   width: 100%;
@@ -51,6 +52,8 @@ interface LayoutProps {
 function Layout({ onChangeTheme }: LayoutProps): React.ReactElement {
   return (
     <LayoutDiv>
+      <Debug />
+
       <HeaderDiv>
         <h2>Welcome to Fuzzy Potato !</h2>
         <div>
