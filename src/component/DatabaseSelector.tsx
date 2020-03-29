@@ -30,7 +30,7 @@ function DatabaseSelector({ connection }: TableListProps) {
         setDatabase(result[0].Database);
       }
     });
-  }, [connection.threadId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [connection.threadId, connection, setDatabase]);
 
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setDatabase(event.target.value);

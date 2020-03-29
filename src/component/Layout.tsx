@@ -84,7 +84,9 @@ function Layout({ onChangeTheme }: LayoutProps): React.ReactElement {
             </LeftPanelDiv>
             <RightPanelDiv>
               <Switch>
-                <Route exact path="/tables/:tableName" component={TableGrid} />
+                <Route exact path="/tables/:tableName">
+                  <TableGrid />
+                </Route>
               </Switch>
             </RightPanelDiv>
           </ContentDiv>

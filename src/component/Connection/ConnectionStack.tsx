@@ -50,9 +50,13 @@ class ConnectionStack extends React.PureComponent<Props, State> {
   }
 
   handleSetDatabase(database: string) {
+    const { history } = this.props;
+
     this.setState({
       database,
     });
+
+    history.push('/tables');
   }
 
   // disconnect() {
@@ -62,6 +66,8 @@ class ConnectionStack extends React.PureComponent<Props, State> {
   // }
 
   handleConnectTo(params: object) {
+    const { history } = this.props;
+
     // this.disconnect();
     const currentConnection = createConnection(params);
     currentConnection.connect();
@@ -75,7 +81,7 @@ class ConnectionStack extends React.PureComponent<Props, State> {
       };
     });
 
-    this.props.history.push('/tables');
+    history.push('/tables');
   }
 
   render() {

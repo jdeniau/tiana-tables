@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { ConnectionContext, DatabaseContext } from '../Contexts';
 import Cell from './Cell';
 import { getSetting } from '../theme';
+import { useParams } from 'react-router-dom';
 
 const Table = styled.table`
   border: 3px solid ${(props) => getSetting(props.theme, 'caret')};
@@ -122,7 +123,7 @@ class TableGrid extends React.PureComponent<TableNameProps> {
               {result.map((row: object) => (
                 <tr>
                   {fields.map((field) => (
-                    <Td>
+                    <Td key={field.name}>
                       <Cell type={field.type} value={row[field.name]} />
                     </Td>
                   ))}
@@ -139,43 +140,21 @@ class TableGrid extends React.PureComponent<TableNameProps> {
   }
 }
 
-interface TableNameWithRouterProps {
-  match: { params: { tableName: string } };
-  connection: Connection;
-  database: string;
-}
-
-const TableGridWithRouter = ({
-  match: {
-    params: { tableName },
-  },
-  connection,
-  database,
-}: TableNameWithRouterProps) => (
-  <TableGrid
-    tableName={tableName}
-    connection={connection}
-    database={database}
-  />
-);
-
-interface TableNameWithRouterProps {
-  match: { params: { tableName: string } };
-}
-function TableGridWithConnection({ match }: TableNameWithRouterProps) {
+function TableGridWithConnection() {
   const { currentConnection } = React.useContext(ConnectionContext);
   const { database } = React.useContext(DatabaseContext);
+  const { tableName } = useParams();
 
-  if (!currentConnection || !database) {
+  if (!currentConnection || !database || !tableName) {
     return null;
   }
 
   return (
-    <TableGridWithRouter
-      key={currentConnection.threadId || undefined}
+    <TableGrid
+      key={`${currentConnection.threadId}|${database}|${tableName}`}
+      tableName={tableName}
       connection={currentConnection}
       database={database}
-      match={match}
     />
   );
 }
