@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Route, Switch, Link } from 'react-router-dom';
 import DatabaseSelector from './DatabaseSelector';
 import TableList from './TableList';
-import TableGrid from './TableGrid';
+import TableLayout from './TableLayout';
 import ThemeSelector from './ThemeSelector';
 import { getSetting } from '../theme';
 import ConnectionNav from './Connection/Nav';
@@ -85,7 +85,7 @@ function Layout({ onChangeTheme }: LayoutProps): React.ReactElement {
             <RightPanelDiv>
               <Switch>
                 <Route exact path="/tables/:tableName">
-                  <TableGrid />
+                  <TableLayout />
                 </Route>
               </Switch>
             </RightPanelDiv>
