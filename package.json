@@ -49,7 +49,15 @@
       "windowsStoreConfig": {
         "packageName": "",
         "name": "fuzzypotato"
-      }
+      },
+      "publishers": [
+        {
+          "name": "@electron-forge/publisher-github",
+          "config": {
+            "prerelease": true
+          }
+        }
+      ]
     }
   },
   "dependencies": {
