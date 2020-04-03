@@ -2,7 +2,7 @@
   "name": "fuzzy-potato",
   "productName": "fuzzy-potato",
   "version": "0.0.1-beta1",
-  "description": "My Electron application description",
+  "description": "Some SQL tool",
   "main": "src/index.ts",
   "scripts": {
     "start": "electron-forge start",
@@ -15,6 +15,10 @@
   },
   "keywords": [],
   "author": "jdeniau",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jdeniau/fuzzy-potato.git"
+  },
   "license": "MIT",
   "config": {
     "forge": {
@@ -39,8 +43,8 @@
       "electronInstallerDebian": {},
       "electronInstallerRedhat": {},
       "github_repository": {
-        "owner": "",
-        "name": ""
+        "owner": "jdeniau",
+        "name": "fuzzy-potato"
       },
       "windowsStoreConfig": {
         "packageName": "",
@@ -60,7 +64,8 @@
     "react-hot-loader": "^4.12.20",
     "react-router-dom": "^5.1.2",
     "styled-components": "^5.0.1",
-    "tslib": "^1.11.1"
+    "tslib": "^1.11.1",
+    "update-electron-app": "^1.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
