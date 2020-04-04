@@ -1,7 +1,7 @@
 {
   "name": "fuzzy-potato",
   "productName": "fuzzy-potato",
-  "version": "0.0.1-beta1",
+  "version": "0.0.1-beta2",
   "description": "Some SQL tool",
   "main": "src/index.ts",
   "scripts": {
