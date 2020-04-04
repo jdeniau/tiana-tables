@@ -1,15 +1,15 @@
 import * as React from 'react';
 import { ConnectionContext, ConnectToFunc } from '../../Contexts';
+import storage from './SavedConnections';
+import { ConnectionObject } from '.';
 
 interface ConnectionFormProps {
   connectTo: ConnectToFunc;
 }
-interface ConnectionFormState {
-  host: string;
-  port: number;
-  user: string;
-  password: string;
-}
+type ConnectionFormState = ConnectionObject & {
+  save: boolean;
+};
+
 class ConnectionForm extends React.PureComponent<
   ConnectionFormProps,
   ConnectionFormState
@@ -17,6 +17,8 @@ class ConnectionForm extends React.PureComponent<
   constructor(props: ConnectionFormProps) {
     super(props);
     this.state = {
+      name: '',
+      save: true,
       host: process.env.DEBUG_DB_HOST || 'localhost',
       port: process.env.DEBUG_DB_PORT
         ? parseInt(process.env.DEBUG_DB_PORT, 10)
@@ -49,14 +51,30 @@ class ConnectionForm extends React.PureComponent<
   }
 
   handleSubmit(event: React.FormEvent) {
+    const { save, ...connection } = this.state;
     event.preventDefault();
 
-    this.props.connectTo(this.state);
+    if (save) {
+      storage.set(connection.name, connection);
+    }
+
+    this.props.connectTo(connection);
   }
 
   render() {
     return (
       <form onSubmit={this.handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="Connection__name">name</label>
+          <input
+            id="Connection__name"
+            name="name"
+            type="text"
+            className="form-control"
+            value={this.state.name}
+            onChange={this.handleInputChange}
+          />
+        </div>
         <div className="form-group">
           <label htmlFor="Connection__host">host</label>
           <input
@@ -98,6 +116,17 @@ class ConnectionForm extends React.PureComponent<
             type="password"
             className="form-control"
             value={this.state.password}
+            onChange={this.handleInputChange}
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="Connection__save">enregistrer la connexion</label>
+          <input
+            id="Connection__save"
+            name="save"
+            type="checkbox"
+            className="form-control"
+            checked={this.state.save}
             onChange={this.handleInputChange}
           />
         </div>

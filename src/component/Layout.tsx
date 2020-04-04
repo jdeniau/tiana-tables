@@ -7,6 +7,7 @@ import TableLayout from './TableLayout';
 import ThemeSelector from './ThemeSelector';
 import { getSetting } from '../theme';
 import ConnectionNav from './Connection/Nav';
+import ConnectionPage from './Connection/ConnectionPage';
 import ConnectionForm from './Connection/ConnectionForm';
 import Debug from './Debug';
 
@@ -71,6 +72,11 @@ function Layout({ onChangeTheme }: LayoutProps): React.ReactElement {
           </div>
         </Route>
         <Route exact path="/connect">
+          <ModalLike>
+            <ConnectionPage />
+          </ModalLike>
+        </Route>
+        <Route exact path="/connect/create">
           <ModalLike>
             <ConnectionForm />
           </ModalLike>
