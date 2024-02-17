@@ -1,5 +1,7 @@
-import { createContext } from 'react';
-import { Connection } from 'mysql';
+import { createContext, useContext, useState } from 'react';
+import type { Connection } from 'mysql';
+import { ThemeProvider } from 'styled-components';
+import { DEFAULT_THEME, THEME_LIST } from './theme';
 
 export interface ConnectToFunc {
   (params: object): void;
@@ -34,10 +36,34 @@ interface ChangeThemeFunc {
   (theme: string): void;
 }
 interface ThemeContextProps {
-  theme: string;
+  themeName: string;
   changeTheme: ChangeThemeFunc;
 }
-export const ThemeContext = createContext<ThemeContextProps>({
-  theme: 'dracula',
+const ThemeContext = createContext<ThemeContextProps>({
+  themeName: DEFAULT_THEME.name,
   changeTheme: () => {},
 });
+
+export function useTheme() {
+  return useContext(ThemeContext);
+}
+
+export function ThemeContextProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactElement {
+  const [themeName, setThemeName] = useState(DEFAULT_THEME.name);
+
+  const changeTheme = (newTheme: string) => {
+    setThemeName(newTheme);
+  };
+
+  return (
+    <ThemeProvider theme={THEME_LIST[themeName]}>
+      <ThemeContext.Provider value={{ themeName, changeTheme }}>
+        {children}
+      </ThemeContext.Provider>
+    </ThemeProvider>
+  );
+}

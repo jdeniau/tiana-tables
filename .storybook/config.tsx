@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { configure, addParameters, addDecorator } from '@storybook/react';
 import { makeDecorator } from '@storybook/addons';
 import { themes } from '@storybook/theming';
@@ -14,8 +13,8 @@ function loadStories() {
 }
 
 const LayoutDiv = styled.div`
-  background: ${props => getSetting(props.theme, 'background')};
-  color: ${props => getSetting(props.theme, 'foreground')};
+  background: ${(props) => getSetting(props.theme, 'background')};
+  color: ${(props) => getSetting(props.theme, 'foreground')};
   min-height: calc(100vh - 16px);
 `;
 

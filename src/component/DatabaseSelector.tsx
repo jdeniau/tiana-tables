@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { Connection } from 'mysql';
+import type { Connection } from 'mysql';
 import { ConnectionContext, DatabaseContext } from '../Contexts';
+import { ChangeEvent, useContext, useEffect, useState } from 'react';
 
 interface TableListWithoutConnectionProps {}
 
@@ -13,14 +13,13 @@ interface DatabaseRow {
 }
 
 function DatabaseSelector({ connection }: TableListProps) {
-  const [databaseList, setDatabaseList]: [
-    DatabaseRow[],
-    Function
-  ] = React.useState([]);
+  const [databaseList, setDatabaseList]: [DatabaseRow[], Function] = useState(
+    []
+  );
 
-  const { database, setDatabase } = React.useContext(DatabaseContext);
+  const { database, setDatabase } = useContext(DatabaseContext);
 
-  React.useEffect(() => {
+  useEffect(() => {
     connection.query('SHOW DATABASES;', (err, result: DatabaseRow[]) => {
       if (err) {
         throw err;
@@ -32,7 +31,7 @@ function DatabaseSelector({ connection }: TableListProps) {
     });
   }, [connection.threadId, connection, setDatabase]);
 
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setDatabase(event.target.value);
   };
 
@@ -48,7 +47,7 @@ function DatabaseSelector({ connection }: TableListProps) {
 export default function DatabaseSelectorWithContext(
   props: TableListWithoutConnectionProps
 ) {
-  const { currentConnection } = React.useContext(ConnectionContext);
+  const { currentConnection } = useContext(ConnectionContext);
 
   if (!currentConnection) {
     return null;

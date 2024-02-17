@@ -1,13 +1,13 @@
-import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 import { ConnectionContext } from '../../Contexts';
+import { ReactElement, useContext } from 'react';
 
-export default function Nav(): React.ReactElement {
+export default function Nav(): ReactElement {
   const {
     connectionList,
     setCurrentConnection,
     currentConnection,
-  } = React.useContext(ConnectionContext);
+  } = useContext(ConnectionContext);
 
   return (
     <nav className="nav nav-pills flex-column">

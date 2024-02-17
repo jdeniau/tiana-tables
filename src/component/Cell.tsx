@@ -1,7 +1,6 @@
-import * as React from 'react';
 import { Types } from 'mysql';
 import styled from 'styled-components';
-import { getColor, getSetting } from '../theme';
+import { getColor, getSetting } from '../../src/theme';
 
 interface TableCellFactoryProps {
   type: Types;

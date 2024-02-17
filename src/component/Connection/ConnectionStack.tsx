@@ -1,16 +1,15 @@
-import * as React from 'react';
-import { Connection } from 'mysql';
-import { createConnection } from 'mysql';
-import { useHistory } from 'react-router';
-import { History } from 'history';
+import { type Connection } from 'mysql';
+import { NavigateFunction, useNavigate } from 'react-router';
 import { ConnectionContext, DatabaseContext } from '../../Contexts';
+import { PureComponent, ReactNode } from 'react';
+import { ConnectionObject } from '.';
 
 interface PropsWithoutHistory {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 interface Props extends PropsWithoutHistory {
-  history: History;
+  navigate: NavigateFunction;
 }
 
 interface State {
@@ -19,9 +18,7 @@ interface State {
   database: string | null;
 }
 
-class ConnectionStack extends React.PureComponent<Props, State> {
-  state: State;
-
+class ConnectionStack extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this.handleConnectTo = this.handleConnectTo.bind(this);
@@ -50,13 +47,13 @@ class ConnectionStack extends React.PureComponent<Props, State> {
   }
 
   handleSetDatabase(database: string) {
-    const { history } = this.props;
+    const { navigate } = this.props;
 
     this.setState({
       database,
     });
 
-    history.push('/tables');
+    navigate('/tables');
   }
 
   // disconnect() {
@@ -65,11 +62,12 @@ class ConnectionStack extends React.PureComponent<Props, State> {
   //   }
   // }
 
-  handleConnectTo(params: object) {
-    const { history } = this.props;
+  async handleConnectTo(params: ConnectionObject) {
+    const { navigate } = this.props;
 
     // this.disconnect();
-    const currentConnection = createConnection(params);
+    console.log('Connecting to', params);
+    const currentConnection = await window.sql.createConnection(params);
     currentConnection.connect();
     this.setState((prevState) => {
       const { connectionList } = prevState;
@@ -81,7 +79,7 @@ class ConnectionStack extends React.PureComponent<Props, State> {
       };
     });
 
-    history.push('/tables');
+    navigate('/tables');
   }
 
   render() {
@@ -110,9 +108,9 @@ class ConnectionStack extends React.PureComponent<Props, State> {
 }
 
 function ConnectionStackWithHistory(props: PropsWithoutHistory) {
-  const history = useHistory();
+  const navigate = useNavigate();
 
-  return <ConnectionStack history={history} {...props} />;
+  return <ConnectionStack navigate={navigate} {...props} />;
 }
 
 export default ConnectionStackWithHistory;

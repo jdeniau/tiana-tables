@@ -1,10 +1,15 @@
-import * as React from 'react';
-import { Connection, FieldInfo } from 'mysql';
-import styled from 'styled-components';
+import type { Connection, FieldInfo } from 'mysql';
 import { useParams } from 'react-router-dom';
 import { ConnectionContext, DatabaseContext } from '../Contexts';
 import TableGrid from './TableGrid';
 import WhereFilter from './Query/WhereFilter';
+import {
+  ReactElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 interface TableNameProps {
   tableName: string;
@@ -18,14 +23,14 @@ function TableLayout({
   tableName,
   connection,
   database,
-}: TableNameProps): React.ReactElement {
-  const [result, setResult] = React.useState<null | object[]>(null);
-  const [fields, setFields] = React.useState<null | FieldInfo[]>(null);
-  const [error, setError] = React.useState<null | Error>(null);
-  const [currentOffset, setCurrentOffset] = React.useState<number>(0);
-  const [where, setWhere] = React.useState<string>('');
+}: TableNameProps): ReactElement {
+  const [result, setResult] = useState<null | object[]>(null);
+  const [fields, setFields] = useState<null | FieldInfo[]>(null);
+  const [error, setError] = useState<null | Error>(null);
+  const [currentOffset, setCurrentOffset] = useState<number>(0);
+  const [where, setWhere] = useState<string>('');
 
-  const fetchTableData = React.useCallback(
+  const fetchTableData = useCallback(
     (offset) => {
       const query = `SELECT * FROM ${database}.${tableName} ${
         where ? ` WHERE ${where}` : ''
@@ -49,7 +54,7 @@ function TableLayout({
     [connection, tableName, database, where]
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchTableData(currentOffset);
   }, [fetchTableData, currentOffset]);
 
@@ -79,8 +84,8 @@ function TableLayout({
 }
 
 function TableGridWithConnection() {
-  const { currentConnection } = React.useContext(ConnectionContext);
-  const { database } = React.useContext(DatabaseContext);
+  const { currentConnection } = useContext(ConnectionContext);
+  const { database } = useContext(DatabaseContext);
   const { tableName } = useParams();
 
   if (!currentConnection || !database || !tableName) {

@@ -1,9 +1,9 @@
-import * as React from 'react';
 import { ConnectionContext, DatabaseContext } from '../Contexts';
-import { Connection } from 'mysql';
+import type { Connection } from 'mysql';
 import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
-import { getColor } from '../theme';
+import { getColor } from '../../src/theme';
+import { ReactElement, useContext, useEffect, useState } from 'react';
 
 const StyledNavLink = styled(NavLink)`
   color: ${(props) => getColor(props.theme, 'support.type', 'foreground')};
@@ -21,11 +21,9 @@ interface TableStatusRow {
 function ConnectedTableList({
   connection,
   database,
-}: TableListProps): React.ReactElement | null {
-  const [tableStatus, setTableStatus] = React.useState<TableStatusRow[] | null>(
-    null
-  );
-  React.useEffect(() => {
+}: TableListProps): ReactElement | null {
+  const [tableStatus, setTableStatus] = useState<TableStatusRow[] | null>(null);
+  useEffect(() => {
     connection.query(
       `SHOW TABLE STATUS FROM \`${database}\`;`,
       (err, result) => {
@@ -60,9 +58,9 @@ function ConnectedTableList({
   );
 }
 
-export default function TableList(props: object): React.ReactElement | null {
-  const { currentConnection } = React.useContext(ConnectionContext);
-  const { database } = React.useContext(DatabaseContext);
+export default function TableList(props: object): ReactElement | null {
+  const { currentConnection } = useContext(ConnectionContext);
+  const { database } = useContext(DatabaseContext);
 
   if (!currentConnection || !database) {
     return null;

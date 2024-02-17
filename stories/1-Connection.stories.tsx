@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import { MemoryRouter as Router } from 'react-router';
@@ -6,7 +5,7 @@ import { stubInterface } from 'ts-sinon';
 import ConnectionForm from '../src/component/Connection/ConnectionForm';
 import ConnectionNav from '../src/component/Connection/Nav';
 import { ConnectionContext } from '../src/Contexts';
-import { Connection } from 'mysql';
+import type { Connection } from 'mysql';
 
 const stories = storiesOf('Connection Block', module);
 

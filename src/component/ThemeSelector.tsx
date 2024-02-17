@@ -1,20 +1,15 @@
-import * as React from 'react';
-import { ThemeContext } from 'styled-components';
-import { THEME_LIST } from '../theme';
+import { THEME_LIST } from '../../src/theme';
+import { useTheme } from '..//Contexts';
 
-interface ThemeSelectorProps {
-  onChangeTheme: (theme: object) => void;
-}
-
-export default function ThemeSelector({ onChangeTheme }: ThemeSelectorProps) {
-  const themeContext = React.useContext(ThemeContext);
+export default function ThemeSelector() {
+  const { themeName, changeTheme } = useTheme();
 
   return (
     <select
       onChange={(e) => {
-        onChangeTheme(THEME_LIST[e.target.value]);
+        changeTheme(e.target.value);
       }}
-      value={themeContext.name}
+      value={themeName}
     >
       {Object.keys(THEME_LIST).map((key) => (
         <option key={key} value={key}>

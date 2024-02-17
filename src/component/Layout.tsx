@@ -1,56 +1,32 @@
-import * as React from 'react';
 import styled from 'styled-components';
 import { Route, Switch, Link } from 'react-router-dom';
 import DatabaseSelector from './DatabaseSelector';
 import TableList from './TableList';
 import TableLayout from './TableLayout';
 import ThemeSelector from './ThemeSelector';
-import { getSetting } from '../theme';
+import { getSetting } from '../../src/theme';
 import ConnectionNav from './Connection/Nav';
 import ConnectionPage from './Connection/ConnectionPage';
 import ConnectionForm from './Connection/ConnectionForm';
 import Debug from './Debug';
+import { ReactElement } from 'react';
+import {
+  Routes,
+  createMemoryRouter,
+  createRoutesFromElements,
+} from 'react-router';
 
-const LayoutDiv = styled.div`
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: ${(props) => getSetting(props.theme, 'background')};
-  color: ${(props) => getSetting(props.theme, 'foreground')};
-`;
-const HeaderDiv = styled.header`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 46px;
-`;
-const ContentDiv = styled.div`
-  display: flex;
-  flex-grow: 1;
-`;
-const LeftPanelDiv = styled.div`
-  min-width: 200px;
-  overflow: auto;
-  padding: 0 10px;
-  border-left: 1px solid ${(props) => getSetting(props.theme, 'foreground')};
-  border-right: 1px solid ${(props) => getSetting(props.theme, 'foreground')};
-`;
-const RightPanelDiv = styled.div`
-  flex-grow: 1;
-  overflow: auto;
-  padding: 0 10px;
-`;
-const ModalLike = styled.div`
-  width: 50%;
-  min-width: 400px;
-  align-self: center;
-`;
+function Home() {
+  return (
+    <div>
+      <p>Welcome to Fuzzy Potato ! </p>
 
-interface LayoutProps {
-  onChangeTheme: (theme: object) => void;
+      <Link to="/connect">Please connect</Link>
+    </div>
+  );
 }
-function Layout({ onChangeTheme }: LayoutProps): React.ReactElement {
+
+function Layout(): ReactElement {
   return (
     <LayoutDiv>
       <Debug />
@@ -63,15 +39,13 @@ function Layout({ onChangeTheme }: LayoutProps): React.ReactElement {
         </div>
       </HeaderDiv>
 
-      <Switch>
-        <Route exact path="/">
-          <div>
-            <p>Welcome to Fuzzy Potato ! </p>
-
-            <Link to="/connect">Please connect</Link>
-          </div>
-        </Route>
-        <Route exact path="/connect">
+      <Routes>
+        <Route
+          // exact
+          path="/"
+          element={<Home />}
+        />
+        {/* <Route exact path="/connect">
           <ModalLike>
             <ConnectionPage />
           </ModalLike>
@@ -96,8 +70,8 @@ function Layout({ onChangeTheme }: LayoutProps): React.ReactElement {
               </Switch>
             </RightPanelDiv>
           </ContentDiv>
-        </Route>
-      </Switch>
+        </Route> */}
+      </Routes>
     </LayoutDiv>
   );
 }
