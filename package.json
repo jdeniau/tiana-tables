@@ -10,7 +10,8 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint:eslint": "eslint --ext .ts,.tsx .",
-    "lint:types": "tsc --noEmit"
+    "lint:types": "tsc --noEmit",
+    "test": "vitest"
   },
   "keywords": [],
   "author": {
@@ -51,6 +52,7 @@
     "mysql2": "^3.9.1",
     "react-router-dom": "^6.22.1",
     "ts-node": "^10.0.0",
-    "typescript": "~4.5.4"
+    "typescript": "~4.5.4",
+    "vitest": "^1.3.0"
   }
 }

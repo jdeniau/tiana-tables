@@ -8,10 +8,8 @@ function useRegisteredConnectionList(): null | Record<
   string,
   ConnectionObject
 > {
-  const [
-    registeredConnections,
-    setRegisteredConnections,
-  ] = useState<null | Record<string, ConnectionObject>>(null);
+  const [registeredConnections, setRegisteredConnections] =
+    useState<null | Record<string, ConnectionObject>>(null);
 
   useEffect(() => {
     connections
@@ -47,6 +45,7 @@ function ConnectionPage() {
               href={`${connection.name}`}
               onClick={(e) => {
                 e.preventDefault();
+
                 connectTo(connection);
               }}
             >

@@ -1,6 +1,6 @@
 import { dialog, safeStorage } from 'electron';
-import path from 'node:path';
-import fs from 'node:fs';
+import { resolve } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
 import envPaths from 'env-paths';
 import { ConnectionObject } from './component/Connection';
 
@@ -18,7 +18,7 @@ type EncryptedConfiguration = {
 } & Omit<Configuration, 'connections'>;
 
 const envPath = envPaths('FuzzyPotato', { suffix: '' });
-const dataFilePath = path.resolve(envPath.config, 'config.json');
+const dataFilePath = resolve(envPath.config, 'config.json');
 
 function encryptConnection(
   connection: ConnectionObject
@@ -41,18 +41,22 @@ function decryptConnection(
 }
 
 export function readConfigurationFile(): null | Configuration {
-  if (!fs.existsSync(dataFilePath)) {
+  if (!existsSync(dataFilePath)) {
     return null;
   }
 
-  const dataString = fs.readFileSync(dataFilePath, 'utf-8');
+  const dataString = readFileSync(dataFilePath, 'utf-8');
 
-  let config = JSON.parse(dataString) as EncryptedConfiguration;
+  if (!dataString) {
+    return null;
+  }
+
+  const config = JSON.parse(dataString) as EncryptedConfiguration;
 
   return {
     ...config,
     connections: Object.fromEntries(
-      Object.entries(config.connections).map(([name, connection]) => [
+      Object.entries(config.connections ?? {}).map(([name, connection]) => [
         name,
         decryptConnection(connection),
       ])
@@ -77,12 +81,22 @@ export function addConnectionToConfig(
     config.connections = {};
   }
 
-  config.connections[name] = encryptConnection(connection);
+  config.connections[name] = connection;
 
-  fs.mkdirSync(envPath.config, { recursive: true });
-  fs.writeFile(
+  const encryptedConfig = {
+    ...config,
+    connections: Object.fromEntries(
+      Object.entries(config.connections).map(([name, connection]) => [
+        name,
+        encryptConnection(connection),
+      ])
+    ),
+  };
+
+  mkdirSync(envPath.config, { recursive: true });
+  writeFile(
     dataFilePath,
-    JSON.stringify(config, null, 2),
+    JSON.stringify(encryptedConfig, null, 2),
     'utf-8',
     (err) => {
       if (err) {

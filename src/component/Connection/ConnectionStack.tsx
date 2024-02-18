@@ -69,11 +69,9 @@ class ConnectionStack extends PureComponent<Props, State> {
     this.setState((prevState) => {
       const { connectionNameList } = prevState;
 
-      connectionNameList.push(params.name);
-
       return {
         currentConnectionName: params.name,
-        connectionNameList,
+        connectionNameList: [...connectionNameList, params.name],
       };
     });
 
