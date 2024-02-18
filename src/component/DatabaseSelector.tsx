@@ -15,7 +15,6 @@ export default function DatabaseSelector() {
   const { database, setDatabase } = useContext(DatabaseContext);
 
   useEffect(() => {
-    console.log('will query database list');
     window.sql.query('SHOW DATABASES;').then(([result]) => {
       if (result) {
         setDatabaseList(result);

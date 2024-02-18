@@ -20,8 +20,6 @@ function ConnectedTableList({ database }: TableListProps): ReactElement | null {
   const { currentConnectionName } = useContext(ConnectionContext);
   const [tableStatus, setTableStatus] = useState<TableStatusRow[] | null>(null);
   useEffect(() => {
-    console.log('currentConnectionName', currentConnectionName);
-
     window.sql
       .query(
         // connection.query(

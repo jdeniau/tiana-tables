@@ -64,11 +64,7 @@ class ConnectionStack extends PureComponent<Props, State> {
   async handleConnectTo(params: ConnectionObject) {
     const { navigate } = this.props;
 
-    // this.disconnect();
-    console.log('Connecting to', params.name);
-    // const currentConnection = createConnection(params);
-    const currentConnection = await window.sql.openConnection(params);
-    // currentConnection.connect();
+    const threadId = await window.sql.openConnection(params);
 
     this.setState((prevState) => {
       const { connectionNameList } = prevState;

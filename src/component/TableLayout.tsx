@@ -31,8 +31,6 @@ function TableLayout({ tableName, database }: TableNameProps): ReactElement {
         where ? ` WHERE ${where}` : ''
       } LIMIT ${DEFAULT_LIMIT} OFFSET ${offset};`;
 
-      console.log(query);
-
       window.sql
         .query(query)
         .then(([result, fields]) => {

@@ -10,8 +10,6 @@ export default function Nav(): ReactElement {
     currentConnectionName,
   } = useContext(ConnectionContext);
 
-  console.log('connectionNameList', connectionNameList);
-
   return (
     <nav className="nav nav-pills flex-column">
       {connectionNameList.map((connection, i) => (

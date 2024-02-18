@@ -3,7 +3,7 @@
 
 import { Connection } from 'mysql2/promise';
 import { ConnectionObject } from './component/Connection';
-import { Configuration } from './main';
+import { Configuration } from './configuration';
 import { contextBridge, ipcRenderer } from 'electron';
 
 // === environment variables ===
@@ -20,7 +20,7 @@ contextBridge.exposeInMainWorld('env', fpEnvVariables);
 
 // === Configuration ===
 interface Config {
-  readConfigurationFile(): Promise<Configuration>;
+  readConfigurationFile(): Promise<null | Configuration>;
 
   addConnectionToConfig(
     name: string,
@@ -42,13 +42,10 @@ interface Sql {
   query(query: string): Promise<unknown>;
 }
 
+// TODO : clone the binder object in sql/index.ts ?
 const sql: Sql = {
   openConnection: (params) => ipcRenderer.invoke('sql:connect', params),
-  query: (query) => {
-    console.log(query);
-
-    return ipcRenderer.invoke('sql:query', query);
-  },
+  query: (query) => ipcRenderer.invoke('sql:query', query),
 };
 
 contextBridge.exposeInMainWorld('sql', sql);
