@@ -1,9 +1,9 @@
-import { Types } from 'mysql';
+import { Types } from 'mysql'; // immporting from mysql2 will import the commonjs package and will fail
 import styled from 'styled-components';
 import { getColor, getSetting } from '../../src/theme';
 
 interface TableCellFactoryProps {
-  type: Types;
+  type: number | undefined;
   value: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 

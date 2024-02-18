@@ -6,31 +6,16 @@ import installExtension, {
 } from 'electron-devtools-installer';
 import envPaths from 'env-paths';
 import { ConnectionObject } from './component/Connection';
-import { createConnection } from 'mysql';
-
-const envPath = envPaths('FuzzyPotato', { suffix: '' });
+import { Connection, createConnection } from 'mysql2/promise';
 
 require('dotenv').config({ path: '../.env' });
+
+const envPath = envPaths('FuzzyPotato', { suffix: '' });
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
-
-// Function to write data to the JSON file
-// function writeDataToFile(data) {
-//   const dataString = JSON.stringify(data, null, 2);
-//   fs.writeFileSync(dataFilePath, dataString);
-// }
-
-// Function to read data from the JSON file
-// function readDataFromFile() {
-//   if (fs.existsSync(dataFilePath)) {
-//     const dataString = fs.readFileSync(dataFilePath, 'utf-8');
-//     return JSON.parse(dataString);
-//   }
-//   return {};
-// }
 
 export type Configuration = {
   connections: Record<string, ConnectionObject>;
@@ -67,7 +52,7 @@ function addConnectionToConfig(
 
   config.connections[name] = connection;
 
-  console.log('writing to ' + dataFilePath);
+  // console.log('writing to ' + dataFilePath);
   fs.mkdirSync(envPath.config, { recursive: true });
   fs.writeFile(
     dataFilePath,
@@ -108,6 +93,8 @@ const createWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', createWindow);
 
+let currentConnection: Connection;
+
 app.whenReady().then(() => {
   installExtension(REACT_DEVELOPER_TOOLS)
     .then((name) => console.log(`Added Extension:  ${name}`))
@@ -115,13 +102,26 @@ app.whenReady().then(() => {
 
   ipcMain.handle('config:read', readConfigurationFile);
   ipcMain.handle('config:connection:add', addConnectionToConfig);
-  ipcMain.handle('sql:createConnection', (event, params) => {
-    console.log('Creating connection to', params);
-    const connection = createConnection(params);
 
-    console.log(connection);
+  ipcMain.handle('sql:connect', async (event, params) => {
+    // console.log('Creating connection to', params);
+    const { name, ...sqlConnectParams } = params;
+    currentConnection = await createConnection(sqlConnectParams);
+    currentConnection.connect();
 
-    return connection;
+    return true;
+  });
+
+  ipcMain.handle('sql:query', async (event, query, cb) => {
+    console.log('Querying', query);
+
+    if (!currentConnection) {
+      throw new Error('No connection');
+    }
+
+    console.log(query);
+
+    return await currentConnection.query(query, cb);
   });
 
   // createWindow();

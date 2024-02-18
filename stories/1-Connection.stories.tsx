@@ -5,7 +5,7 @@ import { stubInterface } from 'ts-sinon';
 import ConnectionForm from '../src/component/Connection/ConnectionForm';
 import ConnectionNav from '../src/component/Connection/Nav';
 import { ConnectionContext } from '../src/Contexts';
-import type { Connection } from 'mysql';
+import type { Connection } from 'mysql2';
 
 const stories = storiesOf('Connection Block', module);
 

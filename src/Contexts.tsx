@@ -1,5 +1,4 @@
 import { createContext, useContext, useState } from 'react';
-import type { Connection } from 'mysql';
 import { ThemeProvider } from 'styled-components';
 import { DEFAULT_THEME, THEME_LIST } from './theme';
 
@@ -7,16 +6,16 @@ export interface ConnectToFunc {
   (params: object): void;
 }
 interface ConnexionContextProps {
-  currentConnection: Connection | null;
-  connectionList: Connection[];
+  currentConnectionName: string | null;
+  connectionNameList: string[];
   connectTo: ConnectToFunc;
-  setCurrentConnection: (connection: Connection) => void;
+  setCurrentConnectionName: (connectionName: string) => void;
 }
 export const ConnectionContext = createContext<ConnexionContextProps>({
-  currentConnection: null,
-  connectionList: [],
+  currentConnectionName: null,
+  connectionNameList: [],
   connectTo: () => {},
-  setCurrentConnection: () => {},
+  setCurrentConnectionName: () => {},
 });
 
 export interface SetDatabaseFunc {

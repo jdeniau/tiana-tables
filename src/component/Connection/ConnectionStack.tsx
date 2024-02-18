@@ -1,4 +1,3 @@
-import { type Connection } from 'mysql';
 import { NavigateFunction, useNavigate } from 'react-router';
 import { ConnectionContext, DatabaseContext } from '../../Contexts';
 import { PureComponent, ReactNode } from 'react';
@@ -13,8 +12,8 @@ interface Props extends PropsWithoutHistory {
 }
 
 interface State {
-  currentConnection: Connection | null;
-  connectionList: Connection[];
+  currentConnectionName: string | null;
+  connectionNameList: string[];
   database: string | null;
 }
 
@@ -22,27 +21,27 @@ class ConnectionStack extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this.handleConnectTo = this.handleConnectTo.bind(this);
-    this.handleSetCurrentConnection = this.handleSetCurrentConnection.bind(
-      this
-    );
+    this.handleSetCurrentConnection =
+      this.handleSetCurrentConnection.bind(this);
     this.handleSetDatabase = this.handleSetDatabase.bind(this);
 
     this.state = {
-      currentConnection: null,
-      connectionList: [],
+      currentConnectionName: null,
+      connectionNameList: [],
       database: null,
     };
   }
 
   componentWillUnmount() {
-    this.state.connectionList.forEach((connection) => {
-      connection.end();
-    });
+    window.sql.closeAllConnections();
+    // this.state.connectionNameList.forEach((connection) => {
+    //   connection.end();
+    // });
   }
 
-  handleSetCurrentConnection(currentConnection: Connection) {
+  handleSetCurrentConnection(currentConnectionName: string) {
     this.setState({
-      currentConnection,
+      currentConnectionName,
     });
   }
 
@@ -66,16 +65,19 @@ class ConnectionStack extends PureComponent<Props, State> {
     const { navigate } = this.props;
 
     // this.disconnect();
-    console.log('Connecting to', params);
-    const currentConnection = await window.sql.createConnection(params);
-    currentConnection.connect();
-    this.setState((prevState) => {
-      const { connectionList } = prevState;
+    console.log('Connecting to', params.name);
+    // const currentConnection = createConnection(params);
+    const currentConnection = await window.sql.openConnection(params);
+    // currentConnection.connect();
 
-      connectionList.push(currentConnection);
+    this.setState((prevState) => {
+      const { connectionNameList } = prevState;
+
+      connectionNameList.push(params.name);
+
       return {
-        currentConnection,
-        connectionList,
+        currentConnectionName: params.name,
+        connectionNameList,
       };
     });
 
@@ -84,14 +86,14 @@ class ConnectionStack extends PureComponent<Props, State> {
 
   render() {
     const { children } = this.props;
-    const { connectionList, currentConnection, database } = this.state;
+    const { connectionNameList, currentConnectionName, database } = this.state;
     return (
       <ConnectionContext.Provider
         value={{
-          connectionList,
-          currentConnection,
+          connectionNameList,
+          currentConnectionName,
           connectTo: this.handleConnectTo,
-          setCurrentConnection: this.handleSetCurrentConnection,
+          setCurrentConnectionName: this.handleSetCurrentConnection,
         }}
       >
         <DatabaseContext.Provider

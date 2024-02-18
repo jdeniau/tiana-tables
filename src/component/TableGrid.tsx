@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import type { FieldInfo } from 'mysql';
+import type { FieldPacket } from 'mysql2/promise';
 import { getSetting } from '../../src/theme';
 import Cell from './Cell';
 import { ReactElement } from 'react';
@@ -26,7 +26,7 @@ const Thead = styled.thead`
 
 interface TableGridProps {
   result: null | object[];
-  fields: null | FieldInfo[];
+  fields: null | FieldPacket[];
 }
 
 function TableGrid({ fields, result }: TableGridProps): ReactElement {

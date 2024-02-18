@@ -1,7 +1,7 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
-import type { Connection } from 'mysql';
+import { Connection } from 'mysql2/promise';
 import { ConnectionObject } from './component/Connection';
 import { Configuration } from './main';
 import { contextBridge, ipcRenderer } from 'electron';
@@ -38,16 +38,16 @@ contextBridge.exposeInMainWorld('config', config);
 
 // === Sql ===
 interface Sql {
-  createConnection(params: ConnectionObject): Promise<Connection>;
+  openConnection(params: ConnectionObject): Promise<Connection>;
+  query(query: string): Promise<unknown>;
 }
 
 const sql: Sql = {
-  createConnection: (params: ConnectionObject) => {
-    const connection = ipcRenderer.invoke('sql:createConnection', params);
+  openConnection: (params) => ipcRenderer.invoke('sql:connect', params),
+  query: (query) => {
+    console.log(query);
 
-    console.log('preload', connection);
-
-    return connection;
+    return ipcRenderer.invoke('sql:query', query);
   },
 };
 

@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import {
+  Outlet,
   MemoryRouter as Router,
   RouterProvider,
   createMemoryRouter,
@@ -10,20 +11,17 @@ import Root from './routes/root';
 import ErrorPage from './error-page';
 import { Home } from './routes/home';
 import ConnectionPage from './component/Connection/ConnectionPage';
+import TableLayout from './component/TableLayout';
 import ConnectionForm from './component/Connection/ConnectionForm';
+import { Tables } from './routes/tables';
 
-const root = createRoot(document.body);
+const root = createRoot(document.getElementById('App'));
 
 // A possibility is also to create history manually to call `history.push('/path')`
 // import { createMemoryHistory } from 'history';
 // export const history = createMemoryHistory();
 // <Router history={history}>
 
-const RightPanelDiv = styled.div`
-  flex-grow: 1;
-  overflow: auto;
-  padding: 0 10px;
-`;
 const ModalLike = styled.div`
   width: 50%;
   min-width: 400px;
@@ -58,6 +56,16 @@ const router = createMemoryRouter([
                 <ConnectionForm />
               </ModalLike>
             ),
+          },
+        ],
+      },
+      {
+        path: 'tables',
+        element: <Tables />,
+        children: [
+          {
+            path: ':tableName',
+            element: <TableLayout />,
           },
         ],
       },

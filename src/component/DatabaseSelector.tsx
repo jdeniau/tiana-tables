@@ -1,18 +1,13 @@
-import type { Connection } from 'mysql';
 import { ConnectionContext, DatabaseContext } from '../Contexts';
 import { ChangeEvent, useContext, useEffect, useState } from 'react';
-
-interface TableListWithoutConnectionProps {}
-
-interface TableListProps extends TableListWithoutConnectionProps {
-  connection: Connection;
-}
 
 interface DatabaseRow {
   Database: string;
 }
 
-function DatabaseSelector({ connection }: TableListProps) {
+export default function DatabaseSelector() {
+  const { currentConnectionName } = useContext(ConnectionContext);
+
   const [databaseList, setDatabaseList]: [DatabaseRow[], Function] = useState(
     []
   );
@@ -20,16 +15,14 @@ function DatabaseSelector({ connection }: TableListProps) {
   const { database, setDatabase } = useContext(DatabaseContext);
 
   useEffect(() => {
-    connection.query('SHOW DATABASES;', (err, result: DatabaseRow[]) => {
-      if (err) {
-        throw err;
-      }
+    console.log('will query database list');
+    window.sql.query('SHOW DATABASES;').then(([result]) => {
       if (result) {
         setDatabaseList(result);
         setDatabase(result[0].Database);
       }
     });
-  }, [connection.threadId, connection, setDatabase]);
+  }, [currentConnectionName, setDatabase]);
 
   const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setDatabase(event.target.value);
@@ -41,23 +34,5 @@ function DatabaseSelector({ connection }: TableListProps) {
         <option key={row.Database}>{row.Database}</option>
       ))}
     </select>
-  );
-}
-
-export default function DatabaseSelectorWithContext(
-  props: TableListWithoutConnectionProps
-) {
-  const { currentConnection } = useContext(ConnectionContext);
-
-  if (!currentConnection) {
-    return null;
-  }
-
-  return (
-    <DatabaseSelector
-      key={currentConnection.threadId || undefined}
-      connection={currentConnection}
-      {...props}
-    />
   );
 }

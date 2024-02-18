@@ -1,5 +1,4 @@
 import { ConnectionContext, DatabaseContext } from '../Contexts';
-import type { Connection } from 'mysql';
 import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
 import { getColor } from '../../src/theme';
@@ -10,7 +9,6 @@ const StyledNavLink = styled(NavLink)`
 `;
 
 interface TableListProps {
-  connection: Connection;
   database: string;
 }
 
@@ -18,23 +16,21 @@ interface TableStatusRow {
   Name: string;
 }
 
-function ConnectedTableList({
-  connection,
-  database,
-}: TableListProps): ReactElement | null {
+function ConnectedTableList({ database }: TableListProps): ReactElement | null {
+  const { currentConnectionName } = useContext(ConnectionContext);
   const [tableStatus, setTableStatus] = useState<TableStatusRow[] | null>(null);
   useEffect(() => {
-    connection.query(
-      `SHOW TABLE STATUS FROM \`${database}\`;`,
-      (err, result) => {
-        if (err) {
-          throw err;
-        }
+    console.log('currentConnectionName', currentConnectionName);
 
+    window.sql
+      .query(
+        // connection.query(
+        `SHOW TABLE STATUS FROM \`${database}\`;`
+      )
+      .then(([result]) => {
         setTableStatus(result);
-      }
-    );
-  }, [connection, database]);
+      });
+  }, [currentConnectionName, database]);
 
   if (!tableStatus) {
     return null;
@@ -46,9 +42,9 @@ function ConnectedTableList({
         <div key={rowDataPacket.Name}>
           <StyledNavLink
             to={`/tables/${rowDataPacket.Name}`}
-            activeStyle={{
-              fontWeight: 'bold',
-            }}
+            style={({ isActive }) => ({
+              fontWeight: isActive ? 'bold' : undefined,
+            })}
           >
             {rowDataPacket.Name}
           </StyledNavLink>
@@ -59,17 +55,16 @@ function ConnectedTableList({
 }
 
 export default function TableList(props: object): ReactElement | null {
-  const { currentConnection } = useContext(ConnectionContext);
+  const { currentConnectionName } = useContext(ConnectionContext);
   const { database } = useContext(DatabaseContext);
 
-  if (!currentConnection || !database) {
+  if (!currentConnectionName || !database) {
     return null;
   }
 
   return (
     <ConnectedTableList
-      key={`${currentConnection.threadId}|${database}` || undefined}
-      connection={currentConnection}
+      // key={`${currentConnection.threadId}|${database}` || undefined}
       database={database}
       {...props}
     />
