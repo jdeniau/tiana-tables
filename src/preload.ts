@@ -14,12 +14,16 @@ interface Config {
     name: string,
     connection: ConnectionObject
   ): Promise<void>;
+
+  changeTheme(theme: string): void;
 }
 
 const config: Config = {
   readConfigurationFile: () => ipcRenderer.invoke('config:read'),
   addConnectionToConfig: (name: string, connection: ConnectionObject) =>
     ipcRenderer.invoke('config:connection:add', name, connection),
+  changeTheme: (theme: string) =>
+    ipcRenderer.invoke('config:theme:change', theme),
 };
 
 contextBridge.exposeInMainWorld('config', config);

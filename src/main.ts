@@ -4,7 +4,12 @@ import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
 import connectionStackInstance from './sql';
-import { readConfigurationFile, addConnectionToConfig } from './configuration';
+import {
+  readConfigurationFile,
+  addConnectionToConfig,
+  changeTheme,
+} from './configuration';
+import { ConnectionObject } from './component/Connection';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -45,7 +50,14 @@ app.whenReady().then(() => {
     .catch((err) => console.log('An error occurred: ', err));
 
   ipcMain.handle('config:read', readConfigurationFile);
-  ipcMain.handle('config:connection:add', addConnectionToConfig);
+  ipcMain.handle(
+    'config:connection:add',
+    (event: unknown, name: string, connection: ConnectionObject) =>
+      addConnectionToConfig(name, connection)
+  );
+  ipcMain.handle('config:theme:change', (event: unknown, name: string) =>
+    changeTheme(name)
+  );
 
   connectionStackInstance.bindIpcMain(ipcMain);
 

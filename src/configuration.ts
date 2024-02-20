@@ -3,9 +3,11 @@ import { resolve } from 'node:path';
 import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
 import envPaths from 'env-paths';
 import { ConnectionObject } from './component/Connection/types';
+import { DEFAULT_THEME } from './theme';
 
 export type Configuration = {
   version: 1;
+  theme: string;
   connections: Record<string, EncryptedConnectionObject>;
 };
 
@@ -19,6 +21,14 @@ type EncryptedConfiguration = {
 
 const envPath = envPaths('TianaTables', { suffix: '' });
 const dataFilePath = resolve(envPath.config, 'config.json');
+
+function getBaseConfig(): Configuration {
+  return {
+    version: 1,
+    theme: DEFAULT_THEME.name,
+    connections: {},
+  };
+}
 
 function encryptConnection(
   connection: ConnectionObject
@@ -63,26 +73,8 @@ export function readConfigurationFile(): null | Configuration {
     ),
   };
 }
-export function addConnectionToConfig(
-  event: Electron.IpcMainInvokeEvent,
-  name: string,
-  connection: ConnectionObject
-): void {
-  let config = readConfigurationFile();
 
-  if (!config) {
-    config = {
-      version: 1,
-      connections: {},
-    };
-  }
-
-  if (!config.connections) {
-    config.connections = {};
-  }
-
-  config.connections[name] = connection;
-
+function writeConfiguration(config: Configuration): void {
   const encryptedConfig = {
     ...config,
     connections: Object.fromEntries(
@@ -104,4 +96,26 @@ export function addConnectionToConfig(
       }
     }
   );
+}
+
+export function addConnectionToConfig(
+  name: string,
+  connection: ConnectionObject
+): void {
+  const config = readConfigurationFile() ?? getBaseConfig();
+
+  if (!config.connections) {
+    config.connections = {};
+  }
+
+  config.connections[name] = connection;
+
+  writeConfiguration(config);
+}
+
+export function changeTheme(theme: string): void {
+  const config = readConfigurationFile() ?? getBaseConfig();
+  config.theme = theme;
+
+  writeConfiguration(config);
 }

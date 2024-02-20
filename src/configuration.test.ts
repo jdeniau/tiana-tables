@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
 import envPaths from 'env-paths';
-import { addConnectionToConfig, readConfigurationFile } from './configuration';
+import {
+  addConnectionToConfig,
+  readConfigurationFile,
+  changeTheme,
+} from './configuration';
 
 vi.mock('env-paths', () => ({
   default: () => ({ config: 'config' }),
@@ -115,7 +119,7 @@ describe('add connection to config', () => {
 
   test('empty file', async () => {
     mockExistsSync.mockReturnValue(false);
-    await addConnectionToConfig({} as any, 'local', {
+    await addConnectionToConfig('local', {
       name: 'local',
       host: 'localhost',
       port: 3306,
@@ -128,6 +132,7 @@ describe('add connection to config', () => {
       JSON.stringify(
         {
           version: 1,
+          theme: 'Dracula',
           connections: {
             local: {
               name: 'local',
@@ -168,7 +173,7 @@ describe('add connection to config', () => {
     mockExistsSync.mockReturnValue(true);
     mockReadFileSync.mockReturnValue(JSON.stringify(config));
 
-    await addConnectionToConfig({} as any, 'test', {
+    await addConnectionToConfig('test', {
       name: 'test',
       host: 'test',
       port: 3306,
@@ -202,6 +207,33 @@ describe('add connection to config', () => {
               password: Buffer.from('encrypted-password').toString('base64'),
             },
           },
+        },
+        null,
+        2
+      ),
+      'utf-8',
+      expect.any(Function)
+    );
+  });
+});
+
+describe('set theme', () => {
+  afterEach(() => {
+    vi.resetModules();
+  });
+
+  test('set theme', async () => {
+    mockExistsSync.mockReturnValue(false);
+
+    await changeTheme('test');
+
+    expect(mockWriteFile).toHaveBeenCalledWith(
+      'config/config.json',
+      JSON.stringify(
+        {
+          version: 1,
+          theme: 'test',
+          connections: {},
         },
         null,
         2
