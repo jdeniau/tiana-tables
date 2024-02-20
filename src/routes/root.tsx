@@ -1,6 +1,9 @@
 import { Outlet } from 'react-router';
 import ConnectionStack from '../component/Connection/ConnectionStack';
-import { ThemeContextProvider } from '../Contexts';
+import {
+  ConfigurationContextProvider,
+  ThemeContextProvider,
+} from '../Contexts';
 import styled from 'styled-components';
 import { getSetting } from '../theme';
 import Debug from '../component/Debug';
@@ -23,21 +26,23 @@ const HeaderDiv = styled.header`
 
 export default function Root() {
   return (
-    <ThemeContextProvider>
-      <ConnectionStack>
-        <LayoutDiv>
-          <Debug />
+    <ConfigurationContextProvider>
+      <ThemeContextProvider>
+        <ConnectionStack>
+          <LayoutDiv>
+            <Debug />
 
-          <HeaderDiv>
-            <h2>Welcome to Tiana Tables !</h2>
-            <div>
-              Theme:
-              <ThemeSelector />
-            </div>
-          </HeaderDiv>
-          <Outlet />
-        </LayoutDiv>
-      </ConnectionStack>
-    </ThemeContextProvider>
+            <HeaderDiv>
+              <h2>Welcome to Tiana Tables !</h2>
+              <div>
+                Theme:
+                <ThemeSelector />
+              </div>
+            </HeaderDiv>
+            <Outlet />
+          </LayoutDiv>
+        </ConnectionStack>
+      </ThemeContextProvider>
+    </ConfigurationContextProvider>
   );
 }

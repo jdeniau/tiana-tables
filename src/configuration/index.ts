@@ -2,23 +2,26 @@ import { dialog, safeStorage } from 'electron';
 import { resolve } from 'node:path';
 import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
 import envPaths from 'env-paths';
-import { ConnectionObject } from './component/Connection/types';
-
-export type Configuration = {
-  version: 1;
-  connections: Record<string, EncryptedConnectionObject>;
-};
-
-type EncryptedConnectionObject = {
-  password: string;
-} & Omit<ConnectionObject, 'password'>;
-
-type EncryptedConfiguration = {
-  connections: Record<string, EncryptedConnectionObject>;
-} & Omit<Configuration, 'connections'>;
+import { ConnectionObject } from '../component/Connection/types';
+import { DEFAULT_THEME } from '../theme';
+import {
+  Configuration,
+  EncryptedConnectionObject,
+  EncryptedConfiguration,
+} from './type';
 
 const envPath = envPaths('TianaTables', { suffix: '' });
 const dataFilePath = resolve(envPath.config, 'config.json');
+
+console.log('Configuration file path:', dataFilePath);
+
+function getBaseConfig(): Configuration {
+  return {
+    version: 1,
+    theme: DEFAULT_THEME.name,
+    connections: {},
+  };
+}
 
 function encryptConnection(
   connection: ConnectionObject
@@ -40,15 +43,15 @@ function decryptConnection(
   };
 }
 
-export function readConfigurationFile(): null | Configuration {
+export function getConfiguration(): Configuration {
   if (!existsSync(dataFilePath)) {
-    return null;
+    return getBaseConfig();
   }
 
   const dataString = readFileSync(dataFilePath, 'utf-8');
 
   if (!dataString) {
-    return null;
+    return getBaseConfig();
   }
 
   const config = JSON.parse(dataString) as EncryptedConfiguration;
@@ -63,26 +66,8 @@ export function readConfigurationFile(): null | Configuration {
     ),
   };
 }
-export function addConnectionToConfig(
-  event: Electron.IpcMainInvokeEvent,
-  name: string,
-  connection: ConnectionObject
-): void {
-  let config = readConfigurationFile();
 
-  if (!config) {
-    config = {
-      version: 1,
-      connections: {},
-    };
-  }
-
-  if (!config.connections) {
-    config.connections = {};
-  }
-
-  config.connections[name] = connection;
-
+function writeConfiguration(config: Configuration): void {
   const encryptedConfig = {
     ...config,
     connections: Object.fromEntries(
@@ -105,3 +90,24 @@ export function addConnectionToConfig(
     }
   );
 }
+
+export function addConnectionToConfig(connection: ConnectionObject): void {
+  const config = getConfiguration() ?? getBaseConfig();
+
+  if (!config.connections) {
+    config.connections = {};
+  }
+
+  config.connections[connection.name] = connection;
+
+  writeConfiguration(config);
+}
+
+export function changeTheme(theme: string): void {
+  const config = getConfiguration() ?? getBaseConfig();
+  config.theme = theme;
+
+  writeConfiguration(config);
+}
+
+export const testables = { getBaseConfig };

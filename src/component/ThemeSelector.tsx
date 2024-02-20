@@ -1,5 +1,5 @@
 import { THEME_LIST } from '../../src/theme';
-import { useTheme } from '..//Contexts';
+import { useTheme } from '../Contexts';
 
 export default function ThemeSelector() {
   const { themeName, changeTheme } = useTheme();

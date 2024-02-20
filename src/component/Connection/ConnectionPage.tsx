@@ -1,27 +1,10 @@
 import { Link, Navigate } from 'react-router-dom';
-import connections from './SavedConnections';
 import { ConnectionObject } from './types';
-import { ConnectionContext } from '../../Contexts';
-import { useContext, useEffect, useState } from 'react';
-
-function useRegisteredConnectionList(): null | Record<
-  string,
-  ConnectionObject
-> {
-  const [registeredConnections, setRegisteredConnections] =
-    useState<null | Record<string, ConnectionObject>>(null);
-
-  useEffect(() => {
-    connections
-      .listConnections()
-      .then((data) => setRegisteredConnections(data ?? {}));
-  }, []);
-
-  return registeredConnections;
-}
+import { ConnectionContext, useConfiguration } from '../../Contexts';
+import { useContext } from 'react';
 
 function ConnectionPage() {
-  const registeredConnectionList = useRegisteredConnectionList();
+  const registeredConnectionList = useConfiguration().connections;
   const { connectTo } = useContext(ConnectionContext);
 
   if (registeredConnectionList === null) {

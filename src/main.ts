@@ -4,12 +4,19 @@ import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
 import connectionStackInstance from './sql';
-import { readConfigurationFile, addConnectionToConfig } from './configuration';
+import {
+  getConfiguration,
+  addConnectionToConfig,
+  changeTheme,
+} from './configuration';
+import { ConnectionObject } from './component/Connection';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
+
+const isMac = process.platform !== 'darwin';
 
 const createWindow = () => {
   // Create the browser window.
@@ -44,8 +51,15 @@ app.whenReady().then(() => {
     .then((name) => console.log(`Added Extension:  ${name}`))
     .catch((err) => console.log('An error occurred: ', err));
 
-  ipcMain.handle('config:read', readConfigurationFile);
-  ipcMain.handle('config:connection:add', addConnectionToConfig);
+  ipcMain.handle('config:get', getConfiguration);
+  ipcMain.handle(
+    'config:connection:add',
+    (event: unknown, connection: ConnectionObject) =>
+      addConnectionToConfig(connection)
+  );
+  ipcMain.handle('config:theme:change', (event: unknown, name: string) =>
+    changeTheme(name)
+  );
 
   connectionStackInstance.bindIpcMain(ipcMain);
 
@@ -59,7 +73,7 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  if (isMac) {
     app.quit();
   }
 });
