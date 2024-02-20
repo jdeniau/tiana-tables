@@ -1,5 +1,4 @@
 import { ConnectionContext, ConnectToFunc } from '../../Contexts';
-import connections from './SavedConnections';
 import { ConnectionObject } from './types';
 import { ChangeEvent, FormEvent, PureComponent, useContext } from 'react';
 
@@ -53,7 +52,7 @@ class ConnectionForm extends PureComponent<
     event.preventDefault();
 
     if (save) {
-      connections.save(connection.name, connection);
+      window.config.addConnectionToConfig(connection);
     }
 
     this.props.connectTo(connection);

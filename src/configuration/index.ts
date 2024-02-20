@@ -2,25 +2,18 @@ import { dialog, safeStorage } from 'electron';
 import { resolve } from 'node:path';
 import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
 import envPaths from 'env-paths';
-import { ConnectionObject } from './component/Connection/types';
-import { DEFAULT_THEME } from './theme';
-
-export type Configuration = {
-  version: 1;
-  theme: string;
-  connections: Record<string, EncryptedConnectionObject>;
-};
-
-type EncryptedConnectionObject = {
-  password: string;
-} & Omit<ConnectionObject, 'password'>;
-
-type EncryptedConfiguration = {
-  connections: Record<string, EncryptedConnectionObject>;
-} & Omit<Configuration, 'connections'>;
+import { ConnectionObject } from '../component/Connection/types';
+import { DEFAULT_THEME } from '../theme';
+import {
+  Configuration,
+  EncryptedConnectionObject,
+  EncryptedConfiguration,
+} from './type';
 
 const envPath = envPaths('TianaTables', { suffix: '' });
 const dataFilePath = resolve(envPath.config, 'config.json');
+
+console.log('Configuration file path:', dataFilePath);
 
 function getBaseConfig(): Configuration {
   return {
@@ -50,15 +43,15 @@ function decryptConnection(
   };
 }
 
-export function readConfigurationFile(): null | Configuration {
+export function getConfiguration(): Configuration {
   if (!existsSync(dataFilePath)) {
-    return null;
+    return getBaseConfig();
   }
 
   const dataString = readFileSync(dataFilePath, 'utf-8');
 
   if (!dataString) {
-    return null;
+    return getBaseConfig();
   }
 
   const config = JSON.parse(dataString) as EncryptedConfiguration;
@@ -98,24 +91,23 @@ function writeConfiguration(config: Configuration): void {
   );
 }
 
-export function addConnectionToConfig(
-  name: string,
-  connection: ConnectionObject
-): void {
-  const config = readConfigurationFile() ?? getBaseConfig();
+export function addConnectionToConfig(connection: ConnectionObject): void {
+  const config = getConfiguration() ?? getBaseConfig();
 
   if (!config.connections) {
     config.connections = {};
   }
 
-  config.connections[name] = connection;
+  config.connections[connection.name] = connection;
 
   writeConfiguration(config);
 }
 
 export function changeTheme(theme: string): void {
-  const config = readConfigurationFile() ?? getBaseConfig();
+  const config = getConfiguration() ?? getBaseConfig();
   config.theme = theme;
 
   writeConfiguration(config);
 }
+
+export const testables = { getBaseConfig };

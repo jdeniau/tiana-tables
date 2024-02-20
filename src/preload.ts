@@ -3,25 +3,22 @@
 
 import { Connection } from 'mysql2/promise';
 import { ConnectionObject } from './component/Connection/types';
-import { Configuration } from './configuration';
+import { Configuration } from './configuration/type';
 import { contextBridge, ipcRenderer } from 'electron';
 
 // === Configuration ===
 interface Config {
-  readConfigurationFile(): Promise<null | Configuration>;
+  getConfiguration(): Promise<null | Configuration>;
 
-  addConnectionToConfig(
-    name: string,
-    connection: ConnectionObject
-  ): Promise<void>;
+  addConnectionToConfig(connection: ConnectionObject): Promise<void>;
 
   changeTheme(theme: string): void;
 }
 
 const config: Config = {
-  readConfigurationFile: () => ipcRenderer.invoke('config:read'),
-  addConnectionToConfig: (name: string, connection: ConnectionObject) =>
-    ipcRenderer.invoke('config:connection:add', name, connection),
+  getConfiguration: () => ipcRenderer.invoke('config:get'),
+  addConnectionToConfig: (connection: ConnectionObject) =>
+    ipcRenderer.invoke('config:connection:add', connection),
   changeTheme: (theme: string) =>
     ipcRenderer.invoke('config:theme:change', theme),
 };

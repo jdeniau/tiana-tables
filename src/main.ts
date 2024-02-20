@@ -5,7 +5,7 @@ import installExtension, {
 } from 'electron-devtools-installer';
 import connectionStackInstance from './sql';
 import {
-  readConfigurationFile,
+  getConfiguration,
   addConnectionToConfig,
   changeTheme,
 } from './configuration';
@@ -15,6 +15,8 @@ import { ConnectionObject } from './component/Connection';
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
+
+const isMac = process.platform !== 'darwin';
 
 const createWindow = () => {
   // Create the browser window.
@@ -49,11 +51,11 @@ app.whenReady().then(() => {
     .then((name) => console.log(`Added Extension:  ${name}`))
     .catch((err) => console.log('An error occurred: ', err));
 
-  ipcMain.handle('config:read', readConfigurationFile);
+  ipcMain.handle('config:get', getConfiguration);
   ipcMain.handle(
     'config:connection:add',
-    (event: unknown, name: string, connection: ConnectionObject) =>
-      addConnectionToConfig(name, connection)
+    (event: unknown, connection: ConnectionObject) =>
+      addConnectionToConfig(connection)
   );
   ipcMain.handle('config:theme:change', (event: unknown, name: string) =>
     changeTheme(name)
@@ -71,7 +73,7 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  if (isMac) {
     app.quit();
   }
 });

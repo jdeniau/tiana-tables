@@ -1,5 +1,6 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { ThemeProvider } from 'styled-components';
+import { Configuration } from './configuration/type';
 import { DEFAULT_THEME, THEME_LIST } from './theme';
 
 export interface ConnectToFunc {
@@ -56,9 +57,11 @@ export function ThemeContextProvider({
 }: {
   children: React.ReactNode;
 }): React.ReactElement {
-  const [themeName, setThemeName] = useState(DEFAULT_THEME.name);
+  const config = useConfiguration();
+  const [themeName, setThemeName] = useState(config.theme);
 
   const changeTheme = (newTheme: string) => {
+    window.config.changeTheme(newTheme);
     setThemeName(newTheme);
   };
 
@@ -69,4 +72,47 @@ export function ThemeContextProvider({
       </ThemeContext.Provider>
     </ThemeProvider>
   );
+}
+
+const ConfigurationContext = createContext<null | Configuration>(null);
+
+export function ConfigurationContextProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [configuration, setConfiguration] = useState<null | Configuration>(
+    null
+  );
+
+  useEffect(() => {
+    window.config.getConfiguration().then((c) => {
+      console.log(c);
+      setConfiguration(c);
+    });
+  }, []);
+
+  console.log(configuration);
+
+  if (!configuration) {
+    return null;
+  }
+
+  return (
+    <ConfigurationContext.Provider value={configuration}>
+      {children}
+    </ConfigurationContext.Provider>
+  );
+}
+
+export function useConfiguration(): Configuration {
+  const value = useContext(ConfigurationContext);
+
+  if (!value) {
+    throw new Error(
+      'useConfiguration must be used within a ConfigurationContextProvider'
+    );
+  }
+
+  return value;
 }
