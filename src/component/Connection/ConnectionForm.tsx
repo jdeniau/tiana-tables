@@ -1,6 +1,6 @@
 import { ConnectionContext, ConnectToFunc } from '../../Contexts';
 import connections from './SavedConnections';
-import { ConnectionObject } from '.';
+import { ConnectionObject } from './types';
 import { ChangeEvent, FormEvent, PureComponent, useContext } from 'react';
 
 interface ConnectionFormProps {
@@ -42,8 +42,7 @@ class ConnectionForm extends PureComponent<
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore: name is in state due to previous line
+    // @ts-expect-error: name is in state due to previous line
     this.setState({
       [name]: value,
     });

@@ -43,7 +43,6 @@ function TableGrid({ fields, result }: TableGridProps): ReactElement {
       )}
       {result && fields && (
         <tbody>
-          {/* eslint-disable react/jsx-key */}
           {/* TODO : use the table primary key to make a real key */}
           {result.map((row: object) => (
             <tr>
@@ -54,7 +53,6 @@ function TableGrid({ fields, result }: TableGridProps): ReactElement {
               ))}
             </tr>
           ))}
-          {/* eslint-enable react/jsx-key */}
         </tbody>
       )}
     </Table>

@@ -1,5 +1,5 @@
 // import Store from 'electron-store';
-import { ConnectionObject } from '.';
+import { ConnectionObject } from './types';
 // import fs from 'node:fs';
 // import path from 'node:path';
 

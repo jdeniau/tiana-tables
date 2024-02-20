@@ -1,5 +1,5 @@
 import { Connection, createConnection } from 'mysql2/promise';
-import { ConnectionObject } from 'src/component/Connection';
+import { ConnectionObject } from '../component/Connection/types';
 
 class ConnectionStack {
   private connections: Map<number, Connection> = new Map();

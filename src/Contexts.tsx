@@ -14,7 +14,9 @@ interface ConnexionContextProps {
 export const ConnectionContext = createContext<ConnexionContextProps>({
   currentConnectionName: null,
   connectionNameList: [],
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   connectTo: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   setCurrentConnectionName: () => {},
 });
 
@@ -28,6 +30,7 @@ interface DatabaseContextProps {
 
 export const DatabaseContext = createContext<DatabaseContextProps>({
   database: null,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   setDatabase: () => {},
 });
 
