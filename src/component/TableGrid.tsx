@@ -1,8 +1,8 @@
-import * as React from 'react';
 import styled from 'styled-components';
-import { FieldInfo } from 'mysql';
-import { getSetting } from '../theme';
+import type { FieldPacket } from 'mysql2/promise';
+import { getSetting } from '../../src/theme';
 import Cell from './Cell';
+import { ReactElement } from 'react';
 
 const Table = styled.table`
   border: 3px solid ${(props) => getSetting(props.theme, 'caret')};
@@ -26,10 +26,10 @@ const Thead = styled.thead`
 
 interface TableGridProps {
   result: null | object[];
-  fields: null | FieldInfo[];
+  fields: null | FieldPacket[];
 }
 
-function TableGrid({ fields, result }: TableGridProps): React.ReactElement {
+function TableGrid({ fields, result }: TableGridProps): ReactElement {
   return (
     <Table>
       {fields && (

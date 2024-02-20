@@ -1,16 +1,14 @@
-import * as React from 'react';
 import { ConnectionContext, DatabaseContext } from '../Contexts';
-import { Connection } from 'mysql';
 import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
-import { getColor } from '../theme';
+import { getColor } from '../../src/theme';
+import { ReactElement, useContext, useEffect, useState } from 'react';
 
 const StyledNavLink = styled(NavLink)`
   color: ${(props) => getColor(props.theme, 'support.type', 'foreground')};
 `;
 
 interface TableListProps {
-  connection: Connection;
   database: string;
 }
 
@@ -18,25 +16,19 @@ interface TableStatusRow {
   Name: string;
 }
 
-function ConnectedTableList({
-  connection,
-  database,
-}: TableListProps): React.ReactElement | null {
-  const [tableStatus, setTableStatus] = React.useState<TableStatusRow[] | null>(
-    null
-  );
-  React.useEffect(() => {
-    connection.query(
-      `SHOW TABLE STATUS FROM \`${database}\`;`,
-      (err, result) => {
-        if (err) {
-          throw err;
-        }
-
+function ConnectedTableList({ database }: TableListProps): ReactElement | null {
+  const { currentConnectionName } = useContext(ConnectionContext);
+  const [tableStatus, setTableStatus] = useState<TableStatusRow[] | null>(null);
+  useEffect(() => {
+    window.sql
+      .query(
+        // connection.query(
+        `SHOW TABLE STATUS FROM \`${database}\`;`
+      )
+      .then(([result]) => {
         setTableStatus(result);
-      }
-    );
-  }, [connection, database]);
+      });
+  }, [currentConnectionName, database]);
 
   if (!tableStatus) {
     return null;
@@ -48,9 +40,9 @@ function ConnectedTableList({
         <div key={rowDataPacket.Name}>
           <StyledNavLink
             to={`/tables/${rowDataPacket.Name}`}
-            activeStyle={{
-              fontWeight: 'bold',
-            }}
+            style={({ isActive }) => ({
+              fontWeight: isActive ? 'bold' : undefined,
+            })}
           >
             {rowDataPacket.Name}
           </StyledNavLink>
@@ -60,18 +52,17 @@ function ConnectedTableList({
   );
 }
 
-export default function TableList(props: object): React.ReactElement | null {
-  const { currentConnection } = React.useContext(ConnectionContext);
-  const { database } = React.useContext(DatabaseContext);
+export default function TableList(props: object): ReactElement | null {
+  const { currentConnectionName } = useContext(ConnectionContext);
+  const { database } = useContext(DatabaseContext);
 
-  if (!currentConnection || !database) {
+  if (!currentConnectionName || !database) {
     return null;
   }
 
   return (
     <ConnectedTableList
-      key={`${currentConnection.threadId}|${database}` || undefined}
-      connection={currentConnection}
+      // key={`${currentConnection.threadId}|${database}` || undefined}
       database={database}
       {...props}
     />

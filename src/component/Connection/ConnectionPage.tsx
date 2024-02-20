@@ -1,36 +1,59 @@
-import * as React from 'react';
-import { Link, Redirect } from 'react-router-dom';
-import storage from './SavedConnections';
+import { Link, Navigate } from 'react-router-dom';
+import connections from './SavedConnections';
 import { ConnectionObject } from '.';
 import { ConnectionContext } from '../../Contexts';
+import { useContext, useEffect, useState } from 'react';
 
-function getRegisteredConnectionList(): ConnectionObject[] {
-  return Object.values(storage.store) || [];
+function useRegisteredConnectionList(): null | Record<
+  string,
+  ConnectionObject
+> {
+  const [registeredConnections, setRegisteredConnections] =
+    useState<null | Record<string, ConnectionObject>>(null);
+
+  useEffect(() => {
+    connections
+      .listConnections()
+      .then((data) => setRegisteredConnections(data ?? {}));
+  }, []);
+
+  return registeredConnections;
 }
 
 function ConnectionPage() {
-  const registeredConnectionList = getRegisteredConnectionList();
-  const { connectTo } = React.useContext(ConnectionContext);
+  const registeredConnectionList = useRegisteredConnectionList();
+  const { connectTo } = useContext(ConnectionContext);
 
-  if (registeredConnectionList.length === 0) {
-    return <Redirect to="/connect/create" />;
+  if (registeredConnectionList === null) {
+    return <div>Reading configuration...</div>;
+  }
+
+  const connectionList: Array<ConnectionObject> = Object.values(
+    registeredConnectionList
+  );
+
+  if (Object.keys(registeredConnectionList).length === 0) {
+    return <Navigate replace to="/connect/create" />;
   }
 
   return (
     <div>
-      {registeredConnectionList.map((connection) => (
-        <div key={connection.name}>
-          <a
-            href={`${connection.name}`}
-            onClick={(e) => {
-              e.preventDefault();
-              connectTo(connection);
-            }}
-          >
-            {connection.name}
-          </a>
-        </div>
-      ))}
+      {connectionList.map(
+        (connection: ConnectionObject): JSX.Element => (
+          <div key={connection.name}>
+            <a
+              href={`${connection.name}`}
+              onClick={(e) => {
+                e.preventDefault();
+
+                connectTo(connection);
+              }}
+            >
+              {connection.name}
+            </a>
+          </div>
+        )
+      )}
       <Link to="/connect/create">New connection</Link>
     </div>
   );

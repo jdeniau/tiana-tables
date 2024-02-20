@@ -1,7 +1,6 @@
-import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import { withKnobs, date, number, text, object } from '@storybook/addon-knobs';
-import { Types } from 'mysql';
+import { Types } from 'mysql2';
 import Cell from '../src/component/Cell';
 
 const stories = storiesOf('Cell', module);

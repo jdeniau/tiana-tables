@@ -1,38 +1,29 @@
-import * as React from 'react';
-import { Connection } from 'mysql';
 import { ConnectionContext, DatabaseContext } from '../Contexts';
-
-interface TableListWithoutConnectionProps {}
-
-interface TableListProps extends TableListWithoutConnectionProps {
-  connection: Connection;
-}
+import { ChangeEvent, useContext, useEffect, useState } from 'react';
 
 interface DatabaseRow {
   Database: string;
 }
 
-function DatabaseSelector({ connection }: TableListProps) {
-  const [databaseList, setDatabaseList]: [
-    DatabaseRow[],
-    Function
-  ] = React.useState([]);
+export default function DatabaseSelector() {
+  const { currentConnectionName } = useContext(ConnectionContext);
 
-  const { database, setDatabase } = React.useContext(DatabaseContext);
+  const [databaseList, setDatabaseList]: [DatabaseRow[], Function] = useState(
+    []
+  );
 
-  React.useEffect(() => {
-    connection.query('SHOW DATABASES;', (err, result: DatabaseRow[]) => {
-      if (err) {
-        throw err;
-      }
+  const { database, setDatabase } = useContext(DatabaseContext);
+
+  useEffect(() => {
+    window.sql.query('SHOW DATABASES;').then(([result]) => {
       if (result) {
         setDatabaseList(result);
         setDatabase(result[0].Database);
       }
     });
-  }, [connection.threadId, connection, setDatabase]);
+  }, [currentConnectionName, setDatabase]);
 
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setDatabase(event.target.value);
   };
 
@@ -42,23 +33,5 @@ function DatabaseSelector({ connection }: TableListProps) {
         <option key={row.Database}>{row.Database}</option>
       ))}
     </select>
-  );
-}
-
-export default function DatabaseSelectorWithContext(
-  props: TableListWithoutConnectionProps
-) {
-  const { currentConnection } = React.useContext(ConnectionContext);
-
-  if (!currentConnection) {
-    return null;
-  }
-
-  return (
-    <DatabaseSelector
-      key={currentConnection.threadId || undefined}
-      connection={currentConnection}
-      {...props}
-    />
   );
 }

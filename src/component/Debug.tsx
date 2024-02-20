@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { ReactElement } from 'react';
 import { useLocation } from 'react-router';
 import styled from 'styled-components';
 
@@ -13,7 +13,7 @@ const Url = styled.div`
   padding: 2px 5px;
 `;
 
-function Debug(): React.ReactElement {
+function Debug(): ReactElement {
   const location = useLocation();
 
   return (

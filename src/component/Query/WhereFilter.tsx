@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { ReactElement, useState } from 'react';
 import styled from 'styled-components';
 
 const WhereArea = styled.textarea`
@@ -12,8 +12,8 @@ interface Props {
   defaultValue: string;
 }
 
-function WhereFilter({ defaultValue, onSubmit }: Props): React.ReactElement {
-  const [where, setWhere] = React.useState<string>(defaultValue);
+function WhereFilter({ defaultValue, onSubmit }: Props): ReactElement {
+  const [where, setWhere] = useState<string>(defaultValue);
 
   return (
     <form

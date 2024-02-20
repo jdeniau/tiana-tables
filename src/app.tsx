@@ -1,51 +1,88 @@
-import * as React from 'react';
-import { MemoryRouter as Router } from 'react-router';
-import { ThemeProvider } from 'styled-components';
-import Layout from './component/Layout';
-import { DEFAULT_THEME } from './theme';
-import ConnectionStack from './component/Connection/ConnectionStack';
+import { createRoot } from 'react-dom/client';
+import {
+  Outlet,
+  MemoryRouter as Router,
+  RouterProvider,
+  createMemoryRouter,
+} from 'react-router';
+import styled from 'styled-components';
+import React, { PureComponent } from 'react';
+import Root from './routes/root';
+import ErrorPage from './error-page';
+import { Home } from './routes/home';
+import ConnectionPage from './component/Connection/ConnectionPage';
+import TableLayout from './component/TableLayout';
+import ConnectionForm from './component/Connection/ConnectionForm';
+import { Tables } from './routes/tables';
+
+const root = createRoot(document.getElementById('App'));
 
 // A possibility is also to create history manually to call `history.push('/path')`
 // import { createMemoryHistory } from 'history';
 // export const history = createMemoryHistory();
 // <Router history={history}>
 
-export interface AppProps {}
+const ModalLike = styled.div`
+  width: 50%;
+  min-width: 400px;
+  align-self: center;
+`;
 
-interface AppState {
-  currentTheme: object;
-}
+const router = createMemoryRouter([
+  {
+    path: '/',
+    element: <Root />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+      {
+        path: 'connect',
+        children: [
+          {
+            index: true,
+            element: (
+              <ModalLike>
+                <ConnectionPage />
+              </ModalLike>
+            ),
+          },
+          {
+            path: 'create',
+            element: (
+              <ModalLike>
+                <ConnectionForm />
+              </ModalLike>
+            ),
+          },
+        ],
+      },
+      {
+        path: 'tables',
+        element: <Tables />,
+        children: [
+          {
+            path: ':tableName',
+            element: <TableLayout />,
+          },
+        ],
+      },
+    ],
+  },
+]);
 
-export class App extends React.PureComponent<AppProps, AppState> {
-  state: AppState;
-
-  constructor(props: AppProps) {
-    super(props);
-
-    this.handleChangeTheme = this.handleChangeTheme.bind(this);
-
-    this.state = {
-      currentTheme: DEFAULT_THEME,
-    };
-  }
-
-  handleChangeTheme(theme: object) {
-    this.setState({
-      currentTheme: theme,
-    });
-  }
-
+export class App extends PureComponent {
   render() {
-    const { currentTheme } = this.state;
-
-    return (
-      <Router>
-        <ConnectionStack>
-          <ThemeProvider theme={currentTheme}>
-            <Layout onChangeTheme={this.handleChangeTheme} />
-          </ThemeProvider>
-        </ConnectionStack>
-      </Router>
-    );
+    return <RouterProvider router={router} />;
   }
 }
+
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// root.render(<div>coucou</div>);

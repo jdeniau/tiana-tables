@@ -1,8 +1,7 @@
-import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import { stubInterface } from 'ts-sinon';
 import { MemoryRouter as Router } from 'react-router';
-import { Connection, Query, queryCallback } from 'mysql';
+import { Connection, Query, queryCallback } from 'mysql2';
 import TableList from '../src/component/TableList';
 import { ConnectionContext, DatabaseContext } from '../src/Contexts';
 

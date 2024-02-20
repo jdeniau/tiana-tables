@@ -1,36 +1,39 @@
-import * as React from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { ReactElement, useContext } from 'react';
+import cn from 'classnames';
 import { ConnectionContext } from '../../Contexts';
 
-export default function Nav(): React.ReactElement {
+export default function Nav(): ReactElement {
   const {
-    connectionList,
-    setCurrentConnection,
-    currentConnection,
-  } = React.useContext(ConnectionContext);
+    connectionNameList,
+    setCurrentConnectionName,
+    currentConnectionName,
+  } = useContext(ConnectionContext);
 
   return (
     <nav className="nav nav-pills flex-column">
-      {connectionList.map((connection, i) => (
-        <NavLink
+      {connectionNameList.map((connection, i) => (
+        <Link
           key={i}
-          className={`nav-link${
-            connection === currentConnection ? ' active' : ''
-          }`}
+          className={cn({
+            'nav-link': true,
+            active: connection === currentConnectionName,
+          })}
           onClick={() => {
-            setCurrentConnection(connection);
+            setCurrentConnectionName(connection);
           }}
           to="/tables"
-          isActive={() => connection === currentConnection}
-          activeStyle={{ color: '#fff' }}
+          style={connection === currentConnectionName ? { color: '#fff' } : {}}
         >
-          {connection.config.host &&
-            connection.config.host.substr(0, 1).toUpperCase()}
-        </NavLink>
+          {/* {connection.config.host &&
+            connection.config.host.substr(0, 1).toUpperCase()} */}
+
+          {connection}
+        </Link>
       ))}
-      <NavLink className="nav-link" activeClassName="active" to="/connect">
+      <Link className="nav-link" to="/connect">
         +
-      </NavLink>
+      </Link>
     </nav>
   );
 }

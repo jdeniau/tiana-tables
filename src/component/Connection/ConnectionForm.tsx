@@ -1,7 +1,7 @@
-import * as React from 'react';
 import { ConnectionContext, ConnectToFunc } from '../../Contexts';
-import storage from './SavedConnections';
+import connections from './SavedConnections';
 import { ConnectionObject } from '.';
+import { ChangeEvent, FormEvent, PureComponent, useContext } from 'react';
 
 interface ConnectionFormProps {
   connectTo: ConnectToFunc;
@@ -10,28 +10,29 @@ type ConnectionFormState = ConnectionObject & {
   save: boolean;
 };
 
-class ConnectionForm extends React.PureComponent<
+class ConnectionForm extends PureComponent<
   ConnectionFormProps,
   ConnectionFormState
 > {
   constructor(props: ConnectionFormProps) {
     super(props);
+
     this.state = {
       name: '',
       save: true,
-      host: process.env.DEBUG_DB_HOST || 'localhost',
-      port: process.env.DEBUG_DB_PORT
-        ? parseInt(process.env.DEBUG_DB_PORT, 10)
+      host: window.env.FP__DEBUG_DB_HOST || 'localhost',
+      port: window.env.FP__DEBUG_DB_PORT
+        ? parseInt(window.env.FP__DEBUG_DB_PORT, 10)
         : 3306,
-      user: process.env.DEBUG_DB_USER || '',
-      password: process.env.DEBUG_DB_PASSWORD || '',
+      user: window.env.FP__DEBUG_DB_USER || '',
+      password: window.env.FP__DEBUG_DB_PASSWORD || '',
     };
 
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleInputChange(event: React.ChangeEvent<HTMLInputElement>): void {
+  handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
     const target = event.target;
 
     const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -50,12 +51,12 @@ class ConnectionForm extends React.PureComponent<
     });
   }
 
-  handleSubmit(event: React.FormEvent) {
+  handleSubmit(event: FormEvent) {
     const { save, ...connection } = this.state;
     event.preventDefault();
 
     if (save) {
-      storage.set(connection.name, connection);
+      connections.save(connection.name, connection);
     }
 
     this.props.connectTo(connection);
@@ -119,16 +120,18 @@ class ConnectionForm extends React.PureComponent<
             onChange={this.handleInputChange}
           />
         </div>
-        <div className="form-group">
-          <label htmlFor="Connection__save">enregistrer la connexion</label>
+        <div className="form-check">
           <input
             id="Connection__save"
             name="save"
             type="checkbox"
-            className="form-control"
+            className="form-check-input"
             checked={this.state.save}
             onChange={this.handleInputChange}
           />
+          <label className="form-check-label" htmlFor="Connection__save">
+            enregistrer la connexion
+          </label>
         </div>
 
         <button className="btn btn-primary" type="submit">
@@ -140,7 +143,7 @@ class ConnectionForm extends React.PureComponent<
 }
 
 function ConnectionFormWithContext() {
-  const { connectTo } = React.useContext(ConnectionContext);
+  const { connectTo } = useContext(ConnectionContext);
 
   return <ConnectionForm connectTo={connectTo} />;
 }
