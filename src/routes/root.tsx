@@ -29,7 +29,7 @@ export default function Root() {
           <Debug />
 
           <HeaderDiv>
-            <h2>Welcome to Fuzzy Potato !</h2>
+            <h2>Welcome to Tiana Tables !</h2>
             <div>
               Theme:
               <ThemeSelector />

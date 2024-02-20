@@ -20,12 +20,12 @@ class ConnectionForm extends PureComponent<
     this.state = {
       name: '',
       save: true,
-      host: window.env.FP__DEBUG_DB_HOST || 'localhost',
-      port: window.env.FP__DEBUG_DB_PORT
-        ? parseInt(window.env.FP__DEBUG_DB_PORT, 10)
+      host: window.env.TIANA__DEBUG_DB_HOST || 'localhost',
+      port: window.env.TIANA__DEBUG_DB_PORT
+        ? parseInt(window.env.TIANA__DEBUG_DB_PORT, 10)
         : 3306,
-      user: window.env.FP__DEBUG_DB_USER || '',
-      password: window.env.FP__DEBUG_DB_PASSWORD || '',
+      user: window.env.TIANA__DEBUG_DB_USER || '',
+      password: window.env.TIANA__DEBUG_DB_PASSWORD || '',
     };
 
     this.handleInputChange = this.handleInputChange.bind(this);

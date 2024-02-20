@@ -1,2 +1,3 @@
-# fuzzy-potato
+# Tiana Tables
+
 Some SQL tool
