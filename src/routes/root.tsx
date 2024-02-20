@@ -35,8 +35,7 @@ export default function Root() {
             <HeaderDiv>
               <h2>Welcome to Tiana Tables !</h2>
               <div>
-                Theme:
-                <ThemeSelector />
+                Theme: <ThemeSelector />
               </div>
             </HeaderDiv>
             <Outlet />

@@ -1,55 +1,24 @@
+import { Button, Checkbox, Form, Input } from 'antd';
 import { ConnectionContext, ConnectToFunc } from '../../Contexts';
 import { ConnectionObject } from './types';
-import { ChangeEvent, FormEvent, PureComponent, useContext } from 'react';
+import { PureComponent, useContext } from 'react';
 
 interface ConnectionFormProps {
   connectTo: ConnectToFunc;
 }
-type ConnectionFormState = ConnectionObject & {
+type ConnectionFormType = ConnectionObject & {
   save: boolean;
 };
 
-class ConnectionForm extends PureComponent<
-  ConnectionFormProps,
-  ConnectionFormState
-> {
+class ConnectionForm extends PureComponent<ConnectionFormProps> {
   constructor(props: ConnectionFormProps) {
     super(props);
 
-    this.state = {
-      name: '',
-      save: true,
-      host: 'localhost',
-      port: 3306,
-      user: '',
-      password: '',
-    };
-
-    this.handleInputChange = this.handleInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
-    const target = event.target;
-
-    const value = target.type === 'checkbox' ? target.checked : target.value;
-    const name = target.name;
-
-    if (!Object.keys(this.state).includes(name)) {
-      throw new Error(
-        `Unable to assign state key ${name} as it is not defined in the state`
-      );
-    }
-
-    // @ts-expect-error: name is in state due to previous line
-    this.setState({
-      [name]: value,
-    });
-  }
-
-  handleSubmit(event: FormEvent) {
-    const { save, ...connection } = this.state;
-    event.preventDefault();
+  handleSubmit(formData: ConnectionFormType): void {
+    const { save, ...connection } = formData;
 
     if (save) {
       window.config.addConnectionToConfig(connection);
@@ -59,81 +28,63 @@ class ConnectionForm extends PureComponent<
   }
 
   render() {
-    return (
-      <form onSubmit={this.handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="Connection__name">name</label>
-          <input
-            id="Connection__name"
-            name="name"
-            type="text"
-            className="form-control"
-            value={this.state.name}
-            onChange={this.handleInputChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="Connection__host">host</label>
-          <input
-            id="Connection__host"
-            name="host"
-            type="text"
-            className="form-control"
-            value={this.state.host}
-            onChange={this.handleInputChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="Connection__port">port</label>
-          <input
-            id="Connection__port"
-            name="port"
-            type="number"
-            className="form-control"
-            value={this.state.port}
-            onChange={this.handleInputChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="Connection__user">user</label>
-          <input
-            id="Connection__user"
-            name="user"
-            type="text"
-            className="form-control"
-            value={this.state.user}
-            onChange={this.handleInputChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="Connection__password">password</label>
-          <input
-            id="Connection__password"
-            name="password"
-            type="password"
-            className="form-control"
-            value={this.state.password}
-            onChange={this.handleInputChange}
-          />
-        </div>
-        <div className="form-check">
-          <input
-            id="Connection__save"
-            name="save"
-            type="checkbox"
-            className="form-check-input"
-            checked={this.state.save}
-            onChange={this.handleInputChange}
-          />
-          <label className="form-check-label" htmlFor="Connection__save">
-            enregistrer la connexion
-          </label>
-        </div>
+    const initialValues = {
+      name: '',
+      host: 'localhost',
+      port: 3306,
+      user: 'root',
+      password: '',
+      save: true,
+    };
 
-        <button className="btn btn-primary" type="submit">
-          Connect
-        </button>
-      </form>
+    return (
+      <Form initialValues={initialValues} onFinish={this.handleSubmit}>
+        <Form.Item<ConnectionFormType>
+          name="name"
+          label="name"
+          rules={[{ required: true }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item<ConnectionFormType>
+          name="host"
+          label="host"
+          rules={[{ required: true }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item<ConnectionFormType>
+          name="port"
+          label="port"
+          rules={[{ required: true }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item<ConnectionFormType>
+          name="user"
+          label="user"
+          rules={[{ required: true }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item<ConnectionFormType> name="password" label="password">
+          <Input type="password" />
+        </Form.Item>
+
+        <Form.Item<ConnectionFormType> name="save" valuePropName="checked">
+          <Checkbox>enregistrer la connexion</Checkbox>
+        </Form.Item>
+
+        <Form.Item<ConnectionFormType>>
+          <Button type="primary" htmlType="submit">
+            Connect
+          </Button>
+        </Form.Item>
+      </Form>
     );
   }
 }
