@@ -9,7 +9,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint:eslint": "eslint --ext .ts,.tsx .",
+    "lint:eslint": "eslint --quiet .",
     "lint:types": "tsc --noEmit",
     "test": "vitest"
   },

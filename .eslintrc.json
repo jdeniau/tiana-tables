@@ -4,6 +4,11 @@
     "es6": true,
     "node": true
   },
+  "ignorePatterns": [
+    "forge.config.ts",
+    "vite.*.config.*",
+    "stories/" // exclude stories from linting for now
+  ],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
@@ -12,5 +17,13 @@
     "plugin:import/electron",
     "plugin:import/typescript"
   ],
-  "parser": "@typescript-eslint/parser"
+  "parser": "@typescript-eslint/parser",
+  "overrides": [
+    {
+      "files": ["*.js", "*.jsx", "*.ts", "*.tsx"],
+      "parserOptions": {
+        "project": "./tsconfig.json"
+      }
+    }
+  ]
 }

@@ -48,6 +48,7 @@ function TableGrid({ fields, result }: TableGridProps): ReactElement {
             <tr>
               {fields.map((field) => (
                 <Td key={field.name}>
+                  {/* @ts-expect-error field name is in object. Need a better type ? */}
                   <Cell type={field.type} value={row[field.name]} />
                 </Td>
               ))}

@@ -28,12 +28,14 @@ contextBridge.exposeInMainWorld('config', config);
 interface Sql {
   openConnection(params: ConnectionObject): Promise<Connection>;
   query(query: string): Promise<unknown>;
+  closeAllConnections(): Promise<void>;
 }
 
 // TODO : clone the binder object in sql/index.ts ?
 const sql: Sql = {
   openConnection: (params) => ipcRenderer.invoke('sql:connect', params),
   query: (query) => ipcRenderer.invoke('sql:query', query),
+  closeAllConnections: () => ipcRenderer.invoke('sql:closeAll'),
 };
 
 contextBridge.exposeInMainWorld('sql', sql);
