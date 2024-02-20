@@ -55,6 +55,7 @@ export function ThemeContextProvider({
   const [themeName, setThemeName] = useState(DEFAULT_THEME.name);
 
   const changeTheme = (newTheme: string) => {
+    window.config.changeTheme(newTheme);
     setThemeName(newTheme);
   };
 
