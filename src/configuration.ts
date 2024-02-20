@@ -17,7 +17,7 @@ type EncryptedConfiguration = {
   connections: Record<string, EncryptedConnectionObject>;
 } & Omit<Configuration, 'connections'>;
 
-const envPath = envPaths('FuzzyPotato', { suffix: '' });
+const envPath = envPaths('TianaTables', { suffix: '' });
 const dataFilePath = resolve(envPath.config, 'config.json');
 
 function encryptConnection(

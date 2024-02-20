@@ -7,12 +7,12 @@ import { Configuration } from './configuration';
 import { contextBridge, ipcRenderer } from 'electron';
 
 // === environment variables ===
-type FpString = string; // maybe `FP__${string}` is TS 5 ?
-type FpEnvVariables = Record<string, FpString>;
+type TianaString = string; // maybe `TIANA__${string}` is TS 5 ?
+type TianaEnvVariables = Record<string, TianaString>;
 
-const fpEnvVariables: FpEnvVariables = Object.fromEntries(
-  Object.entries(process.env).filter((entry): entry is [FpString, string] =>
-    entry[0].startsWith('FP__')
+const fpEnvVariables: TianaEnvVariables = Object.fromEntries(
+  Object.entries(process.env).filter((entry): entry is [TianaString, string] =>
+    entry[0].startsWith('TIANA__')
   )
 );
 
@@ -53,7 +53,7 @@ contextBridge.exposeInMainWorld('sql', sql);
 // Declare window global that have been added
 declare global {
   interface Window {
-    env: FpEnvVariables;
+    env: TianaEnvVariables;
     config: Config;
     sql: Sql;
   }
