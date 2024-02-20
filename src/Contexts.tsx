@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { ThemeProvider } from 'styled-components';
+import { ConfigProvider, theme as antdTheme } from 'antd';
 import { Configuration } from './configuration/type';
-import { DEFAULT_THEME, THEME_LIST } from './theme';
+import { DEFAULT_THEME, getSetting, isDarkTheme, THEME_LIST } from './theme';
 
 export interface ConnectToFunc {
   (params: object): void;
@@ -65,10 +66,25 @@ export function ThemeContextProvider({
     setThemeName(newTheme);
   };
 
+  const theme = THEME_LIST[themeName];
+
   return (
-    <ThemeProvider theme={THEME_LIST[themeName]}>
+    <ThemeProvider theme={theme}>
       <ThemeContext.Provider value={{ themeName, changeTheme }}>
-        {children}
+        <ConfigProvider
+          theme={{
+            token: {
+              // Seed Token
+              colorPrimary: getSetting(theme, 'foreground'),
+
+              // Alias Token
+              colorBgContainer: getSetting(theme, 'background'),
+            },
+            algorithm: isDarkTheme(theme) ? antdTheme.darkAlgorithm : undefined,
+          }}
+        >
+          {children}
+        </ConfigProvider>
       </ThemeContext.Provider>
     </ThemeProvider>
   );

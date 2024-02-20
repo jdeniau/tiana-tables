@@ -4,6 +4,8 @@ import * as active4d from '../theme/active4d.json';
 
 const THEME_LIST_AS_ARRAY = [dracula, visualStudio, active4d] as const;
 
+const DARK_THEME_LIST_NAME = ['Dracula'];
+
 type Theme = (typeof THEME_LIST_AS_ARRAY)[number];
 
 export const THEME_LIST: Record<string, Theme> = {};
@@ -12,6 +14,10 @@ THEME_LIST_AS_ARRAY.forEach((t) => {
 });
 
 export const DEFAULT_THEME = THEME_LIST_AS_ARRAY[0];
+
+export function isDarkTheme(theme: Theme): boolean {
+  return DARK_THEME_LIST_NAME.includes(theme.name);
+}
 
 export interface TmTheme {
   readonly name: string;
