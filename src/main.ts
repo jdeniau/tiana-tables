@@ -6,8 +6,6 @@ import installExtension, {
 import connectionStackInstance from './sql';
 import { readConfigurationFile, addConnectionToConfig } from './configuration';
 
-require('dotenv').config({ path: '../.env' });
-
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();

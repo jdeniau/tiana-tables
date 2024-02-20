@@ -6,18 +6,6 @@ import { ConnectionObject } from './component/Connection';
 import { Configuration } from './configuration';
 import { contextBridge, ipcRenderer } from 'electron';
 
-// === environment variables ===
-type TianaString = string; // maybe `TIANA__${string}` is TS 5 ?
-type TianaEnvVariables = Record<string, TianaString>;
-
-const fpEnvVariables: TianaEnvVariables = Object.fromEntries(
-  Object.entries(process.env).filter((entry): entry is [TianaString, string] =>
-    entry[0].startsWith('TIANA__')
-  )
-);
-
-contextBridge.exposeInMainWorld('env', fpEnvVariables);
-
 // === Configuration ===
 interface Config {
   readConfigurationFile(): Promise<null | Configuration>;
@@ -53,7 +41,6 @@ contextBridge.exposeInMainWorld('sql', sql);
 // Declare window global that have been added
 declare global {
   interface Window {
-    env: TianaEnvVariables;
     config: Config;
     sql: Sql;
   }
