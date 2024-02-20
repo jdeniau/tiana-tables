@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
+import { existsSync, readFileSync, writeFile } from 'node:fs';
 import {
   addConnectionToConfig,
   getConfiguration,

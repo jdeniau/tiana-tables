@@ -21,6 +21,7 @@ class ConnectionStack {
   }
 
   async connect(senderId: number, params: ConnectionObject): Promise<number> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { name, ...rest } = params;
     const connection = await createConnection(rest);
     await connection.connect();
@@ -29,7 +30,7 @@ class ConnectionStack {
     return connection.threadId;
   }
 
-  async query(senderId: number, query: string): Promise<any> {
+  async query(senderId: number, query: string): Promise<unknown> {
     const connection = this.#getConnection(senderId);
 
     return await connection.query(query);

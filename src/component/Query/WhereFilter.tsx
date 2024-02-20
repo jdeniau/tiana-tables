@@ -22,7 +22,6 @@ function WhereFilter({ defaultValue, onSubmit }: Props): ReactElement {
         onSubmit(where);
       }}
     >
-      {/* @ts-expect-error not present infuture TS verwsion */}
       <WhereArea value={where} onChange={(e) => setWhere(e.target.value)} />
 
       <input type="submit" />
