@@ -1,10 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import {
-  Outlet,
-  MemoryRouter as Router,
-  RouterProvider,
-  createMemoryRouter,
-} from 'react-router';
+import { RouterProvider, createMemoryRouter } from 'react-router';
 import styled from 'styled-components';
 import React, { PureComponent } from 'react';
 import Root from './routes/root';
