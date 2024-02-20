@@ -1,5 +1,6 @@
 import { ConnectionContext, DatabaseContext } from '../Contexts';
-import { ChangeEvent, useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { Select } from 'antd';
 
 interface DatabaseRow {
   Database: string;
@@ -21,15 +22,13 @@ export default function DatabaseSelector() {
     });
   }, [currentConnectionName, setDatabase]);
 
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    setDatabase(event.target.value);
-  };
-
   return (
-    <select onChange={handleChange} value={database || undefined}>
-      {databaseList.map((row: DatabaseRow) => (
-        <option key={row.Database}>{row.Database}</option>
-      ))}
-    </select>
+    <Select
+      popupMatchSelectWidth={false}
+      onChange={setDatabase}
+      value={database || undefined}
+      fieldNames={{ label: 'Database', value: 'Database' }}
+      options={databaseList}
+    />
   );
 }
