@@ -1,5 +1,5 @@
 import { Connection, createConnection } from 'mysql2/promise';
-import { ConnectionObject } from 'src/component/Connection';
+import { ConnectionObject } from '../component/Connection/types';
 
 class ConnectionStack {
   private connections: Map<number, Connection> = new Map();
@@ -8,6 +8,7 @@ class ConnectionStack {
   #ipcEventBinding = {
     'sql:connect': this.connect,
     'sql:query': this.query,
+    'sql:closeAll': this.closeAllConnections,
   };
 
   bindIpcMain(ipcMain: Electron.IpcMain): void {
@@ -32,6 +33,16 @@ class ConnectionStack {
     const connection = this.#getConnection(senderId);
 
     return await connection.query(query);
+  }
+
+  async closeAllConnections(): Promise<void> {
+    await Promise.all(
+      Array.from(this.connections.values()).map((connection) =>
+        connection.end()
+      )
+    );
+
+    this.connections.clear();
   }
 
   #getConnection(senderId: number): Connection {

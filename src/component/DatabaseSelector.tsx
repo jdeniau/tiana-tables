@@ -8,9 +8,7 @@ interface DatabaseRow {
 export default function DatabaseSelector() {
   const { currentConnectionName } = useContext(ConnectionContext);
 
-  const [databaseList, setDatabaseList]: [DatabaseRow[], Function] = useState(
-    []
-  );
+  const [databaseList, setDatabaseList] = useState<DatabaseRow[]>([]);
 
   const { database, setDatabase } = useContext(DatabaseContext);
 

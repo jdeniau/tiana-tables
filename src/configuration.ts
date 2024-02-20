@@ -2,7 +2,7 @@ import { dialog, safeStorage } from 'electron';
 import { resolve } from 'node:path';
 import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
 import envPaths from 'env-paths';
-import { ConnectionObject } from './component/Connection';
+import { ConnectionObject } from './component/Connection/types';
 
 export type Configuration = {
   version: 1;

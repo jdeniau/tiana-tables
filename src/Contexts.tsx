@@ -14,7 +14,9 @@ interface ConnexionContextProps {
 export const ConnectionContext = createContext<ConnexionContextProps>({
   currentConnectionName: null,
   connectionNameList: [],
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   connectTo: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   setCurrentConnectionName: () => {},
 });
 
@@ -28,6 +30,7 @@ interface DatabaseContextProps {
 
 export const DatabaseContext = createContext<DatabaseContextProps>({
   database: null,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   setDatabase: () => {},
 });
 
@@ -40,6 +43,7 @@ interface ThemeContextProps {
 }
 const ThemeContext = createContext<ThemeContextProps>({
   themeName: DEFAULT_THEME.name,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   changeTheme: () => {},
 });
 
@@ -55,7 +59,6 @@ export function ThemeContextProvider({
   const [themeName, setThemeName] = useState(DEFAULT_THEME.name);
 
   const changeTheme = (newTheme: string) => {
-    window.config.changeTheme(newTheme);
     setThemeName(newTheme);
   };
 

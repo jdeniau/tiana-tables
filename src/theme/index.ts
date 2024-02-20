@@ -4,7 +4,7 @@ import * as active4d from '../theme/active4d.json';
 
 const THEME_LIST_AS_ARRAY = [dracula, visualStudio, active4d] as const;
 
-type Theme = typeof THEME_LIST_AS_ARRAY[number];
+type Theme = (typeof THEME_LIST_AS_ARRAY)[number];
 
 export const THEME_LIST: Record<string, Theme> = {};
 THEME_LIST_AS_ARRAY.forEach((t) => {
@@ -13,7 +13,7 @@ THEME_LIST_AS_ARRAY.forEach((t) => {
 
 export const DEFAULT_THEME = THEME_LIST_AS_ARRAY[0];
 
-interface TmTheme {
+export interface TmTheme {
   readonly name: string;
   readonly author?: string;
   readonly settings: TmThemeSetting[];

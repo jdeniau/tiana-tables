@@ -40,7 +40,7 @@ function ConnectedTableList({ database }: TableListProps): ReactElement | null {
         <div key={rowDataPacket.Name}>
           <StyledNavLink
             to={`/tables/${rowDataPacket.Name}`}
-            style={({ isActive }) => ({
+            style={({ isActive }: { isActive: boolean }) => ({
               fontWeight: isActive ? 'bold' : undefined,
             })}
           >

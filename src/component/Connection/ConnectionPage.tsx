@@ -1,6 +1,6 @@
 import { Link, Navigate } from 'react-router-dom';
 import connections from './SavedConnections';
-import { ConnectionObject } from '.';
+import { ConnectionObject } from './types';
 import { ConnectionContext } from '../../Contexts';
 import { useContext, useEffect, useState } from 'react';
 

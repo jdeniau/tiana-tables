@@ -1,7 +1,7 @@
 import { NavigateFunction, useNavigate } from 'react-router';
 import { ConnectionContext, DatabaseContext } from '../../Contexts';
 import { PureComponent, ReactNode } from 'react';
-import { ConnectionObject } from '.';
+import { ConnectionObject } from './types';
 
 interface PropsWithoutHistory {
   children: ReactNode;

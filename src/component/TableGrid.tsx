@@ -43,18 +43,17 @@ function TableGrid({ fields, result }: TableGridProps): ReactElement {
       )}
       {result && fields && (
         <tbody>
-          {/* eslint-disable react/jsx-key */}
           {/* TODO : use the table primary key to make a real key */}
           {result.map((row: object) => (
             <tr>
               {fields.map((field) => (
                 <Td key={field.name}>
+                  {/* @ts-expect-error field name is in object. Need a better type ? */}
                   <Cell type={field.type} value={row[field.name]} />
                 </Td>
               ))}
             </tr>
           ))}
-          {/* eslint-enable react/jsx-key */}
         </tbody>
       )}
     </Table>
