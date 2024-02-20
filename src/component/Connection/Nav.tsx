@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ReactElement, useContext } from 'react';
 import { Button } from 'antd';
-import cn from 'classnames';
 import { ConnectionContext } from '../../Contexts';
 
 export default function Nav(): ReactElement {
@@ -20,10 +19,6 @@ export default function Nav(): ReactElement {
         >
           <Link
             key={i}
-            // className={cn({
-            //   'nav-link': true,
-            //   active: connection === currentConnectionName,
-            // })}
             onClick={() => {
               setCurrentConnectionName(connection);
             }}

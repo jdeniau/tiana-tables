@@ -22,7 +22,6 @@
   "license": "MIT",
   "dependencies": {
     "antd": "^5.14.1",
-    "classnames": "^2.5.1",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
     "env-paths": "^3.0.0",

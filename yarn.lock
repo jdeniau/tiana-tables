@@ -8250,7 +8250,6 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^7.0.2"
     "@typescript-eslint/parser": "npm:^7.0.2"
     antd: "npm:^5.14.1"
-    classnames: "npm:^2.5.1"
     electron: "npm:28.2.3"
     electron-devtools-installer: "npm:^3.2.0"
     electron-squirrel-startup: "npm:^1.0.0"
