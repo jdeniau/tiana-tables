@@ -1,10 +1,15 @@
 import { Button, Checkbox, Form, Input } from 'antd';
-import { ConnectionContext, ConnectToFunc } from '../../Contexts';
+import {
+  ConnectionContext,
+  ConnectToFunc,
+  useConfiguration,
+} from '../../Contexts';
 import { ConnectionObject } from './types';
 import { PureComponent, useContext } from 'react';
 
 interface ConnectionFormProps {
   connectTo: ConnectToFunc;
+  addConnectionToConfig: (connection: ConnectionObject) => void;
 }
 type ConnectionFormType = ConnectionObject & {
   save: boolean;
@@ -18,10 +23,11 @@ class ConnectionForm extends PureComponent<ConnectionFormProps> {
   }
 
   handleSubmit(formData: ConnectionFormType): void {
+    const { addConnectionToConfig } = this.props;
     const { save, ...connection } = formData;
 
     if (save) {
-      window.config.addConnectionToConfig(connection);
+      addConnectionToConfig(connection);
     }
 
     this.props.connectTo(connection);
@@ -91,8 +97,14 @@ class ConnectionForm extends PureComponent<ConnectionFormProps> {
 
 function ConnectionFormWithContext() {
   const { connectTo } = useContext(ConnectionContext);
+  const { addConnectionToConfig } = useConfiguration();
 
-  return <ConnectionForm connectTo={connectTo} />;
+  return (
+    <ConnectionForm
+      connectTo={connectTo}
+      addConnectionToConfig={addConnectionToConfig}
+    />
+  );
 }
 
 export default ConnectionFormWithContext;

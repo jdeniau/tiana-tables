@@ -5,7 +5,7 @@ import { ConnectionContext, useConfiguration } from '../../Contexts';
 import { useContext } from 'react';
 
 function ConnectionPage() {
-  const registeredConnectionList = useConfiguration().connections;
+  const registeredConnectionList = useConfiguration().configuration.connections;
   const { connectTo } = useContext(ConnectionContext);
 
   if (registeredConnectionList === null) {

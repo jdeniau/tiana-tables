@@ -9,6 +9,7 @@ import {
   isDarkTheme,
   THEME_LIST,
 } from './theme';
+import { ConnectionObject } from './component/Connection/types';
 
 export interface ConnectToFunc {
   (params: object): void;
@@ -107,7 +108,14 @@ export function ThemeContextProvider({
   );
 }
 
-const ConfigurationContext = createContext<null | Configuration>(null);
+type ConfigurationContextType = {
+  configuration: Configuration;
+  addConnectionToConfig: (connection: ConnectionObject) => void;
+};
+
+const ConfigurationContext = createContext<null | ConfigurationContextType>(
+  null
+);
 
 export function ConfigurationContextProvider({
   children,
@@ -131,14 +139,21 @@ export function ConfigurationContextProvider({
     return null;
   }
 
+  const value: ConfigurationContextType = {
+    configuration,
+    addConnectionToConfig: (connection: ConnectionObject) => {
+      window.config.addConnectionToConfig(connection);
+    },
+  };
+
   return (
-    <ConfigurationContext.Provider value={configuration}>
+    <ConfigurationContext.Provider value={value}>
       {children}
     </ConfigurationContext.Provider>
   );
 }
 
-export function useConfiguration(): Configuration {
+export function useConfiguration(): ConfigurationContextType {
   const value = useContext(ConfigurationContext);
 
   if (!value) {
@@ -149,3 +164,7 @@ export function useConfiguration(): Configuration {
 
   return value;
 }
+
+export const testables = {
+  ConfigurationContext,
+};
