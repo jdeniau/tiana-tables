@@ -18,16 +18,16 @@ interface TableStatusRow {
 
 function ConnectedTableList({ database }: TableListProps): ReactElement | null {
   const { currentConnectionName } = useContext(ConnectionContext);
+  const { executeQuery } = useContext(DatabaseContext);
   const [tableStatus, setTableStatus] = useState<TableStatusRow[] | null>(null);
+
   useEffect(() => {
-    window.sql
-      .query(
-        // connection.query(
-        `SHOW TABLE STATUS FROM \`${database}\`;`
-      )
-      .then(([result]) => {
-        setTableStatus(result);
-      });
+    executeQuery(
+      // connection.query(
+      `SHOW TABLE STATUS FROM \`${database}\`;`
+    ).then(([result]) => {
+      setTableStatus(result);
+    });
   }, [currentConnectionName, database]);
 
   if (!tableStatus) {

@@ -11,10 +11,10 @@ export default function DatabaseSelector() {
 
   const [databaseList, setDatabaseList] = useState<DatabaseRow[]>([]);
 
-  const { database, setDatabase } = useContext(DatabaseContext);
+  const { database, setDatabase, executeQuery } = useContext(DatabaseContext);
 
   useEffect(() => {
-    window.sql.query('SHOW DATABASES;').then(([result]) => {
+    executeQuery('SHOW DATABASES;').then(([result]) => {
       if (result) {
         setDatabaseList(result);
         setDatabase(result[0].Database);

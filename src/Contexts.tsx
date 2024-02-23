@@ -28,6 +28,7 @@ export const ConnectionContext = createContext<ConnexionContextProps>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setCurrentConnectionName: () => {},
 });
+ConnectionContext.displayName = 'ConnectionContext';
 
 export interface SetDatabaseFunc {
   (theme: string): void;
@@ -35,13 +36,16 @@ export interface SetDatabaseFunc {
 interface DatabaseContextProps {
   database: string | null;
   setDatabase: SetDatabaseFunc;
+  executeQuery: (query: string) => Promise<unknown>;
 }
 
 export const DatabaseContext = createContext<DatabaseContextProps>({
   database: null,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setDatabase: () => {},
+  executeQuery: () => Promise.resolve(),
 });
+DatabaseContext.displayName = 'DatabaseContext';
 
 interface ChangeThemeFunc {
   (theme: string): void;
@@ -55,6 +59,7 @@ const ThemeContext = createContext<ThemeContextProps>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   changeTheme: () => {},
 });
+ThemeContext.displayName = 'ThemeContext';
 
 export function useTheme() {
   return useContext(ThemeContext);
@@ -65,8 +70,8 @@ export function ThemeContextProvider({
 }: {
   children: React.ReactNode;
 }): React.ReactElement {
-  const config = useConfiguration();
-  const [themeName, setThemeName] = useState(config.theme);
+  const { configuration } = useConfiguration();
+  const [themeName, setThemeName] = useState(configuration.theme);
 
   const changeTheme = (newTheme: string) => {
     window.config.changeTheme(newTheme);
@@ -116,6 +121,7 @@ type ConfigurationContextType = {
 const ConfigurationContext = createContext<null | ConfigurationContextType>(
   null
 );
+ConfigurationContext.displayName = 'ConfigurationContext';
 
 export function ConfigurationContextProvider({
   children,

@@ -19,6 +19,7 @@ interface TableNameProps {
 const DEFAULT_LIMIT = 10;
 
 function TableLayout({ tableName, database }: TableNameProps): ReactElement {
+  const { executeQuery } = useContext(DatabaseContext);
   const [result, setResult] = useState<null | object[]>(null);
   const [fields, setFields] = useState<null | FieldPacket[]>(null);
   const [error, setError] = useState<null | Error>(null);
@@ -31,8 +32,7 @@ function TableLayout({ tableName, database }: TableNameProps): ReactElement {
         where ? ` WHERE ${where}` : ''
       } LIMIT ${DEFAULT_LIMIT} OFFSET ${offset};`;
 
-      window.sql
-        .query(query)
+      executeQuery(query)
         .then(([result, fields]) => {
           setCurrentOffset(offset);
           setFields(fields || null);
