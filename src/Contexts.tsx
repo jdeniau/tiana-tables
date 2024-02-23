@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { ThemeProvider } from 'styled-components';
+import styled, { ThemeProvider } from 'styled-components';
 import { ConfigProvider, theme as antdTheme } from 'antd';
 import { Configuration } from './configuration/type';
 import {
@@ -9,6 +9,7 @@ import {
   isDarkTheme,
   THEME_LIST,
 } from './theme';
+import { ConnectionObject } from './component/Connection/types';
 
 export interface ConnectToFunc {
   (params: object): void;
@@ -27,6 +28,7 @@ export const ConnectionContext = createContext<ConnexionContextProps>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setCurrentConnectionName: () => {},
 });
+ConnectionContext.displayName = 'ConnectionContext';
 
 export interface SetDatabaseFunc {
   (theme: string): void;
@@ -34,13 +36,16 @@ export interface SetDatabaseFunc {
 interface DatabaseContextProps {
   database: string | null;
   setDatabase: SetDatabaseFunc;
+  executeQuery: (query: string) => Promise<unknown>;
 }
 
 export const DatabaseContext = createContext<DatabaseContextProps>({
   database: null,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setDatabase: () => {},
+  executeQuery: () => Promise.resolve(),
 });
+DatabaseContext.displayName = 'DatabaseContext';
 
 interface ChangeThemeFunc {
   (theme: string): void;
@@ -54,18 +59,28 @@ const ThemeContext = createContext<ThemeContextProps>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   changeTheme: () => {},
 });
+ThemeContext.displayName = 'ThemeContext';
 
 export function useTheme() {
   return useContext(ThemeContext);
 }
+
+const LayoutDiv = styled.div`
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: ${(props) => getSetting(props.theme, 'background')};
+  color: ${(props) => getSetting(props.theme, 'foreground')};
+`;
 
 export function ThemeContextProvider({
   children,
 }: {
   children: React.ReactNode;
 }): React.ReactElement {
-  const config = useConfiguration();
-  const [themeName, setThemeName] = useState(config.theme);
+  const { configuration } = useConfiguration();
+  const [themeName, setThemeName] = useState(configuration.theme);
 
   const changeTheme = (newTheme: string) => {
     window.config.changeTheme(newTheme);
@@ -100,14 +115,22 @@ export function ThemeContextProvider({
             },
           }}
         >
-          {children}
+          <LayoutDiv>{children}</LayoutDiv>
         </ConfigProvider>
       </ThemeContext.Provider>
     </ThemeProvider>
   );
 }
 
-const ConfigurationContext = createContext<null | Configuration>(null);
+type ConfigurationContextType = {
+  configuration: Configuration;
+  addConnectionToConfig: (connection: ConnectionObject) => void;
+};
+
+const ConfigurationContext = createContext<null | ConfigurationContextType>(
+  null
+);
+ConfigurationContext.displayName = 'ConfigurationContext';
 
 export function ConfigurationContextProvider({
   children,
@@ -131,14 +154,21 @@ export function ConfigurationContextProvider({
     return null;
   }
 
+  const value: ConfigurationContextType = {
+    configuration,
+    addConnectionToConfig: (connection: ConnectionObject) => {
+      window.config.addConnectionToConfig(connection);
+    },
+  };
+
   return (
-    <ConfigurationContext.Provider value={configuration}>
+    <ConfigurationContext.Provider value={value}>
       {children}
     </ConfigurationContext.Provider>
   );
 }
 
-export function useConfiguration(): Configuration {
+export function useConfiguration(): ConfigurationContextType {
   const value = useContext(ConfigurationContext);
 
   if (!value) {
@@ -149,3 +179,7 @@ export function useConfiguration(): Configuration {
 
   return value;
 }
+
+export const testables = {
+  ConfigurationContext,
+};

@@ -2,6 +2,7 @@ import { configure, addParameters, addDecorator } from '@storybook/react';
 import { makeDecorator } from '@storybook/addons';
 import { themes } from '@storybook/theming';
 import styled, { ThemeProvider } from 'styled-components';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { DEFAULT_THEME, getSetting } from '../src/theme';
 
 // automatically import all files ending in *.stories.tsx

@@ -94,6 +94,7 @@ class ConnectionStack extends PureComponent<Props, State> {
           value={{
             database,
             setDatabase: this.handleSetDatabase,
+            executeQuery: window.sql.executeQuery,
           }}
         >
           {children}

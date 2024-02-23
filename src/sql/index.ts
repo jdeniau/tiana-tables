@@ -7,7 +7,7 @@ class ConnectionStack {
   // List of IPC events and their handlers
   #ipcEventBinding = {
     'sql:connect': this.connect,
-    'sql:query': this.query,
+    'sql:executeQuery': this.executeQuery,
     'sql:closeAll': this.closeAllConnections,
   };
 
@@ -30,7 +30,7 @@ class ConnectionStack {
     return connection.threadId;
   }
 
-  async query(senderId: number, query: string): Promise<unknown> {
+  async executeQuery(senderId: number, query: string): Promise<unknown> {
     const connection = this.#getConnection(senderId);
 
     return await connection.query(query);
