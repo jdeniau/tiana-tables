@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router';
-import styled from 'styled-components';
+import { styled } from 'styled-components';
 import { getSetting } from '../theme';
 import DatabaseSelector from '../component/DatabaseSelector';
 import TableList from '../component/TableList';

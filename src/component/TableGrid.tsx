@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import { styled } from 'styled-components';
 import type { FieldPacket } from 'mysql2/promise';
 import { getSetting } from '../../src/theme';
 import Cell from './Cell';

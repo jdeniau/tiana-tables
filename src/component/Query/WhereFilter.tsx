@@ -1,5 +1,5 @@
 import { ReactElement, useState } from 'react';
-import styled from 'styled-components';
+import { styled } from 'styled-components';
 
 const WhereArea = styled.textarea`
   width: 100%;

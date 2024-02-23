@@ -1,6 +1,6 @@
 import { ConnectionContext, DatabaseContext } from '../Contexts';
 import { NavLink } from 'react-router-dom';
-import styled from 'styled-components';
+import { styled } from 'styled-components';
 import { getColor } from '../../src/theme';
 import { ReactElement, useContext, useEffect, useState } from 'react';
 

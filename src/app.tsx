@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router';
-import styled from 'styled-components';
+import { styled } from 'styled-components';
 import React, { PureComponent } from 'react';
 import Root from './routes/root';
 import ErrorPage from './error-page';

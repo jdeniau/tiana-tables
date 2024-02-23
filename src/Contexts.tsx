@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import styled, { ThemeProvider } from 'styled-components';
-import { ConfigProvider, theme as antdTheme } from 'antd';
+import { styled, ThemeProvider } from 'styled-components';
+import { ConfigProvider as AntdConfigProvider, theme as antdTheme } from 'antd';
 import { Configuration } from './configuration/type';
 import {
   DEFAULT_THEME,
@@ -92,7 +92,7 @@ export function ThemeContextProvider({
   return (
     <ThemeProvider theme={theme}>
       <ThemeContext.Provider value={{ themeName, changeTheme }}>
-        <ConfigProvider
+        <AntdConfigProvider
           theme={{
             algorithm: isDarkTheme(theme) ? antdTheme.darkAlgorithm : undefined,
             token: {
@@ -116,7 +116,7 @@ export function ThemeContextProvider({
           }}
         >
           <LayoutDiv>{children}</LayoutDiv>
-        </ConfigProvider>
+        </AntdConfigProvider>
       </ThemeContext.Provider>
     </ThemeProvider>
   );

@@ -4,7 +4,7 @@ import {
   ConfigurationContextProvider,
   ThemeContextProvider,
 } from '../Contexts';
-import styled from 'styled-components';
+import { styled } from 'styled-components';
 import Debug from '../component/Debug';
 import ThemeSelector from '../component/ThemeSelector';
 

@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
 import { useLocation } from 'react-router';
-import styled from 'styled-components';
+import { styled } from 'styled-components';
 
 const DebugContainer = styled.div`
   padding: 3px;
