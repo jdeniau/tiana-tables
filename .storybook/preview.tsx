@@ -25,7 +25,7 @@ const preview: Preview = {
   globalTypes: {
     theme: {
       description: 'Global theme for components',
-      defaultValue: 'Visual Studio', //DEFAULT_THEME.name,
+      defaultValue: DEFAULT_THEME.name,
       toolbar: {
         // The label to show for this toolbar item
         title: 'Theme',
