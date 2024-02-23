@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { ThemeProvider } from 'styled-components';
+import styled, { ThemeProvider } from 'styled-components';
 import { ConfigProvider, theme as antdTheme } from 'antd';
 import { Configuration } from './configuration/type';
 import {
@@ -65,6 +65,15 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
+const LayoutDiv = styled.div`
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: ${(props) => getSetting(props.theme, 'background')};
+  color: ${(props) => getSetting(props.theme, 'foreground')};
+`;
+
 export function ThemeContextProvider({
   children,
 }: {
@@ -106,7 +115,7 @@ export function ThemeContextProvider({
             },
           }}
         >
-          {children}
+          <LayoutDiv>{children}</LayoutDiv>
         </ConfigProvider>
       </ThemeContext.Provider>
     </ThemeProvider>
