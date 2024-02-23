@@ -55,6 +55,9 @@ export const WithNULLValue: Story = {
     type: Types.VARCHAR,
     value: null,
   },
+  argTypes: {
+    value: { control: { type: null } },
+  },
 };
 
 export const WithStringType: Story = {
