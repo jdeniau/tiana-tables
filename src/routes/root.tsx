@@ -19,7 +19,6 @@ const Header = styled(Layout.Header)`
 `;
 
 const Content = styled(Layout.Content)`
-  padding: 16px;
   display: flex;
   flex-direction: column;
   background-color: ${({ theme }) => getSetting(theme, 'background')};

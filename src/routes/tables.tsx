@@ -3,35 +3,28 @@ import { styled } from 'styled-components';
 import { getSetting } from '../theme';
 import DatabaseSelector from '../component/DatabaseSelector';
 import TableList from '../component/TableList';
+import { Layout } from 'antd';
 
-const ContentDiv = styled.div`
-  display: flex;
-  flex-grow: 1;
-  overflow: hidden;
-`;
-const LeftPanelDiv = styled.div`
-  min-width: 200px;
-  overflow: auto;
-  padding: 0 10px;
+const Sider = styled(Layout.Sider)`
   border-right: 1px solid ${(props) => getSetting(props.theme, 'foreground')};
 `;
 
-const RightPanelDiv = styled.div`
-  flex-grow: 1;
-  overflow: auto;
-  padding: 0 10px;
+const PaddedDiv = styled.div`
+  padding: 10px;
 `;
 
 export function Tables() {
   return (
-    <ContentDiv>
-      <LeftPanelDiv>
+    <Layout>
+      <Sider width={200} style={{ overflow: 'auto' }}>
         <DatabaseSelector />
-        <TableList />
-      </LeftPanelDiv>
-      <RightPanelDiv>
+        <PaddedDiv>
+          <TableList />
+        </PaddedDiv>
+      </Sider>
+      <Layout.Content style={{ overflow: 'auto' }}>
         <Outlet />
-      </RightPanelDiv>
-    </ContentDiv>
+      </Layout.Content>
+    </Layout>
   );
 }
