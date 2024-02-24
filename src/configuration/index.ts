@@ -10,6 +10,7 @@ import {
   EncryptedConfiguration,
 } from './type';
 
+// TODO use app.getPath('userData') to store the configuration file instead of env-paths
 const envPath = envPaths('TianaTables', { suffix: '' });
 const dataFilePath = resolve(envPath.config, 'config.json');
 
