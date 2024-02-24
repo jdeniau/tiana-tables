@@ -21,3 +21,5 @@ jobs:
         uses: chromaui/action@latest
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          skip: 'dependabot/**' # 👈 Option to skip Chromatic for certain branches
+
