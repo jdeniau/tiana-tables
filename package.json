@@ -14,7 +14,8 @@
     "lint:types": "tsc --noEmit",
     "test": "vitest",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "chromatic": "npx chromatic"
   },
   "keywords": [],
   "author": {
@@ -55,6 +56,7 @@
     "@types/react-dom": "^18.2.19",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
+    "chromatic": "^11.0.0",
     "electron": "28.2.3",
     "electron-devtools-installer": "^3.2.0",
     "eslint": "^8.56.0",
