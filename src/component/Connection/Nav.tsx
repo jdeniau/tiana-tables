@@ -1,7 +1,15 @@
 import { Link } from 'react-router-dom';
 import { ReactElement, useContext } from 'react';
-import { Button } from 'antd';
+import { Button, Menu } from 'antd';
 import { ConnectionContext } from '../../Contexts';
+import { getSetting } from '../../theme';
+import { styled } from 'styled-components';
+
+const StyledMenu = styled(Menu)`
+  flex: 1;
+  min-width: 0;
+  background-color: ${({ theme }) => getSetting(theme, 'selection')};
+`;
 
 export default function Nav(): ReactElement {
   const {
@@ -10,30 +18,35 @@ export default function Nav(): ReactElement {
     currentConnectionName,
   } = useContext(ConnectionContext);
 
-  return (
-    <nav className="nav nav-pills flex-column">
-      {connectionNameList.map((connection, i) => (
-        <Button
-          block
-          type={connection === currentConnectionName ? 'primary' : 'link'}
-        >
-          <Link
-            key={i}
-            onClick={() => {
-              setCurrentConnectionName(connection);
-            }}
-            to="/tables"
-          >
-            {/* {connection.config.host &&
-            connection.config.host.substr(0, 1).toUpperCase()} */}
+  if (!connectionNameList.length) {
+    return null;
+  }
 
-            {connection}
-          </Link>
-        </Button>
-      ))}
-      <Button type="link" block>
+  const items = connectionNameList.map((connection) => ({
+    key: connection,
+    label: (
+      <Link
+        onClick={() => {
+          setCurrentConnectionName(connection);
+        }}
+        to="/tables"
+      >
+        {connection}
+      </Link>
+    ),
+  }));
+
+  return (
+    <>
+      <Button style={{ margin: '0 10px' }}>
         <Link to="/connect">new…</Link>
       </Button>
-    </nav>
+
+      <StyledMenu
+        mode="horizontal"
+        selectedKeys={[currentConnectionName]}
+        items={items}
+      />
+    </>
   );
 }

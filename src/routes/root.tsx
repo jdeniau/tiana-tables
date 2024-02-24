@@ -9,18 +9,20 @@ import Debug from '../component/Debug';
 import ThemeSelector from '../component/ThemeSelector';
 import { Layout } from 'antd';
 import { getSetting } from '../theme';
+import ConnectionNav from '../component/Connection/Nav';
 
 const Header = styled(Layout.Header)`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: ${({ theme }) => getSetting(theme, 'background')};
+  background-color: ${({ theme }) => getSetting(theme, 'selection')};
 `;
 
 const Content = styled(Layout.Content)`
   padding: 16px;
   display: flex;
   flex-direction: column;
+  background-color: ${({ theme }) => getSetting(theme, 'background')};
 `;
 
 export default function Root() {
@@ -32,6 +34,9 @@ export default function Root() {
             <Debug />
             <Header>
               <h2>Tiana Tables</h2>
+
+              <ConnectionNav />
+
               <div>
                 Theme: <ThemeSelector />
               </div>
