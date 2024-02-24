@@ -29,6 +29,7 @@ export default function DatabaseSelector() {
       value={database || undefined}
       fieldNames={{ label: 'Database', value: 'Database' }}
       options={databaseList}
+      style={{ width: '100%' }}
     />
   );
 }

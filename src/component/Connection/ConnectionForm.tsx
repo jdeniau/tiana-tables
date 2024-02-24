@@ -6,10 +6,12 @@ import {
 } from '../../Contexts';
 import { ConnectionObject } from './types';
 import { PureComponent, useContext } from 'react';
+import { NavigateFunction, useNavigate } from 'react-router';
 
 interface ConnectionFormProps {
   connectTo: ConnectToFunc;
   addConnectionToConfig: (connection: ConnectionObject) => void;
+  navigate: NavigateFunction;
 }
 type ConnectionFormType = ConnectionObject & {
   save: boolean;
@@ -34,6 +36,8 @@ class ConnectionForm extends PureComponent<ConnectionFormProps> {
   }
 
   render() {
+    const { navigate } = this.props;
+
     const initialValues = {
       name: '',
       host: 'localhost',
@@ -86,6 +90,13 @@ class ConnectionForm extends PureComponent<ConnectionFormProps> {
         </Form.Item>
 
         <Form.Item<ConnectionFormType>>
+          <Button
+            onClick={() => {
+              navigate(-1);
+            }}
+          >
+            Cancel
+          </Button>
           <Button type="primary" htmlType="submit">
             Connect
           </Button>
@@ -98,9 +109,11 @@ class ConnectionForm extends PureComponent<ConnectionFormProps> {
 function ConnectionFormWithContext() {
   const { connectTo } = useContext(ConnectionContext);
   const { addConnectionToConfig } = useConfiguration();
+  const navigate = useNavigate();
 
   return (
     <ConnectionForm
+      navigate={navigate}
       connectTo={connectTo}
       addConnectionToConfig={addConnectionToConfig}
     />

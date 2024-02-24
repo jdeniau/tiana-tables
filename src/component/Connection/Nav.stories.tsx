@@ -2,6 +2,16 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import { ConnectionContext } from '../../Contexts';
 import Nav from './Nav';
+import styled from 'styled-components';
+import { Layout } from 'antd';
+import { getSetting } from '../../theme';
+
+const Header = styled(Layout.Header)`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: ${({ theme }) => getSetting(theme, 'selection')};
+`;
 
 const meta: Meta<typeof Nav> = {
   component: Nav,
@@ -20,6 +30,11 @@ const meta: Meta<typeof Nav> = {
       >
         <Story />
       </ConnectionContext.Provider>
+    ),
+    (Story) => (
+      <Header>
+        <Story />
+      </Header>
     ),
   ],
 };

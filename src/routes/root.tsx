@@ -7,12 +7,21 @@ import {
 import { styled } from 'styled-components';
 import Debug from '../component/Debug';
 import ThemeSelector from '../component/ThemeSelector';
+import { Layout } from 'antd';
+import { getSetting } from '../theme';
+import ConnectionNav from '../component/Connection/Nav';
 
-const HeaderDiv = styled.header`
+const Header = styled(Layout.Header)`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 46px;
+  background-color: ${({ theme }) => getSetting(theme, 'selection')};
+`;
+
+const Content = styled(Layout.Content)`
+  display: flex;
+  flex-direction: column;
+  background-color: ${({ theme }) => getSetting(theme, 'background')};
 `;
 
 export default function Root() {
@@ -20,15 +29,22 @@ export default function Root() {
     <ConfigurationContextProvider>
       <ThemeContextProvider>
         <ConnectionStack>
-          <Debug />
+          <Layout>
+            <Debug />
+            <Header>
+              <h2>Tiana Tables</h2>
 
-          <HeaderDiv>
-            <h2>Welcome to Tiana Tables !</h2>
-            <div>
-              Theme: <ThemeSelector />
-            </div>
-          </HeaderDiv>
-          <Outlet />
+              <ConnectionNav />
+
+              <div>
+                Theme: <ThemeSelector />
+              </div>
+            </Header>
+
+            <Content>
+              <Outlet />
+            </Content>
+          </Layout>
         </ConnectionStack>
       </ThemeContextProvider>
     </ConfigurationContextProvider>

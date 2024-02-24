@@ -1,14 +1,13 @@
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router';
-import { styled } from 'styled-components';
 import React, { PureComponent } from 'react';
 import Root from './routes/root';
 import ErrorPage from './error-page';
 import { Home } from './routes/home';
-import ConnectionPage from './component/Connection/ConnectionPage';
 import TableLayout from './component/TableLayout';
-import ConnectionForm from './component/Connection/ConnectionForm';
 import { Tables } from './routes/tables';
+import Connect from './routes/connect';
+import Create from './routes/connect/create';
 
 const root = createRoot(document.getElementById('App'));
 
@@ -16,12 +15,6 @@ const root = createRoot(document.getElementById('App'));
 // import { createMemoryHistory } from 'history';
 // export const history = createMemoryHistory();
 // <Router history={history}>
-
-const ModalLike = styled.div`
-  width: 50%;
-  min-width: 400px;
-  align-self: center;
-`;
 
 const router = createMemoryRouter([
   {
@@ -38,19 +31,11 @@ const router = createMemoryRouter([
         children: [
           {
             index: true,
-            element: (
-              <ModalLike>
-                <ConnectionPage />
-              </ModalLike>
-            ),
+            element: <Connect />,
           },
           {
             path: 'create',
-            element: (
-              <ModalLike>
-                <ConnectionForm />
-              </ModalLike>
-            ),
+            element: <Create />,
           },
         ],
       },
