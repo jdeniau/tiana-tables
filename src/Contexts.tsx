@@ -11,7 +11,7 @@ import {
 } from './theme';
 import { ConnectionObject } from './component/Connection/types';
 
-export interface ConnectToFunc {
+interface ConnectToFunc {
   (params: object): void;
 }
 interface ConnexionContextProps {

@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import Root from './routes/root';
 import ErrorPage from './error-page';
 import { Home } from './routes/home';
@@ -53,10 +53,8 @@ const router = createMemoryRouter([
   },
 ]);
 
-export class App extends PureComponent {
-  render() {
-    return <RouterProvider router={router} />;
-  }
+export function App() {
+  return <RouterProvider router={router} />;
 }
 
 root.render(

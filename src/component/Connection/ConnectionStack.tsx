@@ -1,114 +1,63 @@
-import { NavigateFunction, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { ConnectionContext, DatabaseContext } from '../../Contexts';
-import { PureComponent, ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { ConnectionObject } from './types';
 
-interface PropsWithoutHistory {
+interface Props {
   children: ReactNode;
 }
 
-interface Props extends PropsWithoutHistory {
-  navigate: NavigateFunction;
-}
+function ConnectionStack({ children }: Props) {
+  const navigate = useNavigate();
+  const [currentConnectionName, setCurrentConnectionName] = useState<
+    string | null
+  >(null);
+  const [database, setDatabase] = useState<string | null>(null);
+  const [connectionNameList, setConnectionNameList] = useState<string[]>([]);
 
-interface State {
-  currentConnectionName: string | null;
-  connectionNameList: string[];
-  database: string | null;
-}
-
-class ConnectionStack extends PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.handleConnectTo = this.handleConnectTo.bind(this);
-    this.handleSetCurrentConnection =
-      this.handleSetCurrentConnection.bind(this);
-    this.handleSetDatabase = this.handleSetDatabase.bind(this);
-
-    this.state = {
-      currentConnectionName: null,
-      connectionNameList: [],
-      database: null,
+  useEffect(() => {
+    return () => {
+      window.sql.closeAllConnections();
+      // connectionNameList.forEach((connection) => {
+      //   connection.end();
+      // });
     };
-  }
+  }, []);
 
-  componentWillUnmount() {
-    window.sql.closeAllConnections();
-    // this.state.connectionNameList.forEach((connection) => {
-    //   connection.end();
-    // });
-  }
-
-  handleSetCurrentConnection(currentConnectionName: string) {
-    this.setState({
-      currentConnectionName,
-    });
-  }
-
-  handleSetDatabase(database: string) {
-    const { navigate } = this.props;
-
-    this.setState({
-      database,
-    });
+  const handleSetDatabase = (database: string) => {
+    setDatabase(database);
 
     navigate('/tables');
-  }
+  };
 
-  // disconnect() {
-  //   if (this.state.currentConnection) {
-  //     this.state.currentConnection.end();
-  //   }
-  // }
-
-  async handleConnectTo(params: ConnectionObject) {
-    const { navigate } = this.props;
-
+  const handleConnectTo = async (params: ConnectionObject) => {
     await window.sql.openConnection(params);
-
-    this.setState((prevState) => {
-      const { connectionNameList } = prevState;
-
-      return {
-        currentConnectionName: params.name,
-        connectionNameList: [...connectionNameList, params.name],
-      };
-    });
+    setCurrentConnectionName(params.name);
+    setConnectionNameList((prev) => [...prev, params.name]);
 
     navigate('/tables');
-  }
+  };
 
-  render() {
-    const { children } = this.props;
-    const { connectionNameList, currentConnectionName, database } = this.state;
-
-    return (
-      <ConnectionContext.Provider
+  return (
+    <ConnectionContext.Provider
+      value={{
+        connectionNameList,
+        currentConnectionName,
+        connectTo: handleConnectTo,
+        setCurrentConnectionName,
+      }}
+    >
+      <DatabaseContext.Provider
         value={{
-          connectionNameList,
-          currentConnectionName,
-          connectTo: this.handleConnectTo,
-          setCurrentConnectionName: this.handleSetCurrentConnection,
+          database,
+          setDatabase: handleSetDatabase,
+          executeQuery: window.sql.executeQuery,
         }}
       >
-        <DatabaseContext.Provider
-          value={{
-            database,
-            setDatabase: this.handleSetDatabase,
-            executeQuery: window.sql.executeQuery,
-          }}
-        >
-          {children}
-        </DatabaseContext.Provider>
-      </ConnectionContext.Provider>
-    );
-  }
+        {children}
+      </DatabaseContext.Provider>
+    </ConnectionContext.Provider>
+  );
 }
 
-function ConnectionStackWithHistory(props: PropsWithoutHistory) {
-  const navigate = useNavigate();
-
-  return <ConnectionStack navigate={navigate} {...props} />;
-}
-
-export default ConnectionStackWithHistory;
+export default ConnectionStack;
