@@ -3,7 +3,7 @@
 
 import { Connection } from 'mysql2/promise';
 import { ConnectionObject } from './component/Connection/types';
-import { Configuration } from './configuration/type';
+import { Configuration, ConnectionAppState } from './configuration/type';
 import { contextBridge, ipcRenderer } from 'electron';
 
 // === Configuration ===
@@ -13,6 +13,12 @@ interface Config {
   addConnectionToConfig(connection: ConnectionObject): Promise<void>;
 
   changeTheme(theme: string): void;
+
+  updateConnectionState<K extends keyof ConnectionAppState>(
+    connectionName: string,
+    key: K,
+    value: ConnectionAppState[K]
+  ): Promise<void>;
 }
 
 const config: Config = {
@@ -21,6 +27,17 @@ const config: Config = {
     ipcRenderer.invoke('config:connection:add', connection),
   changeTheme: (theme: string) =>
     ipcRenderer.invoke('config:theme:change', theme),
+  updateConnectionState: <K extends keyof ConnectionAppState>(
+    connectionName: string,
+    key: K,
+    value: ConnectionAppState[K]
+  ) =>
+    ipcRenderer.invoke(
+      'config:connection:updateState',
+      connectionName,
+      key,
+      value
+    ),
 };
 
 contextBridge.exposeInMainWorld('config', config);

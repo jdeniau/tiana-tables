@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { styled, ThemeProvider } from 'styled-components';
 import { ConfigProvider as AntdConfigProvider, theme as antdTheme } from 'antd';
-import { Configuration } from './configuration/type';
+import { Configuration, ConnectionAppState } from './configuration/type';
 import {
   DEFAULT_THEME,
   getColor,
@@ -125,6 +125,11 @@ export function ThemeContextProvider({
 type ConfigurationContextType = {
   configuration: Configuration;
   addConnectionToConfig: (connection: ConnectionObject) => void;
+  updateConnectionState: <K extends keyof ConnectionAppState>(
+    connectionName: string,
+    key: K,
+    value: ConnectionAppState[K]
+  ) => void;
 };
 
 const ConfigurationContext = createContext<null | ConfigurationContextType>(
@@ -143,7 +148,6 @@ export function ConfigurationContextProvider({
 
   useEffect(() => {
     window.config.getConfiguration().then((c) => {
-      console.log(c);
       setConfiguration(c);
     });
   }, []);
@@ -158,6 +162,13 @@ export function ConfigurationContextProvider({
     configuration,
     addConnectionToConfig: (connection: ConnectionObject) => {
       window.config.addConnectionToConfig(connection);
+    },
+    updateConnectionState: <K extends keyof ConnectionAppState>(
+      connectionName: string,
+      key: K,
+      value: ConnectionAppState[K]
+    ) => {
+      window.config.updateConnectionState(connectionName, key, value);
     },
   };
 

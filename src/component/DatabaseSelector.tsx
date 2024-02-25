@@ -1,4 +1,8 @@
-import { ConnectionContext, DatabaseContext } from '../Contexts';
+import {
+  ConnectionContext,
+  DatabaseContext,
+  useConfiguration,
+} from '../Contexts';
 import { useContext, useEffect, useState } from 'react';
 import { Select } from 'antd';
 
@@ -8,6 +12,7 @@ interface DatabaseRow {
 
 export default function DatabaseSelector() {
   const { currentConnectionName } = useContext(ConnectionContext);
+  const { updateConnectionState, configuration } = useConfiguration();
 
   const [databaseList, setDatabaseList] = useState<DatabaseRow[]>([]);
 
@@ -17,10 +22,19 @@ export default function DatabaseSelector() {
     executeQuery('SHOW DATABASES;').then(([result]) => {
       if (result) {
         setDatabaseList(result);
-        setDatabase(result[0].Database);
+        setDatabase(
+          // TODO : add a helpen for appState ?
+          configuration.connections[currentConnectionName]?.appState
+            .activeDatabase ?? result[0].Database
+        );
       }
     });
   }, [currentConnectionName, setDatabase]);
+
+  // TODO migrate that into something that does only the side effect ?
+  useEffect(() => {
+    updateConnectionState(currentConnectionName, 'activeDatabase', database);
+  }, [currentConnectionName, database]);
 
   return (
     <Select

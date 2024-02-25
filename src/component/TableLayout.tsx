@@ -1,6 +1,10 @@
 import type { FieldPacket } from 'mysql2/promise';
 import { useParams } from 'react-router-dom';
-import { ConnectionContext, DatabaseContext } from '../Contexts';
+import {
+  ConnectionContext,
+  DatabaseContext,
+  useConfiguration,
+} from '../Contexts';
 import TableGrid from './TableGrid';
 import WhereFilter from './Query/WhereFilter';
 import {
@@ -80,6 +84,11 @@ function TableGridWithConnection() {
   const { currentConnectionName } = useContext(ConnectionContext);
   const { database } = useContext(DatabaseContext);
   const { tableName } = useParams();
+  const { updateConnectionState } = useConfiguration();
+
+  useEffect(() => {
+    updateConnectionState(currentConnectionName, 'openedTable', tableName);
+  }, [tableName]);
 
   if (!currentConnectionName || !database || !tableName) {
     return null;
