@@ -152,8 +152,6 @@ export function ConfigurationContextProvider({
     });
   }, []);
 
-  console.log(configuration);
-
   if (!configuration) {
     return null;
   }

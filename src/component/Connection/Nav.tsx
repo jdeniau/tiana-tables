@@ -12,11 +12,8 @@ const StyledMenu = styled(Menu)`
 `;
 
 export default function Nav(): ReactElement {
-  const {
-    connectionNameList,
-    setCurrentConnectionName,
-    currentConnectionName,
-  } = useContext(ConnectionContext);
+  const { connectionNameList, currentConnectionName } =
+    useContext(ConnectionContext);
 
   if (!connectionNameList.length) {
     return null;
@@ -24,16 +21,7 @@ export default function Nav(): ReactElement {
 
   const items = connectionNameList.map((connection) => ({
     key: connection,
-    label: (
-      <Link
-        onClick={() => {
-          setCurrentConnectionName(connection);
-        }}
-        to="/tables"
-      >
-        {connection}
-      </Link>
-    ),
+    label: <Link to={`/connections/${connection}`}>{connection}</Link>,
   }));
 
   return (
