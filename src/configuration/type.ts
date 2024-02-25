@@ -6,8 +6,15 @@ export type Configuration = {
   connections: Record<string, EncryptedConnectionObject>;
 };
 
+export type ConnectionAppState = {
+  isActive: boolean;
+  activeDatabase: string;
+  openedTable: string;
+};
+
 export type EncryptedConnectionObject = {
   password: string;
+  appState?: ConnectionAppState;
 } & Omit<ConnectionObject, 'password'>;
 
 export type EncryptedConfiguration = {
