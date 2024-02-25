@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext, useContext } from 'react';
 
 interface ConnectToFunc {
   (params: object): void;
@@ -19,3 +19,7 @@ export const ConnectionContext = createContext<ConnexionContextProps>({
   setCurrentConnectionName: () => {},
 });
 ConnectionContext.displayName = 'ConnectionContext';
+
+export function useConnectionContext(): ConnexionContextProps {
+  return useContext(ConnectionContext);
+}

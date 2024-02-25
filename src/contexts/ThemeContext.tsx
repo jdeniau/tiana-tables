@@ -17,16 +17,12 @@ interface ThemeContextProps {
   themeName: string;
   changeTheme: ChangeThemeFunc;
 }
-export const ThemeContext = createContext<ThemeContextProps>({
+const ThemeContext = createContext<ThemeContextProps>({
   themeName: DEFAULT_THEME.name,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   changeTheme: () => {},
 });
 ThemeContext.displayName = 'ThemeContext';
-
-export function useTheme() {
-  return useContext(ThemeContext);
-}
 
 const LayoutDiv = styled.div`
   width: 100%;
@@ -83,4 +79,8 @@ export function ThemeContextProvider({
       </ThemeContext.Provider>
     </ThemeProvider>
   );
+}
+
+export function useTheme() {
+  return useContext(ThemeContext);
 }

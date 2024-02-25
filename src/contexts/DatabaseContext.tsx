@@ -16,3 +16,7 @@ export const DatabaseContext = createContext<DatabaseContextProps>({
   executeQuery: () => Promise.resolve(),
 });
 DatabaseContext.displayName = 'DatabaseContext';
+
+export function useDatabaseContext(): DatabaseContextProps {
+  return useContext(DatabaseContext);
+}

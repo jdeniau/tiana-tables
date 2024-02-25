@@ -1,7 +1,7 @@
 import { useConfiguration } from '../contexts/ConfigurationContext';
-import { DatabaseContext } from '../contexts/DatabaseContext';
-import { ConnectionContext } from '../contexts/ConnectionContext';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useDatabaseContext } from '../contexts/DatabaseContext';
+import { useConnectionContext } from '../contexts/ConnectionContext';
+import { useCallback, useEffect, useState } from 'react';
 import { Select } from 'antd';
 import { useNavigate } from 'react-router';
 
@@ -10,11 +10,11 @@ interface DatabaseRow {
 }
 
 export default function DatabaseSelector() {
-  const { currentConnectionName } = useContext(ConnectionContext);
+  const { currentConnectionName } = useConnectionContext();
   const { updateConnectionState, configuration } = useConfiguration();
   const navigate = useNavigate();
   const [databaseList, setDatabaseList] = useState<DatabaseRow[]>([]);
-  const { database, setDatabase, executeQuery } = useContext(DatabaseContext);
+  const { database, setDatabase, executeQuery } = useDatabaseContext();
 
   useEffect(() => {
     executeQuery('SHOW DATABASES;').then(([result]) => {

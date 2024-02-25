@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ReactElement, useContext } from 'react';
+import { ReactElement } from 'react';
 import { Button, Menu } from 'antd';
-import { ConnectionContext } from '../../contexts/ConnectionContext';
+import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { getSetting } from '../../theme';
 import { styled } from 'styled-components';
 
@@ -12,8 +12,7 @@ const StyledMenu = styled(Menu)`
 `;
 
 export default function Nav(): ReactElement {
-  const { connectionNameList, currentConnectionName } =
-    useContext(ConnectionContext);
+  const { connectionNameList, currentConnectionName } = useConnectionContext();
 
   if (!connectionNameList.length) {
     return null;

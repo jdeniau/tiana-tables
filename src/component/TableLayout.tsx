@@ -1,17 +1,11 @@
 import type { FieldPacket } from 'mysql2/promise';
 import { useParams } from 'react-router-dom';
 import { useConfiguration } from '../contexts/ConfigurationContext';
-import { DatabaseContext } from '../contexts/DatabaseContext';
-import { ConnectionContext } from '../contexts/ConnectionContext';
+import { useDatabaseContext } from '../contexts/DatabaseContext';
+import { useConnectionContext } from '../contexts/ConnectionContext';
 import TableGrid from './TableGrid';
 import WhereFilter from './Query/WhereFilter';
-import {
-  ReactElement,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { ReactElement, useCallback, useEffect, useState } from 'react';
 
 interface TableNameProps {
   tableName: string;
@@ -21,7 +15,7 @@ interface TableNameProps {
 const DEFAULT_LIMIT = 10;
 
 function TableLayout({ tableName, database }: TableNameProps): ReactElement {
-  const { executeQuery } = useContext(DatabaseContext);
+  const { executeQuery } = useDatabaseContext();
   const [result, setResult] = useState<null | object[]>(null);
   const [fields, setFields] = useState<null | FieldPacket[]>(null);
   const [error, setError] = useState<null | Error>(null);
@@ -79,8 +73,8 @@ function TableLayout({ tableName, database }: TableNameProps): ReactElement {
 }
 
 function TableGridWithConnection() {
-  const { currentConnectionName } = useContext(ConnectionContext);
-  const { database } = useContext(DatabaseContext);
+  const { currentConnectionName } = useConnectionContext();
+  const { database } = useDatabaseContext();
   const { tableName } = useParams();
   const { updateConnectionState } = useConfiguration();
 
