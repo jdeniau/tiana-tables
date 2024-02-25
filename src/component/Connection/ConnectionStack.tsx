@@ -81,6 +81,7 @@ class ConnectionStack extends PureComponent<Props, State> {
   render() {
     const { children } = this.props;
     const { connectionNameList, currentConnectionName, database } = this.state;
+
     return (
       <ConnectionContext.Provider
         value={{

@@ -8,6 +8,7 @@ import {
   Configuration,
   EncryptedConnectionObject,
   EncryptedConfiguration,
+  ConnectionAppState,
 } from './type';
 
 // TODO use app.getPath('userData') to store the configuration file instead of env-paths
@@ -107,6 +108,32 @@ export function addConnectionToConfig(connection: ConnectionObject): void {
 export function changeTheme(theme: string): void {
   const config = getConfiguration() ?? getBaseConfig();
   config.theme = theme;
+
+  writeConfiguration(config);
+}
+
+export function updateConnectionState<K extends keyof ConnectionAppState>(
+  connectionName: string,
+  key: K,
+  value: ConnectionAppState[K]
+) {
+  const config = getConfiguration();
+
+  const connection = config.connections[connectionName];
+
+  if (!connection) {
+    return;
+  }
+
+  if (!connection.appState) {
+    connection.appState = {
+      isActive: false,
+      activeDatabase: '',
+      openedTable: '',
+    };
+  }
+
+  connection.appState[key] = value;
 
   writeConfiguration(config);
 }

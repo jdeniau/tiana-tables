@@ -19,24 +19,26 @@ interface TableStatusRow {
 function ConnectedTableList({ database }: TableListProps): ReactElement | null {
   const { currentConnectionName } = useContext(ConnectionContext);
   const { executeQuery } = useContext(DatabaseContext);
-  const [tableStatus, setTableStatus] = useState<TableStatusRow[] | null>(null);
+  const [tableStatusList, setTableStatusList] = useState<
+    TableStatusRow[] | null
+  >(null);
 
   useEffect(() => {
     executeQuery(
       // connection.query(
       `SHOW TABLE STATUS FROM \`${database}\`;`
     ).then(([result]) => {
-      setTableStatus(result);
+      setTableStatusList(result);
     });
   }, [currentConnectionName, database]);
 
-  if (!tableStatus) {
+  if (!tableStatusList) {
     return null;
   }
 
   return (
     <div>
-      {tableStatus.map((rowDataPacket: TableStatusRow) => (
+      {tableStatusList.map((rowDataPacket: TableStatusRow) => (
         <div key={rowDataPacket.Name}>
           <StyledNavLink
             to={`/tables/${rowDataPacket.Name}`}
