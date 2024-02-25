@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ReactElement, useContext } from 'react';
 import { Button, Menu } from 'antd';
-import { ConnectionContext } from '../../Contexts';
+import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { getSetting } from '../../theme';
 import { styled } from 'styled-components';
 

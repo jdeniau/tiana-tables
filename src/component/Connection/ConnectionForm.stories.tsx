@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
-import { ConnectionContext } from '../../Contexts';
+import { ConnectionContext } from '../../contexts/ConnectionContext';
 import ConnectionForm from './ConnectionForm';
 
 const meta: Meta<typeof ConnectionForm> = {

@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import TableList from './TableList';
-import { ConnectionContext, DatabaseContext } from '../Contexts';
+import { DatabaseContext } from '../contexts/DatabaseContext';
+import { ConnectionContext } from '../contexts/ConnectionContext';
 
 const meta: Meta<typeof TableList> = {
   component: TableList,

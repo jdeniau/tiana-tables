@@ -1,4 +1,5 @@
-import { ConnectionContext, DatabaseContext } from '../Contexts';
+import { DatabaseContext } from '../contexts/DatabaseContext';
+import { ConnectionContext } from '../contexts/ConnectionContext';
 import { NavLink } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { getColor } from '../../src/theme';

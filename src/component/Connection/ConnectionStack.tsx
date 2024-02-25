@@ -1,5 +1,6 @@
 import { useMatch, useNavigate } from 'react-router';
-import { ConnectionContext, DatabaseContext } from '../../Contexts';
+import { DatabaseContext } from '../../contexts/DatabaseContext';
+import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { ConnectionObject } from './types';
 

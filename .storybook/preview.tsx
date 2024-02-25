@@ -2,7 +2,8 @@ import React from 'react';
 import type { Preview } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import { useGlobals, useParameter } from '@storybook/manager-api';
-import { ThemeContextProvider, testables } from '../src/Contexts';
+import { testables } from '../src/Contexts';
+import { ThemeContextProvider } from '../src/contexts/ThemeContext';
 import { MemoryRouter } from 'react-router';
 import { DEFAULT_THEME, THEME_LIST, getSetting } from '../src/theme';
 

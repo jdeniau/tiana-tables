@@ -1,10 +1,8 @@
 import type { FieldPacket } from 'mysql2/promise';
 import { useParams } from 'react-router-dom';
-import {
-  ConnectionContext,
-  DatabaseContext,
-  useConfiguration,
-} from '../Contexts';
+import { useConfiguration } from '../contexts/ConfigurationContext';
+import { DatabaseContext } from '../contexts/DatabaseContext';
+import { ConnectionContext } from '../contexts/ConnectionContext';
 import TableGrid from './TableGrid';
 import WhereFilter from './Query/WhereFilter';
 import {

@@ -1,5 +1,6 @@
 import { Button, Checkbox, Form, Input } from 'antd';
-import { ConnectionContext, useConfiguration } from '../../Contexts';
+import { useConfiguration } from '../../contexts/ConfigurationContext';
+import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { ConnectionObject } from './types';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router';

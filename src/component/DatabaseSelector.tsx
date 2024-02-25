@@ -1,8 +1,6 @@
-import {
-  ConnectionContext,
-  DatabaseContext,
-  useConfiguration,
-} from '../Contexts';
+import { useConfiguration } from '../contexts/ConfigurationContext';
+import { DatabaseContext } from '../contexts/DatabaseContext';
+import { ConnectionContext } from '../contexts/ConnectionContext';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Select } from 'antd';
 import { useNavigate } from 'react-router';

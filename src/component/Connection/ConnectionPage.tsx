@@ -1,7 +1,8 @@
 import { Link, Navigate } from 'react-router-dom';
 import { Button } from 'antd';
 import { ConnectionObject } from './types';
-import { ConnectionContext, useConfiguration } from '../../Contexts';
+import { useConfiguration } from '../../contexts/ConfigurationContext';
+import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { useContext } from 'react';
 
 function ConnectionPage() {

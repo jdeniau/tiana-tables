@@ -1,15 +1,13 @@
 import { Outlet } from 'react-router';
 import ConnectionStack from '../component/Connection/ConnectionStack';
-import {
-  ConfigurationContextProvider,
-  ThemeContextProvider,
-} from '../Contexts';
+import { ConfigurationContextProvider } from '../contexts/ConfigurationContext';
 import { styled } from 'styled-components';
 import Debug from '../component/Debug';
 import ThemeSelector from '../component/ThemeSelector';
 import { Layout } from 'antd';
 import { getSetting } from '../theme';
 import ConnectionNav from '../component/Connection/Nav';
+import { ThemeContextProvider } from '../contexts/ThemeContext';
 
 const Header = styled(Layout.Header)`
   display: flex;
