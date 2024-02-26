@@ -12,7 +12,6 @@ interface DatabaseRow {
 export default function DatabaseSelector() {
   const { currentConnectionName } = useConnectionContext();
   const { updateConnectionState, configuration } = useConfiguration();
-  const navigate = useNavigate();
   const [databaseList, setDatabaseList] = useState<DatabaseRow[]>([]);
   const { database, setDatabase, executeQuery } = useDatabaseContext();
 
@@ -29,18 +28,23 @@ export default function DatabaseSelector() {
         setDatabase(currentDatabase);
       }
     });
-  }, [currentConnectionName]);
+  }, [
+    configuration.connections,
+    currentConnectionName,
+    executeQuery,
+    setDatabase,
+  ]);
 
   // TODO migrate that into something that does only the side effect ?
   useEffect(() => {
     updateConnectionState(currentConnectionName, 'activeDatabase', database);
-  }, [currentConnectionName, database]);
+  }, [currentConnectionName, database, updateConnectionState]);
 
   const handleChange = useCallback(
     (database: string) => {
       setDatabase(database);
     },
-    [currentConnectionName, navigate]
+    [setDatabase]
   );
 
   return (

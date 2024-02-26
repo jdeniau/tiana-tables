@@ -40,7 +40,7 @@ function TableLayout({ tableName, database }: TableNameProps): ReactElement {
           setError(err);
         });
     },
-    [tableName, database, where]
+    [database, tableName, where, executeQuery]
   );
 
   useEffect(() => {
@@ -80,7 +80,7 @@ function TableGridWithConnection() {
 
   useEffect(() => {
     updateConnectionState(currentConnectionName, 'openedTable', tableName);
-  }, [tableName]);
+  }, [currentConnectionName, tableName, updateConnectionState]);
 
   if (!currentConnectionName || !database || !tableName) {
     return null;
