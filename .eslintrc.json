@@ -21,6 +21,11 @@
     "plugin:react-hooks/recommended"
   ],
   "parser": "@typescript-eslint/parser",
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
   "rules": {
     "@typescript-eslint/no-unused-vars": [
       "error",

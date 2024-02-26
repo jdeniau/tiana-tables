@@ -15,7 +15,8 @@
     "strict": true
   },
   "include": [
-    "src"
+    "src",
+    "locales"
     // "stories" /ignore stories for now
   ]
 }

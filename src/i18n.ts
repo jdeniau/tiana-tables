@@ -1,5 +1,7 @@
 import i18n from 'i18next';
 import { useTranslation, initReactI18next } from 'react-i18next';
+import en from '../locales/en';
+import fr from '../locales/fr';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -10,44 +12,10 @@ declare module 'i18next' {
 
 const resources = {
   en: {
-    translation: {
-      cancel: 'Cancel',
-      edit: 'Edit',
-      save: 'Save',
-      'connect.pleaseConnect': 'Please connect',
-      'connect.new': 'New…',
-      'theme.switch.label': 'Theme:',
-      'connection.create.button': 'Create connection…',
-      'connection.form.name.label': 'Name',
-      'connection.form.host.label': 'Host',
-      'connection.form.port.label': 'Port',
-      'connection.form.user.label': 'User',
-      'connection.form.password.label': 'Password',
-      'connection.form.saveConnection': 'Save connection',
-      'connection.form.action.connect': 'Connect',
-      'connection.form.action.saveAndConnect': 'Save and connect',
-      'table.rows.loadMore': 'Load more…',
-    },
+    translation: en,
   },
   fr: {
-    translation: {
-      cancel: 'Annuler',
-      edit: 'Modifier',
-      save: 'Enregistrer',
-      'connect.pleaseConnect': 'Veuillez vous connecter',
-      'connect.new': 'Nouveau…',
-      'theme.switch.label': 'Thème :',
-      'connection.create.button': 'Créer une connexion…',
-      'connection.form.name.label': 'Nom',
-      'connection.form.host.label': 'Hôte',
-      'connection.form.port.label': 'Port',
-      'connection.form.user.label': 'Utilisateur',
-      'connection.form.password.label': 'Mot de passe',
-      'connection.form.saveConnection': 'Enregistrer la connexion',
-      'connection.form.action.connect': 'Connecter',
-      'connection.form.action.saveAndConnect': 'Enregistrer et connecter',
-      'table.rows.loadMore': 'Charger plus…',
-    },
+    translation: fr,
   },
 } as const;
 
