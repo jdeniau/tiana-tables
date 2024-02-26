@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { Configuration, ConnectionAppState } from '../configuration/type';
 import { ConnectionObject } from '../component/Connection/types';
 
@@ -32,23 +39,32 @@ export function ConfigurationContextProvider({
     });
   }, []);
 
-  if (!configuration) {
-    return null;
-  }
+  const addConnectionToConfig = useCallback((connection: ConnectionObject) => {
+    window.config.addConnectionToConfig(connection);
+  }, []);
 
-  const value: ConfigurationContextType = {
-    configuration,
-    addConnectionToConfig: (connection: ConnectionObject) => {
-      window.config.addConnectionToConfig(connection);
-    },
-    updateConnectionState: <K extends keyof ConnectionAppState>(
+  const updateConnectionState = useCallback(
+    <K extends keyof ConnectionAppState>(
       connectionName: string,
       key: K,
       value: ConnectionAppState[K]
     ) => {
       window.config.updateConnectionState(connectionName, key, value);
     },
-  };
+    []
+  );
+  const value: ConfigurationContextType = useMemo(
+    () => ({
+      configuration,
+      addConnectionToConfig,
+      updateConnectionState,
+    }),
+    [configuration, addConnectionToConfig, updateConnectionState]
+  );
+
+  if (!configuration) {
+    return null;
+  }
 
   return (
     <ConfigurationContext.Provider value={value}>
