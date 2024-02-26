@@ -9,9 +9,10 @@ import {
   addConnectionToConfig,
   changeTheme,
   updateConnectionState,
+  editConnection,
 } from './configuration';
 import { ConnectionObject } from './component/Connection';
-import { ConnectionAppState } from './configuration/type';
+import { Configuration, ConnectionAppState } from './configuration/type';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -56,8 +57,16 @@ app.whenReady().then(() => {
   ipcMain.handle('config:get', getConfiguration);
   ipcMain.handle(
     'config:connection:add',
-    (event: unknown, connection: ConnectionObject) =>
+    (event: unknown, connection: ConnectionObject): Configuration =>
       addConnectionToConfig(connection)
+  );
+  ipcMain.handle(
+    'config:connection:edit',
+    (
+      event: unknown,
+      connectionName: string,
+      connection: ConnectionObject
+    ): Configuration => editConnection(connectionName, connection)
   );
   ipcMain.handle('config:theme:change', (event: unknown, name: string) =>
     changeTheme(name)

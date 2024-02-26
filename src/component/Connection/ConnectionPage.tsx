@@ -1,5 +1,5 @@
 import { Link, Navigate } from 'react-router-dom';
-import { Button } from 'antd';
+import { Button, Flex } from 'antd';
 import { ConnectionObject } from './types';
 import { useConfiguration } from '../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
@@ -24,11 +24,12 @@ function ConnectionPage() {
     <div>
       {connectionList.map(
         (connection: ConnectionObject): JSX.Element => (
-          <div key={connection.name}>
+          <Flex key={connection.name} gap="small">
             <Button block>
               <Link
                 to={connection.name}
                 onClick={(e) => {
+                  // TODO move this in the page component
                   e.preventDefault();
                   connectTo(connection);
                 }}
@@ -36,7 +37,10 @@ function ConnectionPage() {
                 {connection.name}
               </Link>
             </Button>
-          </div>
+            <Button>
+              <Link to={`/connect/edit/${connection.name}`}>edit </Link>
+            </Button>
+          </Flex>
         )
       )}
 

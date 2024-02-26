@@ -5,25 +5,35 @@ import { ConnectionObject } from './types';
 import { useNavigate } from 'react-router';
 
 type ConnectionFormType = ConnectionObject & {
-  save: boolean;
+  save?: boolean;
 };
 
-function ConnectionForm() {
+type Props = { connection?: ConnectionObject };
+
+function ConnectionForm({ connection }: Props) {
   const { connectTo } = useConnectionContext();
-  const { addConnectionToConfig } = useConfiguration();
+  const { addConnectionToConfig, editConnection } = useConfiguration();
   const navigate = useNavigate();
 
   const handleSubmit = (formData: ConnectionFormType): void => {
-    const { save, ...connection } = formData;
+    const { save, ...connectionFormData } = formData;
 
-    if (save) {
-      addConnectionToConfig(connection);
+    if (connectionFormData) {
+      // edit connection
+      editConnection(connection.name, connectionFormData);
+
+      navigate('/connect');
+      return;
     }
 
-    connectTo(connection);
+    if (save) {
+      addConnectionToConfig(connectionFormData);
+    }
+
+    connectTo(connectionFormData);
   };
 
-  const initialValues = {
+  const initialValues: ConnectionFormType = connection ?? {
     name: '',
     host: 'localhost',
     port: 3306,
@@ -70,9 +80,11 @@ function ConnectionForm() {
         <Input type="password" />
       </Form.Item>
 
-      <Form.Item<ConnectionFormType> name="save" valuePropName="checked">
-        <Checkbox>enregistrer la connexion</Checkbox>
-      </Form.Item>
+      {!connection && (
+        <Form.Item<ConnectionFormType> name="save" valuePropName="checked">
+          <Checkbox>enregistrer la connexion</Checkbox>
+        </Form.Item>
+      )}
 
       <Form.Item<ConnectionFormType>>
         <Button
@@ -83,7 +95,7 @@ function ConnectionForm() {
           Cancel
         </Button>
         <Button type="primary" htmlType="submit">
-          Connect
+          {connection ? 'Save' : 'Connect'}
         </Button>
       </Form.Item>
     </Form>
