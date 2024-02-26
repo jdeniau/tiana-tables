@@ -25,7 +25,7 @@ const meta: Meta<typeof Nav> = {
           setCurrentConnectionName: (connection) => {
             action('setCurrentConnectionName')(connection);
           },
-          connectTo: () => {},
+          connectTo: async () => {},
         }}
       >
         <Story />

@@ -13,16 +13,16 @@ class ConnectionStack {
 
   bindIpcMain(ipcMain: Electron.IpcMain): void {
     for (const [channel, handler] of Object.entries(this.#ipcEventBinding)) {
-      ipcMain.handle(channel, (event, ...args) =>
+      ipcMain.handle(channel, (event, ...args: unknown[]) =>
         // convert the first argument to senderId and bind the rest
+        // @ts-expect-error issue with strict type in tsconfig, but seems to work at runtime
         handler.bind(this)(event.sender.id, ...args)
       );
     }
   }
 
   async connect(senderId: number, params: ConnectionObject): Promise<number> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { name, ...rest } = params;
+    const { name: _, ...rest } = params;
     const connection = await createConnection(rest);
     await connection.connect();
     this.connections.set(senderId, connection);

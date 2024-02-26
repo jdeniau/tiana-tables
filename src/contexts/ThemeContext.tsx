@@ -19,6 +19,7 @@ import {
   theme as antdTheme,
 } from 'antd';
 import { useConfiguration } from './ConfigurationContext';
+import invariant from 'tiny-invariant';
 
 interface ChangeThemeFunc {
   (theme: string): void;
@@ -57,6 +58,8 @@ export function ThemeContextProvider({
   }, []);
 
   const theme = THEME_LIST[themeName];
+
+  invariant(theme, `Theme ${themeName} not found`);
 
   const themeContextValue = useMemo(
     () => ({ themeName, changeTheme }),

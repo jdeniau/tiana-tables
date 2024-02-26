@@ -8,6 +8,7 @@ import { Layout } from 'antd';
 import { getSetting } from '../theme';
 import ConnectionNav from '../component/Connection/Nav';
 import { ThemeContextProvider } from '../contexts/ThemeContext';
+import { useTranslation } from '../i18n';
 
 const Header = styled(Layout.Header)`
   display: flex;
@@ -23,6 +24,8 @@ const Content = styled(Layout.Content)`
 `;
 
 export default function Root() {
+  const { t } = useTranslation();
+
   return (
     <ConfigurationContextProvider>
       <ThemeContextProvider>
@@ -35,7 +38,7 @@ export default function Root() {
               <ConnectionNav />
 
               <div>
-                Theme: <ThemeSelector />
+                {t('theme.switch.label')} <ThemeSelector />
               </div>
             </Header>
 

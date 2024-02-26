@@ -47,7 +47,9 @@ export function ConfigurationContextProvider({
 
   const value: ConfigurationContextType = useMemo(
     () => ({
-      configuration,
+      // force `as` here as we will break if configuration is null, but the hook needs to be before it.
+      // We don't want to use ts-expect-error, as we want to test other properties of the object.
+      configuration: configuration as Configuration,
       addConnectionToConfig: willChangeConfiguration(
         window.config.addConnectionToConfig
       ),

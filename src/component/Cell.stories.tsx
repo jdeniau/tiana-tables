@@ -15,7 +15,7 @@ const meta: Meta<typeof Cell> = {
           connectionNameList: ['test'],
           // eslint-disable-next-line @typescript-eslint/no-empty-function
           setCurrentConnectionName: () => {},
-          connectTo: (connection) => {
+          connectTo: async (connection) => {
             action('connectTo')(connection);
           },
         }}

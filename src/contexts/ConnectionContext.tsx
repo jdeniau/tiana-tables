@@ -1,7 +1,8 @@
 import { createContext, useContext } from 'react';
+import { ConnectionObject } from '../component/Connection/types';
 
 interface ConnectToFunc {
-  (params: object): void;
+  (params: ConnectionObject): Promise<void>;
 }
 interface ConnexionContextProps {
   currentConnectionName: string | null;
@@ -14,7 +15,7 @@ export const ConnectionContext = createContext<ConnexionContextProps>({
   currentConnectionName: null,
   connectionNameList: [],
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  connectTo: () => {},
+  connectTo: () => Promise.resolve(),
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setCurrentConnectionName: () => {},
 });

@@ -11,10 +11,12 @@
     "outDir": "dist",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "strict": true
   },
   "include": [
-    "src"
+    "src",
+    "locales"
     // "stories" /ignore stories for now
   ]
 }

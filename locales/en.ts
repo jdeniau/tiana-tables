@@ -1,0 +1,18 @@
+export default {
+  cancel: 'Cancel',
+  edit: 'Edit',
+  save: 'Save',
+  'connect.pleaseConnect': 'Please connect',
+  'connect.new': 'New…',
+  'theme.switch.label': 'Theme:',
+  'connection.create.button': 'Create connection…',
+  'connection.form.name.label': 'Name',
+  'connection.form.host.label': 'Host',
+  'connection.form.port.label': 'Port',
+  'connection.form.user.label': 'User',
+  'connection.form.password.label': 'Password',
+  'connection.form.saveConnection': 'Save connection',
+  'connection.form.action.connect': 'Connect',
+  'connection.form.action.saveAndConnect': 'Save and connect',
+  'table.rows.loadMore': 'Load more…',
+};

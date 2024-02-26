@@ -9,8 +9,13 @@ import { Tables } from './routes/tables';
 import Connect from './routes/connect';
 import Create from './routes/connect/create';
 import Edit from './routes/connect/edit.$connectionName';
+import invariant from 'tiny-invariant';
 
-const root = createRoot(document.getElementById('App'));
+const appElement = document.getElementById('App');
+
+invariant(appElement, 'App element not found');
+
+const root = createRoot(appElement);
 
 // A possibility is also to create history manually to call `history.push('/path')`
 // import { createMemoryHistory } from 'history';
