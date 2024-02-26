@@ -3,7 +3,6 @@ import { useDatabaseContext } from '../contexts/DatabaseContext';
 import { useConnectionContext } from '../contexts/ConnectionContext';
 import { useCallback, useEffect, useState } from 'react';
 import { Select } from 'antd';
-import { useNavigate } from 'react-router';
 
 interface DatabaseRow {
   Database: string;

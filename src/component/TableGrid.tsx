@@ -45,6 +45,8 @@ function TableGrid({ fields, result }: TableGridProps): ReactElement {
         <tbody>
           {/* TODO : use the table primary key to make a real key */}
           {result.map((row: object) => (
+            //  TODO activate and use the PRIMARY KEY value as react key
+            // eslint-disable-next-line react/jsx-key
             <tr>
               {fields.map((field) => (
                 <Td key={field.name}>
