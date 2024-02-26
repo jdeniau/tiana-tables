@@ -32,6 +32,16 @@ type Story = StoryObj<typeof ConnectionForm>;
  * See https://storybook.js.org/docs/api/csf
  * to learn how to use render functions.
  */
-export const Form: Story = {
-  render: () => <ConnectionForm />,
+export const Create: Story = {};
+
+export const Edit: Story = {
+  args: {
+    connection: {
+      name: 'test',
+      host: 'localhost',
+      port: 3307,
+      user: 'test-user',
+      password: '',
+    },
+  },
 };

@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Configuration, ConnectionAppState } from '../configuration/type';
 import { ConnectionObject } from '../component/Connection/types';
 

@@ -18,7 +18,7 @@ function ConnectionForm({ connection }: Props) {
   const handleSubmit = (formData: ConnectionFormType): void => {
     const { save, ...connectionFormData } = formData;
 
-    if (connectionFormData) {
+    if (connection) {
       // edit connection
       editConnection(connection.name, connectionFormData);
 
