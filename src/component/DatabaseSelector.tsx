@@ -3,6 +3,7 @@ import { useDatabaseContext } from '../contexts/DatabaseContext';
 import { useConnectionContext } from '../contexts/ConnectionContext';
 import { useCallback, useEffect, useState } from 'react';
 import { Select } from 'antd';
+import invariant from 'tiny-invariant';
 
 interface DatabaseRow {
   Database: string;
@@ -15,8 +16,11 @@ export default function DatabaseSelector() {
   const { database, setDatabase, executeQuery } = useDatabaseContext();
 
   useEffect(() => {
+    // @ts-expect-error -- TODO handle types here
     executeQuery('SHOW DATABASES;').then(([result]) => {
       if (result) {
+        invariant(currentConnectionName, 'Connection name is required');
+
         setDatabaseList(result);
 
         // TODO : add a helper for appState ?
@@ -36,7 +40,13 @@ export default function DatabaseSelector() {
 
   // TODO migrate that into something that does only the side effect ?
   useEffect(() => {
-    updateConnectionState(currentConnectionName, 'activeDatabase', database);
+    invariant(currentConnectionName, 'Connection name is required');
+
+    updateConnectionState(
+      currentConnectionName,
+      'activeDatabase',
+      database ?? ''
+    );
   }, [currentConnectionName, database, updateConnectionState]);
 
   const handleChange = useCallback(

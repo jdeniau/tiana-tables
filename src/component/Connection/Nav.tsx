@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ReactElement } from 'react';
+import { styled } from 'styled-components';
 import { Button, Menu } from 'antd';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { getSetting } from '../../theme';
-import { styled } from 'styled-components';
+import { useTranslation } from '../../i18n';
 
 const StyledMenu = styled(Menu)`
   flex: 1;
@@ -11,8 +12,9 @@ const StyledMenu = styled(Menu)`
   background-color: ${({ theme }) => getSetting(theme, 'selection')};
 `;
 
-export default function Nav(): ReactElement {
+export default function Nav(): ReactElement | null {
   const { connectionNameList, currentConnectionName } = useConnectionContext();
+  const { t } = useTranslation();
 
   if (!connectionNameList.length) {
     return null;
@@ -26,12 +28,12 @@ export default function Nav(): ReactElement {
   return (
     <>
       <Button style={{ margin: '0 10px' }}>
-        <Link to="/connect">new…</Link>
+        <Link to="/connect">{t('connect.new')}</Link>
       </Button>
 
       <StyledMenu
         mode="horizontal"
-        selectedKeys={[currentConnectionName]}
+        selectedKeys={[currentConnectionName ?? '']}
         items={items}
       />
     </>

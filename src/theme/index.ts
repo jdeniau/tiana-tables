@@ -2,7 +2,11 @@ import * as dracula from '../theme/dracula.json';
 import * as visualStudio from '../theme/visualStudio.json';
 import * as active4d from '../theme/active4d.json';
 
-const THEME_LIST_AS_ARRAY = [dracula, visualStudio, active4d] as const;
+const THEME_LIST_AS_ARRAY: TmTheme[] = [
+  dracula,
+  visualStudio,
+  active4d,
+] as const;
 
 const DARK_THEME_LIST_NAME = ['Dracula'];
 
@@ -27,7 +31,7 @@ export interface TmTheme {
 
 interface TmThemeSetting {
   readonly scope?: string | string[];
-  readonly settings: Record<string, string>;
+  readonly settings: Record<string, string | undefined>;
 }
 
 interface TmThemeScopedSetting extends TmThemeSetting {
@@ -52,7 +56,7 @@ export function getColor(
   currentTheme: TmTheme,
   scopeToFind: string,
   settingToFind: string
-): string {
+): string | undefined {
   const item = currentTheme.settings
     .filter(isScopedSetting)
     .find(({ scope }: TmThemeSetting) => {
@@ -69,7 +73,10 @@ export function getColor(
   return item.settings[settingToFind];
 }
 
-export function getSetting(currentTheme: TmTheme, key: string): string {
+export function getSetting(
+  currentTheme: TmTheme,
+  key: string
+): string | undefined {
   const settings = currentTheme.settings.filter(
     isUnscopedSetting
   ) as TmThemeGlobalSetting[];

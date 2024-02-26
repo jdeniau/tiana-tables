@@ -28,6 +28,7 @@ function ConnectedTableList({ database }: TableListProps): ReactElement | null {
     executeQuery(
       // connection.query(
       `SHOW TABLE STATUS FROM \`${database}\`;`
+      // @ts-expect-error -- TODO handle types here
     ).then(([result]) => {
       setTableStatusList(result);
     });

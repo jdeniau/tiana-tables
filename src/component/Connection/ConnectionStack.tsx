@@ -3,6 +3,7 @@ import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { ConnectionObject } from './types';
+import invariant from 'tiny-invariant';
 
 interface Props {
   children: ReactNode;
@@ -45,6 +46,8 @@ function ConnectionStack({ children }: Props) {
 
   const handleSetDatabase = useCallback(
     (database: string) => {
+      invariant(currentConnectionName, 'Connection name is required');
+
       navigate(`/connections/${currentConnectionName}/${database}`);
     },
     [currentConnectionName, navigate]
@@ -54,14 +57,14 @@ function ConnectionStack({ children }: Props) {
     <ConnectionContext.Provider
       value={{
         connectionNameList,
-        currentConnectionName,
+        currentConnectionName: currentConnectionName ?? null,
         connectTo: handleConnectTo,
         setCurrentConnectionName: handleSetConnection,
       }}
     >
       <DatabaseContext.Provider
         value={{
-          database: databaseName,
+          database: databaseName ?? null,
           setDatabase: handleSetDatabase,
           executeQuery: window.sql.executeQuery,
         }}

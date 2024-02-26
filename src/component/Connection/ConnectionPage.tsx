@@ -3,8 +3,10 @@ import { Button, Flex } from 'antd';
 import { ConnectionObject } from './types';
 import { useConfiguration } from '../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
+import { useTranslation } from '../../i18n';
 
 function ConnectionPage() {
+  const { t } = useTranslation();
   const registeredConnectionList = useConfiguration().configuration.connections;
   const { connectTo } = useConnectionContext();
 
@@ -38,7 +40,7 @@ function ConnectionPage() {
               </Link>
             </Button>
             <Button>
-              <Link to={`/connect/edit/${connection.name}`}>edit </Link>
+              <Link to={`/connect/edit/${connection.name}`}>{t('edit')}</Link>
             </Button>
           </Flex>
         )
@@ -47,7 +49,7 @@ function ConnectionPage() {
       <hr />
 
       <Button block>
-        <Link to="/connect/create">Create connection…</Link>
+        <Link to="/connect/create">{t('connection.create.button')}</Link>
       </Button>
     </div>
   );
