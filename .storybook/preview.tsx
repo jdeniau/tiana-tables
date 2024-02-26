@@ -62,6 +62,9 @@ const preview: Preview = {
             addConnectionToConfig: (connection) => {
               action('addConnectionToConfig')(connection);
             },
+            updateConnectionState: (connectionName, key, value) => {
+              action('updateConnectionState')(connectionName, key, value);
+            },
           }}
         >
           <ThemeContextProvider>
