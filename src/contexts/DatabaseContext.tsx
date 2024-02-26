@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext, useContext } from 'react';
 
 interface SetDatabaseFunc {
   (theme: string): void;

@@ -31,7 +31,7 @@ function ConnectedTableList({ database }: TableListProps): ReactElement | null {
     ).then(([result]) => {
       setTableStatusList(result);
     });
-  }, [currentConnectionName, database]);
+  }, [currentConnectionName, database, executeQuery]);
 
   if (!tableStatusList) {
     return null;
