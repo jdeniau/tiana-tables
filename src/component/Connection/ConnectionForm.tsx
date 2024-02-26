@@ -1,7 +1,7 @@
 import { Button, Checkbox, Form, Input } from 'antd';
-import { ConnectionContext, useConfiguration } from '../../Contexts';
+import { useConfiguration } from '../../contexts/ConfigurationContext';
+import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { ConnectionObject } from './types';
-import { useContext } from 'react';
 import { useNavigate } from 'react-router';
 
 type ConnectionFormType = ConnectionObject & {
@@ -9,7 +9,7 @@ type ConnectionFormType = ConnectionObject & {
 };
 
 function ConnectionForm() {
-  const { connectTo } = useContext(ConnectionContext);
+  const { connectTo } = useConnectionContext();
   const { addConnectionToConfig } = useConfiguration();
   const navigate = useNavigate();
 

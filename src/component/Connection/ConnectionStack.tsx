@@ -1,6 +1,7 @@
-import { useNavigate } from 'react-router';
-import { ConnectionContext, DatabaseContext } from '../../Contexts';
-import { ReactNode, useEffect, useState } from 'react';
+import { useMatch, useNavigate } from 'react-router';
+import { DatabaseContext } from '../../contexts/DatabaseContext';
+import { ConnectionContext } from '../../contexts/ConnectionContext';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { ConnectionObject } from './types';
 
 interface Props {
@@ -9,10 +10,11 @@ interface Props {
 
 function ConnectionStack({ children }: Props) {
   const navigate = useNavigate();
-  const [currentConnectionName, setCurrentConnectionName] = useState<
-    string | null
-  >(null);
-  const [database, setDatabase] = useState<string | null>(null);
+  const currentConnectionName = useMatch('connections/:connectionName/*')
+    ?.params.connectionName;
+  const databaseName = useMatch('connections/:connectionName/:databaseName/*')
+    ?.params.databaseName;
+
   const [connectionNameList, setConnectionNameList] = useState<string[]>([]);
 
   useEffect(() => {
@@ -24,19 +26,29 @@ function ConnectionStack({ children }: Props) {
     };
   }, []);
 
-  const handleSetDatabase = (database: string) => {
-    setDatabase(database);
+  const handleConnectTo = useCallback(
+    async (params: ConnectionObject) => {
+      await window.sql.openConnection(params);
+      setConnectionNameList((prev) => [...prev, params.name]);
 
-    navigate('/tables');
-  };
+      navigate(`/connections/${params.name}`);
+    },
+    [navigate, setConnectionNameList]
+  );
 
-  const handleConnectTo = async (params: ConnectionObject) => {
-    await window.sql.openConnection(params);
-    setCurrentConnectionName(params.name);
-    setConnectionNameList((prev) => [...prev, params.name]);
+  const handleSetConnection = useCallback(
+    (connectionName: string) => {
+      navigate(`/connections/${connectionName}`);
+    },
+    [navigate]
+  );
 
-    navigate('/tables');
-  };
+  const handleSetDatabase = useCallback(
+    (database: string) => {
+      navigate(`/connections/${currentConnectionName}/${database}`);
+    },
+    [currentConnectionName, navigate]
+  );
 
   return (
     <ConnectionContext.Provider
@@ -44,12 +56,12 @@ function ConnectionStack({ children }: Props) {
         connectionNameList,
         currentConnectionName,
         connectTo: handleConnectTo,
-        setCurrentConnectionName,
+        setCurrentConnectionName: handleSetConnection,
       }}
     >
       <DatabaseContext.Provider
         value={{
-          database,
+          database: databaseName,
           setDatabase: handleSetDatabase,
           executeQuery: window.sql.executeQuery,
         }}

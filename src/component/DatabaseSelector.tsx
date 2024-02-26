@@ -1,45 +1,52 @@
-import {
-  ConnectionContext,
-  DatabaseContext,
-  useConfiguration,
-} from '../Contexts';
-import { useContext, useEffect, useState } from 'react';
+import { useConfiguration } from '../contexts/ConfigurationContext';
+import { useDatabaseContext } from '../contexts/DatabaseContext';
+import { useConnectionContext } from '../contexts/ConnectionContext';
+import { useCallback, useEffect, useState } from 'react';
 import { Select } from 'antd';
+import { useNavigate } from 'react-router';
 
 interface DatabaseRow {
   Database: string;
 }
 
 export default function DatabaseSelector() {
-  const { currentConnectionName } = useContext(ConnectionContext);
+  const { currentConnectionName } = useConnectionContext();
   const { updateConnectionState, configuration } = useConfiguration();
-
+  const navigate = useNavigate();
   const [databaseList, setDatabaseList] = useState<DatabaseRow[]>([]);
-
-  const { database, setDatabase, executeQuery } = useContext(DatabaseContext);
+  const { database, setDatabase, executeQuery } = useDatabaseContext();
 
   useEffect(() => {
     executeQuery('SHOW DATABASES;').then(([result]) => {
       if (result) {
         setDatabaseList(result);
-        setDatabase(
-          // TODO : add a helpen for appState ?
+
+        // TODO : add a helper for appState ?
+        const currentDatabase =
           configuration.connections[currentConnectionName]?.appState
-            .activeDatabase ?? result[0].Database
-        );
+            .activeDatabase ?? result[0].Database;
+
+        setDatabase(currentDatabase);
       }
     });
-  }, [currentConnectionName, setDatabase]);
+  }, [currentConnectionName]);
 
   // TODO migrate that into something that does only the side effect ?
   useEffect(() => {
     updateConnectionState(currentConnectionName, 'activeDatabase', database);
   }, [currentConnectionName, database]);
 
+  const handleChange = useCallback(
+    (database: string) => {
+      setDatabase(database);
+    },
+    [currentConnectionName, navigate]
+  );
+
   return (
     <Select
       popupMatchSelectWidth={false}
-      onChange={setDatabase}
+      onChange={handleChange}
       value={database || undefined}
       fieldNames={{ label: 'Database', value: 'Database' }}
       options={databaseList}

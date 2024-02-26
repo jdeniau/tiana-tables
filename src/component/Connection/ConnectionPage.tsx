@@ -1,12 +1,12 @@
 import { Link, Navigate } from 'react-router-dom';
 import { Button } from 'antd';
 import { ConnectionObject } from './types';
-import { ConnectionContext, useConfiguration } from '../../Contexts';
-import { useContext } from 'react';
+import { useConfiguration } from '../../contexts/ConfigurationContext';
+import { useConnectionContext } from '../../contexts/ConnectionContext';
 
 function ConnectionPage() {
   const registeredConnectionList = useConfiguration().configuration.connections;
-  const { connectTo } = useContext(ConnectionContext);
+  const { connectTo } = useConnectionContext();
 
   if (registeredConnectionList === null) {
     return <div>Reading configuration...</div>;

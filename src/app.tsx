@@ -40,7 +40,11 @@ const router = createMemoryRouter([
         ],
       },
       {
-        path: 'tables',
+        path: 'connections/:connectionName',
+        element: <Tables />,
+      },
+      {
+        path: 'connections/:connectionName/:databaseName',
         element: <Tables />,
         children: [
           {
