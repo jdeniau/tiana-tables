@@ -10,7 +10,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 interface Config {
   getConfiguration(): Promise<null | Configuration>;
 
-  addConnectionToConfig(connection: ConnectionObject): Promise<void>;
+  addConnectionToConfig(connection: ConnectionObject): Promise<Configuration>;
 
   changeTheme(theme: string): void;
 
@@ -19,12 +19,19 @@ interface Config {
     key: K,
     value: ConnectionAppState[K]
   ): Promise<void>;
+
+  editConnection(
+    connectionName: string,
+    connection: ConnectionObject
+  ): Promise<Configuration>;
 }
 
 const config: Config = {
   getConfiguration: () => ipcRenderer.invoke('config:get'),
   addConnectionToConfig: (connection: ConnectionObject) =>
     ipcRenderer.invoke('config:connection:add', connection),
+  editConnection: (connectionName: string, connection: ConnectionObject) =>
+    ipcRenderer.invoke('config:connection:edit', connectionName, connection),
   changeTheme: (theme: string) =>
     ipcRenderer.invoke('config:theme:change', theme),
   updateConnectionState: <K extends keyof ConnectionAppState>(

@@ -1,10 +1,10 @@
 import ModalLike from '../../component/Style/ModalLike';
-import ConnectionFormWithContext from '../../component/Connection/ConnectionForm';
+import ConnectionForm from '../../component/Connection/ConnectionForm';
 
 export default function Create() {
   return (
     <ModalLike>
-      <ConnectionFormWithContext />
+      <ConnectionForm />
     </ModalLike>
   );
 }

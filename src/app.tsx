@@ -8,6 +8,7 @@ import TableLayout from './component/TableLayout';
 import { Tables } from './routes/tables';
 import Connect from './routes/connect';
 import Create from './routes/connect/create';
+import Edit from './routes/connect/edit.$connectionName';
 
 const root = createRoot(document.getElementById('App'));
 
@@ -36,6 +37,10 @@ const router = createMemoryRouter([
           {
             path: 'create',
             element: <Create />,
+          },
+          {
+            path: 'edit/:connectionName',
+            element: <Edit />,
           },
         ],
       },

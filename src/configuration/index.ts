@@ -93,8 +93,10 @@ function writeConfiguration(config: Configuration): void {
   );
 }
 
-export function addConnectionToConfig(connection: ConnectionObject): void {
-  const config = getConfiguration() ?? getBaseConfig();
+export function addConnectionToConfig(
+  connection: ConnectionObject
+): Configuration {
+  const config = getConfiguration();
 
   if (!config.connections) {
     config.connections = {};
@@ -103,10 +105,34 @@ export function addConnectionToConfig(connection: ConnectionObject): void {
   config.connections[connection.name] = connection;
 
   writeConfiguration(config);
+
+  return config;
+}
+
+export function editConnection(
+  connectionName: string,
+  connection: ConnectionObject
+): Configuration {
+  const config = getConfiguration();
+
+  if (!config.connections) {
+    config.connections = {};
+  }
+
+  if (connectionName !== connection.name) {
+    // if name change, replace the old connection by the new one
+    delete config.connections[connectionName];
+  }
+
+  config.connections[connection.name] = connection;
+
+  writeConfiguration(config);
+
+  return config;
 }
 
 export function changeTheme(theme: string): void {
-  const config = getConfiguration() ?? getBaseConfig();
+  const config = getConfiguration();
   config.theme = theme;
 
   writeConfiguration(config);

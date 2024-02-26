@@ -22,7 +22,7 @@ export default function DatabaseSelector() {
         // TODO : add a helper for appState ?
         const currentDatabase =
           configuration.connections[currentConnectionName]?.appState
-            .activeDatabase ?? result[0].Database;
+            ?.activeDatabase ?? result[0].Database;
 
         setDatabase(currentDatabase);
       }

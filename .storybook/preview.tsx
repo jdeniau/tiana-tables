@@ -64,6 +64,9 @@ const preview: Preview = {
             updateConnectionState: (connectionName, key, value) => {
               action('updateConnectionState')(connectionName, key, value);
             },
+            editConnection: (name, connection) => {
+              action('editConnection')(name, connection);
+            },
           }}
         >
           <ThemeContextProvider>

@@ -6,6 +6,7 @@ import {
   changeTheme,
   testables,
   updateConnectionState,
+  editConnection,
 } from '.';
 import { Configuration } from './type';
 import { DEFAULT_THEME } from '../theme';
@@ -427,6 +428,97 @@ describe('set connection appState', async () => {
                 activeDatabase: 'test',
                 openedTable: '',
               },
+            },
+          },
+        },
+        null,
+        2
+      ),
+      'utf-8',
+      expect.any(Function)
+    );
+  });
+});
+
+describe('edit', () => {
+  test('edit connexion', () => {
+    mockExistingConfig();
+
+    const configuration = editConnection('prod', {
+      name: 'prod',
+      host: 'prod2',
+      user: 'root2',
+      port: 3306,
+      password: 'password',
+    });
+
+    expect(configuration.connections.prod.host).toBe('prod2');
+
+    expect(mockWriteFile).toHaveBeenCalledWith(
+      'config/config.json',
+      JSON.stringify(
+        {
+          version: 1,
+          theme: DEFAULT_THEME.name,
+          connections: {
+            local: {
+              name: 'local',
+              host: 'localhost',
+              user: 'root',
+              port: 3306,
+              password: Buffer.from('encrypted-password').toString('base64'),
+            },
+            prod: {
+              name: 'prod',
+              host: 'prod2',
+              user: 'root2',
+              port: 3306,
+              password: Buffer.from('encrypted-password').toString('base64'),
+            },
+          },
+        },
+        null,
+        2
+      ),
+      'utf-8',
+      expect.any(Function)
+    );
+  });
+
+  test('rename connexion', () => {
+    mockExistingConfig();
+
+    const configuration = editConnection('local', {
+      name: 'local2',
+      host: 'local2',
+      user: 'root2',
+      port: 3306,
+      password: 'password',
+    });
+
+    expect(configuration.connections.local).toBeUndefined();
+    expect(configuration.connections.local2.host).toBe('local2');
+
+    expect(mockWriteFile).toHaveBeenCalledWith(
+      'config/config.json',
+      JSON.stringify(
+        {
+          version: 1,
+          theme: DEFAULT_THEME.name,
+          connections: {
+            prod: {
+              name: 'prod',
+              host: 'prod',
+              user: 'root',
+              port: 3306,
+              password: Buffer.from('encrypted-password').toString('base64'),
+            },
+            local2: {
+              name: 'local2',
+              host: 'local2',
+              user: 'root2',
+              port: 3306,
+              password: Buffer.from('encrypted-password').toString('base64'),
             },
           },
         },

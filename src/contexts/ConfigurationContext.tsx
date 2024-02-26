@@ -1,17 +1,11 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Configuration, ConnectionAppState } from '../configuration/type';
 import { ConnectionObject } from '../component/Connection/types';
 
 type ConfigurationContextType = {
   configuration: Configuration;
   addConnectionToConfig: (connection: ConnectionObject) => void;
+  editConnection: (name: string, connection: ConnectionObject) => void;
   updateConnectionState: <K extends keyof ConnectionAppState>(
     connectionName: string,
     key: K,
@@ -39,27 +33,28 @@ export function ConfigurationContextProvider({
     });
   }, []);
 
-  const addConnectionToConfig = useCallback((connection: ConnectionObject) => {
-    window.config.addConnectionToConfig(connection);
-  }, []);
+  function willChangeConfiguration<P extends unknown[]>(
+    functionThatUpdateConfigurations: (...params: P) => Promise<Configuration>
+  ): (...params: P) => Promise<Configuration> {
+    return async (...params: P) => {
+      const configuration = await functionThatUpdateConfigurations(...params);
 
-  const updateConnectionState = useCallback(
-    <K extends keyof ConnectionAppState>(
-      connectionName: string,
-      key: K,
-      value: ConnectionAppState[K]
-    ) => {
-      window.config.updateConnectionState(connectionName, key, value);
-    },
-    []
-  );
+      setConfiguration(configuration);
+
+      return configuration;
+    };
+  }
+
   const value: ConfigurationContextType = useMemo(
     () => ({
       configuration,
-      addConnectionToConfig,
-      updateConnectionState,
+      addConnectionToConfig: willChangeConfiguration(
+        window.config.addConnectionToConfig
+      ),
+      updateConnectionState: window.config.updateConnectionState,
+      editConnection: willChangeConfiguration(window.config.editConnection),
     }),
-    [configuration, addConnectionToConfig, updateConnectionState]
+    [configuration]
   );
 
   if (!configuration) {
