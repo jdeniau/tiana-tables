@@ -11,7 +11,6 @@ import {
   isDarkTheme,
   THEME_LIST,
   DEFAULT_THEME,
-  TmTheme,
 } from '../theme';
 import { styled, ThemeProvider } from 'styled-components';
 import {

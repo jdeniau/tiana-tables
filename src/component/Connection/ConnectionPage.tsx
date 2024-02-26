@@ -1,9 +1,9 @@
 import { Link, Navigate } from 'react-router-dom';
 import { Button, Flex } from 'antd';
-import { ConnectionObject } from './types';
 import { useConfiguration } from '../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useTranslation } from '../../i18n';
+import { EncryptedConnectionObject } from '../../configuration/type';
 
 function ConnectionPage() {
   const { t } = useTranslation();
@@ -14,9 +14,7 @@ function ConnectionPage() {
     return <div>Reading configuration...</div>;
   }
 
-  const connectionList: Array<ConnectionObject> = Object.values(
-    registeredConnectionList
-  );
+  const connectionList = Object.values(registeredConnectionList);
 
   if (Object.keys(registeredConnectionList).length === 0) {
     return <Navigate replace to="/connect/create" />;
@@ -25,7 +23,7 @@ function ConnectionPage() {
   return (
     <div>
       {connectionList.map(
-        (connection: ConnectionObject): JSX.Element => (
+        (connection: EncryptedConnectionObject): JSX.Element => (
           <Flex key={connection.name} gap="small">
             <Button block>
               <Link
@@ -33,7 +31,11 @@ function ConnectionPage() {
                 onClick={(e) => {
                   // TODO move this in the page component
                   e.preventDefault();
-                  connectTo(connection);
+
+                  // remove unwanted properties
+                  const { appState: _, ...rest } = connection;
+
+                  connectTo(rest);
                 }}
               >
                 {connection.name}

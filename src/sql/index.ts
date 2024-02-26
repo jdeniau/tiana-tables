@@ -22,8 +22,7 @@ class ConnectionStack {
   }
 
   async connect(senderId: number, params: ConnectionObject): Promise<number> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { name, ...rest } = params;
+    const { name: _, ...rest } = params;
     const connection = await createConnection(rest);
     await connection.connect();
     this.connections.set(senderId, connection);
