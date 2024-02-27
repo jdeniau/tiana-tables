@@ -1,4 +1,4 @@
-import { BrowserWindow, app, ipcMain } from 'electron';
+import { BrowserWindow, app, ipcMain, session } from 'electron';
 import path from 'node:path';
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
@@ -20,6 +20,21 @@ if (require('electron-squirrel-startup')) {
 }
 
 const isMac = process.platform !== 'darwin';
+
+function installReactDevToolsExtension() {
+  installExtension(REACT_DEVELOPER_TOOLS)
+    .then((name) => {
+      console.log(`Added Extension:  ${name}`);
+
+      // once extension is loaded, reload the view after a short period (probably to be sure that the extension is loaded ?)
+      BrowserWindow.getAllWindows().forEach((win) => {
+        setTimeout(() => {
+          win.webContents.reload();
+        }, 1000);
+      });
+    })
+    .catch((err) => console.error('Unable to install extension: ', err));
+}
 
 const createWindow = () => {
   // Create the browser window.
@@ -50,9 +65,19 @@ const createWindow = () => {
 app.on('ready', createWindow);
 
 app.whenReady().then(() => {
-  installExtension(REACT_DEVELOPER_TOOLS)
-    .then((name) => console.log(`Added Extension:  ${name}`))
-    .catch((err) => console.log('An error occurred: ', err));
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          // TODO maybe disable unsafe-inline for style-src on build ?
+          "default-src 'self'; style-src 'self' 'unsafe-inline'",
+        ],
+      },
+    });
+  });
+
+  installReactDevToolsExtension();
 
   ipcMain.handle('config:get', getConfiguration);
   ipcMain.handle(
