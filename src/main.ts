@@ -1,8 +1,5 @@
-import { BrowserWindow, app, ipcMain } from 'electron';
+import { BrowserWindow, app, ipcMain, session } from 'electron';
 import path from 'node:path';
-import installExtension, {
-  REACT_DEVELOPER_TOOLS,
-} from 'electron-devtools-installer';
 import connectionStackInstance from './sql';
 import {
   getConfiguration,
@@ -20,6 +17,31 @@ if (require('electron-squirrel-startup')) {
 }
 
 const isMac = process.platform !== 'darwin';
+
+function installReactDevToolsExtension() {
+  const reactDevToolsPath = path.join(
+    __dirname,
+    '../../react-devtools/5.0.0_1'
+  );
+
+  session.defaultSession
+    .loadExtension(
+      reactDevToolsPath,
+      // allowFileAccess is required to load the devtools extension on file:// URLs.
+      { allowFileAccess: true }
+    )
+    .then((extension) => {
+      console.log(`Added Extension "${extension.name}"`);
+
+      // once extension is loaded, reload the view after a short period (probably to be sure that the extension is loaded ?)
+      BrowserWindow.getAllWindows().forEach((win) => {
+        setTimeout(() => {
+          win.webContents.reload();
+        }, 1000);
+      });
+    })
+    .catch((err) => console.log('Unable to install extension: ', err));
+}
 
 const createWindow = () => {
   // Create the browser window.
@@ -50,9 +72,19 @@ const createWindow = () => {
 app.on('ready', createWindow);
 
 app.whenReady().then(() => {
-  installExtension(REACT_DEVELOPER_TOOLS)
-    .then((name) => console.log(`Added Extension:  ${name}`))
-    .catch((err) => console.log('An error occurred: ', err));
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          // TODO maybe disable unsafe-inline for style-src on build ?
+          "default-src 'self'; style-src 'self' 'unsafe-inline'",
+        ],
+      },
+    });
+  });
+
+  installReactDevToolsExtension();
 
   ipcMain.handle('config:get', getConfiguration);
   ipcMain.handle(
