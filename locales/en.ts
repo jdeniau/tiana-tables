@@ -2,6 +2,7 @@ export default {
   cancel: 'Cancel',
   edit: 'Edit',
   save: 'Save',
+  filter: 'Filter',
   'connect.pleaseConnect': 'Please connect',
   'connect.new': 'New…',
   'theme.switch.label': 'Theme:',

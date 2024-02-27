@@ -1,5 +1,7 @@
+import { Button, Space } from 'antd';
 import { ReactElement, useState } from 'react';
 import { styled } from 'styled-components';
+import { useTranslation } from '../../i18n';
 
 const WhereArea = styled.textarea`
   width: 100%;
@@ -13,6 +15,7 @@ interface Props {
 }
 
 function WhereFilter({ defaultValue, onSubmit }: Props): ReactElement {
+  const { t } = useTranslation();
   const [where, setWhere] = useState<string>(defaultValue);
 
   return (
@@ -22,9 +25,17 @@ function WhereFilter({ defaultValue, onSubmit }: Props): ReactElement {
         onSubmit(where);
       }}
     >
-      <WhereArea value={where} onChange={(e) => setWhere(e.target.value)} />
+      <Space.Compact style={{ width: '100%', marginBottom: '0.5em' }}>
+        <WhereArea
+          rows={1}
+          value={where}
+          onChange={(e) => setWhere(e.target.value)}
+        />
 
-      <input type="submit" />
+        <Button htmlType="submit" type="primary">
+          {t('filter')}
+        </Button>
+      </Space.Compact>
     </form>
   );
 }

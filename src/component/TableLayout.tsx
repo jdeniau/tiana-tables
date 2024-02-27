@@ -8,13 +8,14 @@ import TableGrid from './TableGrid';
 import WhereFilter from './Query/WhereFilter';
 import { useTranslation } from '../i18n';
 import invariant from 'tiny-invariant';
+import { Button, Flex } from 'antd';
 
 interface TableNameProps {
   tableName: string;
   database: string;
 }
 
-const DEFAULT_LIMIT = 10;
+const DEFAULT_LIMIT = 100;
 
 function TableLayout({ tableName, database }: TableNameProps): ReactElement {
   const { t } = useTranslation();
@@ -69,9 +70,14 @@ function TableLayout({ tableName, database }: TableNameProps): ReactElement {
 
       <TableGrid fields={fields} result={result} />
 
-      <button onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}>
-        {t('table.rows.loadMore')}
-      </button>
+      <Flex justify="center" align="center" style={{ marginTop: '20px' }}>
+        <Button
+          onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}
+          type="primary"
+        >
+          {t('table.rows.loadMore')}
+        </Button>
+      </Flex>
     </div>
   );
 }
