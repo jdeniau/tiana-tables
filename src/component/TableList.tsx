@@ -4,6 +4,7 @@ import { NavLink } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { getColor } from '../../src/theme';
 import { ReactElement, useEffect, useState } from 'react';
+import { RowDataPacket } from 'mysql2';
 
 const StyledNavLink = styled(NavLink)`
   color: ${(props) => getColor(props.theme, 'support.type', 'foreground')};
@@ -13,7 +14,7 @@ interface TableListProps {
   database: string;
 }
 
-interface TableStatusRow {
+interface TableStatusRow extends RowDataPacket {
   Name: string;
 }
 
@@ -25,10 +26,9 @@ function ConnectedTableList({ database }: TableListProps): ReactElement | null {
   >(null);
 
   useEffect(() => {
-    executeQuery(
+    executeQuery<TableStatusRow[]>(
       // connection.query(
       `SHOW TABLE STATUS FROM \`${database}\`;`
-      // @ts-expect-error -- TODO handle types here
     ).then(([result]) => {
       setTableStatusList(result);
     });

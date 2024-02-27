@@ -24,6 +24,7 @@ const meta: Meta<typeof Cell> = {
           value={{
             database: 'mocked-db',
             setDatabase: () => {},
+            // @ts-expect-error -- we don't need to implement the whole context
             executeQuery: async (query) => {
               action('executeQuery')(query);
 

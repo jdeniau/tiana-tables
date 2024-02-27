@@ -1,5 +1,6 @@
 import { Connection, createConnection } from 'mysql2/promise';
 import { ConnectionObject } from '../component/Connection/types';
+import { QueryResult } from './types';
 
 class ConnectionStack {
   private connections: Map<number, Connection> = new Map();
@@ -30,7 +31,7 @@ class ConnectionStack {
     return connection.threadId;
   }
 
-  async executeQuery(senderId: number, query: string): Promise<unknown> {
+  async executeQuery(senderId: number, query: string): QueryResult {
     const connection = this.#getConnection(senderId);
 
     return await connection.query(query);

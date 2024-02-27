@@ -1,5 +1,5 @@
 import { ReactElement, useCallback, useEffect, useState } from 'react';
-import type { FieldPacket } from 'mysql2/promise';
+import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { useParams } from 'react-router-dom';
 import { useConfiguration } from '../contexts/ConfigurationContext';
 import { useDatabaseContext } from '../contexts/DatabaseContext';
@@ -13,14 +13,19 @@ import { Button, Flex } from 'antd';
 interface TableNameProps {
   tableName: string;
   database: string;
+  primaryKeys: Array<string>;
 }
 
 const DEFAULT_LIMIT = 100;
 
-function TableLayout({ tableName, database }: TableNameProps): ReactElement {
+function TableLayout({
+  tableName,
+  database,
+  primaryKeys,
+}: TableNameProps): ReactElement {
   const { t } = useTranslation();
   const { executeQuery } = useDatabaseContext();
-  const [result, setResult] = useState<null | object[]>(null);
+  const [result, setResult] = useState<null | RowDataPacket[]>(null);
   const [fields, setFields] = useState<null | FieldPacket[]>(null);
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
@@ -32,8 +37,7 @@ function TableLayout({ tableName, database }: TableNameProps): ReactElement {
         where ? ` WHERE ${where}` : ''
       } LIMIT ${DEFAULT_LIMIT} OFFSET ${offset};`;
 
-      executeQuery(query)
-        // @ts-expect-error -- TODO handle types here
+      executeQuery<RowDataPacket[]>(query)
         .then(([result, fields]) => {
           setCurrentOffset(offset);
           setFields(fields || null);
@@ -68,7 +72,7 @@ function TableLayout({ tableName, database }: TableNameProps): ReactElement {
         }}
       />
 
-      <TableGrid fields={fields} result={result} />
+      <TableGrid fields={fields} result={result} primaryKeys={primaryKeys} />
 
       <Flex justify="center" align="center" style={{ marginTop: '20px' }}>
         <Button
@@ -82,7 +86,9 @@ function TableLayout({ tableName, database }: TableNameProps): ReactElement {
   );
 }
 
-function TableGridWithConnection() {
+type Props = { primaryKeys: Array<string> };
+
+function TableGridWithConnection({ primaryKeys }: Props) {
   const { currentConnectionName } = useConnectionContext();
   const { database } = useDatabaseContext();
   const { tableName } = useParams();
@@ -104,6 +110,7 @@ function TableGridWithConnection() {
       key={`${currentConnectionName}|${database}|${tableName}`}
       tableName={tableName}
       database={database}
+      primaryKeys={primaryKeys}
     />
   );
 }

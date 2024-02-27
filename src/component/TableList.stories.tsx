@@ -23,6 +23,7 @@ const meta: Meta<typeof TableList> = {
           value={{
             database: 'mocked-db',
             setDatabase: () => {},
+            // @ts-expect-error -- we don't need to implement the whole context
             executeQuery: async (query) => {
               action('executeQuery')(query);
 
