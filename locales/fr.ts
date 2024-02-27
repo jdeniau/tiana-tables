@@ -4,6 +4,7 @@ const fr: Translation = {
   cancel: 'Annuler',
   edit: 'Modifier',
   save: 'Enregistrer',
+  filter: 'Filtrer',
   'connect.pleaseConnect': 'Veuillez vous connecter',
   'connect.new': 'Nouveau…',
   'theme.switch.label': 'Thème :',
