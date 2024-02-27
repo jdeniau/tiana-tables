@@ -5,6 +5,7 @@
     "node": true
   },
   "ignorePatterns": [
+    "extensions/",
     "forge.config.ts",
     "vite.*.config.*",
     "stories/" // exclude stories from linting for now

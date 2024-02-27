@@ -21,7 +21,7 @@ const isMac = process.platform !== 'darwin';
 function installReactDevToolsExtension() {
   const reactDevToolsPath = path.join(
     __dirname,
-    '../../react-devtools/5.0.0_1'
+    '../../extensions/react-devtools/5.0.0_1'
   );
 
   session.defaultSession
