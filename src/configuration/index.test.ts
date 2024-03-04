@@ -4,11 +4,11 @@ import { DEFAULT_THEME } from './themes';
 import { Configuration } from './type';
 import {
   addConnectionToConfig,
-  getConfiguration,
   changeTheme,
+  editConnection,
+  getConfiguration,
   testables,
   updateConnectionState,
-  editConnection,
 } from '.';
 
 const { getBaseConfig } = testables;

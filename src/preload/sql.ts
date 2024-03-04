@@ -1,9 +1,9 @@
 import { ipcRenderer } from 'electron';
 import { Connection } from 'mysql2/promise';
 import type {
+  ConnectionObject,
   QueryResult,
   QueryReturnType,
-  ConnectionObject,
 } from '../sql/types';
 
 interface Sql {

@@ -10,12 +10,12 @@ import {
   ThemeConfig,
   theme as antdTheme,
 } from 'antd';
-import { styled, ThemeProvider } from 'styled-components';
+import { ThemeProvider, styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import {
-  isDarkTheme,
-  THEME_LIST,
   DEFAULT_THEME,
+  THEME_LIST,
+  isDarkTheme,
 } from '../configuration/themes';
 import { getColor, getSetting } from '../renderer/theme';
 import { useConfiguration } from './ConfigurationContext';

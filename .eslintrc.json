@@ -32,6 +32,7 @@
       "error",
       { "varsIgnorePattern": "^_" }
     ],
+    "sort-imports": ["error", { "ignoreDeclarationSort": true }],
     "import/order": [
       "error",
       {

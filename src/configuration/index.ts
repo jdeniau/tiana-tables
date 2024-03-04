@@ -6,9 +6,9 @@ import { ConnectionObject } from '../sql/types';
 import { DEFAULT_THEME } from './themes';
 import {
   Configuration,
-  EncryptedConnectionObject,
-  EncryptedConfiguration,
   ConnectionAppState,
+  EncryptedConfiguration,
+  EncryptedConnectionObject,
 } from './type';
 
 // TODO use app.getPath('userData') to store the configuration file instead of env-paths

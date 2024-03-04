@@ -5,11 +5,11 @@ import installExtension, {
 } from 'electron-devtools-installer';
 import { updateElectronApp } from 'update-electron-app';
 import {
-  getConfiguration,
   addConnectionToConfig,
   changeTheme,
-  updateConnectionState,
   editConnection,
+  getConfiguration,
+  updateConnectionState,
 } from './configuration';
 import type { Configuration, ConnectionAppState } from './configuration/type';
 import connectionStackInstance from './sql';
