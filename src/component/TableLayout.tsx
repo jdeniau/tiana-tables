@@ -8,7 +8,7 @@ import TableGrid from './TableGrid';
 import WhereFilter from './Query/WhereFilter';
 import { useTranslation } from '../i18n';
 import invariant from 'tiny-invariant';
-import { Button, Flex } from 'antd';
+import { Button, Flex, Layout } from 'antd';
 
 interface TableNameProps {
   tableName: string;
@@ -61,28 +61,34 @@ function TableLayout({
   }
 
   return (
-    <div>
-      <h3>{tableName}</h3>
+    <Layout style={{ height: '100%' }}>
+      <Layout.Header style={{ height: 'auto' }}>
+        <h3>{tableName}</h3>
 
-      <WhereFilter
-        defaultValue={where}
-        onSubmit={(where) => {
-          setCurrentOffset(0);
-          setWhere(where);
-        }}
-      />
+        <WhereFilter
+          defaultValue={where}
+          onSubmit={(where) => {
+            setCurrentOffset(0);
+            setWhere(where);
+          }}
+        />
+      </Layout.Header>
 
-      <TableGrid fields={fields} result={result} primaryKeys={primaryKeys} />
+      <Layout.Content style={{ overflow: 'auto' }}>
+        <TableGrid fields={fields} result={result} primaryKeys={primaryKeys} />
+      </Layout.Content>
 
-      <Flex justify="center" align="center" style={{ marginTop: '20px' }}>
-        <Button
-          onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}
-          type="primary"
-        >
-          {t('table.rows.loadMore')}
-        </Button>
-      </Flex>
-    </div>
+      <Layout.Footer>
+        <Flex justify="center" align="center" style={{ marginTop: '20px' }}>
+          <Button
+            onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}
+            type="primary"
+          >
+            {t('table.rows.loadMore')}
+          </Button>
+        </Flex>
+      </Layout.Footer>
+    </Layout>
   );
 }
 
