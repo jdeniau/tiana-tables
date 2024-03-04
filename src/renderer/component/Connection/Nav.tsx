@@ -1,10 +1,10 @@
-import { Link } from 'react-router-dom';
 import { ReactElement } from 'react';
-import { styled } from 'styled-components';
 import { Button, Menu } from 'antd';
+import { Link } from 'react-router-dom';
+import { styled } from 'styled-components';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
-import { getSetting } from '../../theme';
 import { useTranslation } from '../../../i18n';
+import { getSetting } from '../../theme';
 
 const StyledMenu = styled(Menu)`
   flex: 1;

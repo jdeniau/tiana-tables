@@ -1,5 +1,5 @@
-import { Connection } from 'mysql2/promise';
 import { ipcRenderer } from 'electron';
+import { Connection } from 'mysql2/promise';
 import type {
   QueryResult,
   QueryReturnType,

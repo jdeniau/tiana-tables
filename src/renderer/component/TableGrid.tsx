@@ -1,7 +1,7 @@
-import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
-import Cell from './Cell';
 import { ReactElement } from 'react';
 import { Table } from 'antd';
+import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
+import Cell from './Cell';
 
 interface TableGridProps<R extends object> {
   result: null | R[];

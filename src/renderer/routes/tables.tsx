@@ -1,9 +1,9 @@
+import { Layout } from 'antd';
 import { Outlet } from 'react-router';
 import { styled } from 'styled-components';
-import { getSetting } from '../theme';
 import DatabaseSelector from '../component/DatabaseSelector';
 import TableList from '../component/TableList';
-import { Layout } from 'antd';
+import { getSetting } from '../theme';
 
 const Sider = styled(Layout.Sider)`
   border-right: 1px solid ${(props) => getSetting(props.theme, 'foreground')};

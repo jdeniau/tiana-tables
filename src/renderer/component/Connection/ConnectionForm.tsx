@@ -1,10 +1,10 @@
-import { useNavigate } from 'react-router';
+import { useState } from 'react';
 import { Button, Checkbox, Form, Input } from 'antd';
+import type { TFunction } from 'i18next';
+import { useNavigate } from 'react-router';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
-import { useState } from 'react';
-import type { TFunction } from 'i18next';
 import type { ConnectionObject } from '../../../sql/types';
 
 type ConnectionFormType = ConnectionObject & {

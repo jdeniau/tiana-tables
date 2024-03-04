@@ -1,6 +1,6 @@
 import { dialog, safeStorage } from 'electron';
-import { resolve } from 'node:path';
 import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
+import { resolve } from 'node:path';
 import envPaths from 'env-paths';
 import { ConnectionObject } from '../sql/types';
 import { DEFAULT_THEME } from './themes';

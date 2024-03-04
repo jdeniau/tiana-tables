@@ -1,9 +1,9 @@
-import { Link, Navigate } from 'react-router-dom';
 import { Button, Flex } from 'antd';
+import { Link, Navigate } from 'react-router-dom';
+import { EncryptedConnectionObject } from '../../../configuration/type';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
-import { EncryptedConnectionObject } from '../../../configuration/type';
 
 function ConnectionPage() {
   const { t } = useTranslation();

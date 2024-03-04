@@ -1,8 +1,8 @@
 import { useParams } from 'react-router';
 import invariant from 'tiny-invariant';
-import ModalLike from '../../component/Style/ModalLike';
-import ConnectionForm from '../../component/Connection/ConnectionForm';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
+import ConnectionForm from '../../component/Connection/ConnectionForm';
+import ModalLike from '../../component/Style/ModalLike';
 
 export default function Edit() {
   const { configuration } = useConfiguration();

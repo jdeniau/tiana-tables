@@ -1,10 +1,10 @@
-import { useDatabaseContext } from '../../contexts/DatabaseContext';
-import { useConnectionContext } from '../../contexts/ConnectionContext';
-import { NavLink } from 'react-router-dom';
-import { styled } from 'styled-components';
-import { getColor } from '../theme';
 import { ReactElement, useEffect, useState } from 'react';
 import { RowDataPacket } from 'mysql2';
+import { NavLink } from 'react-router-dom';
+import { styled } from 'styled-components';
+import { useConnectionContext } from '../../contexts/ConnectionContext';
+import { useDatabaseContext } from '../../contexts/DatabaseContext';
+import { getColor } from '../theme';
 
 const StyledNavLink = styled(NavLink)`
   color: ${(props) => getColor(props.theme, 'support.type', 'foreground')};

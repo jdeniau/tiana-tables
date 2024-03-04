@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useConfiguration } from '../../../contexts/ConfigurationContext';
-import { useDatabaseContext } from '../../../contexts/DatabaseContext';
-import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import invariant from 'tiny-invariant';
+import { useConfiguration } from '../../../contexts/ConfigurationContext';
+import { useConnectionContext } from '../../../contexts/ConnectionContext';
+import { useDatabaseContext } from '../../../contexts/DatabaseContext';
 import { TableLayout } from './TableLayout';
 
 type Props = { primaryKeys: Array<string> };

@@ -1,6 +1,6 @@
+import { RowDataPacket } from 'mysql2';
 import { Params, useLoaderData } from 'react-router';
 import TableLayout from '../component/TableLayout';
-import { RowDataPacket } from 'mysql2';
 
 type RouteParams = {
   params: Params<'connectionName' | 'databaseName' | 'tableName'>;

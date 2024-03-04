@@ -1,6 +1,6 @@
+import * as active4d from '../renderer/theme/active4d.json';
 import * as dracula from '../renderer/theme/dracula.json';
 import * as visualStudio from '../renderer/theme/visualStudio.json';
-import * as active4d from '../renderer/theme/active4d.json';
 
 export interface TmTheme {
   readonly name: string;

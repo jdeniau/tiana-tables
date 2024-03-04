@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
-import Cell from './Cell';
-import { DatabaseContext } from '../../contexts/DatabaseContext';
-import { ConnectionContext } from '../../contexts/ConnectionContext';
+import type { Meta, StoryObj } from '@storybook/react';
 import { Types } from 'mysql';
+import { ConnectionContext } from '../../contexts/ConnectionContext';
+import { DatabaseContext } from '../../contexts/DatabaseContext';
+import Cell from './Cell';
 
 const meta: Meta<typeof Cell> = {
   component: Cell,

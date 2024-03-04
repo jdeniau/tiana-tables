@@ -1,10 +1,10 @@
-import { useConfiguration } from '../../contexts/ConfigurationContext';
-import { useDatabaseContext } from '../../contexts/DatabaseContext';
-import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useCallback, useEffect, useState } from 'react';
 import { Select } from 'antd';
-import invariant from 'tiny-invariant';
 import { RowDataPacket } from 'mysql2';
+import invariant from 'tiny-invariant';
+import { useConfiguration } from '../../contexts/ConfigurationContext';
+import { useConnectionContext } from '../../contexts/ConnectionContext';
+import { useDatabaseContext } from '../../contexts/DatabaseContext';
 
 interface DatabaseRow extends RowDataPacket {
   Database: string;

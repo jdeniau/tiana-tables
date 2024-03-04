@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { Button } from 'antd';
+import { Link } from 'react-router-dom';
 import { useTranslation } from '../../i18n';
 
 export function Home() {
