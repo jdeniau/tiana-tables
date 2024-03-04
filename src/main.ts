@@ -15,12 +15,12 @@ import {
 import { ConnectionObject } from './component/Connection';
 import { Configuration, ConnectionAppState } from './configuration/type';
 
-updateElectronApp();
-
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
+
+updateElectronApp();
 
 const isMac = process.platform !== 'darwin';
 
