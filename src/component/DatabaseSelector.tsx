@@ -4,8 +4,9 @@ import { useConnectionContext } from '../contexts/ConnectionContext';
 import { useCallback, useEffect, useState } from 'react';
 import { Select } from 'antd';
 import invariant from 'tiny-invariant';
+import { RowDataPacket } from 'mysql2';
 
-interface DatabaseRow {
+interface DatabaseRow extends RowDataPacket {
   Database: string;
 }
 
@@ -16,8 +17,7 @@ export default function DatabaseSelector() {
   const { database, setDatabase, executeQuery } = useDatabaseContext();
 
   useEffect(() => {
-    // @ts-expect-error -- TODO handle types here
-    executeQuery('SHOW DATABASES;').then(([result]) => {
+    executeQuery<DatabaseRow[]>('SHOW DATABASES;').then(([result]) => {
       if (result) {
         invariant(currentConnectionName, 'Connection name is required');
 

@@ -1,15 +1,17 @@
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router';
+import invariant from 'tiny-invariant';
 import React from 'react';
 import Root from './routes/root';
 import ErrorPage from './error-page';
 import { Home } from './routes/home';
-import TableLayout from './component/TableLayout';
 import { Tables } from './routes/tables';
 import Connect from './routes/connect';
 import Create from './routes/connect/create';
 import Edit from './routes/connect/edit.$connectionName';
-import invariant from 'tiny-invariant';
+import TableName, {
+  loader as tableNameLoader,
+} from './routes/connections.$connectionName.$databaseName.$tableName';
 
 const appElement = document.getElementById('App');
 
@@ -59,7 +61,8 @@ const router = createMemoryRouter([
         children: [
           {
             path: ':tableName',
-            element: <TableLayout />,
+            loader: tableNameLoader,
+            element: <TableName />,
           },
         ],
       },

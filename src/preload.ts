@@ -5,6 +5,7 @@ import { Connection } from 'mysql2/promise';
 import { ConnectionObject } from './component/Connection/types';
 import { Configuration, ConnectionAppState } from './configuration/type';
 import { contextBridge, ipcRenderer } from 'electron';
+import { QueryResult, QueryReturnType } from './sql/types';
 
 // === Configuration ===
 interface Config {
@@ -52,7 +53,7 @@ contextBridge.exposeInMainWorld('config', config);
 // === Sql ===
 interface Sql {
   openConnection(params: ConnectionObject): Promise<Connection>;
-  executeQuery(query: string): Promise<unknown>;
+  executeQuery<T extends QueryReturnType>(query: string): QueryResult<T>;
   closeAllConnections(): Promise<void>;
 }
 
