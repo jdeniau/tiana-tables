@@ -7,6 +7,7 @@ import { getSetting } from '../theme';
 
 const Sider = styled(Layout.Sider)`
   border-right: 1px solid ${(props) => getSetting(props.theme, 'foreground')};
+  background: ${(props) => getSetting(props.theme, 'background')} !important;
 `;
 
 const PaddedDiv = styled.div`
