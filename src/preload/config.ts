@@ -16,6 +16,8 @@ interface Config {
     value: ConnectionAppState[K]
   ): Promise<void>;
 
+  getConnectionFromName(name: string): Promise<ConnectionObject>;
+
   editConnection(
     connectionName: string,
     connection: ConnectionObject
@@ -28,6 +30,9 @@ export const config: Config = {
   changeTheme: bindChannel(CONFIGURATION_CHANNEL.CHANGE_THEME),
   updateConnectionState: bindChannel(
     CONFIGURATION_CHANNEL.UPDATE_CONNECTION_STATE
+  ),
+  getConnectionFromName: bindChannel(
+    CONFIGURATION_CHANNEL.GET_CONNECTION_FROM_NAME
   ),
   editConnection: bindChannel(CONFIGURATION_CHANNEL.EDIT_CONNECTION),
 };

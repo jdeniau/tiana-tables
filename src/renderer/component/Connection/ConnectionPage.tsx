@@ -27,16 +27,16 @@ function ConnectionPage() {
           <Flex key={connection.name} gap="small">
             <Button block>
               <Link
-                to={connection.name}
-                onClick={(e) => {
-                  // TODO move this in the page component
-                  e.preventDefault();
+                to={`/connections/${connection.name}/`}
+                // onClick={(e) => {
+                //   // TODO move this in the page component
+                //   e.preventDefault();
 
-                  // remove unwanted properties
-                  const { appState: _, ...rest } = connection;
+                //   // remove unwanted properties
+                //   const { appState: _, ...rest } = connection;
 
-                  connectTo(rest);
-                }}
+                //   connectTo(rest);
+                // }}
               >
                 {connection.name}
               </Link>

@@ -32,6 +32,8 @@ class ConnectionStack {
   }
 
   async executeQuery(senderId: number, query: string): QueryResult {
+    console.log(this.connections);
+
     const connection = this.#getConnection(senderId);
 
     return await connection.query(query);

@@ -11,6 +11,7 @@ type ConfigurationContextType = {
     key: K,
     value: ConnectionAppState[K]
   ) => void;
+  getConnectionFromName: (name: string) => Promise<ConnectionObject>;
 };
 
 const ConfigurationContext = createContext<null | ConfigurationContextType>(
@@ -55,6 +56,7 @@ export function ConfigurationContextProvider({
       ),
       updateConnectionState: window.config.updateConnectionState,
       editConnection: willChangeConfiguration(window.config.editConnection),
+      getConnectionFromName: window.config.getConnectionFromName,
     }),
     [configuration]
   );

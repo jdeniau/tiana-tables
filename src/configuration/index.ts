@@ -175,9 +175,25 @@ export function updateConnectionState<K extends keyof ConnectionAppState>(
   writeConfiguration(config);
 }
 
+function getConnectionFromName(name: string): ConnectionObject {
+  console.log(name);
+  const config = getConfiguration();
+
+  console.log(config);
+
+  if (!config.connections || !config.connections[name]) {
+    throw new Error(`Connection ${name} not found`);
+  }
+
+  const { appState: _, ...rest } = config.connections[name];
+
+  return rest;
+}
+
 const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.GET]: getConfiguration,
   [CONFIGURATION_CHANNEL.ADD_CONNECTION]: addConnectionToConfig,
+  [CONFIGURATION_CHANNEL.GET_CONNECTION_FROM_NAME]: getConnectionFromName,
   [CONFIGURATION_CHANNEL.EDIT_CONNECTION]: editConnection,
   [CONFIGURATION_CHANNEL.CHANGE_THEME]: changeTheme,
   [CONFIGURATION_CHANNEL.UPDATE_CONNECTION_STATE]: updateConnectionState,

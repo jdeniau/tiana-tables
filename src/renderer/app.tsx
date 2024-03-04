@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { RouterProvider, createMemoryRouter } from 'react-router';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import invariant from 'tiny-invariant';
 import ErrorPage from './error-page';
 import Connect from './routes/connect';
@@ -11,7 +11,7 @@ import TableName, {
 } from './routes/connections.$connectionName.$databaseName.$tableName';
 import { Home } from './routes/home';
 import Root from './routes/root';
-import { Tables } from './routes/tables';
+import Tables from './routes/tables';
 
 const appElement = document.getElementById('App');
 
@@ -24,7 +24,7 @@ const root = createRoot(appElement);
 // export const history = createMemoryHistory();
 // <Router history={history}>
 
-const router = createMemoryRouter([
+const router = createBrowserRouter([
   {
     path: '/',
     element: <Root />,
@@ -55,17 +55,17 @@ const router = createMemoryRouter([
         path: 'connections/:connectionName',
         element: <Tables />,
       },
-      {
-        path: 'connections/:connectionName/:databaseName',
-        element: <Tables />,
-        children: [
-          {
-            path: ':tableName',
-            loader: tableNameLoader,
-            element: <TableName />,
-          },
-        ],
-      },
+      // {
+      //   path: 'connections/:connectionName/:databaseName',
+      //   element: <Tables />,
+      //   children: [
+      //     {
+      //       path: ':tableName',
+      //       loader: tableNameLoader,
+      //       element: <TableName />,
+      //     },
+      //   ],
+      // },
     ],
   },
 ]);

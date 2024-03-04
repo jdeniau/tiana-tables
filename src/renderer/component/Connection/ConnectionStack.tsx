@@ -28,13 +28,22 @@ function ConnectionStack({ children }: Props) {
   }, []);
 
   const handleConnectTo = useCallback(
-    async (params: ConnectionObject) => {
-      await window.sql.openConnection(params);
-      setConnectionNameList((prev) => [...prev, params.name]);
+    async (params: ConnectionObject | string) => {
+      const connection =
+        typeof params === 'string'
+          ? await window.config.getConnectionFromName(params)
+          : params;
 
-      navigate(`/connections/${params.name}`);
+      if (connectionNameList.includes(connection.name)) {
+        return;
+      }
+
+      await window.sql.openConnection(connection);
+      setConnectionNameList((prev) => [...prev, connection.name]);
+
+      // navigate(`/connections/${connection.name}`);
     },
-    [navigate, setConnectionNameList]
+    [connectionNameList]
   );
 
   const handleSetDatabase = useCallback(
