@@ -1,4 +1,5 @@
 import { Connection, createConnection } from 'mysql2/promise';
+import { SQL_CHANNEL } from '../preload/sqlChannel';
 import { ConnectionObject, QueryResult } from './types';
 
 class ConnectionStack {
@@ -6,9 +7,9 @@ class ConnectionStack {
 
   // List of IPC events and their handlers
   #ipcEventBinding = {
-    'sql:connect': this.connect,
-    'sql:executeQuery': this.executeQuery,
-    'sql:closeAll': this.closeAllConnections,
+    [SQL_CHANNEL.CONNECT]: this.connect,
+    [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQuery,
+    [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
 
   bindIpcMain(ipcMain: Electron.IpcMain): void {

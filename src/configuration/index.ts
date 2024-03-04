@@ -2,6 +2,7 @@ import { dialog, safeStorage } from 'electron';
 import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
 import { resolve } from 'node:path';
 import envPaths from 'env-paths';
+import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
 import { ConnectionObject } from '../sql/types';
 import { DEFAULT_THEME } from './themes';
 import {
@@ -162,6 +163,24 @@ export function updateConnectionState<K extends keyof ConnectionAppState>(
   connection.appState[key] = value;
 
   writeConfiguration(config);
+}
+
+const IPC_EVENT_BINDING = {
+  [CONFIGURATION_CHANNEL.GET]: getConfiguration,
+  [CONFIGURATION_CHANNEL.ADD_CONNECTION]: addConnectionToConfig,
+  [CONFIGURATION_CHANNEL.EDIT_CONNECTION]: editConnection,
+  [CONFIGURATION_CHANNEL.CHANGE_THEME]: changeTheme,
+  [CONFIGURATION_CHANNEL.UPDATE_CONNECTION_STATE]: updateConnectionState,
+} as const;
+
+export function bindIpcMain(ipcMain: Electron.IpcMain): void {
+  for (const [channel, handler] of Object.entries(IPC_EVENT_BINDING)) {
+    ipcMain.handle(channel, (event, ...args: unknown[]) =>
+      // convert the first argument to senderId and bind the rest
+      // @ts-expect-error issue with strict type in tsconfig, but seems to work at runtime
+      handler(...args)
+    );
+  }
 }
 
 export const testables = { getBaseConfig };
