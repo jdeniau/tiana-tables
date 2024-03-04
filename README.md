@@ -1,6 +1,10 @@
 # Tiana Tables
 
-Some SQL tool
+Some SQL tool that works on Linux, Windows and MacOS.
+
+## Installation
+
+You can download the latest release in the [Release page](https://github.com/jdeniau/tiana-tables/releases).
 
 ## Contributing
 
