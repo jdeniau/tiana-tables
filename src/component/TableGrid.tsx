@@ -7,15 +7,18 @@ interface TableGridProps<R extends object> {
   result: null | R[];
   fields: null | FieldPacket[];
   primaryKeys: Array<string>;
+  yTableScroll: number;
 }
 
 function TableGrid<Row extends RowDataPacket>({
   fields,
   result,
   primaryKeys,
+  yTableScroll,
 }: TableGridProps<Row>): ReactElement {
   return (
     <Table
+      bordered
       //  TODO : use the table primary key to make a real key
       dataSource={
         result?.map((r) => {
@@ -29,9 +32,11 @@ function TableGrid<Row extends RowDataPacket>({
         dataIndex: field.name,
         //  TODO field name is an object. Need a better type ?
         key: field.name,
+        ellipsis: true,
         render: (value: Row) => <Cell type={field.type} value={value} />,
       }))}
       pagination={false}
+      scroll={{ x: true, y: yTableScroll }}
     />
   );
 }

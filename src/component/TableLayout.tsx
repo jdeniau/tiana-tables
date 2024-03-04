@@ -1,4 +1,11 @@
-import { ReactElement, useCallback, useEffect, useState } from 'react';
+import {
+  ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { useParams } from 'react-router-dom';
 import { useConfiguration } from '../contexts/ConfigurationContext';
@@ -8,7 +15,7 @@ import TableGrid from './TableGrid';
 import WhereFilter from './Query/WhereFilter';
 import { useTranslation } from '../i18n';
 import invariant from 'tiny-invariant';
-import { Button, Flex, Layout } from 'antd';
+import { Button, Flex } from 'antd';
 
 interface TableNameProps {
   tableName: string;
@@ -17,6 +24,45 @@ interface TableNameProps {
 }
 
 const DEFAULT_LIMIT = 100;
+
+function useTableHeight(): [number, React.RefObject<HTMLDivElement>] {
+  const [yTableScroll, setYTableScroll] = useState<number>(0);
+  const resizeRef = useRef<HTMLDivElement | null>(null);
+
+  const resizeObserver = useMemo(
+    () =>
+      new ResizeObserver((entries) => {
+        const entry = entries[0];
+        const divHeight = entry.borderBoxSize[0].blockSize;
+
+        const tableHeader =
+          resizeRef.current?.querySelector('.ant-table-header');
+
+        const tableHeaderHeight =
+          tableHeader?.getBoundingClientRect().height ?? 0;
+
+        // I don't know why we need to subtract 1 from the height, but if not, the div will have a scrollbar
+        setYTableScroll(divHeight - tableHeaderHeight - 1);
+      }),
+    []
+  );
+
+  useEffect(() => {
+    const resizeRefCurrent = resizeRef.current;
+
+    if (resizeRefCurrent) {
+      resizeObserver.observe(resizeRefCurrent);
+    }
+
+    return () => {
+      if (resizeRefCurrent) {
+        resizeObserver.unobserve(resizeRefCurrent);
+      }
+    };
+  }, [resizeObserver]);
+
+  return [yTableScroll, resizeRef];
+}
 
 function TableLayout({
   tableName,
@@ -30,6 +76,8 @@ function TableLayout({
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
   const [where, setWhere] = useState<string>('');
+
+  const [yTableScroll, resizeRef] = useTableHeight();
 
   const fetchTableData = useCallback(
     (offset: number) => {
@@ -61,8 +109,8 @@ function TableLayout({
   }
 
   return (
-    <Layout style={{ height: '100%' }}>
-      <Layout.Header style={{ height: 'auto' }}>
+    <Flex vertical gap="small" style={{ height: '100%' }}>
+      <div>
         <h3>{tableName}</h3>
 
         <WhereFilter
@@ -72,23 +120,26 @@ function TableLayout({
             setWhere(where);
           }}
         />
-      </Layout.Header>
+      </div>
 
-      <Layout.Content style={{ overflow: 'auto' }}>
-        <TableGrid fields={fields} result={result} primaryKeys={primaryKeys} />
-      </Layout.Content>
+      <div style={{ overflow: 'auto', flex: '1' }} ref={resizeRef}>
+        <TableGrid
+          fields={fields}
+          result={result}
+          primaryKeys={primaryKeys}
+          yTableScroll={yTableScroll}
+        />
+      </div>
 
-      <Layout.Footer>
-        <Flex justify="center" align="center" style={{ marginTop: '20px' }}>
-          <Button
-            onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}
-            type="primary"
-          >
-            {t('table.rows.loadMore')}
-          </Button>
-        </Flex>
-      </Layout.Footer>
-    </Layout>
+      <Flex justify="center" align="center">
+        <Button
+          onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}
+          type="primary"
+        >
+          {t('table.rows.loadMore')}
+        </Button>
+      </Flex>
+    </Flex>
   );
 }
 
