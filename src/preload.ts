@@ -1,74 +1,17 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
-import { Connection } from 'mysql2/promise';
-import { Configuration, ConnectionAppState } from './configuration/type';
-import { contextBridge, ipcRenderer } from 'electron';
-import { QueryResult, QueryReturnType, ConnectionObject } from './sql/types';
-
-// === Configuration ===
-interface Config {
-  getConfiguration(): Promise<null | Configuration>;
-
-  addConnectionToConfig(connection: ConnectionObject): Promise<Configuration>;
-
-  changeTheme(theme: string): void;
-
-  updateConnectionState<K extends keyof ConnectionAppState>(
-    connectionName: string,
-    key: K,
-    value: ConnectionAppState[K]
-  ): Promise<void>;
-
-  editConnection(
-    connectionName: string,
-    connection: ConnectionObject
-  ): Promise<Configuration>;
-}
-
-const config: Config = {
-  getConfiguration: () => ipcRenderer.invoke('config:get'),
-  addConnectionToConfig: (connection: ConnectionObject) =>
-    ipcRenderer.invoke('config:connection:add', connection),
-  editConnection: (connectionName: string, connection: ConnectionObject) =>
-    ipcRenderer.invoke('config:connection:edit', connectionName, connection),
-  changeTheme: (theme: string) =>
-    ipcRenderer.invoke('config:theme:change', theme),
-  updateConnectionState: <K extends keyof ConnectionAppState>(
-    connectionName: string,
-    key: K,
-    value: ConnectionAppState[K]
-  ) =>
-    ipcRenderer.invoke(
-      'config:connection:updateState',
-      connectionName,
-      key,
-      value
-    ),
-};
+import { contextBridge } from 'electron';
+import { config } from './preload/config';
+import { sql } from './preload/sql';
 
 contextBridge.exposeInMainWorld('config', config);
-
-// === Sql ===
-interface Sql {
-  openConnection(params: ConnectionObject): Promise<Connection>;
-  executeQuery<T extends QueryReturnType>(query: string): QueryResult<T>;
-  closeAllConnections(): Promise<void>;
-}
-
-// TODO : clone the binder object in sql/index.ts ?
-const sql: Sql = {
-  openConnection: (params) => ipcRenderer.invoke('sql:connect', params),
-  executeQuery: (query) => ipcRenderer.invoke('sql:executeQuery', query),
-  closeAllConnections: () => ipcRenderer.invoke('sql:closeAll'),
-};
-
 contextBridge.exposeInMainWorld('sql', sql);
 
 // Declare window global that have been added
 declare global {
   interface Window {
-    config: Config;
-    sql: Sql;
+    config: typeof config;
+    sql: typeof sql;
   }
 }

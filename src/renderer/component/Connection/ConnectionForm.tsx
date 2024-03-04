@@ -5,7 +5,7 @@ import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
 import { useState } from 'react';
 import type { TFunction } from 'i18next';
-import { ConnectionObject } from '../../../sql/types';
+import type { ConnectionObject } from '../../../sql/types';
 
 type ConnectionFormType = ConnectionObject & {
   save?: boolean;

@@ -1,9 +1,9 @@
+import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { useMatch, useNavigate } from 'react-router';
+import invariant from 'tiny-invariant';
 import { DatabaseContext } from '../../../contexts/DatabaseContext';
 import { ConnectionContext } from '../../../contexts/ConnectionContext';
-import { ReactNode, useCallback, useEffect, useState } from 'react';
-import { ConnectionObject } from '../../../sql/types';
-import invariant from 'tiny-invariant';
+import type { ConnectionObject } from '../../../sql/types';
 
 interface Props {
   children: ReactNode;
