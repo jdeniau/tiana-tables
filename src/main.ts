@@ -4,16 +4,16 @@ import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
 import { updateElectronApp } from 'update-electron-app';
-import connectionStackInstance from './sql';
 import {
-  getConfiguration,
   addConnectionToConfig,
   changeTheme,
-  updateConnectionState,
   editConnection,
+  getConfiguration,
+  updateConnectionState,
 } from './configuration';
-import { ConnectionObject } from './component/Connection';
-import { Configuration, ConnectionAppState } from './configuration/type';
+import type { Configuration, ConnectionAppState } from './configuration/type';
+import connectionStackInstance from './sql';
+import type { ConnectionObject } from './sql/types';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {

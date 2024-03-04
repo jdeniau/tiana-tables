@@ -6,20 +6,19 @@ import {
   useState,
 } from 'react';
 import {
-  getColor,
-  getSetting,
-  isDarkTheme,
-  THEME_LIST,
-  DEFAULT_THEME,
-} from '../theme';
-import { styled, ThemeProvider } from 'styled-components';
-import {
   ConfigProvider as AntdConfigProvider,
   ThemeConfig,
   theme as antdTheme,
 } from 'antd';
-import { useConfiguration } from './ConfigurationContext';
+import { ThemeProvider, styled } from 'styled-components';
 import invariant from 'tiny-invariant';
+import {
+  DEFAULT_THEME,
+  THEME_LIST,
+  isDarkTheme,
+} from '../configuration/themes';
+import { getColor, getSetting } from '../renderer/theme';
+import { useConfiguration } from './ConfigurationContext';
 
 interface ChangeThemeFunc {
   (theme: string): void;

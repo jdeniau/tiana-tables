@@ -4,7 +4,8 @@ import { action } from '@storybook/addon-actions';
 import { testables } from '../src/contexts/ConfigurationContext';
 import { ThemeContextProvider } from '../src/contexts/ThemeContext';
 import { MemoryRouter } from 'react-router';
-import { DEFAULT_THEME, THEME_LIST, getSetting } from '../src/theme';
+import { DEFAULT_THEME, THEME_LIST } from '../src/configuration/themes';
+import { getSetting } from '../src/renderer/theme';
 
 const { ConfigurationContext } = testables;
 

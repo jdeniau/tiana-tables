@@ -1,15 +1,15 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
 import { existsSync, readFileSync, writeFile } from 'node:fs';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { DEFAULT_THEME } from './themes';
+import { Configuration } from './type';
 import {
   addConnectionToConfig,
-  getConfiguration,
   changeTheme,
+  editConnection,
+  getConfiguration,
   testables,
   updateConnectionState,
-  editConnection,
 } from '.';
-import { Configuration } from './type';
-import { DEFAULT_THEME } from '../theme';
 
 const { getBaseConfig } = testables;
 
