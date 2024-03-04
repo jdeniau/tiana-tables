@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 import { ReactElement } from 'react';
 import { styled } from 'styled-components';
 import { Button, Menu } from 'antd';
-import { useConnectionContext } from '../../contexts/ConnectionContext';
+import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { getSetting } from '../../theme';
-import { useTranslation } from '../../i18n';
+import { useTranslation } from '../../../i18n';
 
 const StyledMenu = styled(Menu)`
   flex: 1;

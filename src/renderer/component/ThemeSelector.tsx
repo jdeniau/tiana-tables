@@ -1,6 +1,6 @@
 import { Select } from 'antd';
-import { THEME_LIST } from '../../src/theme';
-import { useTheme } from '../contexts/ThemeContext';
+import { THEME_LIST } from '../../configuration/themes';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function ThemeSelector() {
   const { themeName, changeTheme } = useTheme();

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from 'antd';
-import { useTranslation } from '../i18n';
+import { useTranslation } from '../../i18n';
 
 export function Home() {
   const { t } = useTranslation();

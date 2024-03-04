@@ -5,13 +5,12 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { getColor, getSetting } from '../renderer/theme';
 import {
-  getColor,
-  getSetting,
   isDarkTheme,
   THEME_LIST,
   DEFAULT_THEME,
-} from '../theme';
+} from '../configuration/themes';
 import { styled, ThemeProvider } from 'styled-components';
 import {
   ConfigProvider as AntdConfigProvider,

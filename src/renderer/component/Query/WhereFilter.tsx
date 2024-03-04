@@ -1,7 +1,7 @@
 import { Button, Space } from 'antd';
 import { ReactElement, useState } from 'react';
 import { styled } from 'styled-components';
-import { useTranslation } from '../../i18n';
+import { useTranslation } from '../../../i18n';
 
 const WhereArea = styled.textarea`
   width: 100%;

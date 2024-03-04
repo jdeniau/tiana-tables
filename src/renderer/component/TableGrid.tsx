@@ -19,7 +19,6 @@ function TableGrid<Row extends RowDataPacket>({
   return (
     <Table
       bordered
-      //  TODO : use the table primary key to make a real key
       dataSource={
         result?.map((r) => {
           const key = primaryKeys.map((pk) => r[pk]).join('-');

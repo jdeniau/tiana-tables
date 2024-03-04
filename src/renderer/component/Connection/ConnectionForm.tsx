@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router';
 import { Button, Checkbox, Form, Input } from 'antd';
-import { useConfiguration } from '../../contexts/ConfigurationContext';
-import { useConnectionContext } from '../../contexts/ConnectionContext';
-import { ConnectionObject } from './types';
-import { useTranslation } from '../../i18n';
+import { useConfiguration } from '../../../contexts/ConfigurationContext';
+import { useConnectionContext } from '../../../contexts/ConnectionContext';
+import { useTranslation } from '../../../i18n';
 import { useState } from 'react';
 import type { TFunction } from 'i18next';
+import { ConnectionObject } from '../../../sql/types';
 
 type ConnectionFormType = ConnectionObject & {
   save?: boolean;

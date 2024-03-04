@@ -2,10 +2,9 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 import { Connection } from 'mysql2/promise';
-import { ConnectionObject } from './component/Connection/types';
 import { Configuration, ConnectionAppState } from './configuration/type';
 import { contextBridge, ipcRenderer } from 'electron';
-import { QueryResult, QueryReturnType } from './sql/types';
+import { QueryResult, QueryReturnType, ConnectionObject } from './sql/types';
 
 // === Configuration ===
 interface Config {

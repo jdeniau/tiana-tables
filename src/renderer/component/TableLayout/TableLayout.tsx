@@ -1,9 +1,9 @@
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
-import { useDatabaseContext } from '../../contexts/DatabaseContext';
+import { useDatabaseContext } from '../../../contexts/DatabaseContext';
 import TableGrid from '../TableGrid';
 import WhereFilter from '../Query/WhereFilter';
-import { useTranslation } from '../../i18n';
+import { useTranslation } from '../../../i18n';
 import { Button, Flex } from 'antd';
 import { useTableHeight } from './useTableHeight';
 

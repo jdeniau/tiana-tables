@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Configuration, ConnectionAppState } from '../configuration/type';
-import { ConnectionObject } from '../component/Connection/types';
+import { ConnectionObject } from '../sql/types';
 
 type ConfigurationContextType = {
   configuration: Configuration;

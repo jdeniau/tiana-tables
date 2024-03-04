@@ -1,6 +1,6 @@
 import { Types } from 'mysql'; // immporting from mysql2 will import the commonjs package and will fail
 import { styled } from 'styled-components';
-import { getColor, getSetting } from '../../src/theme';
+import { getColor, getSetting } from '../theme';
 
 interface TableCellFactoryProps {
   type: number | undefined;

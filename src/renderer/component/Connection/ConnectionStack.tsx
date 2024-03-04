@@ -1,8 +1,8 @@
 import { useMatch, useNavigate } from 'react-router';
-import { DatabaseContext } from '../../contexts/DatabaseContext';
-import { ConnectionContext } from '../../contexts/ConnectionContext';
+import { DatabaseContext } from '../../../contexts/DatabaseContext';
+import { ConnectionContext } from '../../../contexts/ConnectionContext';
 import { ReactNode, useCallback, useEffect, useState } from 'react';
-import { ConnectionObject } from './types';
+import { ConnectionObject } from '../../../sql/types';
 import invariant from 'tiny-invariant';
 
 interface Props {

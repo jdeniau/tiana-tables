@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
+import TableList from './TableList';
+import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
-import ConnectionForm from './ConnectionForm';
 
-const meta: Meta<typeof ConnectionForm> = {
-  component: ConnectionForm,
+const meta: Meta<typeof TableList> = {
+  component: TableList,
   decorators: [
     (Story) => (
       <ConnectionContext.Provider
@@ -18,30 +19,35 @@ const meta: Meta<typeof ConnectionForm> = {
           },
         }}
       >
-        <Story />
+        <DatabaseContext.Provider
+          value={{
+            database: 'mocked-db',
+            setDatabase: () => {},
+            // @ts-expect-error -- we don't need to implement the whole context
+            executeQuery: async (query) => {
+              action('executeQuery')(query);
+
+              return Promise.resolve([
+                [{ Name: 'foo' }, { Name: 'bar' }, { Name: 'baz' }],
+              ]);
+            },
+          }}
+        >
+          <Story />
+        </DatabaseContext.Provider>
       </ConnectionContext.Provider>
     ),
   ],
 };
 
 export default meta;
-type Story = StoryObj<typeof ConnectionForm>;
+type Story = StoryObj<typeof TableList>;
 
 /*
  *👇 Render functions are a framework specific feature to allow you control on how the component renders.
  * See https://storybook.js.org/docs/api/csf
  * to learn how to use render functions.
  */
-export const Create: Story = {};
-
-export const Edit: Story = {
-  args: {
-    connection: {
-      name: 'test',
-      host: 'localhost',
-      port: 3307,
-      user: 'test-user',
-      password: '',
-    },
-  },
+export const Primary: Story = {
+  render: () => <TableList />,
 };

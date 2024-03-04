@@ -1,6 +1,6 @@
 // import original module declarations
 import 'styled-components';
-import { TmTheme } from './theme';
+import { TmTheme } from '../configuration/themes';
 
 // and extend them!
 declare module 'styled-components' {

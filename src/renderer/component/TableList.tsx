@@ -1,8 +1,8 @@
-import { useDatabaseContext } from '../contexts/DatabaseContext';
-import { useConnectionContext } from '../contexts/ConnectionContext';
+import { useDatabaseContext } from '../../contexts/DatabaseContext';
+import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { NavLink } from 'react-router-dom';
 import { styled } from 'styled-components';
-import { getColor } from '../../src/theme';
+import { getColor } from '../theme';
 import { ReactElement, useEffect, useState } from 'react';
 import { RowDataPacket } from 'mysql2';
 

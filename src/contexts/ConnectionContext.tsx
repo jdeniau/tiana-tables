@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { ConnectionObject } from '../component/Connection/types';
+import { ConnectionObject } from '../sql/types';
 
 interface ConnectToFunc {
   (params: ConnectionObject): Promise<void>;

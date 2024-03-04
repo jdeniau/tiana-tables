@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
-import { ConnectionContext } from '../../contexts/ConnectionContext';
+import { ConnectionContext } from '../../../contexts/ConnectionContext';
 import Nav from './Nav';
 import { styled } from 'styled-components';
 import { Layout } from 'antd';

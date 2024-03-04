@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useConfiguration } from '../../contexts/ConfigurationContext';
-import { useDatabaseContext } from '../../contexts/DatabaseContext';
-import { useConnectionContext } from '../../contexts/ConnectionContext';
+import { useConfiguration } from '../../../contexts/ConfigurationContext';
+import { useDatabaseContext } from '../../../contexts/DatabaseContext';
+import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import invariant from 'tiny-invariant';
 import { TableLayout } from './TableLayout';
 

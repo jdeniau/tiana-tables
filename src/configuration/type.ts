@@ -1,4 +1,4 @@
-import { ConnectionObject } from '../component/Connection/types';
+import { ConnectionObject } from '../sql/types';
 
 export type Configuration = {
   version: 1;

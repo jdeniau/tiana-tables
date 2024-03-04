@@ -12,8 +12,8 @@ import {
   updateConnectionState,
   editConnection,
 } from './configuration';
-import { ConnectionObject } from './component/Connection';
 import { Configuration, ConnectionAppState } from './configuration/type';
+import { ConnectionObject } from './sql/types';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {

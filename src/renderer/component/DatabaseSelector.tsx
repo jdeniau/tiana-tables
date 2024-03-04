@@ -1,6 +1,6 @@
-import { useConfiguration } from '../contexts/ConfigurationContext';
-import { useDatabaseContext } from '../contexts/DatabaseContext';
-import { useConnectionContext } from '../contexts/ConnectionContext';
+import { useConfiguration } from '../../contexts/ConfigurationContext';
+import { useDatabaseContext } from '../../contexts/DatabaseContext';
+import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useCallback, useEffect, useState } from 'react';
 import { Select } from 'antd';
 import invariant from 'tiny-invariant';

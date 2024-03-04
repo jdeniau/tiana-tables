@@ -9,7 +9,7 @@ import {
   editConnection,
 } from '.';
 import { Configuration } from './type';
-import { DEFAULT_THEME } from '../theme';
+import { DEFAULT_THEME } from './themes';
 
 const { getBaseConfig } = testables;
 
