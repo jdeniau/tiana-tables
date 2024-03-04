@@ -7,7 +7,9 @@ import { MakerDMG } from '@electron-forge/maker-dmg';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 
 const config: ForgeConfig = {
-  packagerConfig: {},
+  packagerConfig: {
+    executableName: 'tiana-tables',
+  },
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({}),
