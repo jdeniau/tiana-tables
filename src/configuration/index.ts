@@ -46,7 +46,17 @@ function decryptConnection(
   };
 }
 
+let configuration: Configuration | null = null;
+
 export function getConfiguration(): Configuration {
+  if (!configuration) {
+    configuration = loadConfiguration();
+  }
+
+  return configuration;
+}
+
+function loadConfiguration(): Configuration {
   if (!existsSync(dataFilePath)) {
     return getBaseConfig();
   }

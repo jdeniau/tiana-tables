@@ -13,8 +13,6 @@ const meta: Meta<typeof Cell> = {
         value={{
           currentConnectionName: 'test',
           connectionNameList: ['test'],
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          setCurrentConnectionName: () => {},
           connectTo: async (connection) => {
             action('connectTo')(connection);
           },

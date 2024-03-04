@@ -11,8 +11,6 @@ const meta: Meta<typeof ConnectionForm> = {
         value={{
           currentConnectionName: 'test',
           connectionNameList: ['test'],
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          setCurrentConnectionName: () => {},
           connectTo: async (connection) => {
             action('connectTo')(connection);
           },

@@ -37,13 +37,6 @@ function ConnectionStack({ children }: Props) {
     [navigate, setConnectionNameList]
   );
 
-  const handleSetConnection = useCallback(
-    (connectionName: string) => {
-      navigate(`/connections/${connectionName}`);
-    },
-    [navigate]
-  );
-
   const handleSetDatabase = useCallback(
     (database: string) => {
       invariant(currentConnectionName, 'Connection name is required');
@@ -59,7 +52,6 @@ function ConnectionStack({ children }: Props) {
         connectionNameList,
         currentConnectionName: currentConnectionName ?? null,
         connectTo: handleConnectTo,
-        setCurrentConnectionName: handleSetConnection,
       }}
     >
       <DatabaseContext.Provider

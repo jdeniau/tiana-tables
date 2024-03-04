@@ -14,7 +14,6 @@ const fr: Translation = {
   'connection.form.port.label': 'Port',
   'connection.form.user.label': 'Utilisateur',
   'connection.form.password.label': 'Mot de passe',
-  'connection.form.saveConnection': 'Enregistrer la connexion',
   'connection.form.action.connect': 'Connecter',
   'connection.form.action.saveAndConnect': 'Enregistrer et connecter',
   'table.rows.loadMore': 'Charger plus…',
