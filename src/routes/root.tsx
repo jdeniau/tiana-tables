@@ -1,10 +1,11 @@
 import { Outlet } from 'react-router';
+import { Flex, Layout } from 'antd';
+import { styled } from 'styled-components';
+import packageJson from '../../package.json';
 import ConnectionStack from '../component/Connection/ConnectionStack';
 import { ConfigurationContextProvider } from '../contexts/ConfigurationContext';
-import { styled } from 'styled-components';
 import Debug from '../component/Debug';
 import ThemeSelector from '../component/ThemeSelector';
-import { Layout } from 'antd';
 import { getSetting } from '../theme';
 import ConnectionNav from '../component/Connection/Nav';
 import { ThemeContextProvider } from '../contexts/ThemeContext';
@@ -33,7 +34,10 @@ export default function Root() {
           <Layout>
             <Debug />
             <Header>
-              <h2>Tiana Tables</h2>
+              <Flex align="center" gap="small">
+                <h2>Tiana Tables</h2>
+                <span>v{packageJson.version}</span>
+              </Flex>
 
               <ConnectionNav />
 
