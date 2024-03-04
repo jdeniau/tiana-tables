@@ -4,16 +4,8 @@ import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
 import { updateElectronApp } from 'update-electron-app';
-import {
-  addConnectionToConfig,
-  changeTheme,
-  editConnection,
-  getConfiguration,
-  updateConnectionState,
-} from './configuration';
-import type { Configuration, ConnectionAppState } from './configuration/type';
+import { bindIpcMain as bindIpcMainConfiguration } from './configuration';
 import connectionStackInstance from './sql';
-import type { ConnectionObject } from './sql/types';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -82,33 +74,7 @@ app.whenReady().then(() => {
 
   installReactDevToolsExtension();
 
-  ipcMain.handle('config:get', getConfiguration);
-  ipcMain.handle(
-    'config:connection:add',
-    (event: unknown, connection: ConnectionObject): Configuration =>
-      addConnectionToConfig(connection)
-  );
-  ipcMain.handle(
-    'config:connection:edit',
-    (
-      event: unknown,
-      connectionName: string,
-      connection: ConnectionObject
-    ): Configuration => editConnection(connectionName, connection)
-  );
-  ipcMain.handle('config:theme:change', (event: unknown, name: string) =>
-    changeTheme(name)
-  );
-  ipcMain.handle(
-    'config:connection:updateState',
-    <K extends keyof ConnectionAppState>(
-      event: unknown,
-      connectionName: string,
-      key: K,
-      value: ConnectionAppState[K]
-    ) => updateConnectionState(connectionName, key, value)
-  );
-
+  bindIpcMainConfiguration(ipcMain);
   connectionStackInstance.bindIpcMain(ipcMain);
 
   // createWindow();

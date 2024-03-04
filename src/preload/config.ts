@@ -1,6 +1,7 @@
-import { ipcRenderer } from 'electron';
 import type { Configuration, ConnectionAppState } from '../configuration/type';
 import type { ConnectionObject } from '../sql/types';
+import { bindChannel } from './bindChannel';
+import { CONFIGURATION_CHANNEL } from './configurationChannel';
 
 interface Config {
   getConfiguration(): Promise<null | Configuration>;
@@ -22,22 +23,11 @@ interface Config {
 }
 
 export const config: Config = {
-  getConfiguration: () => ipcRenderer.invoke('config:get'),
-  addConnectionToConfig: (connection: ConnectionObject) =>
-    ipcRenderer.invoke('config:connection:add', connection),
-  editConnection: (connectionName: string, connection: ConnectionObject) =>
-    ipcRenderer.invoke('config:connection:edit', connectionName, connection),
-  changeTheme: (theme: string) =>
-    ipcRenderer.invoke('config:theme:change', theme),
-  updateConnectionState: <K extends keyof ConnectionAppState>(
-    connectionName: string,
-    key: K,
-    value: ConnectionAppState[K]
-  ) =>
-    ipcRenderer.invoke(
-      'config:connection:updateState',
-      connectionName,
-      key,
-      value
-    ),
+  getConfiguration: bindChannel(CONFIGURATION_CHANNEL.GET),
+  addConnectionToConfig: bindChannel(CONFIGURATION_CHANNEL.ADD_CONNECTION),
+  changeTheme: bindChannel(CONFIGURATION_CHANNEL.CHANGE_THEME),
+  updateConnectionState: bindChannel(
+    CONFIGURATION_CHANNEL.UPDATE_CONNECTION_STATE
+  ),
+  editConnection: bindChannel(CONFIGURATION_CHANNEL.EDIT_CONNECTION),
 };
