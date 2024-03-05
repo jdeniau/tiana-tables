@@ -9,7 +9,7 @@ export type Configuration = {
 export type ConnectionAppState = {
   isActive: boolean; // TODO not handled yet
   activeDatabase: string;
-  openedTable: string; // TODO not handled yet
+  openedTable: string;
 };
 
 export type EncryptedConnectionObject = {

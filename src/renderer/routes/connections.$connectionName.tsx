@@ -41,13 +41,15 @@ export async function loader({ params, request }: RouteParams) {
 
   const configuration = await window.config.getConfiguration();
 
-  const configDatabase =
-    configuration.connections[connectionName]?.appState?.activeDatabase;
+  const { activeDatabase: configDatabase, openedTable } =
+    configuration.connections[connectionName]?.appState || {};
 
   const activeDatabase = configDatabase || databaseList[0].Database;
 
   // redirect to the current database if we are not on a "database" page
-  const expectedUrl = `/connections/${connectionName}/${activeDatabase}`;
+  const expectedUrl = `/connections/${connectionName}/${activeDatabase}${
+    openedTable ? `/${openedTable}` : ''
+  }`;
 
   if (!request.url.endsWith(expectedUrl)) {
     return redirect(expectedUrl);
