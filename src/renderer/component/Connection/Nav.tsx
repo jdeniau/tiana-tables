@@ -20,7 +20,7 @@ export default function Nav(): ReactElement | null {
     return null;
   }
 
-  const items = connectionNameList.map((connection) => ({
+  const items = Array.from(connectionNameList).map((connection) => ({
     key: connection,
     label: <Link to={`/connections/${connection}`}>{connection}</Link>,
   }));

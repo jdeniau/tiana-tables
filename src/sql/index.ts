@@ -1,4 +1,5 @@
 import { Connection, createConnection } from 'mysql2/promise';
+import { getConfiguration } from '../configuration';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import { ConnectionObject, QueryResult } from './types';
 
@@ -7,7 +8,6 @@ class ConnectionStack {
 
   // List of IPC events and their handlers
   #ipcEventBinding = {
-    [SQL_CHANNEL.CONNECT]: this.connect,
     [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQuery,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
@@ -22,24 +22,8 @@ class ConnectionStack {
     }
   }
 
-  async connect(params: ConnectionObject): Promise<void> {
-    const { name, ...rest } = params;
-
-    // don't connect twice to the same connection
-    if (this.connections.has(name)) {
-      throw new Error(`Connection already opened on "${name}"`);
-    }
-
-    console.log(`[SQL] Open connection to "${name}"`);
-
-    const connection = await createConnection(rest);
-    await connection.connect();
-
-    this.connections.set(name, connection);
-  }
-
   async executeQuery(connectionName: string, query: string): QueryResult {
-    const connection = this.#getConnection(connectionName);
+    const connection = await this.#getConnection(connectionName);
 
     console.log(`[SQL] Execute query on "${connectionName}": "${query}"`);
 
@@ -56,12 +40,42 @@ class ConnectionStack {
     this.connections.clear();
   }
 
-  #getConnection(connectionName: string): Connection {
+  async #getConnection(connectionName: string): Promise<Connection> {
     const connection = this.connections.get(connectionName);
 
     if (!connection) {
-      throw new Error('No connection');
+      // throw new Error('No connection');
+
+      const { appState: _, ...connectionConfig } =
+        getConfiguration().connections[connectionName];
+
+      return await this.#connect(connectionConfig);
     }
+
+    return connection;
+  }
+
+  async #connect(params: ConnectionObject): Promise<Connection> {
+    const { name, ...rest } = params;
+
+    // don't connect twice to the same connection
+    if (this.connections.has(name)) {
+      throw new Error(`Connection already opened on "${name}"`);
+    }
+
+    console.log(`[SQL] Open connection to "${name}"`);
+
+    // TODO use a connection pool instead ? https://github.com/mysqljs/mysql?tab=readme-ov-file#establishing-connections
+    const connection = await createConnection(rest);
+
+    connection.on('end', () => {
+      console.log(`[SQL] Connection to "${name}" ended`);
+      this.connections.delete(name);
+    });
+
+    await connection.connect();
+
+    this.connections.set(name, connection);
 
     return connection;
   }

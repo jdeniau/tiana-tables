@@ -11,8 +11,8 @@ const meta: Meta<typeof ConnectionForm> = {
         value={{
           currentConnectionName: 'test',
           connectionNameList: ['test'],
-          connectTo: async (connection) => {
-            action('connectTo')(connection);
+          addConnectionToList: async (connectionName) => {
+            action('addConnectionToList')(connectionName);
           },
         }}
       >

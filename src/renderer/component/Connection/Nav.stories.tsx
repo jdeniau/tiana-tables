@@ -20,7 +20,7 @@ const meta: Meta<typeof Nav> = {
         value={{
           currentConnectionName: 'production',
           connectionNameList: ['test', 'production', 'staging', 'development'],
-          connectTo: async () => {},
+          addConnectionToList: () => {},
         }}
       >
         <Story />
