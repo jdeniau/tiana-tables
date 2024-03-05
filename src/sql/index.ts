@@ -25,6 +25,13 @@ class ConnectionStack {
   async connect(params: ConnectionObject): Promise<void> {
     const { name, ...rest } = params;
 
+    // don't connect twice to the same connection
+    if (this.connections.has(name)) {
+      throw new Error(`Connection already opened on "${name}"`);
+    }
+
+    console.log(`[SQL] Open connection to "${name}"`);
+
     const connection = await createConnection(rest);
     await connection.connect();
 
@@ -34,7 +41,7 @@ class ConnectionStack {
   async executeQuery(connectionName: string, query: string): QueryResult {
     const connection = this.#getConnection(connectionName);
 
-    console.log(`[SQL] Execute query "${query}"`);
+    console.log(`[SQL] Execute query on "${connectionName}": "${query}"`);
 
     return await connection.query(query);
   }

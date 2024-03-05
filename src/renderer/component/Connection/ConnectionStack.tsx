@@ -10,6 +10,7 @@ import {
   DatabaseContextProps,
 } from '../../../contexts/DatabaseContext';
 import type { ConnectionObject } from '../../../sql/types';
+import { getErrorMessage } from '../../utils/error';
 
 interface Props {
   children: ReactNode;
@@ -33,10 +34,15 @@ function ConnectionStack({ children }: Props) {
     };
   }, []);
 
+  // TODO we might need to change that into the proper route as reload will not work
   const handleConnectTo = useCallback(
     async (params: ConnectionObject) => {
-      await window.sql.openConnection(params);
-      // setConnectionNameList((prev) => [...prev, params.name]);
+      try {
+        await window.sql.openConnection(params);
+        setConnectionNameList((prev) => [...prev, params.name]);
+      } catch (error: unknown) {
+        console.error(getErrorMessage(error));
+      }
 
       navigate(`/connections/${params.name}`);
     },
