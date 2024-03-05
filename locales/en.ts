@@ -12,7 +12,6 @@ export default {
   'connection.form.port.label': 'Port',
   'connection.form.user.label': 'User',
   'connection.form.password.label': 'Password',
-  'connection.form.saveConnection': 'Save connection',
   'connection.form.action.connect': 'Connect',
   'connection.form.action.saveAndConnect': 'Save and connect',
   'table.rows.loadMore': 'Load more…',

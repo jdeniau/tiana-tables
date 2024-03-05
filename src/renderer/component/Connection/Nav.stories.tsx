@@ -1,4 +1,3 @@
-import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Layout } from 'antd';
 import { styled } from 'styled-components';
@@ -21,10 +20,6 @@ const meta: Meta<typeof Nav> = {
         value={{
           currentConnectionName: 'production',
           connectionNameList: ['test', 'production', 'staging', 'development'],
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          setCurrentConnectionName: (connection) => {
-            action('setCurrentConnectionName')(connection);
-          },
           connectTo: async () => {},
         }}
       >

@@ -11,7 +11,7 @@ import {
   updateConnectionState,
 } from '.';
 
-const { getBaseConfig } = testables;
+const { getBaseConfig, resetConfiguration } = testables;
 
 vi.mock('env-paths', () => ({
   default: () => ({ config: 'config' }),
@@ -37,6 +37,8 @@ function resetAllMocks(): void {
   mockExistsSync.mockReset();
   mockReadFileSync.mockReset();
   mockWriteFile.mockReset();
+
+  resetConfiguration();
 }
 
 vi.mock('electron', () => ({
@@ -81,6 +83,7 @@ describe('read configuration from file', () => {
     mockExistsSync.mockReturnValue(false);
 
     expect(getConfiguration()).toStrictEqual(getBaseConfig());
+    expect(mockReadFileSync).not.toHaveBeenCalled();
   });
 
   test('existing file but empty', () => {
@@ -88,6 +91,8 @@ describe('read configuration from file', () => {
     mockReadFileSync.mockReturnValue('');
 
     expect(getConfiguration()).toStrictEqual(getBaseConfig());
+
+    expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 
   test('existing file without connexion key', () => {
@@ -97,6 +102,8 @@ describe('read configuration from file', () => {
     expect(getConfiguration()).toStrictEqual({
       connections: {},
     });
+
+    expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 
   test('existing file without connexion', () => {
@@ -107,6 +114,8 @@ describe('read configuration from file', () => {
       version: 1,
       connections: {},
     });
+
+    expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 
   test('existing file with connexions', () => {
@@ -237,6 +246,8 @@ describe('add connection to config', () => {
       'utf-8',
       expect.any(Function)
     );
+
+    expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 });
 
@@ -313,6 +324,8 @@ describe('set theme', () => {
       'utf-8',
       expect.any(Function)
     );
+
+    expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 });
 
@@ -331,6 +344,8 @@ describe('set connection appState', async () => {
     await updateConnectionState('inexistant', 'isActive', true);
 
     expect(mockWriteFile).not.toHaveBeenCalled();
+
+    expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 
   test('existing file, set active', async () => {
@@ -372,6 +387,8 @@ describe('set connection appState', async () => {
       'utf-8',
       expect.any(Function)
     );
+
+    expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 
   test('existing file, set activeDatabase', async () => {
@@ -437,6 +454,8 @@ describe('set connection appState', async () => {
       'utf-8',
       expect.any(Function)
     );
+
+    expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 });
 
@@ -483,6 +502,8 @@ describe('edit', () => {
       'utf-8',
       expect.any(Function)
     );
+
+    expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 
   test('rename connexion', () => {
@@ -528,5 +549,7 @@ describe('edit', () => {
       'utf-8',
       expect.any(Function)
     );
+
+    expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 });
