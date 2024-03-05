@@ -16,7 +16,7 @@ import {
 const envPath = envPaths('TianaTables', { suffix: '' });
 const dataFilePath = resolve(envPath.config, 'config.json');
 
-console.log('Configuration file path:', dataFilePath);
+console.log('[CONFIG] Configuration file path:', dataFilePath);
 
 function getBaseConfig(): Configuration {
   return {

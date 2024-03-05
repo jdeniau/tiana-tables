@@ -4,7 +4,7 @@ import { ConnectionObject } from '../sql/types';
 interface ConnectToFunc {
   (params: ConnectionObject): Promise<void>;
 }
-interface ConnexionContextProps {
+export interface ConnexionContextProps {
   currentConnectionName: string | null;
   connectionNameList: string[];
   connectTo: ConnectToFunc;

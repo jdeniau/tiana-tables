@@ -1,4 +1,3 @@
-import { Connection } from 'mysql2/promise';
 import type {
   ConnectionObject,
   QueryResult,
@@ -8,8 +7,11 @@ import { bindChannel } from './bindChannel';
 import { SQL_CHANNEL } from './sqlChannel';
 
 interface Sql {
-  openConnection(params: ConnectionObject): Promise<Connection>;
-  executeQuery<T extends QueryReturnType>(query: string): QueryResult<T>;
+  openConnection(params: ConnectionObject): Promise<void>;
+  executeQuery<T extends QueryReturnType>(
+    connectionName: string,
+    query: string
+  ): QueryResult<T>;
   closeAllConnections(): Promise<void>;
 }
 

@@ -6,12 +6,17 @@ import ErrorPage from './error-page';
 import Connect from './routes/connect';
 import Create from './routes/connect/create';
 import Edit from './routes/connect/edit.$connectionName';
-import TableName, {
-  loader as tableNameLoader,
+import ConnectionDetailPage, {
+  loader as connectionDetailPageLoader,
+} from './routes/connections.$connectionName';
+import DatabaseDetailPage, {
+  loader as databaseDetailPageLoader,
+} from './routes/connections.$connectionName.$databaseName';
+import TableNamePage, {
+  loader as tableNamePageLoader,
 } from './routes/connections.$connectionName.$databaseName.$tableName';
 import { Home } from './routes/home';
 import Root from './routes/root';
-import { Tables } from './routes/tables';
 
 const appElement = document.getElementById('App');
 
@@ -53,16 +58,20 @@ const router = createMemoryRouter([
       },
       {
         path: 'connections/:connectionName',
-        element: <Tables />,
-      },
-      {
-        path: 'connections/:connectionName/:databaseName',
-        element: <Tables />,
+        element: <ConnectionDetailPage />,
+        loader: connectionDetailPageLoader,
         children: [
           {
-            path: ':tableName',
-            loader: tableNameLoader,
-            element: <TableName />,
+            path: ':databaseName',
+            element: <DatabaseDetailPage />,
+            loader: databaseDetailPageLoader,
+            children: [
+              {
+                path: ':tableName',
+                loader: tableNamePageLoader,
+                element: <TableNamePage />,
+              },
+            ],
           },
         ],
       },

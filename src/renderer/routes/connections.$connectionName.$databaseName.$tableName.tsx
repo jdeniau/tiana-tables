@@ -1,5 +1,6 @@
 import { RowDataPacket } from 'mysql2';
 import { Params, useLoaderData } from 'react-router';
+import invariant from 'tiny-invariant';
 import TableLayout from '../component/TableLayout';
 
 type RouteParams = {
@@ -11,9 +12,12 @@ interface ShowKeyRow extends RowDataPacket {
 }
 
 export async function loader({ params }: RouteParams) {
-  const { databaseName, tableName } = params;
+  const { connectionName, databaseName, tableName } = params;
+
+  invariant(connectionName, 'Connection name is required');
 
   const [result] = await window.sql.executeQuery<ShowKeyRow[]>(
+    connectionName,
     `SHOW KEYS FROM ${databaseName}.${tableName} WHERE Key_name = 'PRIMARY';`
   );
 
@@ -24,7 +28,7 @@ export async function loader({ params }: RouteParams) {
   };
 }
 
-export default function TableName() {
+export default function TableNamePage() {
   const { primaryKeys } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
 
   return <TableLayout primaryKeys={primaryKeys} />;

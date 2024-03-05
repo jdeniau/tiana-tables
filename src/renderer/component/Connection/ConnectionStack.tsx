@@ -1,8 +1,14 @@
-import { ReactNode, useCallback, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { useMatch, useNavigate } from 'react-router';
 import invariant from 'tiny-invariant';
-import { ConnectionContext } from '../../../contexts/ConnectionContext';
-import { DatabaseContext } from '../../../contexts/DatabaseContext';
+import {
+  ConnectionContext,
+  ConnexionContextProps,
+} from '../../../contexts/ConnectionContext';
+import {
+  DatabaseContext,
+  DatabaseContextProps,
+} from '../../../contexts/DatabaseContext';
 import type { ConnectionObject } from '../../../sql/types';
 
 interface Props {
@@ -30,11 +36,11 @@ function ConnectionStack({ children }: Props) {
   const handleConnectTo = useCallback(
     async (params: ConnectionObject) => {
       await window.sql.openConnection(params);
-      setConnectionNameList((prev) => [...prev, params.name]);
+      // setConnectionNameList((prev) => [...prev, params.name]);
 
       navigate(`/connections/${params.name}`);
     },
-    [navigate, setConnectionNameList]
+    [navigate]
   );
 
   const handleSetDatabase = useCallback(
@@ -46,21 +52,34 @@ function ConnectionStack({ children }: Props) {
     [currentConnectionName, navigate]
   );
 
+  const connectionContextValue = useMemo(
+    (): ConnexionContextProps => ({
+      connectionNameList,
+      currentConnectionName: currentConnectionName ?? null,
+      connectTo: handleConnectTo,
+    }),
+    [connectionNameList, currentConnectionName, handleConnectTo]
+  );
+
+  const databateContextValue = useMemo(
+    (): DatabaseContextProps => ({
+      database: databaseName ?? null,
+      setDatabase: handleSetDatabase,
+      executeQuery: (query) => {
+        invariant(
+          currentConnectionName,
+          'Connection name is required to execute a query'
+        );
+
+        return window.sql.executeQuery(currentConnectionName, query);
+      },
+    }),
+    [currentConnectionName, databaseName, handleSetDatabase]
+  );
+
   return (
-    <ConnectionContext.Provider
-      value={{
-        connectionNameList,
-        currentConnectionName: currentConnectionName ?? null,
-        connectTo: handleConnectTo,
-      }}
-    >
-      <DatabaseContext.Provider
-        value={{
-          database: databaseName ?? null,
-          setDatabase: handleSetDatabase,
-          executeQuery: window.sql.executeQuery,
-        }}
-      >
+    <ConnectionContext.Provider value={connectionContextValue}>
+      <DatabaseContext.Provider value={databateContextValue}>
         {children}
       </DatabaseContext.Provider>
     </ConnectionContext.Provider>
