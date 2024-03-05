@@ -10,10 +10,6 @@ function ConnectionPage() {
   const registeredConnectionList = useConfiguration().configuration.connections;
   const { connectTo } = useConnectionContext();
 
-  if (registeredConnectionList === null) {
-    return <div>Reading configuration...</div>;
-  }
-
   const connectionList = Object.values(registeredConnectionList);
 
   if (Object.keys(registeredConnectionList).length === 0) {

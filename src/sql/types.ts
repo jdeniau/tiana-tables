@@ -27,3 +27,11 @@ export type ConnectionObject = {
   user: string;
   password: string;
 };
+
+/**
+ * Represent the return type of "SHOW DATABASES;" query.
+ */
+interface ShowDatabaseRow extends RowDataPacket {
+  Database: string;
+}
+export type ShowDatabasesResult = ShowDatabaseRow[];

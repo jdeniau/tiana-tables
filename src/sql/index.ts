@@ -3,7 +3,7 @@ import { SQL_CHANNEL } from '../preload/sqlChannel';
 import { ConnectionObject, QueryResult } from './types';
 
 class ConnectionStack {
-  private connections: Map<number, Connection> = new Map();
+  private connections: Map<string, Connection> = new Map();
 
   // List of IPC events and their handlers
   #ipcEventBinding = {
@@ -17,22 +17,31 @@ class ConnectionStack {
       ipcMain.handle(channel, (event, ...args: unknown[]) =>
         // convert the first argument to senderId and bind the rest
         // @ts-expect-error issue with strict type in tsconfig, but seems to work at runtime
-        handler.bind(this)(event.sender.id, ...args)
+        handler.bind(this)(...args)
       );
     }
   }
 
-  async connect(senderId: number, params: ConnectionObject): Promise<number> {
-    const { name: _, ...rest } = params;
+  async connect(params: ConnectionObject): Promise<void> {
+    const { name, ...rest } = params;
+
+    // don't connect twice to the same connection
+    if (this.connections.has(name)) {
+      throw new Error(`Connection already opened on "${name}"`);
+    }
+
+    console.log(`[SQL] Open connection to "${name}"`);
+
     const connection = await createConnection(rest);
     await connection.connect();
-    this.connections.set(senderId, connection);
 
-    return connection.threadId;
+    this.connections.set(name, connection);
   }
 
-  async executeQuery(senderId: number, query: string): QueryResult {
-    const connection = this.#getConnection(senderId);
+  async executeQuery(connectionName: string, query: string): QueryResult {
+    const connection = this.#getConnection(connectionName);
+
+    console.log(`[SQL] Execute query on "${connectionName}": "${query}"`);
 
     return await connection.query(query);
   }
@@ -47,8 +56,8 @@ class ConnectionStack {
     this.connections.clear();
   }
 
-  #getConnection(senderId: number): Connection {
-    const connection = this.connections.get(senderId);
+  #getConnection(connectionName: string): Connection {
+    const connection = this.connections.get(connectionName);
 
     if (!connection) {
       throw new Error('No connection');

@@ -10,24 +10,23 @@ const StyledNavLink = styled(NavLink)`
   color: ${(props) => getColor(props.theme, 'support.type', 'foreground')};
 `;
 
-interface TableListProps {
-  database: string;
-}
-
 interface TableStatusRow extends RowDataPacket {
   Name: string;
 }
 
-function ConnectedTableList({ database }: TableListProps): ReactElement | null {
+export default function TableList(): ReactElement | null {
   const { currentConnectionName } = useConnectionContext();
-  const { executeQuery } = useDatabaseContext();
+  const { executeQuery, database } = useDatabaseContext();
   const [tableStatusList, setTableStatusList] = useState<
     TableStatusRow[] | null
   >(null);
 
   useEffect(() => {
+    if (!currentConnectionName || !database) {
+      return;
+    }
+
     executeQuery<TableStatusRow[]>(
-      // connection.query(
       `SHOW TABLE STATUS FROM \`${database}\`;`
     ).then(([result]) => {
       setTableStatusList(result);
@@ -43,7 +42,7 @@ function ConnectedTableList({ database }: TableListProps): ReactElement | null {
       {tableStatusList.map((rowDataPacket: TableStatusRow) => (
         <div key={rowDataPacket.Name}>
           <StyledNavLink
-            to={rowDataPacket.Name}
+            to={`${database}/${rowDataPacket.Name}`}
             style={({ isActive }: { isActive: boolean }) => ({
               fontWeight: isActive ? 'bold' : undefined,
             })}
@@ -53,22 +52,5 @@ function ConnectedTableList({ database }: TableListProps): ReactElement | null {
         </div>
       ))}
     </div>
-  );
-}
-
-export default function TableList(props: object): ReactElement | null {
-  const { currentConnectionName } = useConnectionContext();
-  const { database } = useDatabaseContext();
-
-  if (!currentConnectionName || !database) {
-    return null;
-  }
-
-  return (
-    <ConnectedTableList
-      // key={`${currentConnection.threadId}|${database}` || undefined}
-      database={database}
-      {...props}
-    />
   );
 }

@@ -45,10 +45,6 @@ const preview: Preview = {
       </MemoryRouter>
     ),
     (Story, { globals: { theme } }) => {
-      // const themeName = useParameter('backgrounds');
-
-      // console.log('themeName', themeName);
-
       return (
         <ConfigurationContext.Provider
           // weirdly needed to force storybook to re-render

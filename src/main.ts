@@ -19,7 +19,7 @@ const isMac = process.platform !== 'darwin';
 function installReactDevToolsExtension() {
   installExtension(REACT_DEVELOPER_TOOLS)
     .then((name) => {
-      console.log(`Added Extension:  ${name}`);
+      console.log(`[DEBUG] Added Extension:  ${name}`);
 
       // once extension is loaded, reload the view after a short period (probably to be sure that the extension is loaded ?)
       BrowserWindow.getAllWindows().forEach((win) => {

@@ -4,7 +4,7 @@ import { QueryResult, QueryReturnType } from '../sql/types';
 interface SetDatabaseFunc {
   (theme: string): void;
 }
-interface DatabaseContextProps {
+export interface DatabaseContextProps {
   database: string | null;
   setDatabase: SetDatabaseFunc;
   executeQuery: <T extends QueryReturnType>(query: string) => QueryResult<T>;

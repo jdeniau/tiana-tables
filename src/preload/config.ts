@@ -4,7 +4,7 @@ import { bindChannel } from './bindChannel';
 import { CONFIGURATION_CHANNEL } from './configurationChannel';
 
 interface Config {
-  getConfiguration(): Promise<null | Configuration>;
+  getConfiguration(): Promise<Configuration>;
 
   addConnectionToConfig(connection: ConnectionObject): Promise<Configuration>;
 
