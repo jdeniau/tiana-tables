@@ -193,4 +193,9 @@ export function bindIpcMain(ipcMain: Electron.IpcMain): void {
   }
 }
 
-export const testables = { getBaseConfig };
+export const testables = {
+  getBaseConfig,
+  resetConfiguration: () => {
+    configuration = null;
+  },
+};
