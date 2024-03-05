@@ -15,8 +15,8 @@ const meta: Meta<typeof ConnectionPage> = {
         value={{
           currentConnectionName: null,
           connectionNameList: [],
-          connectTo: async (connection) => {
-            action('connectTo')(connection);
+          addConnectionToList: async (connectionName) => {
+            action('addConnectionToList')(connectionName);
           },
         }}
       >

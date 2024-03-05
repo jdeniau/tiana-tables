@@ -1,7 +1,15 @@
+import { useEffect } from 'react';
 import { Layout } from 'antd';
-import { Outlet, Params, redirect, useLoaderData } from 'react-router-dom';
+import {
+  Outlet,
+  Params,
+  redirect,
+  useLoaderData,
+  useParams,
+} from 'react-router-dom';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
+import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { ShowDatabasesResult } from '../../sql/types';
 import DatabaseSelector from '../component/DatabaseSelector';
 import TableList from '../component/TableList';
@@ -55,6 +63,16 @@ export default function ConnectionDetailPage() {
     Awaited<ReturnType<typeof loader>>,
     Response
   >;
+
+  const { addConnectionToList } = useConnectionContext();
+
+  const { connectionName } = useParams();
+
+  useEffect(() => {
+    if (connectionName) {
+      addConnectionToList(connectionName);
+    }
+  }, [addConnectionToList, connectionName]);
 
   return (
     <Layout>

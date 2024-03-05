@@ -9,8 +9,6 @@ import {
   DatabaseContext,
   DatabaseContextProps,
 } from '../../../contexts/DatabaseContext';
-import type { ConnectionObject } from '../../../sql/types';
-import { getErrorMessage } from '../../utils/error';
 
 interface Props {
   children: ReactNode;
@@ -23,7 +21,9 @@ function ConnectionStack({ children }: Props) {
   const databaseName = useMatch('connections/:connectionName/:databaseName/*')
     ?.params.databaseName;
 
-  const [connectionNameList, setConnectionNameList] = useState<string[]>([]);
+  const [connectionNameList, setConnectionNameList] = useState<Array<string>>(
+    []
+  );
 
   useEffect(() => {
     return () => {
@@ -35,19 +35,11 @@ function ConnectionStack({ children }: Props) {
   }, []);
 
   // TODO we might need to change that into the proper route as reload will not work
-  const handleConnectTo = useCallback(
-    async (params: ConnectionObject) => {
-      try {
-        await window.sql.openConnection(params);
-        setConnectionNameList((prev) => [...prev, params.name]);
-      } catch (error: unknown) {
-        console.error(getErrorMessage(error));
-      }
-
-      navigate(`/connections/${params.name}`);
-    },
-    [navigate]
-  );
+  const addConnectionToList = useCallback(async (connectionName: string) => {
+    setConnectionNameList((prev) =>
+      Array.from(new Set([...prev, connectionName]))
+    );
+  }, []);
 
   const handleSetDatabase = useCallback(
     (database: string) => {
@@ -62,9 +54,9 @@ function ConnectionStack({ children }: Props) {
     (): ConnexionContextProps => ({
       connectionNameList,
       currentConnectionName: currentConnectionName ?? null,
-      connectTo: handleConnectTo,
+      addConnectionToList,
     }),
-    [connectionNameList, currentConnectionName, handleConnectTo]
+    [connectionNameList, currentConnectionName, addConnectionToList]
   );
 
   const databateContextValue = useMemo(

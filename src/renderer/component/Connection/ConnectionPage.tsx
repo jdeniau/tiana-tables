@@ -2,13 +2,11 @@ import { Button, Flex } from 'antd';
 import { Link, Navigate } from 'react-router-dom';
 import { EncryptedConnectionObject } from '../../../configuration/type';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
-import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
 
 function ConnectionPage() {
   const { t } = useTranslation();
   const registeredConnectionList = useConfiguration().configuration.connections;
-  const { connectTo } = useConnectionContext();
 
   const connectionList = Object.values(registeredConnectionList);
 
@@ -22,18 +20,7 @@ function ConnectionPage() {
         (connection: EncryptedConnectionObject): JSX.Element => (
           <Flex key={connection.name} gap="small">
             <Button block>
-              <Link
-                to={connection.name}
-                onClick={(e) => {
-                  // TODO move this in the page component
-                  e.preventDefault();
-
-                  // remove unwanted properties
-                  const { appState: _, ...rest } = connection;
-
-                  connectTo(rest);
-                }}
-              >
+              <Link to={`/connections/${connection.name}`}>
                 {connection.name}
               </Link>
             </Button>

@@ -2,7 +2,6 @@ import { Button, Form, Input } from 'antd';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
-import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
 import type { ConnectionObject } from '../../../sql/types';
 
@@ -29,7 +28,6 @@ function ConnectionForm({ connection }: Props) {
   };
 
   const { t } = useTranslation();
-  const { connectTo } = useConnectionContext();
   const { addConnectionToConfig, editConnection } = useConfiguration();
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -44,7 +42,8 @@ function ConnectionForm({ connection }: Props) {
     }
 
     addConnectionToConfig(formData);
-    connectTo(formData);
+
+    navigate(`/connections/${formData.name}`);
   };
 
   return (
