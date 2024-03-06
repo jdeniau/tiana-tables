@@ -13,8 +13,12 @@ const Url = styled.div`
   padding: 2px 5px;
 `;
 
-function Debug(): ReactElement {
+function Debug(): ReactElement | null {
   const location = useLocation();
+
+  if (process.env.NODE_ENV !== 'development') {
+    return null;
+  }
 
   return (
     <DebugContainer>

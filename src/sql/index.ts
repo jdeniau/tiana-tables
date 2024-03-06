@@ -28,7 +28,18 @@ class ConnectionStack {
 
     log('SQL', `Execute query on "${connectionName}": "${query}"`);
 
-    return await connection.query(query);
+    try {
+      return await connection.query(query);
+    } catch (error) {
+      // retry once
+      log('SQL', `Error on "${connectionName}"`, error);
+
+      this.connections.delete(connectionName);
+
+      const renewedConnection = await this.#getConnection(connectionName);
+
+      return await renewedConnection.query(query);
+    }
   }
 
   async closeAllConnections(): Promise<void> {
