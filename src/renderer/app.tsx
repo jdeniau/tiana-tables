@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { RouterProvider, createHashRouter } from 'react-router-dom';
 import invariant from 'tiny-invariant';
 import ErrorPage from './error-page';
 import Connect from './routes/connect';
@@ -29,7 +29,7 @@ const root = createRoot(appElement);
 // export const history = createMemoryHistory();
 // <Router history={history}>
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: '/',
     element: <Root />,
