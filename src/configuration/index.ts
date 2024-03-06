@@ -2,6 +2,7 @@ import { dialog, safeStorage } from 'electron';
 import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
 import { resolve } from 'node:path';
 import envPaths from 'env-paths';
+import { log } from '../log';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
 import { ConnectionObject } from '../sql/types';
 import { DEFAULT_THEME } from './themes';
@@ -16,7 +17,7 @@ import {
 const envPath = envPaths('TianaTables', { suffix: '' });
 const dataFilePath = resolve(envPath.config, 'config.json');
 
-console.log('[CONFIG] Configuration file path:', dataFilePath);
+log('CONFIG', 'Configuration file path:', dataFilePath);
 
 function getBaseConfig(): Configuration {
   return {

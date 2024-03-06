@@ -5,6 +5,7 @@ import installExtension, {
 } from 'electron-devtools-installer';
 import { updateElectronApp } from 'update-electron-app';
 import { bindIpcMain as bindIpcMainConfiguration } from './configuration';
+import { log } from './log';
 import connectionStackInstance from './sql';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -17,9 +18,14 @@ updateElectronApp();
 const isMac = process.platform !== 'darwin';
 
 function installReactDevToolsExtension() {
+  // don't install the extension in production
+  if (process.env.NODE_ENV === 'development') {
+    return;
+  }
+
   installExtension(REACT_DEVELOPER_TOOLS)
     .then((name) => {
-      console.log(`[DEBUG] Added Extension:  ${name}`);
+      log('DEBUG', `Added Extension:  ${name}`);
 
       // once extension is loaded, reload the view after a short period (probably to be sure that the extension is loaded ?)
       BrowserWindow.getAllWindows().forEach((win) => {
@@ -51,7 +57,9 @@ const createWindow = () => {
   }
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  if (process.env.NODE_ENV === 'development') {
+    mainWindow.webContents.openDevTools();
+  }
 };
 
 // This method will be called when Electron has finished
