@@ -13,10 +13,6 @@ import {
 
 const { getBaseConfig, resetConfiguration } = testables;
 
-vi.mock('env-paths', () => ({
-  default: () => ({ config: 'config' }),
-}));
-
 vi.mock('node:path', () => ({
   resolve: (a: string, b: string) => `${a}/${b}`,
 }));
@@ -45,6 +41,9 @@ vi.mock('electron', () => ({
   safeStorage: {
     encryptString: vi.fn((s: string) => Buffer.from(`encrypted-${s}`)),
     decryptString: vi.fn((b: Buffer) => b.toString().substring(10)),
+  },
+  app: {
+    getPath: vi.fn((s: string) => s),
   },
 }));
 
@@ -156,7 +155,7 @@ describe('add connection to config', () => {
     });
 
     expect(mockWriteFile).toHaveBeenCalledWith(
-      'config/config.json',
+      'userData/config/config.json',
       JSON.stringify(
         {
           version: 1,
@@ -212,7 +211,7 @@ describe('add connection to config', () => {
     });
 
     expect(mockWriteFile).toHaveBeenCalledWith(
-      'config/config.json',
+      'userData/config/config.json',
       JSON.stringify(
         {
           version: 1,
@@ -258,7 +257,7 @@ describe('set theme', () => {
     await changeTheme('test');
 
     expect(mockWriteFile).toHaveBeenCalledWith(
-      'config/config.json',
+      'userData/config/config.json',
       JSON.stringify(
         {
           version: 1,
@@ -298,7 +297,7 @@ describe('set theme', () => {
     await changeTheme('test');
 
     expect(mockWriteFile).toHaveBeenCalledWith(
-      'config/config.json',
+      'userData/config/config.json',
       JSON.stringify(
         {
           version: 1,
@@ -354,7 +353,7 @@ describe('set connection appState', async () => {
     await updateConnectionState('prod', 'isActive', true);
 
     expect(mockWriteFile).toHaveBeenCalledWith(
-      'config/config.json',
+      'userData/config/config.json',
       JSON.stringify(
         {
           version: 1,
@@ -421,7 +420,7 @@ describe('set connection appState', async () => {
     await updateConnectionState('prod', 'activeDatabase', 'test');
 
     expect(mockWriteFile).toHaveBeenCalledWith(
-      'config/config.json',
+      'userData/config/config.json',
       JSON.stringify(
         {
           version: 1,
@@ -474,7 +473,7 @@ describe('edit', () => {
     expect(configuration.connections.prod.host).toBe('prod2');
 
     expect(mockWriteFile).toHaveBeenCalledWith(
-      'config/config.json',
+      'userData/config/config.json',
       JSON.stringify(
         {
           version: 1,
@@ -521,7 +520,7 @@ describe('edit', () => {
     expect(configuration.connections.local2.host).toBe('local2');
 
     expect(mockWriteFile).toHaveBeenCalledWith(
-      'config/config.json',
+      'userData/config/config.json',
       JSON.stringify(
         {
           version: 1,

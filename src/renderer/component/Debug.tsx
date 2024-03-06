@@ -16,7 +16,7 @@ const Url = styled.div`
 function Debug(): ReactElement | null {
   const location = useLocation();
 
-  if (process.env.NODE_ENV !== 'development') {
+  if (!window.isDev) {
     return null;
   }
 
