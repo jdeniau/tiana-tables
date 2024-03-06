@@ -13,14 +13,18 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+const isMac = process.platform !== 'darwin';
+const isDev = !app.isPackaged;
+
+// log files are stored in the userData folder, and the file name is different in dev and prod
+log.transports.file.resolvePathFn = () =>
+  path.join(app.getPath('userData'), 'logs', isDev ? 'dev.log' : 'main.log');
+
 log.initialize();
 
 updateElectronApp({
   logger: log,
 });
-
-const isMac = process.platform !== 'darwin';
-const isDev = !app.isPackaged;
 
 function installReactDevToolsExtension() {
   // don't install the extension in production
