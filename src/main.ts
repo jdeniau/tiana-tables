@@ -3,9 +3,9 @@ import path from 'node:path';
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
-import { updateElectronApp } from 'update-electron-app';
+import log from 'electron-log/main';
+import { UpdateSourceType, updateElectronApp } from 'update-electron-app';
 import { bindIpcMain as bindIpcMainConfiguration } from './configuration';
-import { log } from './log';
 import connectionStackInstance from './sql';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -13,19 +13,28 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-updateElectronApp();
+log.initialize();
+
+updateElectronApp({
+  updateSource: {
+    type: UpdateSourceType.ElectronPublicUpdateService,
+    repo: 'jdeniau/tiana-tables',
+  },
+  logger: log,
+});
 
 const isMac = process.platform !== 'darwin';
+const isDev = !app.isPackaged;
 
 function installReactDevToolsExtension() {
   // don't install the extension in production
-  if (process.env.NODE_ENV === 'development') {
+  if (!isDev) {
     return;
   }
 
   installExtension(REACT_DEVELOPER_TOOLS)
     .then((name) => {
-      log('DEBUG', `Added Extension:  ${name}`);
+      log.debug(`Added Extension:  ${name}`);
 
       // once extension is loaded, reload the view after a short period (probably to be sure that the extension is loaded ?)
       BrowserWindow.getAllWindows().forEach((win) => {
@@ -57,7 +66,7 @@ const createWindow = () => {
   }
 
   // Open the DevTools.
-  if (process.env.NODE_ENV === 'development') {
+  if (isDev) {
     mainWindow.webContents.openDevTools();
   }
 };
@@ -84,6 +93,10 @@ app.whenReady().then(() => {
 
   bindIpcMainConfiguration(ipcMain);
   connectionStackInstance.bindIpcMain(ipcMain);
+
+  ipcMain.handle('get-is-dev', () => {
+    return isDev;
+  });
 
   // createWindow();
   // app.on('activate', function () {

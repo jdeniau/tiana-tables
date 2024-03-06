@@ -1,6 +1,6 @@
+import log from 'electron-log';
 import { Connection, createConnection } from 'mysql2/promise';
 import { getConfiguration } from '../configuration';
-import { log } from '../log';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import { ConnectionObject, QueryResult } from './types';
 
@@ -26,13 +26,13 @@ class ConnectionStack {
   async executeQuery(connectionName: string, query: string): QueryResult {
     const connection = await this.#getConnection(connectionName);
 
-    log('SQL', `Execute query on "${connectionName}": "${query}"`);
+    log.debug(`Execute query on "${connectionName}": "${query}"`);
 
     try {
       return await connection.query(query);
     } catch (error) {
       // retry once
-      log('SQL', `Error on "${connectionName}"`, error);
+      log.debug(`Error on "${connectionName}"`, error);
 
       this.connections.delete(connectionName);
 
@@ -75,13 +75,13 @@ class ConnectionStack {
       throw new Error(`Connection already opened on "${name}"`);
     }
 
-    log('SQL', `Open connection to "${name}"`);
+    log.debug(`Open connection to "${name}"`);
 
     // TODO use a connection pool instead ? https://github.com/mysqljs/mysql?tab=readme-ov-file#establishing-connections
     const connection = await createConnection(rest);
 
     connection.on('end', () => {
-      log('SQL', `Connection to "${name}" ended`);
+      log.debug(`Connection to "${name}" ended`);
       this.connections.delete(name);
     });
 

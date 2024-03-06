@@ -1,8 +1,7 @@
-import { dialog, safeStorage } from 'electron';
+import { app, dialog, safeStorage } from 'electron';
 import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
 import { resolve } from 'node:path';
-import envPaths from 'env-paths';
-import { log } from '../log';
+import log from 'electron-log';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
 import { ConnectionObject } from '../sql/types';
 import { DEFAULT_THEME } from './themes';
@@ -13,11 +12,10 @@ import {
   EncryptedConnectionObject,
 } from './type';
 
-// TODO use app.getPath('userData') to store the configuration file instead of env-paths
-const envPath = envPaths('TianaTables', { suffix: '' });
-const dataFilePath = resolve(envPath.config, 'config.json');
+const configPath = resolve(app.getPath('userData'), 'config');
+const dataFilePath = resolve(configPath, 'config.json');
 
-log('CONFIG', 'Configuration file path:', dataFilePath);
+log.info('Configuration file path:', dataFilePath);
 
 function getBaseConfig(): Configuration {
   return {
@@ -92,7 +90,7 @@ function writeConfiguration(config: Configuration): void {
     ),
   };
 
-  mkdirSync(envPath.config, { recursive: true });
+  mkdirSync(configPath, { recursive: true });
   writeFile(
     dataFilePath,
     JSON.stringify(encryptedConfig, null, 2),
