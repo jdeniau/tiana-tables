@@ -6,7 +6,7 @@
   "main": ".vite/build/main.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jdeniau/tiana-tables.git"
+    "url": "https://github.com/jdeniau/tiana-tables"
   },
   "scripts": {
     "start": "electron-forge start",

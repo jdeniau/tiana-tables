@@ -4,7 +4,7 @@ import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
 import log from 'electron-log/main';
-import { UpdateSourceType, updateElectronApp } from 'update-electron-app';
+import { updateElectronApp } from 'update-electron-app';
 import { bindIpcMain as bindIpcMainConfiguration } from './configuration';
 import connectionStackInstance from './sql';
 
@@ -16,10 +16,6 @@ if (require('electron-squirrel-startup')) {
 log.initialize();
 
 updateElectronApp({
-  updateSource: {
-    type: UpdateSourceType.ElectronPublicUpdateService,
-    repo: 'jdeniau/tiana-tables',
-  },
   logger: log,
 });
 
