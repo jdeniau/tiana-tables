@@ -42,7 +42,7 @@ export default function TableList(): ReactElement | null {
       {tableStatusList.map((rowDataPacket: TableStatusRow) => (
         <div key={rowDataPacket.Name}>
           <StyledNavLink
-            to={`${database}/${rowDataPacket.Name}`}
+            to={`/connections/${currentConnectionName}/${database}/tables/${rowDataPacket.Name}`}
             style={({ isActive }: { isActive: boolean }) => ({
               fontWeight: isActive ? 'bold' : undefined,
             })}

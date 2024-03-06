@@ -4,6 +4,7 @@ import { useTranslation } from '../../i18n';
 
 export function Home() {
   const { t } = useTranslation();
+
   return (
     <div>
       <p>Tiana Tables ! </p>
