@@ -1,21 +1,28 @@
 import { useState } from 'react';
-import { Button, Form, Input } from 'antd';
+import { Button, Flex, Form, Input } from 'antd';
 import invariant from 'tiny-invariant';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
+import { isResultSetHeader, isRowDataPacketArray } from '../../sql/type-guard';
 import { QueryResult } from '../../sql/types';
+import TableGrid from '../component/TableGrid';
+import { useTableHeight } from '../component/TableLayout/useTableHeight';
 
 const { TextArea } = Input;
 
+// TODO : create an element for the `yScroll` (actually need to be wrapped in a Flex height 100 and overflow, etc.)
 export default function SqlPage() {
-  const [result, setResult] = useState<QueryResult | null>(null);
+  const [result, setResult] = useState<Awaited<QueryResult> | null>(null);
   const { database } = useDatabaseContext();
   const { currentConnectionName } = useConnectionContext();
 
   invariant(currentConnectionName, 'Connection name is required');
 
+  const [yTableScroll, resizeRef] = useTableHeight();
+  console.log(result, yTableScroll);
+
   return (
-    <div>
+    <Flex vertical gap="small" style={{ height: '100%' }}>
       <Form
         initialValues={{
           raw: 'SELECT * FROM cart LIMIT 10;',
@@ -45,14 +52,24 @@ export default function SqlPage() {
         <Button htmlType="submit">Submit</Button>
       </Form>
 
-      <div>
-        {result && (
+      {result && <h2>Result</h2>}
+      <div style={{ overflow: 'auto', flex: '1' }} ref={resizeRef}>
+        {result && isRowDataPacketArray(result[0]) && (
+          <TableGrid
+            result={result[0]}
+            fields={result[1]}
+            yTableScroll={yTableScroll}
+          />
+        )}
+
+        {result && isResultSetHeader(result[0]) && (
           <div>
-            <h2>Result</h2>
-            <pre>{JSON.stringify(result, null, 2)}</pre>
+            <div>Affected rows: {result[0].affectedRows}</div>
+            <div>Inserted id: {result[0].insertId}</div>
           </div>
         )}
+        {/* TODO handle all other types of query result ? if we do handle multiple calls */}
       </div>
-    </div>
+    </Flex>
   );
 }

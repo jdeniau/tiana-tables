@@ -6,7 +6,7 @@ import Cell from './Cell';
 interface TableGridProps<R extends object> {
   result: null | R[];
   fields: null | FieldPacket[];
-  primaryKeys: Array<string>;
+  primaryKeys?: Array<string>;
   yTableScroll: number;
 }
 
@@ -21,6 +21,10 @@ function TableGrid<Row extends RowDataPacket>({
       bordered
       dataSource={
         result?.map((r) => {
+          if (!primaryKeys) {
+            return r;
+          }
+
           const key = primaryKeys.map((pk) => r[pk]).join('-');
 
           return { ...r, key };
