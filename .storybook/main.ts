@@ -2,7 +2,6 @@ import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
   stories: [
-    '../src/renderer/**/*.mdx',
     '../src/renderer/**/*.stories.@(js|jsx|mjs|ts|tsx)',
   ],
   addons: [
@@ -17,6 +16,12 @@ const config: StorybookConfig = {
   },
   core: {
     disableTelemetry: true,
+    builder: {
+      name: '@storybook/builder-vite',
+      options: {
+        viteConfigPath: '.storybook/vite.config.ts',
+      },
+    },
   },
   docs: {
     autodocs: 'tag',
