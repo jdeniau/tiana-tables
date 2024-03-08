@@ -30,6 +30,7 @@ const Content = styled(Layout.Content)`
 function ToggleRawSqlButton() {
   const { currentConnectionName } = useConnectionContext();
   const { database } = useDatabaseContext();
+  const { t } = useTranslation();
 
   if (!currentConnectionName) {
     return null;
@@ -38,7 +39,7 @@ function ToggleRawSqlButton() {
   return (
     <Button>
       <Link to={`/connections/${currentConnectionName}/${database}/sql`}>
-        SQL
+        {t('sqlPanel.callerButton')}
       </Link>
     </Button>
   );
