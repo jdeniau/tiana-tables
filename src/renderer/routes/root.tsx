@@ -1,4 +1,4 @@
-import { Button, Flex, Layout } from 'antd';
+import { Flex, Layout } from 'antd';
 import { Outlet } from 'react-router';
 import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
@@ -8,6 +8,7 @@ import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { ThemeContextProvider } from '../../contexts/ThemeContext';
 import { useTranslation } from '../../i18n';
+import ButtonLink from '../component/ButtonLink';
 import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
 import Debug from '../component/Debug';
@@ -37,11 +38,9 @@ function ToggleRawSqlButton() {
   }
 
   return (
-    <Button>
-      <Link to={`/connections/${currentConnectionName}/${database}/sql`}>
-        {t('sqlPanel.callerButton')}
-      </Link>
-    </Button>
+    <ButtonLink to={`/connections/${currentConnectionName}/${database}/sql`}>
+      {t('sqlPanel.callerButton')}
+    </ButtonLink>
   );
 }
 

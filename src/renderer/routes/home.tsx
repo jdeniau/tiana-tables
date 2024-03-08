@@ -1,6 +1,5 @@
-import { Button } from 'antd';
-import { Link } from 'react-router-dom';
 import { useTranslation } from '../../i18n';
+import ButtonLink from '../component/ButtonLink';
 
 export function Home() {
   const { t } = useTranslation();
@@ -9,9 +8,9 @@ export function Home() {
     <div>
       <p>Tiana Tables ! </p>
 
-      <Button type="primary">
-        <Link to="/connect">{t('connect.pleaseConnect')}</Link>
-      </Button>
+      <ButtonLink type="primary" to="/connect">
+        {t('connect.pleaseConnect')}
+      </ButtonLink>
     </div>
   );
 }
