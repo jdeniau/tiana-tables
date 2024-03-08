@@ -48,7 +48,7 @@ export async function loader({ params, request }: RouteParams) {
 
   // redirect to the current database if we are not on a "database" page
   const expectedUrl = `/connections/${connectionName}/${activeDatabase}${
-    openedTable ? `/${openedTable}` : ''
+    openedTable ? `/tables/${openedTable}` : ''
   }`;
 
   if (!request.url.endsWith(expectedUrl)) {

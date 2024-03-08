@@ -17,6 +17,7 @@ import TableNamePage, {
 } from './routes/connections.$connectionName.$databaseName.$tableName';
 import { Home } from './routes/home';
 import Root from './routes/root';
+import SqlPage from './routes/sql.$connectionName';
 
 const appElement = document.getElementById('App');
 
@@ -67,9 +68,13 @@ const router = createHashRouter([
             loader: databaseDetailPageLoader,
             children: [
               {
-                path: ':tableName',
+                path: 'tables/:tableName',
                 loader: tableNamePageLoader,
                 element: <TableNamePage />,
+              },
+              {
+                path: 'sql',
+                element: <SqlPage />,
               },
             ],
           },

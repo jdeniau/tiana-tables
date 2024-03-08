@@ -1,4 +1,4 @@
-import { useRouteError } from 'react-router-dom';
+import { Link, useRouteError } from 'react-router-dom';
 import Debug from './component/Debug';
 
 export default function ErrorPage() {
@@ -14,6 +14,8 @@ export default function ErrorPage() {
         {/* @ts-expect-error error might have one of tjose */}
         <i>{error.statusText || error.message}</i>
       </p>
+
+      <Link to="/">Go back to the home page</Link>
     </div>
   );
 }
