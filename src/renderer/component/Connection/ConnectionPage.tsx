@@ -1,8 +1,9 @@
-import { Button, Flex } from 'antd';
-import { Link, Navigate } from 'react-router-dom';
+import { Flex } from 'antd';
+import { Navigate } from 'react-router-dom';
 import { EncryptedConnectionObject } from '../../../configuration/type';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
+import ButtonLink from '../ButtonLink';
 
 function ConnectionPage() {
   const { t } = useTranslation();
@@ -19,23 +20,21 @@ function ConnectionPage() {
       {connectionList.map(
         (connection: EncryptedConnectionObject): JSX.Element => (
           <Flex key={connection.name} gap="small">
-            <Button block>
-              <Link to={`/connections/${connection.name}`}>
-                {connection.name}
-              </Link>
-            </Button>
-            <Button>
-              <Link to={`/connect/edit/${connection.name}`}>{t('edit')}</Link>
-            </Button>
+            <ButtonLink to={`/connections/${connection.name}`} block>
+              {connection.name}
+            </ButtonLink>
+            <ButtonLink to={`/connect/edit/${connection.name}`}>
+              {t('edit')}
+            </ButtonLink>
           </Flex>
         )
       )}
 
       <hr />
 
-      <Button block>
-        <Link to="/connect/create">{t('connection.create.button')}</Link>
-      </Button>
+      <ButtonLink block to="/connect/create">
+        {t('connection.create.button')}
+      </ButtonLink>
     </div>
   );
 }

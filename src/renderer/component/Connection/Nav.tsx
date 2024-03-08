@@ -1,10 +1,11 @@
 import { ReactElement } from 'react';
-import { Button, Menu } from 'antd';
+import { Menu } from 'antd';
 import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
 import { getSetting } from '../../theme';
+import ButtonLink from '../ButtonLink';
 
 const StyledMenu = styled(Menu)`
   flex: 1;
@@ -27,9 +28,9 @@ export default function Nav(): ReactElement | null {
 
   return (
     <>
-      <Button style={{ margin: '0 10px' }}>
-        <Link to="/connect">{t('connect.new')}</Link>
-      </Button>
+      <ButtonLink style={{ margin: '0 10px' }} to="/connect">
+        {t('connect.new')}
+      </ButtonLink>
 
       <StyledMenu
         mode="horizontal"

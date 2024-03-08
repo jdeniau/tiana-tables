@@ -78,11 +78,7 @@ const preview: Preview = {
         <style>
           {`
 .sb-show-main {
-  background:  ${getSetting(
-    // @ts-expect-error theme is a keyof THEME_LIST
-    THEME_LIST[theme],
-    'background'
-  )} !important;
+  background:  ${getSetting(THEME_LIST[theme], 'background')} !important;
   transition: background 0s;
 }`}
         </style>
