@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import { Button, Flex, Form, Input } from 'antd';
+import { Button, Flex, Form } from 'antd';
 import invariant from 'tiny-invariant';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useTranslation } from '../../i18n';
 import { isResultSetHeader, isRowDataPacketArray } from '../../sql/type-guard';
 import { QueryResult } from '../../sql/types';
+import { RawSqlEditor } from '../component/MonacoEditor/RawSqlEditor';
 import TableGrid from '../component/TableGrid';
 import { useTableHeight } from '../component/TableLayout/useTableHeight';
-import { RawSqlEditor } from '../component/MonacoEditor/RawSqlEditor';
-
-const { TextArea } = Input;
 
 const DEFAULT_VALUE = `SELECT * 
 FROM cart c

@@ -10,48 +10,47 @@ type Props = {
 export function RawSqlEditor({ defaultValue, onChange }: Props) {
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const monacoEl = useRef(null);
+  const monacoEl = useRef<HTMLDivElement>(null);
 
+  // initialize the editor
   useEffect(() => {
-    if (monacoEl) {
-      setEditor((editor) => {
-        if (editor) {
-          // don't recreate the editor
-          return editor;
-        }
+    const currentMonacoElement = monacoEl.current;
 
-        const createdEditor = monaco.editor.create(monacoEl.current!, {
-          value: defaultValue,
-          language: 'sql',
-        });
-
-        createdEditor.onDidChangeModelContent(() => {
-          onChange?.(createdEditor.getValue());
-        });
-
-        return createdEditor;
-      });
+    if (!currentMonacoElement) {
+      return;
     }
 
+    setEditor((editor) => {
+      if (editor) {
+        // don't recreate the editor
+        return editor;
+      }
+
+      const createdEditor = monaco.editor.create(currentMonacoElement, {
+        value: defaultValue,
+        language: 'sql',
+      });
+
+      createdEditor.onDidChangeModelContent(() => {
+        onChange?.(createdEditor.getValue());
+      });
+
+      return createdEditor;
+    });
+  }, [defaultValue, editor, onChange]);
+
+  useEffect(() => {
+    // dispose the editor when the component is unmounted
     return () => editor?.dispose();
   }, [editor]);
 
   return (
-    <>
-      <div
-        style={{
-          width: '100vw',
-          height: '50vh',
-        }}
-        ref={monacoEl}
-      ></div>
-      <button
-        onClick={() => {
-          console.log(editor?.getValue());
-        }}
-      >
-        Log editor value
-      </button>
-    </>
+    <div
+      style={{
+        width: '100vw',
+        height: '35vh',
+      }}
+      ref={monacoEl}
+    ></div>
   );
 }
