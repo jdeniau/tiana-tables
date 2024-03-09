@@ -43,11 +43,11 @@ export interface TmThemeGlobalSetting extends TmThemeSetting {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isScopedSetting(o: { scope?: any; settings?: any }): boolean {
+export function isScopedSetting(o: { scope?: any; settings?: any }): o is TmThemeScopedSetting {
   return o.scope && o.settings;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isUnscopedSetting(o: { scope?: any; settings?: any }): boolean {
+export function isUnscopedSetting(o: { scope?: any; settings?: any }): o is TmThemeGlobalSetting {
   return !o.scope && o.settings;
 }

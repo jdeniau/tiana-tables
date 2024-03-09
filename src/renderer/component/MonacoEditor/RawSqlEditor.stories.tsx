@@ -13,7 +13,13 @@ type Story = StoryObj<typeof RawSqlEditor>;
  * See https://storybook.js.org/docs/api/csf
  * to learn how to use render functions.
  */
-export const Primary: Story = {};
+export const Primary: Story = {
+  args: {
+    defaultValue: `SELECT *
+FROM employe -- test comment
+LIMIT 10;`,
+  },
+};
 
 // export const Edit: Story = {
 //   args: {
