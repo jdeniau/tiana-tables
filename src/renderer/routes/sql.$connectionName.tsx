@@ -8,8 +8,14 @@ import { isResultSetHeader, isRowDataPacketArray } from '../../sql/type-guard';
 import { QueryResult } from '../../sql/types';
 import TableGrid from '../component/TableGrid';
 import { useTableHeight } from '../component/TableLayout/useTableHeight';
+import { RawSqlEditor } from '../component/MonacoEditor/RawSqlEditor';
 
 const { TextArea } = Input;
+
+const DEFAULT_VALUE = `SELECT * 
+FROM cart c
+WHERE  c.id > 5
+LIMIT 10;`;
 
 // TODO : create an element for the `yScroll` (actually need to be wrapped in a Flex height 100 and overflow, etc.)
 export default function SqlPage() {
@@ -26,7 +32,7 @@ export default function SqlPage() {
     <Flex vertical gap="small" style={{ height: '100%' }}>
       <Form
         initialValues={{
-          raw: 'SELECT * FROM cart LIMIT 10;',
+          raw: DEFAULT_VALUE,
         }}
         onFinish={async (values) => {
           const query = values.raw;
@@ -46,8 +52,8 @@ export default function SqlPage() {
           setResult(result);
         }}
       >
-        <Form.Item name="raw">
-          <TextArea rows={10} />
+        <Form.Item name="raw" valuePropName="defaultValue">
+          <RawSqlEditor />
         </Form.Item>
 
         <Button htmlType="submit">{t('rawSql.submit')}</Button>

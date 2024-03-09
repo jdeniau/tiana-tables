@@ -3447,13 +3447,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/addon-onboarding@npm:^8.0.0-rc.3":
-  version: 8.0.0-rc.3
-  resolution: "@storybook/addon-onboarding@npm:8.0.0-rc.3"
-  checksum: 10c0/78b29e211004cf1d36591344200a5c29bbbdb4be7d664cbac04500fd13093ec931b5c75eb3c1f1b85d58d057dd7fa043d07c4aec053a664ff31e3dffa91566fe
-  languageName: node
-  linkType: hard
-
 "@storybook/addon-outline@npm:8.0.0-rc.3":
   version: 8.0.0-rc.3
   resolution: "@storybook/addon-outline@npm:8.0.0-rc.3"
@@ -10737,6 +10730,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"monaco-editor@npm:^0.47.0":
+  version: 0.47.0
+  resolution: "monaco-editor@npm:0.47.0"
+  checksum: 10c0/bbe4fc284a7803e4ed0fa69b6e31c41ef6f5d259722e8a876ce2850b7139e68eff3a6435306e11eff848db8662b818e40f9cafc6f7a53d4a4551fed362d5dc02
+  languageName: node
+  linkType: hard
+
 "ms@npm:2.0.0":
   version: 2.0.0
   resolution: "ms@npm:2.0.0"
@@ -14065,7 +14065,6 @@ __metadata:
     "@storybook/addon-essentials": "npm:^8.0.0-rc.3"
     "@storybook/addon-interactions": "npm:^8.0.0-rc.3"
     "@storybook/addon-links": "npm:^8.0.0-rc.3"
-    "@storybook/addon-onboarding": "npm:^8.0.0-rc.3"
     "@storybook/blocks": "npm:^8.0.0-rc.3"
     "@storybook/react": "npm:^8.0.0-rc.3"
     "@storybook/react-vite": "npm:^8.0.0-rc.3"
@@ -14090,6 +14089,7 @@ __metadata:
     eslint-plugin-react-hooks: "npm:^4.6.0"
     eslint-plugin-storybook: "npm:^0.8.0"
     i18next: "npm:^23.10.0"
+    monaco-editor: "npm:^0.47.0"
     mysql: "npm:^2.18.1"
     mysql2: "npm:^3.9.1"
     react: "npm:^18.2.0"
