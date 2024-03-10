@@ -21,6 +21,7 @@ export default function SqlPage() {
   const [result, setResult] = useState<Awaited<QueryResult> | null>(null);
   const { database } = useDatabaseContext();
   const { currentConnectionName } = useConnectionContext();
+  const [form] = Form.useForm();
 
   invariant(currentConnectionName, 'Connection name is required');
 
@@ -29,6 +30,7 @@ export default function SqlPage() {
   return (
     <Flex vertical gap="small" style={{ height: '100%' }}>
       <Form
+        form={form}
         initialValues={{
           raw: DEFAULT_VALUE,
         }}
@@ -51,7 +53,13 @@ export default function SqlPage() {
         }}
       >
         <Form.Item name="raw" valuePropName="defaultValue">
-          <RawSqlEditor style={{ width: '100vw', height: '35vh' }} />
+          <RawSqlEditor
+            style={{ width: '100vw', height: '35vh' }}
+            onSubmit={() => {
+              // trigger the form "onFinish" event
+              form.submit();
+            }}
+          />
         </Form.Item>
 
         <Button htmlType="submit">{t('rawSql.submit')}</Button>

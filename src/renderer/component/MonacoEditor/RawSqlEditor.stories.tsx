@@ -3,6 +3,9 @@ import { RawSqlEditor } from './RawSqlEditor';
 
 const meta: Meta<typeof RawSqlEditor> = {
   component: RawSqlEditor,
+  args: {
+    style: { width: '100vw', height: '35vh' },
+  },
 };
 
 export default meta;
@@ -16,7 +19,10 @@ type Story = StoryObj<typeof RawSqlEditor>;
 export const Primary: Story = {
   args: {
     defaultValue: `SELECT *
-FROM employe -- test comment
+FROM employe e
+JOIN title ON e.title_id = title.id
+WHERE e.gender = 'F' -- test comment
+  AND titles.title = 'Senior Engineer'
 LIMIT 10;`,
   },
 };

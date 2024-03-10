@@ -7,6 +7,7 @@ import { convertTextmateThemeToMonaco } from './themes';
 type Props = {
   defaultValue?: string;
   onChange?: (value: string) => void;
+  onSubmit: () => void;
   style?: CSSProperties;
   monacoOptions?: monaco.editor.IStandaloneEditorConstructionOptions;
 };
@@ -14,6 +15,7 @@ type Props = {
 export function RawSqlEditor({
   defaultValue,
   onChange,
+  onSubmit,
   style,
   monacoOptions,
 }: Props) {
@@ -51,6 +53,13 @@ export function RawSqlEditor({
         minimap: { enabled: false },
         ...memoizedMonacoOptions,
       });
+
+      createdEditor.addCommand(
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+        () => {
+          onSubmit();
+        }
+      );
 
       createdEditor.onDidChangeModelContent(() => {
         onChange?.(createdEditor.getValue());

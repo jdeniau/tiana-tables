@@ -1,4 +1,4 @@
-import { ReactElement, useState } from 'react';
+import { ReactElement, useRef, useState } from 'react';
 import { Button, Space } from 'antd';
 import { useTranslation } from '../../../i18n';
 import { RawSqlEditor } from '../MonacoEditor/RawSqlEditor';
@@ -11,9 +11,11 @@ interface Props {
 function WhereFilter({ defaultValue, onSubmit }: Props): ReactElement {
   const { t } = useTranslation();
   const [where, setWhere] = useState<string>(defaultValue);
+  const ref = useRef<HTMLFormElement>(null);
 
   return (
     <form
+      ref={ref}
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit(where);
@@ -32,6 +34,10 @@ function WhereFilter({ defaultValue, onSubmit }: Props): ReactElement {
           }}
           monacoOptions={{
             lineNumbers: 'off',
+          }}
+          onSubmit={() => {
+            // submit the form
+            ref.current?.dispatchEvent(new Event('submit', { bubbles: true }));
           }}
         />
 
