@@ -1,8 +1,6 @@
 import {
   TmTheme,
-  TmThemeGlobalSetting,
   TmThemeScopedSetting,
-  TmThemeSetting,
   isScopedSetting,
   isUnscopedSetting,
 } from '../../configuration/themes';
@@ -14,12 +12,12 @@ export function getColor(
 ): string | undefined {
   const item = currentTheme.settings
     .filter(isScopedSetting)
-    .find(({ scope }: TmThemeSetting) => {
+    .find(({ scope }: TmThemeScopedSetting) => {
       if (Array.isArray(scope)) {
         return scope.includes(scopeToFind);
       }
       return scope === scopeToFind;
-    }) as TmThemeScopedSetting;
+    });
 
   if (!item) {
     throw new Error(`color not found for scope "${scopeToFind}"`);
@@ -32,9 +30,7 @@ export function getSetting(
   currentTheme: TmTheme,
   key: string
 ): string | undefined {
-  const settings = currentTheme.settings.filter(
-    isUnscopedSetting
-  ) as TmThemeGlobalSetting[];
+  const settings = currentTheme.settings.filter(isUnscopedSetting);
 
   if (!settings) {
     throw new Error(`color not found settings`);

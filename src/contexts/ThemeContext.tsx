@@ -97,6 +97,6 @@ export function ThemeContextProvider({
   );
 }
 
-export function useTheme() {
+export function useTheme(): ThemeContextProps {
   return useContext(ThemeContext);
 }
