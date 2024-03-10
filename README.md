@@ -4,7 +4,7 @@ Some SQL tool that works on Linux, Windows and MacOS.
 
 ## Purpose 
 
-Tiana tables is a MySQL / mariadb database query application for developers. 
+Tiana tables is a MySQL / MariaDB database query application for developers. 
 
 The main purpose of Tiana tables is to be :
 - easy to use: access to data and modifications should be easy for all tasks that a, developer has to make on a daily basis,
