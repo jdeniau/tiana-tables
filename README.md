@@ -1,6 +1,6 @@
 # Tiana Tables
 
-Some SQL tool that works on Linux, Windows and MacOS.
+SQL query tool that works on Linux, Windows and MacOS.
 
 ## Purpose 
 
