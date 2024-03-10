@@ -30,4 +30,5 @@ self.MonacoEnvironment = {
   },
 };
 
+// This line is mandatory, otherwise syntax color will not work
 monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);

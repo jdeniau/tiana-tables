@@ -67,7 +67,7 @@ export function RawSqlEditor({
 
       return createdEditor;
     });
-  }, [defaultValue, editor, onChange, memoizedMonacoOptions]);
+  }, [defaultValue, editor, onChange, memoizedMonacoOptions, onSubmit]);
 
   useEffect(() => {
     // dispose the editor when the component is unmounted
