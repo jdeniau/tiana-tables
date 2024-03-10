@@ -51,7 +51,7 @@ export default function SqlPage() {
         }}
       >
         <Form.Item name="raw" valuePropName="defaultValue">
-          <RawSqlEditor />
+          <RawSqlEditor style={{ width: '100vw', height: '35vh' }} />
         </Form.Item>
 
         <Button htmlType="submit">{t('rawSql.submit')}</Button>

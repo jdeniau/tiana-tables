@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import './userWorker';
 import { useTheme } from 'styled-components';
@@ -7,14 +7,28 @@ import { convertTextmateThemeToMonaco } from './themes';
 type Props = {
   defaultValue?: string;
   onChange?: (value: string) => void;
+  style?: CSSProperties;
+  monacoOptions?: monaco.editor.IStandaloneEditorConstructionOptions;
 };
 
-export function RawSqlEditor({ defaultValue, onChange }: Props) {
+export function RawSqlEditor({
+  defaultValue,
+  onChange,
+  style,
+  monacoOptions,
+}: Props) {
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoEl = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const textmateTheme = theme;
+
+  // Convert the TextMate theme to a Monaco Editor theme
+  const monacoTheme = convertTextmateThemeToMonaco(textmateTheme);
+
+  monaco.editor.defineTheme('currentTheme', monacoTheme);
+
+  const memoizedMonacoOptions = useMemo(() => monacoOptions, [monacoOptions]);
 
   // initialize the editor
   useEffect(() => {
@@ -30,15 +44,12 @@ export function RawSqlEditor({ defaultValue, onChange }: Props) {
         return editor;
       }
 
-      // Convert the TextMate theme to a Monaco Editor theme
-      const monacoTheme = convertTextmateThemeToMonaco(textmateTheme);
-
-      monaco.editor.defineTheme('test', monacoTheme);
-
       const createdEditor = monaco.editor.create(currentMonacoElement, {
         value: defaultValue,
         language: 'sql',
-        theme: 'test',
+        theme: 'currentTheme',
+        minimap: { enabled: false },
+        ...memoizedMonacoOptions,
       });
 
       createdEditor.onDidChangeModelContent(() => {
@@ -47,20 +58,12 @@ export function RawSqlEditor({ defaultValue, onChange }: Props) {
 
       return createdEditor;
     });
-  }, [defaultValue, editor, onChange]);
+  }, [defaultValue, editor, onChange, memoizedMonacoOptions]);
 
   useEffect(() => {
     // dispose the editor when the component is unmounted
     return () => editor?.dispose();
   }, [editor]);
 
-  return (
-    <div
-      style={{
-        width: '100vw',
-        height: '35vh',
-      }}
-      ref={monacoEl}
-    ></div>
-  );
+  return <div style={style} ref={monacoEl}></div>;
 }

@@ -1,13 +1,7 @@
 import { ReactElement, useState } from 'react';
 import { Button, Space } from 'antd';
-import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
-
-const WhereArea = styled.textarea`
-  width: 100%;
-  padding: 5px;
-  border-radius: 3px;
-`;
+import { RawSqlEditor } from '../MonacoEditor/RawSqlEditor';
 
 interface Props {
   onSubmit: (where: string) => void;
@@ -26,10 +20,19 @@ function WhereFilter({ defaultValue, onSubmit }: Props): ReactElement {
       }}
     >
       <Space.Compact style={{ width: '100%', marginBottom: '0.5em' }}>
-        <WhereArea
-          rows={1}
-          value={where}
-          onChange={(e) => setWhere(e.target.value)}
+        <RawSqlEditor
+          defaultValue={where}
+          onChange={setWhere}
+          style={{
+            height: '32px',
+            // If this line is not set, then the width will be 100% of the window size,
+            // And then push the button outside of the viewport
+            minWidth: '0',
+            flex: 1,
+          }}
+          monacoOptions={{
+            lineNumbers: 'off',
+          }}
         />
 
         <Button htmlType="submit" type="primary">
