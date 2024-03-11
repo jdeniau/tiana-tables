@@ -1,5 +1,6 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
+import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import ButtonLink from './ButtonLink';
 
 const meta: Meta<typeof ButtonLink> = {
@@ -10,6 +11,7 @@ const meta: Meta<typeof ButtonLink> = {
     to: '/go-somewhere',
   },
   decorators: [
+    reactRouterDecorator,
     (Story) => (
       <div>
         <Story />

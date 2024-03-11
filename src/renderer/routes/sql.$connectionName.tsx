@@ -37,6 +37,7 @@ export default function SqlPage() {
         onFinish={async (values) => {
           const query = values.raw;
 
+          // TODO submit the form the get the error handling
           if (database) {
             await window.sql.executeQuery(
               currentConnectionName,

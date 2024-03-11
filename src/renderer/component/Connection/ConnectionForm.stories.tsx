@@ -1,6 +1,7 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from '@storybook/test';
+import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
 import { testables } from '../../../contexts/ConfigurationContext';
 import ConnectionForm from './ConnectionForm';
 
@@ -11,6 +12,7 @@ const addConnectionToConfig = fn();
 const meta: Meta<typeof ConnectionForm> = {
   component: ConnectionForm,
   decorators: [
+    reactRouterDecorator,
     (Story, { globals: { theme } }) => (
       <ConfigurationContext.Provider
         value={{

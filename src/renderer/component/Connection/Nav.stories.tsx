@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Layout } from 'antd';
 import { styled } from 'styled-components';
+import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
 import { ConnectionContext } from '../../../contexts/ConnectionContext';
 import { getSetting } from '../../theme';
 import Nav from './Nav';
@@ -15,6 +16,7 @@ const Header = styled(Layout.Header)`
 const meta: Meta<typeof Nav> = {
   component: Nav,
   decorators: [
+    reactRouterDecorator,
     (Story) => (
       <ConnectionContext.Provider
         value={{

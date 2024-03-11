@@ -2,14 +2,15 @@ import log from 'electron-log';
 import { Connection, createConnection } from 'mysql2/promise';
 import { getConfiguration } from '../configuration';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
-import { ConnectionObject, QueryResult } from './types';
+import { QueryResultOrError, encodeError } from './errorSerializer';
+import { ConnectionObject } from './types';
 
 class ConnectionStack {
   private connections: Map<string, Connection> = new Map();
 
   // List of IPC events and their handlers
   #ipcEventBinding = {
-    [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQuery,
+    [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQueryAndRetry,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
 
@@ -23,22 +24,41 @@ class ConnectionStack {
     }
   }
 
-  async executeQuery(connectionName: string, query: string): QueryResult {
+  async executeQueryAndRetry(
+    connectionName: string,
+    query: string
+  ): QueryResultOrError {
+    try {
+      return this.executeQuery(connectionName, query);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : error;
+
+      if (
+        typeof message === 'string' &&
+        message.includes('connection is in closed state')
+      ) {
+        // retry once
+        this.connections.delete(connectionName);
+
+        return this.executeQuery(connectionName, query);
+      }
+
+      throw error;
+    }
+  }
+
+  async executeQuery(
+    connectionName: string,
+    query: string
+  ): QueryResultOrError {
     const connection = await this.#getConnection(connectionName);
 
     log.debug(`Execute query on "${connectionName}": "${query}"`);
 
     try {
-      return await connection.query(query);
+      return { result: await connection.query(query), error: undefined };
     } catch (error) {
-      // retry once
-      log.debug(`Error on "${connectionName}"`, error);
-
-      this.connections.delete(connectionName);
-
-      const renewedConnection = await this.#getConnection(connectionName);
-
-      return await renewedConnection.query(query);
+      return { result: undefined, error: encodeError(error) };
     }
   }
 
