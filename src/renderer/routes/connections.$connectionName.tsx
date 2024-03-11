@@ -51,7 +51,7 @@ export async function loader({ params, request }: RouteParams) {
     openedTable ? `/tables/${openedTable}` : ''
   }`;
 
-  if (!request.url.endsWith(expectedUrl)) {
+  if (new URL(request.url).pathname !== expectedUrl) {
     return redirect(expectedUrl);
   }
 

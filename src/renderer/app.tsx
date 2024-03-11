@@ -18,7 +18,7 @@ import ConnectionErrorPage from './routes/errors/ConnectionsErrorPage';
 import RootErrorPage from './routes/errors/RootErrorPage';
 import { Home } from './routes/home';
 import Root from './routes/root';
-import SqlPage from './routes/sql.$connectionName';
+import SqlPage, { action as sqlPageAction } from './routes/sql.$connectionName';
 
 const appElement = document.getElementById('App');
 
@@ -61,6 +61,9 @@ const router = createHashRouter([
       {
         path: 'connections/:connectionName',
         loader: connectionDetailPageLoader,
+        shouldRevalidate: ({ currentParams, nextParams }) => {
+          return currentParams.connectionName !== nextParams.connectionName;
+        },
         element: <ConnectionDetailPage />,
         children: [
           {
@@ -77,6 +80,7 @@ const router = createHashRouter([
               {
                 path: 'sql',
                 element: <SqlPage />,
+                action: sqlPageAction,
               },
             ],
           },
