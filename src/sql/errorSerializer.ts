@@ -22,6 +22,12 @@ function isSqlError(e: unknown): e is SqlError {
   return typeof e === 'object' && e !== null && 'code' in e && 'errno' in e;
 }
 
+/**
+ * This is a hack to encode the error object to be sent over IPC.
+ * If we don't do that, the error object will only contain `message`, `name` and `stack` properties.
+ *
+ * Use `decodeError` to decode the error object on the renderer side.
+ */
 export function encodeError(e: unknown): ErrorWithSqlData {
   if (typeof e === 'string') {
     return { name: 'Error', message: e };
@@ -41,6 +47,9 @@ export function encodeError(e: unknown): ErrorWithSqlData {
   };
 }
 
+/**
+ * Used to decode an error that have been encoded using `encodeError`.
+ */
 export function decodeError({
   name,
   message,
