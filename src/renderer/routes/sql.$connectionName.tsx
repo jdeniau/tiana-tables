@@ -1,29 +1,38 @@
-import { useState } from 'react';
 import { Button, Flex, Form } from 'antd';
+import { ActionFunctionArgs, useFetcher } from 'react-router-dom';
 import invariant from 'tiny-invariant';
-import { useConnectionContext } from '../../contexts/ConnectionContext';
-import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useTranslation } from '../../i18n';
 import { isResultSetHeader, isRowDataPacketArray } from '../../sql/type-guard';
-import { QueryResult } from '../../sql/types';
 import { RawSqlEditor } from '../component/MonacoEditor/RawSqlEditor';
 import TableGrid from '../component/TableGrid';
 import { useTableHeight } from '../component/TableLayout/useTableHeight';
 
-const DEFAULT_VALUE = `SELECT * 
-FROM cart c
-WHERE  c.id > 5
-LIMIT 10;`;
+const DEFAULT_VALUE = `SELECT *  FROM employees e WHERE e.gender = 'F' LIMIT 10;`;
+
+export async function action({ request, params }: ActionFunctionArgs) {
+  const { databaseName, connectionName } = params;
+
+  invariant(connectionName, 'Connection name is required');
+  invariant(databaseName, 'Database name is required');
+
+  const formData = await request.formData();
+  const query = formData.get('raw');
+
+  invariant(typeof query === 'string', 'Query as string is required');
+
+  await window.sql.executeQuery(connectionName, `USE ${databaseName};`);
+  const result = await window.sql.executeQuery(connectionName, query);
+
+  return result;
+}
 
 // TODO : create an element for the `yScroll` (actually need to be wrapped in a Flex height 100 and overflow, etc.)
 export default function SqlPage() {
   const { t } = useTranslation();
-  const [result, setResult] = useState<Awaited<QueryResult> | null>(null);
-  const { database } = useDatabaseContext();
-  const { currentConnectionName } = useConnectionContext();
   const [form] = Form.useForm();
+  const fetcher = useFetcher();
 
-  invariant(currentConnectionName, 'Connection name is required');
+  const result = fetcher.data;
 
   const [yTableScroll, resizeRef] = useTableHeight();
 
@@ -31,26 +40,11 @@ export default function SqlPage() {
     <Flex vertical gap="small" style={{ height: '100%' }}>
       <Form
         form={form}
-        initialValues={{
-          raw: DEFAULT_VALUE,
-        }}
-        onFinish={async (values) => {
-          const query = values.raw;
-
-          // TODO submit the form the get the error handling
-          if (database) {
-            await window.sql.executeQuery(
-              currentConnectionName,
-              `USE ${database};`
-            );
-          }
-
-          const result = await window.sql.executeQuery(
-            currentConnectionName,
-            query
-          );
-
-          setResult(result);
+        initialValues={{ raw: DEFAULT_VALUE }}
+        onFinish={(values) => {
+          fetcher.submit(values, {
+            method: 'post',
+          });
         }}
       >
         <Form.Item name="raw" valuePropName="defaultValue">

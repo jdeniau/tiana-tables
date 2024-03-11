@@ -51,6 +51,7 @@ export function RawSqlEditor({
         language: 'sql',
         theme: 'currentTheme',
         minimap: { enabled: false },
+        automaticLayout: true,
         ...memoizedMonacoOptions,
       });
 
