@@ -1,8 +1,8 @@
 import { Link, useRouteError } from 'react-router-dom';
-import { useTranslation } from '../i18n';
-import Debug from './component/Debug';
+import { useTranslation } from '../../../i18n';
+import Debug from '../../component/Debug';
 
-export default function ErrorPage() {
+export default function RootErrorPage() {
   const error = useRouteError();
   const { t } = useTranslation();
   console.error(error);
@@ -13,7 +13,7 @@ export default function ErrorPage() {
       <h1>{t('errorPage.title')}</h1>
       <p>{t('errorPage.sorry')}</p>
       <p>
-        {/* @ts-expect-error error might have one of tjose */}
+        {/* @ts-expect-error error might have one of those */}
         <i>{error.statusText || error.message}</i>
       </p>
 
