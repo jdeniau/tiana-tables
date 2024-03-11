@@ -1,5 +1,6 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
+import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
 import { DEFAULT_THEME } from '../../../configuration/themes';
 import { testables } from '../../../contexts/ConfigurationContext';
 import { ConnectionContext } from '../../../contexts/ConnectionContext';
@@ -10,6 +11,7 @@ const { ConfigurationContext } = testables;
 const meta: Meta<typeof ConnectionPage> = {
   component: ConnectionPage,
   decorators: [
+    reactRouterDecorator,
     (Story) => (
       <ConnectionContext.Provider
         value={{

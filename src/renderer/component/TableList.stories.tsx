@@ -1,5 +1,6 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
+import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
 import TableList from './TableList';
@@ -7,6 +8,7 @@ import TableList from './TableList';
 const meta: Meta<typeof TableList> = {
   component: TableList,
   decorators: [
+    reactRouterDecorator,
     (Story) => (
       <ConnectionContext.Provider
         value={{

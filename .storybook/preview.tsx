@@ -38,11 +38,6 @@ const preview: Preview = {
     },
   },
   decorators: [
-    (Story) => (
-      <MemoryRouter>
-        <Story />
-      </MemoryRouter>
-    ),
     (Story, { globals: { theme } }) => {
       return (
         <ConfigurationContext.Provider
