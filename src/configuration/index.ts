@@ -171,6 +171,11 @@ export function updateConnectionState<K extends keyof ConnectionAppState>(
 
   connection.appState[key] = value;
 
+  // reset table if database did change
+  if (key === 'activeDatabase') {
+    connection.appState.openedTable = '';
+  }
+
   writeConfiguration(config);
 }
 
