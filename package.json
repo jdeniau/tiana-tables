@@ -1,9 +1,15 @@
 {
   "name": "tiana-tables",
   "productName": "Tiana Tables",
-  "version": "0.0.7",
   "description": "My Electron application description",
+  "license": "MIT",
+  "version": "0.0.7",
   "main": ".vite/build/main.js",
+  "keywords": [],
+  "author": {
+    "name": "Julien Deniau",
+    "email": "julien.deniau@gmail.com"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/jdeniau/tiana-tables"
@@ -19,14 +25,19 @@
     "test": "vitest",
     "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build",
-    "chromatic": "npx chromatic"
+    "chromatic": "npx chromatic",
+    "prepare": "husky"
   },
-  "keywords": [],
-  "author": {
-    "name": "Julien Deniau",
-    "email": "julien.deniau@gmail.com"
+  "pre-commit": "lint-staged",
+  "lint-staged": {
+    "*.{json,css,md}": [
+      "prettier --write"
+    ],
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --quiet --fix"
+    ]
   },
-  "license": "MIT",
   "dependencies": {
     "antd": "^5.14.1",
     "electron-log": "^5.1.1",
@@ -75,7 +86,10 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-storybook": "^0.8.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "mysql2": "^3.9.1",
+    "pre-commit": "^1.2.2",
     "react-router-dom": "^6.22.1",
     "storybook": "^8.0.0-rc.3",
     "ts-node": "^10.9.2",
