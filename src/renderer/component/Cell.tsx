@@ -7,7 +7,16 @@ interface TableCellFactoryProps {
   value: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
-const NullSpan = styled.span`
+const BaseCell = styled.div`
+  min-width: 100px;
+  max-width: 300px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  word-break: keep-all;
+`;
+
+const NullSpan = styled(BaseCell)`
   color: ${(props) => getColor(props.theme, 'constant.language', 'foreground')};
 `;
 
@@ -15,7 +24,7 @@ function NullCell() {
   return <NullSpan>(NULL)</NullSpan>;
 }
 
-const ForegroundSpan = styled.span`
+const ForegroundSpan = styled(BaseCell)`
   color: ${(props) => getSetting(props.theme, 'foreground')};
 `;
 
@@ -23,14 +32,14 @@ function DatetimeCell({ value }: { value: Date }) {
   return <ForegroundSpan>{value.toISOString()}</ForegroundSpan>;
 }
 
-const StringSpan = styled.span`
+const StringSpan = styled(BaseCell)`
   color: ${(props) => getColor(props.theme, 'string', 'foreground')};
 `;
 function StringCell({ value }: { value: string }) {
   return <StringSpan>{value}</StringSpan>;
 }
 
-const NumberSpan = styled.span`
+const NumberSpan = styled(BaseCell)`
   color: ${(props) => getColor(props.theme, 'constant.numeric', 'foreground')};
 `;
 function NumberCell({ value }: { value: number }) {
@@ -106,4 +115,5 @@ function TableCellFactory({ type, value }: TableCellFactoryProps) {
       throw new Error(`Type ${type} is not managed for now`);
   }
 }
+
 export default TableCellFactory;
