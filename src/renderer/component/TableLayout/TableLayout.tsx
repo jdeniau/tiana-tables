@@ -58,8 +58,7 @@ export function TableLayout({
   return (
     <Flex vertical gap="small" style={{ height: '100%' }}>
       <div>
-        <h3>{tableName}</h3>
-
+        <h3>{t('table.filters.title')}</h3>
         <WhereFilter
           defaultValue={where}
           onSubmit={(where) => {
@@ -69,7 +68,12 @@ export function TableLayout({
         />
       </div>
 
-      <TableGrid fields={fields} result={result} primaryKeys={primaryKeys} />
+      <TableGrid
+        fields={fields}
+        result={result}
+        primaryKeys={primaryKeys}
+        title={() => tableName}
+      />
 
       <Flex justify="center" align="center">
         <Button

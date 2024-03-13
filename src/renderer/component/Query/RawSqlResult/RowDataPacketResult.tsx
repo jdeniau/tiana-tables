@@ -46,10 +46,12 @@ export default function RawSqlResult({ fetcher }: Props) {
 
   return (
     <>
-      <h2>{t('rawSql.result.title')}</h2>
-
       {result && isRowDataPacketArray(result[0]) && (
-        <TableGrid result={result[0]} fields={result[1]} />
+        <TableGrid
+          result={result[0]}
+          fields={result[1]}
+          title={() => t('rawSql.result.title')}
+        />
       )}
 
       {result && isResultSetHeader(result[0]) && (

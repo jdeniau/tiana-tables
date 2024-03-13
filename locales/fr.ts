@@ -24,6 +24,7 @@ const fr: Translation = {
   'rawSql.result.title': 'Résultat :',
   'rawSql.submit': 'Soumettre',
   'sqlPanel.callerButton': 'SQL',
+  'table.filters.title': 'Filtres',
   'table.rows.loadMore': 'Charger plus…',
   'theme.switch.label': 'Thème :',
 };
