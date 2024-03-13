@@ -24,25 +24,31 @@ function TableGrid<Row extends RowDataPacket>({
       <Table
         title={title}
         bordered
-        dataSource={
-          result?.map((r) => {
-            if (!primaryKeys) {
-              return r;
-            }
-
-            const key = primaryKeys.map((pk) => r[pk]).join('-');
-
-            return { ...r, key };
-          }) ?? []
-        }
+        // the header, contains the column names
         columns={fields?.map((field) => ({
           title: field.name,
           dataIndex: field.name,
-          //  TODO field name is an object. Need a better type ?
           key: field.name,
+
+          // add "…" to the end of the cell if the content is too long
           ellipsis: true,
+
+          // if the field is a primary key, fix the column to the left when scrolling
+          fixed: primaryKeys?.includes(field.name) ? 'left' : undefined,
+
+          // how to render a data cell in this column
           render: (value: Row) => <Cell type={field.type} value={value} />,
         }))}
+        // the list of sql rows
+        dataSource={result ?? []}
+        rowKey={(record) => {
+          if (!primaryKeys) {
+            // undefined is a valid react key
+            return undefined as unknown as string;
+          }
+
+          return primaryKeys.map((pk) => record[pk]).join('-');
+        }}
         pagination={false}
         scroll={{ x: true, y: yTableScroll }}
       />
