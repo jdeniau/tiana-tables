@@ -22,6 +22,7 @@ export default {
   'rawSql.result.title': 'Result',
   'rawSql.submit': 'Submit',
   'sqlPanel.callerButton': 'SQL',
+  'table.filters.title': 'Filters',
   'table.rows.loadMore': 'Load more…',
   'theme.switch.label': 'Theme:',
 };

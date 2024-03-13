@@ -1,4 +1,4 @@
-import { ReactElement } from 'react';
+import { ReactElement, ReactNode } from 'react';
 import { Table } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import Cell from './Cell';
@@ -8,18 +8,21 @@ interface TableGridProps<R extends RowDataPacket> {
   result: null | R[];
   fields: null | FieldPacket[];
   primaryKeys?: Array<string>;
+  title?: () => ReactNode;
 }
 
 function TableGrid<Row extends RowDataPacket>({
   fields,
   result,
   primaryKeys,
+  title,
 }: TableGridProps<Row>): ReactElement {
   const [yTableScroll, resizeRef] = useTableHeight();
 
   return (
     <div style={{ overflow: 'auto', flex: '1' }} ref={resizeRef}>
       <Table
+        title={title}
         bordered
         dataSource={
           result?.map((r) => {
