@@ -1,7 +1,4 @@
-import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import invariant from 'tiny-invariant';
-import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
 import { TableLayout } from './TableLayout';
@@ -12,14 +9,6 @@ function TableLayoutPageContent({ primaryKeys }: Props) {
   const { currentConnectionName } = useConnectionContext();
   const { database } = useDatabaseContext();
   const { tableName } = useParams();
-  const { updateConnectionState } = useConfiguration();
-
-  useEffect(() => {
-    invariant(currentConnectionName, 'Connection name is required');
-    invariant(tableName, 'Table name is required');
-
-    updateConnectionState(currentConnectionName, 'openedTable', tableName);
-  }, [currentConnectionName, tableName, updateConnectionState]);
 
   if (!currentConnectionName || !database || !tableName) {
     return null;

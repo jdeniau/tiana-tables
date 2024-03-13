@@ -1,4 +1,4 @@
-import type { Configuration, ConnectionAppState } from '../configuration/type';
+import type { Configuration } from '../configuration/type';
 import type { ConnectionObject } from '../sql/types';
 import { bindChannel } from './bindChannel';
 import { CONFIGURATION_CHANNEL } from './configurationChannel';
@@ -10,10 +10,12 @@ interface Config {
 
   changeTheme(theme: string): void;
 
-  updateConnectionState<K extends keyof ConnectionAppState>(
+  setActiveDatabase(connectionName: string, value: string): Promise<void>;
+
+  setActiveTable(
     connectionName: string,
-    key: K,
-    value: ConnectionAppState[K]
+    database: string,
+    tableName: string
   ): Promise<void>;
 
   editConnection(
@@ -26,8 +28,7 @@ export const config: Config = {
   getConfiguration: bindChannel(CONFIGURATION_CHANNEL.GET),
   addConnectionToConfig: bindChannel(CONFIGURATION_CHANNEL.ADD_CONNECTION),
   changeTheme: bindChannel(CONFIGURATION_CHANNEL.CHANGE_THEME),
-  updateConnectionState: bindChannel(
-    CONFIGURATION_CHANNEL.UPDATE_CONNECTION_STATE
-  ),
+  setActiveDatabase: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE),
+  setActiveTable: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE),
   editConnection: bindChannel(CONFIGURATION_CHANNEL.EDIT_CONNECTION),
 };

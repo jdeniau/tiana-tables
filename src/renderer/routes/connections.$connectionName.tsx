@@ -41,8 +41,12 @@ export async function loader({ params, request }: RouteParams) {
 
   const configuration = await window.config.getConfiguration();
 
-  const { activeDatabase: configDatabase, openedTable } =
+  const { activeDatabase: configDatabase, activeTableByDatabase } =
     configuration.connections[connectionName]?.appState || {};
+
+  const openedTable = configDatabase
+    ? activeTableByDatabase?.[configDatabase]
+    : undefined;
 
   const activeDatabase = configDatabase || databaseList[0].Database;
 

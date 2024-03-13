@@ -7,8 +7,9 @@ import {
   changeTheme,
   editConnection,
   getConfiguration,
+  setActiveDatabase,
+  setActiveTable,
   testables,
-  updateConnectionState,
 } from '.';
 
 const { getBaseConfig, resetConfiguration } = testables;
@@ -332,7 +333,7 @@ describe('set connection appState', async () => {
   test('empty file', async () => {
     mockExistsSync.mockReturnValue(false);
 
-    await updateConnectionState('test', 'isActive', true);
+    await setActiveDatabase('test', 'db');
 
     expect(mockWriteFile).not.toHaveBeenCalled();
   });
@@ -340,52 +341,9 @@ describe('set connection appState', async () => {
   test('existing file, non-existing connection', async () => {
     mockExistingConfig();
 
-    await updateConnectionState('inexistant', 'isActive', true);
+    await setActiveDatabase('inexistant', 'db');
 
     expect(mockWriteFile).not.toHaveBeenCalled();
-
-    expect(mockReadFileSync).toHaveBeenCalledOnce();
-  });
-
-  test('existing file, set active', async () => {
-    mockExistingConfig();
-
-    await updateConnectionState('prod', 'isActive', true);
-
-    expect(mockWriteFile).toHaveBeenCalledWith(
-      'userData/config/config.json',
-      JSON.stringify(
-        {
-          version: 1,
-          theme: DEFAULT_THEME.name,
-          connections: {
-            local: {
-              name: 'local',
-              host: 'localhost',
-              user: 'root',
-              port: 3306,
-              password: Buffer.from('encrypted-password').toString('base64'),
-            },
-            prod: {
-              name: 'prod',
-              host: 'prod',
-              user: 'root',
-              port: 3306,
-              password: Buffer.from('encrypted-password').toString('base64'),
-              appState: {
-                isActive: true,
-                activeDatabase: '',
-                openedTable: '',
-              },
-            },
-          },
-        },
-        null,
-        2
-      ),
-      'utf-8',
-      expect.any(Function)
-    );
 
     expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
@@ -409,15 +367,14 @@ describe('set connection appState', async () => {
           port: 3306,
           password: Buffer.from('encrypted-password').toString('base64'),
           appState: {
-            isActive: true,
-            activeDatabase: '',
-            openedTable: '',
+            activeDatabase: 'db',
+            activeTableByDatabase: {},
           },
         },
       },
     });
 
-    await updateConnectionState('prod', 'activeDatabase', 'test');
+    await setActiveDatabase('prod', 'db');
 
     expect(mockWriteFile).toHaveBeenCalledWith(
       'userData/config/config.json',
@@ -440,9 +397,8 @@ describe('set connection appState', async () => {
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
               appState: {
-                isActive: true,
-                activeDatabase: 'test',
-                openedTable: '',
+                activeDatabase: 'db',
+                activeTableByDatabase: {},
               },
             },
           },
@@ -457,27 +413,12 @@ describe('set connection appState', async () => {
     expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 
-  test('setting database should reset openedTable', async () => {
-    mockExistingConfig({
-      version: 1,
-      theme: DEFAULT_THEME.name,
-      connections: {
-        local: {
-          name: 'local',
-          host: 'localhost',
-          user: 'root',
-          port: 3306,
-          password: Buffer.from('encrypted-password').toString('base64'),
-          appState: {
-            isActive: true,
-            activeDatabase: 'old_db',
-            openedTable: 'test',
-          },
-        },
-      },
-    });
+  test('existing file, set activeTable', async () => {
+    mockExistingConfig();
 
-    await updateConnectionState('local', 'activeDatabase', 'new_db');
+    await setActiveDatabase('prod', 'db');
+    await setActiveTable('prod', 'db', 'table');
+    await setActiveTable('prod', 'db2', 'table2');
 
     expect(mockWriteFile).toHaveBeenCalledWith(
       'userData/config/config.json',
@@ -492,10 +433,19 @@ describe('set connection appState', async () => {
               user: 'root',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+            },
+            prod: {
+              name: 'prod',
+              host: 'prod',
+              user: 'root',
+              port: 3306,
+              password: Buffer.from('encrypted-password').toString('base64'),
               appState: {
-                isActive: true,
-                activeDatabase: 'new_db',
-                openedTable: '',
+                activeDatabase: 'db',
+                activeTableByDatabase: {
+                  db: 'table',
+                  db2: 'table2',
+                },
               },
             },
           },

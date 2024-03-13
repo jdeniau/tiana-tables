@@ -25,8 +25,11 @@ const meta: Meta<typeof ConnectionForm> = {
             action('addConnectionToConfig')(connection);
             addConnectionToConfig(connection);
           },
-          updateConnectionState: (connectionName, key, value) => {
-            action('updateConnectionState')(connectionName, key, value);
+          setActiveDatabase: (connectionName, value) => {
+            action('setActiveDatabase')(connectionName, value);
+          },
+          setActiveTable: (connectionName, database, tableName) => {
+            action('setActiveTable')(connectionName, database, tableName);
           },
           editConnection: (name, connection) => {
             action('editConnection')(name, connection);
@@ -66,14 +69,14 @@ export const Create: Story = {
 
     await userEvent.type(host, 'my.database.com');
 
-    await userEvent.click(canvas.getByText(/save and connect/i));
+    await userEvent.click(canvas.getByText(/Save and connect/i));
 
     expect(addConnectionToConfig).toHaveBeenCalledWith({
-      name: 'some personnal name',
       host: 'my.database.com',
+      name: 'some personnal name',
+      password: '',
       port: 3306,
       user: 'root',
-      password: '',
     });
   },
 };

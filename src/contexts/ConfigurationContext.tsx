@@ -1,15 +1,16 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { Configuration, ConnectionAppState } from '../configuration/type';
+import { Configuration } from '../configuration/type';
 import { ConnectionObject } from '../sql/types';
 
 type ConfigurationContextType = {
   configuration: Configuration;
   addConnectionToConfig: (connection: ConnectionObject) => void;
   editConnection: (name: string, connection: ConnectionObject) => void;
-  updateConnectionState: <K extends keyof ConnectionAppState>(
+  setActiveDatabase: (connectionName: string, database: string) => void;
+  setActiveTable: (
     connectionName: string,
-    key: K,
-    value: ConnectionAppState[K]
+    database: string,
+    tableName: string
   ) => void;
 };
 
@@ -53,7 +54,8 @@ export function ConfigurationContextProvider({
       addConnectionToConfig: willChangeConfiguration(
         window.config.addConnectionToConfig
       ),
-      updateConnectionState: window.config.updateConnectionState,
+      setActiveDatabase: window.config.setActiveDatabase,
+      setActiveTable: window.config.setActiveTable,
       editConnection: willChangeConfiguration(window.config.editConnection),
     }),
     [configuration]

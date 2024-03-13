@@ -7,7 +7,6 @@ import { ConnectionObject } from '../sql/types';
 import { DEFAULT_THEME } from './themes';
 import {
   Configuration,
-  ConnectionAppState,
   EncryptedConfiguration,
   EncryptedConnectionObject,
 } from './type';
@@ -148,10 +147,31 @@ export function changeTheme(theme: string): void {
   writeConfiguration(config);
 }
 
-export function updateConnectionState<K extends keyof ConnectionAppState>(
+export function setActiveDatabase(connectionName: string, database: string) {
+  const config = getConfiguration();
+
+  const connection = config.connections[connectionName];
+
+  if (!connection) {
+    return;
+  }
+
+  if (!connection.appState) {
+    connection.appState = {
+      activeDatabase: '',
+      activeTableByDatabase: {},
+    };
+  }
+
+  connection.appState.activeDatabase = database;
+
+  writeConfiguration(config);
+}
+
+export function setActiveTable(
   connectionName: string,
-  key: K,
-  value: ConnectionAppState[K]
+  database: string,
+  tableName: string
 ) {
   const config = getConfiguration();
 
@@ -163,18 +183,15 @@ export function updateConnectionState<K extends keyof ConnectionAppState>(
 
   if (!connection.appState) {
     connection.appState = {
-      isActive: false,
       activeDatabase: '',
-      openedTable: '',
+      activeTableByDatabase: {},
     };
   }
 
-  connection.appState[key] = value;
-
-  // reset table if database did change
-  if (key === 'activeDatabase') {
-    connection.appState.openedTable = '';
-  }
+  connection.appState.activeTableByDatabase = {
+    ...connection.appState.activeTableByDatabase,
+    [database]: tableName,
+  };
 
   writeConfiguration(config);
 }
@@ -184,7 +201,8 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.ADD_CONNECTION]: addConnectionToConfig,
   [CONFIGURATION_CHANNEL.EDIT_CONNECTION]: editConnection,
   [CONFIGURATION_CHANNEL.CHANGE_THEME]: changeTheme,
-  [CONFIGURATION_CHANNEL.UPDATE_CONNECTION_STATE]: updateConnectionState,
+  [CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE]: setActiveDatabase,
+  [CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE]: setActiveTable,
 } as const;
 
 export function bindIpcMain(ipcMain: Electron.IpcMain): void {
