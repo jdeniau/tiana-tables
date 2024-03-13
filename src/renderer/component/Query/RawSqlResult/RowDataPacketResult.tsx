@@ -8,8 +8,8 @@ import {
   isRowDataPacketArray,
 } from '../../../../sql/type-guard';
 import { QueryResult } from '../../../../sql/types';
+import TableGrid from '../../TableGrid';
 import SqlErrorComponent from '../SqlErrorComponent';
-import RowDataPacketResult from './Success';
 
 type Props = {
   fetcher: Fetcher<
@@ -49,7 +49,7 @@ export default function RawSqlResult({ fetcher }: Props) {
       <h2>{t('rawSql.result.title')}</h2>
 
       {result && isRowDataPacketArray(result[0]) && (
-        <RowDataPacketResult result={result[0]} fields={result[1]} />
+        <TableGrid result={result[0]} fields={result[1]} />
       )}
 
       {result && isResultSetHeader(result[0]) && (

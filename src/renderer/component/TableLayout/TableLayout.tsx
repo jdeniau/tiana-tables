@@ -5,7 +5,6 @@ import { useDatabaseContext } from '../../../contexts/DatabaseContext';
 import { useTranslation } from '../../../i18n';
 import WhereFilter from '../Query/WhereFilter';
 import TableGrid from '../TableGrid';
-import { useTableHeight } from './useTableHeight';
 
 interface TableNameProps {
   tableName: string;
@@ -26,8 +25,6 @@ export function TableLayout({
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
   const [where, setWhere] = useState<string>('');
-
-  const [yTableScroll, resizeRef] = useTableHeight();
 
   const fetchTableData = useCallback(
     (offset: number) => {
@@ -72,14 +69,7 @@ export function TableLayout({
         />
       </div>
 
-      <div style={{ overflow: 'auto', flex: '1' }} ref={resizeRef}>
-        <TableGrid
-          fields={fields}
-          result={result}
-          primaryKeys={primaryKeys}
-          yTableScroll={yTableScroll}
-        />
-      </div>
+      <TableGrid fields={fields} result={result} primaryKeys={primaryKeys} />
 
       <Flex justify="center" align="center">
         <Button
