@@ -3,5 +3,6 @@ export enum CONFIGURATION_CHANNEL {
   ADD_CONNECTION = 'config:connection:add',
   EDIT_CONNECTION = 'config:connection:edit',
   CHANGE_THEME = 'config:theme:change',
-  UPDATE_CONNECTION_STATE = 'config:connection:updateState',
+  SET_ACTIVE_DATABASE = 'config:connection:setActiveDatabase',
+  SET_ACTIVE_TABLE = 'config:connection:setActiveTable',
 }

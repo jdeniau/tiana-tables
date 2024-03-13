@@ -6,10 +6,9 @@ export type Configuration = {
   connections: Record<string, EncryptedConnectionObject>;
 };
 
-export type ConnectionAppState = {
-  isActive: boolean; // TODO not handled yet
+type ConnectionAppState = {
   activeDatabase: string;
-  openedTable: string;
+  activeTableByDatabase: Record<string, string>;
 };
 
 export type EncryptedConnectionObject = {

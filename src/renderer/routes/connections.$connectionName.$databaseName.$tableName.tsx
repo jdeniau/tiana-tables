@@ -15,6 +15,8 @@ export async function loader({ params }: RouteParams) {
   const { connectionName, databaseName, tableName } = params;
 
   invariant(connectionName, 'Connection name is required');
+  invariant(databaseName, 'Database name is required');
+  invariant(tableName, 'Table name is required');
 
   const [result] = await window.sql.executeQuery<ShowKeyRow[]>(
     connectionName,
@@ -22,6 +24,8 @@ export async function loader({ params }: RouteParams) {
   );
 
   const primaryKeys = result.map((row) => row.Column_name);
+
+  window.config.setActiveTable(connectionName, databaseName, tableName);
 
   return {
     primaryKeys,
