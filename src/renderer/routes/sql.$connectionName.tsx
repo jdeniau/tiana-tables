@@ -1,15 +1,27 @@
 import { Button, Flex, Form } from 'antd';
 import { ActionFunctionArgs, useFetcher } from 'react-router-dom';
 import invariant from 'tiny-invariant';
+import { QueryResult } from '../..//sql/types';
 import { useTranslation } from '../../i18n';
-import { isResultSetHeader, isRowDataPacketArray } from '../../sql/type-guard';
+import { SqlError } from '../../sql/errorSerializer';
+import { isSqlError } from '../../sql/isSqlError';
 import { RawSqlEditor } from '../component/MonacoEditor/RawSqlEditor';
-import TableGrid from '../component/TableGrid';
-import { useTableHeight } from '../component/TableLayout/useTableHeight';
+import RawSqlResult from '../component/Query/RawSqlResult/RowDataPacketResult';
 
 const DEFAULT_VALUE = `SELECT *  FROM employees e WHERE e.gender = 'F' LIMIT 10;`;
 
-export async function action({ request, params }: ActionFunctionArgs) {
+type SqlActionReturnTypes =
+  | {
+      result: Awaited<QueryResult>;
+    }
+  | {
+      error: SqlError;
+    };
+
+export async function action({
+  request,
+  params,
+}: ActionFunctionArgs): Promise<SqlActionReturnTypes> {
   const { databaseName, connectionName } = params;
 
   invariant(connectionName, 'Connection name is required');
@@ -20,21 +32,27 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   invariant(typeof query === 'string', 'Query as string is required');
 
-  await window.sql.executeQuery(connectionName, `USE ${databaseName};`);
-  const result = await window.sql.executeQuery(connectionName, query);
+  try {
+    await window.sql.executeQuery(connectionName, `USE ${databaseName};`);
+    const result = await window.sql.executeQuery(connectionName, query);
 
-  return result;
+    return { result };
+  } catch (error) {
+    if (isSqlError(error)) {
+      return { error };
+    }
+
+    throw error;
+  }
 }
 
 // TODO : create an element for the `yScroll` (actually need to be wrapped in a Flex height 100 and overflow, etc.)
 export default function SqlPage() {
   const { t } = useTranslation();
   const [form] = Form.useForm();
-  const fetcher = useFetcher();
+  const fetcher = useFetcher<SqlActionReturnTypes>();
 
-  const result = fetcher.data;
-
-  const [yTableScroll, resizeRef] = useTableHeight();
+  const { state } = fetcher;
 
   return (
     <Flex vertical gap="small" style={{ height: '100%' }}>
@@ -57,31 +75,16 @@ export default function SqlPage() {
           />
         </Form.Item>
 
-        <Button htmlType="submit">{t('rawSql.submit')}</Button>
+        <Button
+          htmlType="submit"
+          disabled={state === 'submitting'}
+          type="primary"
+        >
+          {t('rawSql.submit')}
+        </Button>
       </Form>
 
-      {result && <h2>{t('rawSql.result.title')}</h2>}
-      <div style={{ overflow: 'auto', flex: '1' }} ref={resizeRef}>
-        {result && isRowDataPacketArray(result[0]) && (
-          <TableGrid
-            result={result[0]}
-            fields={result[1]}
-            yTableScroll={yTableScroll}
-          />
-        )}
-
-        {result && isResultSetHeader(result[0]) && (
-          <div>
-            <div>
-              {t('rawSql.result.affectedRows')} {result[0].affectedRows}
-            </div>
-            <div>
-              {t('rawSql.result.insertId')} {result[0].insertId}
-            </div>
-          </div>
-        )}
-        {/* TODO handle all other types of query result ? if we do handle multiple calls */}
-      </div>
+      <RawSqlResult fetcher={fetcher} />
     </Flex>
   );
 }

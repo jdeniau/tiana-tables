@@ -1,3 +1,4 @@
+import { isSqlError } from './isSqlError';
 import { QueryResult, QueryReturnType } from './types';
 
 export type QueryResultOrError<T extends QueryReturnType = QueryReturnType> =
@@ -16,10 +17,6 @@ export interface SqlError extends Error {
 
 interface ErrorWithSqlData extends Error {
   sqlError?: Omit<SqlError, 'name' | 'message'>;
-}
-
-function isSqlError(e: unknown): e is SqlError {
-  return typeof e === 'object' && e !== null && 'code' in e && 'errno' in e;
 }
 
 /**
