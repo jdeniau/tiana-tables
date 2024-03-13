@@ -67,6 +67,14 @@ export const WithStringType: Story = {
   },
 };
 
+export const WithLongStringType: Story = {
+  args: {
+    type: Types.VARCHAR,
+    value:
+      'This is a very long string that should be truncated to fit the cell width.',
+  },
+};
+
 export const WithNumberType: Story = {
   args: {
     type: Types.FLOAT,
