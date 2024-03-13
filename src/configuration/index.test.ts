@@ -456,6 +456,57 @@ describe('set connection appState', async () => {
 
     expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
+
+  test('setting database should reset openedTable', async () => {
+    mockExistingConfig({
+      version: 1,
+      theme: DEFAULT_THEME.name,
+      connections: {
+        local: {
+          name: 'local',
+          host: 'localhost',
+          user: 'root',
+          port: 3306,
+          password: Buffer.from('encrypted-password').toString('base64'),
+          appState: {
+            isActive: true,
+            activeDatabase: 'old_db',
+            openedTable: 'test',
+          },
+        },
+      },
+    });
+
+    await updateConnectionState('local', 'activeDatabase', 'new_db');
+
+    expect(mockWriteFile).toHaveBeenCalledWith(
+      'userData/config/config.json',
+      JSON.stringify(
+        {
+          version: 1,
+          theme: DEFAULT_THEME.name,
+          connections: {
+            local: {
+              name: 'local',
+              host: 'localhost',
+              user: 'root',
+              port: 3306,
+              password: Buffer.from('encrypted-password').toString('base64'),
+              appState: {
+                isActive: true,
+                activeDatabase: 'new_db',
+                openedTable: '',
+              },
+            },
+          },
+        },
+        null,
+        2
+      ),
+      'utf-8',
+      expect.any(Function)
+    );
+  });
 });
 
 describe('edit', () => {
