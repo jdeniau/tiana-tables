@@ -4,7 +4,6 @@ import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
 import log from 'electron-log/main';
-import invariant from 'tiny-invariant';
 import { updateElectronApp } from 'update-electron-app';
 import { bindIpcMain as bindIpcMainConfiguration } from './configuration';
 import { SQL_CHANNEL } from './preload/sqlChannel';
@@ -138,6 +137,13 @@ const createWindow = () => {
             );
           },
         },
+        {
+          label: 'Open navigation panel',
+          accelerator: 'CmdOrCtrl+K',
+          click: () => {
+            mainWindow.webContents.send('openNavigationPanel');
+          },
+        },
       ],
     },
     {
@@ -185,7 +191,7 @@ const createWindow = () => {
   ];
 
   // @ts-expect-error template is a Menu, issue with the `ìsMac`and the array unpacking
-  const menu = new Menu(template);
+  const menu = Menu.buildFromTemplate(template);
 
   ipcMain.on(SQL_CHANNEL.ON_CONNECTION_CHANGED, () => {
     // on connection change, let's activate the SQL panel link menu
@@ -193,7 +199,9 @@ const createWindow = () => {
     setTimeout(() => {
       const sqlPanelLink = menu.getMenuItemById('sqlPanelLink');
 
-      invariant(sqlPanelLink, 'SQL panel link is required');
+      if (!sqlPanelLink) {
+        return;
+      }
 
       sqlPanelLink.enabled = Boolean(
         connectionStackInstance.currentConnectionName &&
