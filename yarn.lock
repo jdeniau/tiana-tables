@@ -8486,6 +8486,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fuse.js@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "fuse.js@npm:7.0.0"
+  checksum: 10c0/3574b7fc2e0ccb047e05dbe5f8f04e8f0754f62fa209669ef426ea1354a32ae7355620788af8f1d29f94e1fdecd513f1f3787f012848a31ec90bb4e0e6092504
+  languageName: node
+  linkType: hard
+
 "galactus@npm:^1.0.0":
   version: 1.0.0
   resolution: "galactus@npm:1.0.0"
@@ -14287,6 +14294,7 @@ __metadata:
     eslint-plugin-react: "npm:^7.33.2"
     eslint-plugin-react-hooks: "npm:^4.6.0"
     eslint-plugin-storybook: "npm:^0.8.0"
+    fuse.js: "npm:^7.0.0"
     husky: "npm:^9.0.11"
     i18next: "npm:^23.10.0"
     lint-staged: "npm:^15.2.2"

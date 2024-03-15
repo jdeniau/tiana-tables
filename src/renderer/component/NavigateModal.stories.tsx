@@ -33,7 +33,14 @@ const meta: Meta<typeof NavigateModal> = {
               action('executeQuery')(query);
 
               return Promise.resolve([
-                [{ Name: 'foo' }, { Name: 'bar' }, { Name: 'baz' }],
+                [
+                  { Name: 'departments' },
+                  { Name: 'dept_emp' },
+                  { Name: 'dept_manager' },
+                  { Name: 'employees' },
+                  { Name: 'salaries' },
+                  { Name: 'titles' },
+                ],
               ]);
             },
           }}
