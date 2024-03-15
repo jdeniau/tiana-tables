@@ -17,6 +17,8 @@ export default {
   'errorPage.goHome': 'Go back to the home page',
   'errorPage.sorry': 'Sorry, an unexpected error has occurred.',
   'errorPage.title': 'Oops!',
+  'navigation_modal.title': 'Navigate',
+  'navigation_modal.search.placeholder': 'Start searching…',
   'rawSql.result.affectedRows': 'Affected rows:',
   'rawSql.result.insertId': 'Insert ID:',
   'rawSql.result.title': 'Result',

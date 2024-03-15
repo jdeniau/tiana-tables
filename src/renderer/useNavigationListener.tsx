@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Modal } from 'antd';
 import { useNavigate } from 'react-router';
+import NavigateModal from './component/NavigateModal';
 
 type ReturnType = {
   NavigateModal: React.FunctionComponent;
@@ -23,20 +23,12 @@ export function useNavigationListener(): ReturnType {
     });
   }, [navigate]);
 
-  const NavigateModal = () => (
-    <Modal
-      title="Basic Modal"
-      open={isNavigateModalOpen}
-      onOk={() => {
-        console.log('ox');
-      }}
-      onCancel={() => {
-        setIsNavigateModalOpen(false);
-      }}
-    >
-      Work in progress…
-    </Modal>
+  const NavigateModalComponent = () => (
+    <NavigateModal
+      isNavigateModalOpen={isNavigateModalOpen}
+      setIsNavigateModalOpen={setIsNavigateModalOpen}
+    />
   );
 
-  return { NavigateModal };
+  return { NavigateModal: NavigateModalComponent };
 }

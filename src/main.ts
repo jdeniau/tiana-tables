@@ -138,8 +138,10 @@ const createWindow = () => {
           },
         },
         {
+          id: 'openNavigationPanelLink',
           label: 'Open navigation panel',
           accelerator: 'CmdOrCtrl+K',
+          enabled: false,
           click: () => {
             mainWindow.webContents.send('openNavigationPanel');
           },
@@ -190,6 +192,11 @@ const createWindow = () => {
     },
   ];
 
+  const MENU_ITEMS_THAT_NEEDS_CONNECTION = [
+    'sqlPanelLink',
+    'openNavigationPanelLink',
+  ];
+
   // @ts-expect-error template is a Menu, issue with the `ìsMac`and the array unpacking
   const menu = Menu.buildFromTemplate(template);
 
@@ -197,16 +204,18 @@ const createWindow = () => {
     // on connection change, let's activate the SQL panel link menu
     // do wait because the event is also handled by the sql connectionStack
     setTimeout(() => {
-      const sqlPanelLink = menu.getMenuItemById('sqlPanelLink');
+      MENU_ITEMS_THAT_NEEDS_CONNECTION.forEach((id) => {
+        const sqlPanelLink = menu.getMenuItemById(id);
 
-      if (!sqlPanelLink) {
-        return;
-      }
+        if (!sqlPanelLink) {
+          return;
+        }
 
-      sqlPanelLink.enabled = Boolean(
-        connectionStackInstance.currentConnectionName &&
-          connectionStackInstance.databaseName
-      );
+        sqlPanelLink.enabled = Boolean(
+          connectionStackInstance.currentConnectionName &&
+            connectionStackInstance.databaseName
+        );
+      });
     }, 1);
   });
   // menu.append(
