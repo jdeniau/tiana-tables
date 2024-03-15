@@ -4,7 +4,6 @@ import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
 import log from 'electron-log/main';
-import invariant from 'tiny-invariant';
 import { updateElectronApp } from 'update-electron-app';
 import { bindIpcMain as bindIpcMainConfiguration } from './configuration';
 import { SQL_CHANNEL } from './preload/sqlChannel';
@@ -138,6 +137,15 @@ const createWindow = () => {
             );
           },
         },
+        {
+          id: 'openNavigationPanelLink',
+          label: 'Open navigation panel',
+          accelerator: 'CmdOrCtrl+K',
+          enabled: false,
+          click: () => {
+            mainWindow.webContents.send('openNavigationPanel');
+          },
+        },
       ],
     },
     {
@@ -184,21 +192,30 @@ const createWindow = () => {
     },
   ];
 
+  const MENU_ITEMS_THAT_NEEDS_CONNECTION = [
+    'sqlPanelLink',
+    'openNavigationPanelLink',
+  ];
+
   // @ts-expect-error template is a Menu, issue with the `ìsMac`and the array unpacking
-  const menu = new Menu(template);
+  const menu = Menu.buildFromTemplate(template);
 
   ipcMain.on(SQL_CHANNEL.ON_CONNECTION_CHANGED, () => {
     // on connection change, let's activate the SQL panel link menu
     // do wait because the event is also handled by the sql connectionStack
     setTimeout(() => {
-      const sqlPanelLink = menu.getMenuItemById('sqlPanelLink');
+      MENU_ITEMS_THAT_NEEDS_CONNECTION.forEach((id) => {
+        const sqlPanelLink = menu.getMenuItemById(id);
 
-      invariant(sqlPanelLink, 'SQL panel link is required');
+        if (!sqlPanelLink) {
+          return;
+        }
 
-      sqlPanelLink.enabled = Boolean(
-        connectionStackInstance.currentConnectionName &&
-          connectionStackInstance.databaseName
-      );
+        sqlPanelLink.enabled = Boolean(
+          connectionStackInstance.currentConnectionName &&
+            connectionStackInstance.databaseName
+        );
+      });
     }, 1);
   });
   // menu.append(

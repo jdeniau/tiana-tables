@@ -56,13 +56,14 @@ const RootLink = styled(Link)`
 
 export default function Root() {
   const { t } = useTranslation();
-  useNavigationListener();
+  const { NavigateModal } = useNavigationListener();
 
   return (
     <ConfigurationContextProvider>
       <ThemeContextProvider>
         <ConnectionStack>
           <Layout>
+            <NavigateModal />
             <Debug />
             <Header>
               <Flex align="center" gap="small">

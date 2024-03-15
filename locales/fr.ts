@@ -19,6 +19,8 @@ const fr: Translation = {
   'errorPage.goHome': "Retourner à la page d'accueil",
   'errorPage.sorry': "Désolé, une erreur inattendue s'est produite.",
   'errorPage.title': 'Oups !',
+  'navigation_modal.title': 'Naviguer',
+  'navigation_modal.search.placeholder': 'Commencer à chercher…',
   'rawSql.result.affectedRows': 'Lignes affectées :',
   'rawSql.result.insertId': 'ID inséré :',
   'rawSql.result.title': 'Résultat :',
