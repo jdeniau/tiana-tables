@@ -6,17 +6,41 @@ import { QueryResultOrError, encodeError } from './errorSerializer';
 import { ConnectionObject } from './types';
 
 class ConnectionStack {
-  private connections: Map<string, Connection> = new Map();
+  #connections: Map<string, Connection> = new Map();
+
+  #currentConnectionName: string | undefined;
+
+  #databaseName: string | undefined;
 
   // List of IPC events and their handlers
-  #ipcEventBinding = {
+  #ipcMainHandler = {
     [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQueryAndRetry,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
 
+  #ipcMainOn = {
+    [SQL_CHANNEL.ON_CONNECTION_CHANGED]: this.onConnectionNameChanged,
+  };
+
+  get currentConnectionName(): string | undefined {
+    return this.#currentConnectionName;
+  }
+
+  get databaseName(): string | undefined {
+    return this.#databaseName;
+  }
+
   bindIpcMain(ipcMain: Electron.IpcMain): void {
-    for (const [channel, handler] of Object.entries(this.#ipcEventBinding)) {
+    for (const [channel, handler] of Object.entries(this.#ipcMainHandler)) {
       ipcMain.handle(channel, (event, ...args: unknown[]) =>
+        // convert the first argument to senderId and bind the rest
+        // @ts-expect-error issue with strict type in tsconfig, but seems to work at runtime
+        handler.bind(this)(...args)
+      );
+    }
+
+    for (const [channel, handler] of Object.entries(this.#ipcMainOn)) {
+      ipcMain.on(channel, (event, ...args: unknown[]) =>
         // convert the first argument to senderId and bind the rest
         // @ts-expect-error issue with strict type in tsconfig, but seems to work at runtime
         handler.bind(this)(...args)
@@ -38,7 +62,7 @@ class ConnectionStack {
         message.includes('connection is in closed state')
       ) {
         // retry once
-        this.connections.delete(connectionName);
+        this.#connections.delete(connectionName);
 
         return this.executeQuery(connectionName, query);
       }
@@ -62,18 +86,28 @@ class ConnectionStack {
     }
   }
 
+  async onConnectionNameChanged(
+    connectionName: string | undefined,
+    databaseName: string | undefined
+  ): Promise<void> {
+    log.debug(`Connection changed to "${connectionName}:${databaseName}"`);
+
+    this.#currentConnectionName = connectionName;
+    this.#databaseName = databaseName;
+  }
+
   async closeAllConnections(): Promise<void> {
     await Promise.all(
-      Array.from(this.connections.values()).map((connection) =>
+      Array.from(this.#connections.values()).map((connection) =>
         connection.end()
       )
     );
 
-    this.connections.clear();
+    this.#connections.clear();
   }
 
   async #getConnection(connectionName: string): Promise<Connection> {
-    const connection = this.connections.get(connectionName);
+    const connection = this.#connections.get(connectionName);
 
     if (!connection) {
       // throw new Error('No connection');
@@ -91,7 +125,7 @@ class ConnectionStack {
     const { name, ...rest } = params;
 
     // don't connect twice to the same connection
-    if (this.connections.has(name)) {
+    if (this.#connections.has(name)) {
       throw new Error(`Connection already opened on "${name}"`);
     }
 
@@ -102,12 +136,12 @@ class ConnectionStack {
 
     connection.on('end', () => {
       log.debug(`Connection to "${name}" ended`);
-      this.connections.delete(name);
+      this.#connections.delete(name);
     });
 
     await connection.connect();
 
-    this.connections.set(name, connection);
+    this.#connections.set(name, connection);
 
     return connection;
   }

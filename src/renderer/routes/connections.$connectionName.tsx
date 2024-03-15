@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Layout } from 'antd';
 import {
+  LoaderFunctionArgs,
   Outlet,
   Params,
   redirect,
@@ -24,7 +25,7 @@ const PaddedDiv = styled.div`
   padding: 10px;
 `;
 
-interface RouteParams {
+interface RouteParams extends LoaderFunctionArgs {
   params: Params<'connectionName'>;
   request: Request;
 }

@@ -14,6 +14,7 @@ import ConnectionNav from '../component/Connection/Nav';
 import Debug from '../component/Debug';
 import ThemeSelector from '../component/ThemeSelector';
 import { getSetting } from '../theme';
+import { useNavigationListener } from '../useNavigationListener';
 
 const Header = styled(Layout.Header)`
   display: flex;
@@ -55,6 +56,7 @@ const RootLink = styled(Link)`
 
 export default function Root() {
   const { t } = useTranslation();
+  useNavigationListener();
 
   return (
     <ConfigurationContextProvider>

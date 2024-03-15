@@ -1,9 +1,8 @@
-import { Outlet, Params, redirect } from 'react-router';
+import { LoaderFunctionArgs, Outlet, Params, redirect } from 'react-router';
 import invariant from 'tiny-invariant';
 
-interface RouteParams {
+interface RouteParams extends LoaderFunctionArgs {
   params: Params<'connectionName' | 'databaseName'>;
-  request: Request;
 }
 
 export async function loader({ params, request }: RouteParams) {
@@ -21,11 +20,17 @@ export async function loader({ params, request }: RouteParams) {
 
   const openedTable = activeTableByDatabase?.[databaseName];
 
-  // redirect to the current database if we are not on a "database" page
+  // redirect to the current database if we are not on a "database" root page
   if (openedTable) {
-    const expectedUrl = `/connections/${connectionName}/${databaseName}/tables/${openedTable}`;
+    const currentUrl = new URL(request.url).pathname;
 
-    if (new URL(request.url).pathname !== expectedUrl) {
+    const needsRedirect = currentUrl?.match(
+      new RegExp('^/connections/([^/]+)/([^/]+)$')
+    );
+
+    if (needsRedirect) {
+      const expectedUrl = `/connections/${connectionName}/${databaseName}/tables/${openedTable}`;
+
       return redirect(expectedUrl);
     }
   }
