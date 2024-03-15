@@ -3,10 +3,12 @@
 
 import { contextBridge, ipcRenderer } from 'electron';
 import { config } from './preload/config';
+import { navigationListener } from './preload/navigationListener';
 import { sql } from './preload/sql';
 
 contextBridge.exposeInMainWorld('config', config);
 contextBridge.exposeInMainWorld('sql', sql);
+contextBridge.exposeInMainWorld('navigationListener', navigationListener);
 
 ipcRenderer.invoke('get-is-dev').then((isDev) => {
   contextBridge.exposeInMainWorld('isDev', isDev);
@@ -18,5 +20,6 @@ declare global {
     isDev: boolean;
     config: typeof config;
     sql: typeof sql;
+    navigationListener: typeof navigationListener;
   }
 }

@@ -1,11 +1,11 @@
 import { RowDataPacket } from 'mysql2';
-import { Params, useLoaderData } from 'react-router';
+import { LoaderFunctionArgs, Params, useLoaderData } from 'react-router';
 import invariant from 'tiny-invariant';
 import TableLayout from '../component/TableLayout';
 
-type RouteParams = {
+interface RouteParams extends LoaderFunctionArgs {
   params: Params<'connectionName' | 'databaseName' | 'tableName'>;
-};
+}
 
 interface ShowKeyRow extends RowDataPacket {
   Column_name: string;

@@ -34,6 +34,11 @@ function ConnectionStack({ children }: Props) {
     };
   }, []);
 
+  // inform the main process that the connection name has changed
+  useEffect(() => {
+    window.sql.connectionNameChanged(currentConnectionName, databaseName);
+  }, [currentConnectionName, databaseName]);
+
   // TODO we might need to change that into the proper route as reload will not work
   const addConnectionToList = useCallback(async (connectionName: string) => {
     setConnectionNameList((prev) =>
