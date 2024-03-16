@@ -8,7 +8,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [macos-14-arm64]
+        os: [macos-13-arm64]
     runs-on: ${{ matrix.os }}
 
     steps:
