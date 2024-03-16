@@ -18,7 +18,8 @@ const config: ForgeConfig = {
           '"APPLE_SIGN_ID" environment variable is required'
         ) ||
         '', // TODO :Do we need to pass this ? It "should" be handled automatically by osx-sign
-      // provisioningProfile: 'path/to/provisioningProfile', probably need that on CI
+      provisioningProfile:
+        '~/Library/MobileDevice/Provisioning Profiles/build_pp.provisionprofile',
     }, // object must exist even if empty
     osxNotarize: {
       // option 1
