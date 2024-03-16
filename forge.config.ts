@@ -19,7 +19,7 @@ const config: ForgeConfig = {
         ) ||
         '', // TODO :Do we need to pass this ? It "should" be handled automatically by osx-sign
       provisioningProfile:
-        '~/Library/MobileDevice/Provisioning Profiles/build_pp.provisionprofile',
+        '/Users/runner/_work/_temp/build_pp.provisionprofile',
     }, // object must exist even if empty
     osxNotarize: {
       // option 1
