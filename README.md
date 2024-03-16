@@ -15,6 +15,14 @@ What you won't find in Tiana tables (or at least for a long time):
 
 - database and user administration : you will probably want to use another tool more "admin"-friendly like sql workbench or similar
 
+### DB support 
+
+For now, Tiana Tables supports MySQL and MariaDb. 
+I might add PostgreSql support one day, but as I do not use it, so it's not a priority for now. 
+If you like Tiana Table and want to implement PostgreSql though, it should be pretty easy as all queries that are made should be SQL standard 
+Other DB? I da not plan to support another DB system, but if it does share SQL standard, you might open an issue to discuss about it. 
+I probably won't accept DB that are too far from SQL, because it will rendor the app less good with SQL and the maintenance will be too hard. 
+
 ## Installation
 
 You can download the latest release in the [Release page](https://github.com/jdeniau/tiana-tables/releases).
