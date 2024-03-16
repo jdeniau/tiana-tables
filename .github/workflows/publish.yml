@@ -8,13 +8,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os:
-          [
-            ubuntu-latest,
-            windows-latest,
-            macos-latest,
-            flyci-macos-large-latest-m2,
-          ]
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-14]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -38,7 +32,7 @@ jobs:
       # The "Developer ID Application" certificate here: https://developer.apple.com/account/resources/certificates/list
       # The provision profile and certificate here: https://developer.apple.com/account/resources/profiles/list
       - name: Install the Apple certificate and provisioning profile
-        if: startsWith(matrix.os, 'macos') || startsWith(matrix.os, 'flyci-macos')
+        if: startsWith(matrix.os, 'macos')
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.APPLE_P12_PASSWORD }}
@@ -78,10 +72,3 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # For every platform
           GITHUB_TOKEN: ${{ github.token }}
-
-      # not required for github runners, but added for flyci as I do not really know if I can trust them
-      - name: Clean up keychain and provisioning profile
-        if: ${{ always() }}
-        run: |
-          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
-          rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.provisionprofile
