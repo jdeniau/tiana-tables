@@ -8,7 +8,13 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os:
+          [
+            ubuntu-latest,
+            windows-latest,
+            macos-latest,
+            flyci-macos-large-latest-m2,
+          ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -72,3 +78,10 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # For every platform
           GITHUB_TOKEN: ${{ github.token }}
+
+      # not required for github runners, but added for flyci as I do not really know if I can trust them
+      - name: Clean up keychain and provisioning profile
+        if: ${{ always() }}
+        run: |
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
+          rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.provisionprofile
