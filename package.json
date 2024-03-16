@@ -3,7 +3,7 @@
   "productName": "Tiana Tables",
   "description": "My Electron application description",
   "license": "MIT",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "main": ".vite/build/main.js",
   "keywords": [],
   "author": {
