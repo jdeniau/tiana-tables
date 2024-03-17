@@ -15,6 +15,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: enable corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
       #  Follow https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
       # to sign the application.
       # You can create:
@@ -53,3 +64,14 @@ jobs:
 
       - name: test
         run: security find-identity -p codesigning  -v
+
+      - name: Sign & Publish Electron app
+        run: DEBUG=electron-notarize* yarn publish
+        env:
+          # MacOS sign specific
+          APPLE_SIGN_ID: ${{ secrets.APPLE_SIGN_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # For every platform
+          GITHUB_TOKEN: ${{ github.token }}
