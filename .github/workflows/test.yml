@@ -8,7 +8,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [macos-latest, macos-jdu, macos-14]
+        os: [
+            macos-latest,
+            macos-jdu,
+            # macos-14
+          ]
     runs-on: ${{ matrix.os }}
     continue-on-error: true
 
@@ -67,7 +71,7 @@ jobs:
         run: security find-identity -p codesigning  -v
 
       - name: Sign & Publish Electron app
-        run: DEBUG=electron-osx-sign* yarn publish
+        run: DEBUG=electron-osx-sign* yarn make
         env:
           # MacOS sign specific
           APPLE_SIGN_ID: ${{ secrets.APPLE_SIGN_ID }}
