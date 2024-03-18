@@ -7,43 +7,57 @@ import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import invariant from 'tiny-invariant';
 
+console.log('----------');
+console.log(JSON.stringify(process.argv));
+console.log(process.env.NODE_ENV);
+console.log(new Error().stack);
+console.log('----------');
+console.log('----------');
+console.log('----------');
+console.log('----------');
+console.log('----------');
+console.log('----------');
+console.log('----------');
+console.log('----------');
+console.log('----------');
+console.log('----------');
+
+const isStartScript = process.argv[1].includes('electron-forge-start');
+const willSign = !isStartScript;
+
+function requireEnvSignString(
+  value: string | undefined,
+  envVariableName: string
+): string {
+  if (willSign) {
+    invariant(value, `"${envVariableName}" environment variable is required`);
+  }
+
+  return (
+    value ??
+    // do not care about thoses values when not signing, ie. with `yarn start`
+    ''
+  );
+}
+
 const config: ForgeConfig = {
   packagerConfig: {
     executableName: 'tiana-tables',
     osxSign: {
-      identity:
-        process.env.APPLE_SIGN_ID ||
-        invariant(
-          process.env.APPLE_SIGN_ID,
-          '"APPLE_SIGN_ID" environment variable is required'
-        ) ||
-        '', // TODO :Do we need to pass this ? It "should" be handled automatically by osx-sign
+      identity: requireEnvSignString(
+        process.env.APPLE_SIGN_ID,
+        'APPLE_SIGN_ID'
+      ), // TODO :Do we need to pass this ? It "should" be handled automatically by osx-sign
       // provisioningProfile: 'path/to/provisioningProfile', probably need that on CI
     }, // object must exist even if empty
     osxNotarize: {
       // option 1
-      appleId:
-        // weird syntax if to throw an error if not defined only when trying to sign & notarize
-        process.env.APPLE_ID ||
-        invariant(
-          process.env.APPLE_ID,
-          '"APPLE_ID" environment variable is required'
-        ) ||
-        '',
-      appleIdPassword:
-        process.env.APPLE_APP_PASSWORD ||
-        invariant(
-          process.env.APPLE_APP_PASSWORD,
-          '"APPLE_APP_PASSWORD" environment variable is required'
-        ) ||
-        '',
-      teamId:
-        process.env.APPLE_TEAM_ID ||
-        invariant(
-          process.env.APPLE_TEAM_ID,
-          '"APPLE_TEAM_ID" environment variable is required'
-        ) ||
-        '',
+      appleId: requireEnvSignString(process.env.APPLE_ID, 'APPLE_ID'),
+      appleIdPassword: requireEnvSignString(
+        process.env.APPLE_APP_PASSWORD,
+        'APPLE_APP_PASSWORD'
+      ),
+      teamId: requireEnvSignString(process.env.APPLE_TEAM_ID, 'APPLE_TEAM_ID'),
     },
   },
   rebuildConfig: {},
