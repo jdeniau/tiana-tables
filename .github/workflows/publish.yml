@@ -62,7 +62,7 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
-      - name: 'electron packager: do not be quiet !'
+      - name: 'electron packager: do not be quiet !' # See https://github.com/electron/forge/issues/3540
         run: mv node_modules/@electron-forge/core/dist/api/package.js node_modules/@electron-forge/core/dist/api/package.quiet.js && sed 's/packageOpts.quiet = true/packageOpts.quiet = false/' node_modules/@electron-forge/core/dist/api/package.quiet.js > node_modules/@electron-forge/core/dist/api/package.js
 
         # Issue with max opened file on arm macos
