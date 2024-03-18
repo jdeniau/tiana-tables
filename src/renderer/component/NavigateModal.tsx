@@ -110,8 +110,22 @@ export default function NavigateModal({
         setIsNavigateModalOpen(false);
       }}
       footer={null}
+      width={800}
+      style={{
+        // do not overflow the viewport, and keep 100px of padding
+        top: '100px', // this is the default, but do keep this in case antd change it's default value
+        maxHeight: 'calc(100vh - 200px)',
+        overflow: 'hidden',
+      }}
     >
-      <Flex vertical gap="small">
+      <Flex
+        vertical
+        gap="small" // do not overflow the viewport
+        style={{
+          maxHeight: 'min(calc(100vh - 250px), 600px)', // max 600 px, but can not be bigger than the height minus 250px
+          overflow: 'hidden', // Enable scroll if content exceeds the max height
+        }}
+      >
         <Input.Search
           ref={searchRef}
           placeholder={t('navigation_modal.search.placeholder')}
@@ -129,6 +143,7 @@ export default function NavigateModal({
           </Flex>
         ) : (
           <List
+            style={{ overflow: 'auto' }}
             bordered
             dataSource={filteredTableStatusList}
             renderItem={(item: TableStatusRow, index: number) => (

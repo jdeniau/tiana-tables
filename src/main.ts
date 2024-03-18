@@ -79,6 +79,10 @@ app.whenReady().then(() => {
     return isDev;
   });
 
+  ipcMain.handle('get-is-mac', () => {
+    return isMac;
+  });
+
   // createWindow();
   // app.on('activate', function () {
   //   if (BrowserWindow.getAllWindows().length === 0) createWindow();

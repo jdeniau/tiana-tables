@@ -12,9 +12,10 @@ import ButtonLink from '../component/ButtonLink';
 import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
 import Debug from '../component/Debug';
+import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import ThemeSelector from '../component/ThemeSelector';
 import { getSetting } from '../theme';
-import { useNavigationListener } from '../useNavigationListener';
+import NavigateModalContextProvider from '../useNavigationListener';
 
 const Header = styled(Layout.Header)`
   display: flex;
@@ -39,9 +40,11 @@ function ToggleRawSqlButton() {
   }
 
   return (
-    <ButtonLink to={`/connections/${currentConnectionName}/${database}/sql`}>
-      {t('sqlPanel.callerButton')}
-    </ButtonLink>
+    <KeyboardShortcutTooltip cmdOrCtrl pressedKey="t">
+      <ButtonLink to={`/connections/${currentConnectionName}/${database}/sql`}>
+        {t('sqlPanel.callerButton')}
+      </ButtonLink>
+    </KeyboardShortcutTooltip>
   );
 }
 
@@ -56,36 +59,36 @@ const RootLink = styled(Link)`
 
 export default function Root() {
   const { t } = useTranslation();
-  const { NavigateModal } = useNavigationListener();
 
   return (
     <ConfigurationContextProvider>
       <ThemeContextProvider>
         <ConnectionStack>
-          <Layout>
-            <NavigateModal />
-            <Debug />
-            <Header>
-              <Flex align="center" gap="small">
-                <h2>
-                  <RootLink to="/">Tiana Tables</RootLink>
-                </h2>
-                <span>v{packageJson.version}</span>
-              </Flex>
+          <NavigateModalContextProvider>
+            <Layout>
+              <Debug />
+              <Header>
+                <Flex align="center" gap="small">
+                  <h2>
+                    <RootLink to="/">Tiana Tables</RootLink>
+                  </h2>
+                  <span>v{packageJson.version}</span>
+                </Flex>
 
-              <ConnectionNav />
+                <ConnectionNav />
 
-              <div>
-                {t('theme.switch.label')} <ThemeSelector />
-              </div>
+                <div>
+                  {t('theme.switch.label')} <ThemeSelector />
+                </div>
 
-              <ToggleRawSqlButton />
-            </Header>
+                <ToggleRawSqlButton />
+              </Header>
 
-            <Content>
-              <Outlet />
-            </Content>
-          </Layout>
+              <Content>
+                <Outlet />
+              </Content>
+            </Layout>
+          </NavigateModalContextProvider>
         </ConnectionStack>
       </ThemeContextProvider>
     </ConfigurationContextProvider>
