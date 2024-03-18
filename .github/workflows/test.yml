@@ -14,7 +14,7 @@ jobs:
             macos-14,
           ]
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
+    # continue-on-error: true
 
     steps:
       - name: Checkout code
@@ -79,7 +79,7 @@ jobs:
 
       - name: 'change launchctl limit for arm macos'
         if: startsWith(matrix.os, 'macos-14')
-        run: launchctl limit maxfiles 999999 999999
+        run: sudo launchctl limit maxfiles 999999 999999
 
       - name: Sign & Publish Electron app
         run: DEBUG=electron-osx-sign* yarn package
