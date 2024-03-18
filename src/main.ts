@@ -6,6 +6,11 @@ import installExtension, {
 import log from 'electron-log/main';
 import { updateElectronApp } from 'update-electron-app';
 import { bindIpcMain as bindIpcMainConfiguration } from './configuration';
+import {
+  getConfigurationFolder,
+  getLogFolder,
+  getLogPath,
+} from './configuration/filePaths';
 import { SQL_CHANNEL } from './preload/sqlChannel';
 import connectionStackInstance from './sql';
 
@@ -18,9 +23,7 @@ const isMac = process.platform === 'darwin';
 const isDev = !app.isPackaged;
 
 // log files are stored in the userData folder, and the file name is different in dev and prod
-log.transports.file.resolvePathFn = () =>
-  path.join(app.getPath('userData'), 'logs', isDev ? 'dev.log' : 'main.log');
-
+log.transports.file.resolvePathFn = () => getLogPath();
 log.initialize();
 
 updateElectronApp({
@@ -182,6 +185,25 @@ const createWindow = () => {
     {
       role: 'help',
       submenu: [
+        {
+          // display two menu: one for the logs, the other for the configuration folder
+          // TODO : we should remove this in a future version (v1.0.0 ?) as debug should not be required anymore
+          label: 'Data folders',
+          submenu: [
+            {
+              label: 'Logs',
+              click: () => {
+                shell.openPath(getLogFolder());
+              },
+            },
+            {
+              label: 'Configuration',
+              click: () => {
+                shell.openPath(getConfigurationFolder());
+              },
+            },
+          ],
+        },
         {
           label: 'Github Repository',
           click: async () => {

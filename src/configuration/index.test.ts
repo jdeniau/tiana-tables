@@ -15,6 +15,7 @@ import {
 const { getBaseConfig, resetConfiguration } = testables;
 
 vi.mock('node:path', () => ({
+  dirname: (path: string) => path.substring(0, path.lastIndexOf('/')),
   resolve: (a: string, b: string) => `${a}/${b}`,
 }));
 
