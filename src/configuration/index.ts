@@ -1,9 +1,10 @@
-import { app, dialog, safeStorage } from 'electron';
+import { dialog, safeStorage } from 'electron';
 import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname } from 'node:path';
 import log from 'electron-log';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
 import { ConnectionObject } from '../sql/types';
+import { getConfigurationPath } from './filePaths';
 import { DEFAULT_THEME } from './themes';
 import {
   Configuration,
@@ -11,10 +12,9 @@ import {
   EncryptedConnectionObject,
 } from './type';
 
-const configPath = resolve(app.getPath('userData'), 'config');
-const dataFilePath = resolve(configPath, 'config.json');
+const configurationPath = getConfigurationPath();
 
-log.info('Configuration file path:', dataFilePath);
+log.info('Configuration file path:', configurationPath);
 
 function getBaseConfig(): Configuration {
   return {
@@ -55,11 +55,11 @@ export function getConfiguration(): Configuration {
 }
 
 function loadConfiguration(): Configuration {
-  if (!existsSync(dataFilePath)) {
+  if (!existsSync(configurationPath)) {
     return getBaseConfig();
   }
 
-  const dataString = readFileSync(dataFilePath, 'utf-8');
+  const dataString = readFileSync(configurationPath, 'utf-8');
 
   if (!dataString) {
     return getBaseConfig();
@@ -89,9 +89,15 @@ function writeConfiguration(config: Configuration): void {
     ),
   };
 
-  mkdirSync(configPath, { recursive: true });
+  // mkdirSync(configPath, { recursive: true });
+
+  // create the folder of the `dataFilePath` if it does not exist
+  if (!existsSync(dirname(configurationPath))) {
+    mkdirSync(dirname(configurationPath), { recursive: true });
+  }
+
   writeFile(
-    dataFilePath,
+    configurationPath,
     JSON.stringify(encryptedConfig, null, 2),
     'utf-8',
     (err) => {
