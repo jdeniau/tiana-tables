@@ -1,25 +1,25 @@
-# name: 'Chromatic'
+name: 'Chromatic'
 
-# on: push
+on: push
 
-# jobs:
-#   chromatic:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4
-#         with:
-#           fetch-depth: 0
+jobs:
+  chromatic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-#       - name: Enable corepack
-#         run: corepack enable
+      - name: Enable corepack
+        run: corepack enable
 
-#       - name: Install dependencies
-#         run: yarn install --immutable
+      - name: Install dependencies
+        run: yarn install --immutable
 
-#       - name: Publish to Chromatic
-#         uses: chromaui/action@latest
-#         with:
-#           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-#           skip: 'dependabot/**' # 👈 Option to skip Chromatic for certain branches
+      - name: Publish to Chromatic
+        uses: chromaui/action@latest
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          skip: 'dependabot/**' # 👈 Option to skip Chromatic for certain branches
 
