@@ -3,6 +3,7 @@ import {
   getConfigurationFolder,
   getLogFolder,
 } from '../configuration/filePaths';
+import { t } from '../i18n';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import connectionStackInstance from '../sql';
 import { isMacPlatform } from './helpers';
@@ -61,10 +62,10 @@ export function createMenu(mainWindow: BrowserWindow) {
     },
     //
     {
-      label: 'Navigate', // TODO transations
+      label: t('menu.navigate'),
       submenu: [
         {
-          label: 'New connection',
+          label: t('menu.navigate.newConnection'),
           accelerator: 'CmdOrCtrl+N',
           click: () => {
             mainWindow.webContents.send('navigate', '/connect');
@@ -72,7 +73,7 @@ export function createMenu(mainWindow: BrowserWindow) {
         },
         {
           id: 'sqlPanelLink',
-          label: 'SQL panel',
+          label: t('menu.navigate.sqlPanel'),
           accelerator: 'CmdOrCtrl+T',
           enabled: false, // wait for a connection to be selected
           click: () => {
@@ -92,7 +93,7 @@ export function createMenu(mainWindow: BrowserWindow) {
         },
         {
           id: 'openNavigationPanelLink',
-          label: 'Open navigation panel',
+          label: t('menu.navigate.openNavigationPanel'),
           accelerator: 'CmdOrCtrl+K',
           enabled: false,
           click: () => {
@@ -138,16 +139,16 @@ export function createMenu(mainWindow: BrowserWindow) {
         {
           // display two menu: one for the logs, the other for the configuration folder
           // TODO : we should remove this in a future version (v1.0.0 ?) as debug should not be required anymore
-          label: 'Data folders',
+          label: t('menu.help.dataFolders'),
           submenu: [
             {
-              label: 'Logs',
+              label: t('menu.help.logs'),
               click: () => {
                 shell.openPath(getLogFolder());
               },
             },
             {
-              label: 'Configuration',
+              label: t('menu.help.configuration'),
               click: () => {
                 shell.openPath(getConfigurationFolder());
               },
@@ -155,7 +156,7 @@ export function createMenu(mainWindow: BrowserWindow) {
           ],
         },
         {
-          label: 'Github Repository',
+          label: t('menu.help.githubRepository'),
           click: async () => {
             await shell.openExternal('https://github.com/jdeniau/tiana-tables');
           },

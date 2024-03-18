@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Layout } from 'antd';
+import { Button, Flex, Layout } from 'antd';
 import {
   LoaderFunctionArgs,
   Outlet,
@@ -11,18 +11,17 @@ import {
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
+import { useTranslation } from '../../i18n';
 import { ShowDatabasesResult } from '../../sql/types';
 import DatabaseSelector from '../component/DatabaseSelector';
+import { KeyboardShortcut } from '../component/KeyboardShortcut';
 import TableList from '../component/TableList';
 import { getSetting } from '../theme';
+import { useNavigateModalContext } from '../useNavigationListener';
 
 const Sider = styled(Layout.Sider)`
   border-right: 1px solid ${(props) => getSetting(props.theme, 'foreground')};
   background: ${(props) => getSetting(props.theme, 'background')} !important;
-`;
-
-const PaddedDiv = styled.div`
-  padding: 10px;
 `;
 
 interface RouteParams extends LoaderFunctionArgs {
@@ -70,7 +69,8 @@ export default function ConnectionDetailPage() {
     Awaited<ReturnType<typeof loader>>,
     Response
   >;
-
+  const { t } = useTranslation();
+  const { openNavigateModal } = useNavigateModalContext();
   const { addConnectionToList } = useConnectionContext();
 
   const { connectionName } = useParams();
@@ -84,10 +84,14 @@ export default function ConnectionDetailPage() {
   return (
     <Layout>
       <Sider width={200} style={{ overflow: 'auto' }}>
-        <DatabaseSelector databaseList={databaseList} />
-        <PaddedDiv>
+        <Flex vertical gap="small">
+          <DatabaseSelector databaseList={databaseList} />
+          <Button block size="small" onClick={openNavigateModal}>
+            {t('tableList.navigate')}
+            <KeyboardShortcut cmdOrCtrl pressedKey="k" />
+          </Button>
           <TableList />
-        </PaddedDiv>
+        </Flex>
       </Sider>
       <Layout.Content style={{ overflow: 'auto' }}>
         <Outlet />

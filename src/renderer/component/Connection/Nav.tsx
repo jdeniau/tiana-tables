@@ -6,6 +6,7 @@ import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
 import { getSetting } from '../../theme';
 import ButtonLink from '../ButtonLink';
+import { KeyboardShortcutTooltip } from '../KeyboardShortcut';
 
 const StyledMenu = styled(Menu)`
   flex: 1;
@@ -28,9 +29,11 @@ export default function Nav(): ReactElement | null {
 
   return (
     <>
-      <ButtonLink style={{ margin: '0 10px' }} to="/connect">
-        {t('connect.new')}
-      </ButtonLink>
+      <KeyboardShortcutTooltip cmdOrCtrl pressedKey="n">
+        <ButtonLink style={{ margin: '0 10px' }} to="/connect">
+          {t('connect.new')}
+        </ButtonLink>
+      </KeyboardShortcutTooltip>
 
       <StyledMenu
         mode="horizontal"

@@ -14,10 +14,15 @@ ipcRenderer.invoke('get-is-dev').then((isDev) => {
   contextBridge.exposeInMainWorld('isDev', isDev);
 });
 
+ipcRenderer.invoke('get-is-mac').then((isMac) => {
+  contextBridge.exposeInMainWorld('isMac', isMac);
+});
+
 // Declare window global that have been added
 declare global {
   interface Window {
     isDev: boolean;
+    isMac: boolean;
     config: typeof config;
     sql: typeof sql;
     navigationListener: typeof navigationListener;
