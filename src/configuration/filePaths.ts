@@ -1,5 +1,6 @@
 import { app } from 'electron';
 import path, { dirname, resolve } from 'node:path';
+import { isDevApp } from '../main-process/helpers';
 
 export function getConfigurationPath() {
   const configDir = resolve(app.getPath('userData'), 'config');
@@ -13,12 +14,10 @@ export function getConfigurationFolder() {
 }
 
 export function getLogPath() {
-  const isDev = !app.isPackaged;
-
   return path.join(
     app.getPath('userData'),
     'logs',
-    isDev ? 'dev.log' : 'main.log'
+    isDevApp() ? 'dev.log' : 'main.log'
   );
 }
 
