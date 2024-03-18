@@ -10,8 +10,8 @@ jobs:
       matrix:
         os: [
             macos-latest,
-            macos-jdu,
-            # macos-14
+            # macos-jdu,
+            macos-14,
           ]
     runs-on: ${{ matrix.os }}
     continue-on-error: true
@@ -67,11 +67,14 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
-      - name: test
-        run: security find-identity -p codesigning  -v
+      # - name: test
+      #   run: security find-identity -p codesigning  -v
+
+      - name: 'electron packager: do not be quiet !'
+        run: mv node_modules/@electron-forge/core/dist/api/package.js node_modules/@electron-forge/core/dist/api/package.quiet.js && sed 's/packageOpts.quiet = true/packageOpts.quiet = false/' node_modules/@electron-forge/core/dist/api/package.quiet.js > node_modules/@electron-forge/core/dist/api/package.js
 
       - name: Sign & Publish Electron app
-        run: DEBUG=electron-osx-sign* yarn make
+        run: DEBUG=electron-osx-sign* yarn package
         env:
           # MacOS sign specific
           APPLE_SIGN_ID: ${{ secrets.APPLE_SIGN_ID }}
