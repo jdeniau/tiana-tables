@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [
-            macos-latest,
+            # macos-latest,
             # macos-jdu,
             macos-14,
           ]
@@ -82,7 +82,7 @@ jobs:
         run: sudo launchctl limit maxfiles 999999 999999
 
       - name: Sign & Publish Electron app
-        run: DEBUG=electron-osx-sign* yarn package
+        run: DEBUG=electron-osx-sign* yarn publish
         env:
           # MacOS sign specific
           APPLE_SIGN_ID: ${{ secrets.APPLE_SIGN_ID }}
