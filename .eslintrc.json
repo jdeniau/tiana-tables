@@ -7,6 +7,7 @@
   "ignorePatterns": [
     "forge.config.ts",
     "vite.*.config.*",
+    "vitest.config.*",
     "out/", // build output
     "stories/" // exclude stories from linting for now
   ],
