@@ -77,6 +77,10 @@ jobs:
         if: startsWith(matrix.os, 'macos-14')
         run: ulimit -n 999999
 
+      - name: 'change launchctl limit for arm macos'
+        if: startsWith(matrix.os, 'macos-14')
+        run: launchctl limit maxfiles 999999 999999
+
       - name: Sign & Publish Electron app
         run: DEBUG=electron-osx-sign* yarn package
         env:
