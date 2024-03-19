@@ -7,21 +7,6 @@ import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import invariant from 'tiny-invariant';
 
-console.log('----------');
-console.log(JSON.stringify(process.argv));
-console.log(process.env.NODE_ENV);
-console.log(new Error().stack);
-console.log('----------');
-console.log('----------');
-console.log('----------');
-console.log('----------');
-console.log('----------');
-console.log('----------');
-console.log('----------');
-console.log('----------');
-console.log('----------');
-console.log('----------');
-
 const isStartScript = process.argv[1].includes('electron-forge-start');
 const willSign = !isStartScript;
 
