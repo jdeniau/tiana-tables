@@ -1,4 +1,6 @@
+import * as NightOwl from '../renderer/theme/Night Owl.tmTheme.json';
 import * as active4d from '../renderer/theme/active4d.json';
+import * as base16Eva from '../renderer/theme/base16-eva.tmTheme.json';
 import * as dracula from '../renderer/theme/dracula.json';
 import * as visualStudio from '../renderer/theme/visualStudio.json';
 
@@ -12,9 +14,11 @@ const THEME_LIST_AS_ARRAY: TmTheme[] = [
   dracula,
   visualStudio,
   active4d,
+  NightOwl,
+  base16Eva,
 ] as const;
 
-const DARK_THEME_LIST_NAME = [dracula.name];
+const DARK_THEME_LIST_NAME = [dracula.name, NightOwl.name, base16Eva.name];
 
 type Theme = (typeof THEME_LIST_AS_ARRAY)[number];
 
@@ -42,12 +46,20 @@ export interface TmThemeGlobalSetting extends TmThemeSetting {
   readonly scope: undefined;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isScopedSetting(o: { scope?: any; settings?: any }): o is TmThemeScopedSetting {
+export function isScopedSetting(o: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  scope?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  settings?: any;
+}): o is TmThemeScopedSetting {
   return o.scope && o.settings;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isUnscopedSetting(o: { scope?: any; settings?: any }): o is TmThemeGlobalSetting {
+export function isUnscopedSetting(o: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  scope?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  settings?: any;
+}): o is TmThemeGlobalSetting {
   return !o.scope && o.settings;
 }
