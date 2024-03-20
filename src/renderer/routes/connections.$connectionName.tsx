@@ -48,14 +48,33 @@ export async function loader({ params, request }: RouteParams) {
     ? activeTableByDatabase?.[configDatabase]
     : undefined;
 
+  if (!databaseList || !databaseList[0]) {
+    // TODO handle the case where there is no table in the databbase
+    throw new Error('No database found. Case not handled for now.');
+  }
+
   const activeDatabase = configDatabase || databaseList[0].Database;
+
+  // TODO handle the case where the "configDatabase" is not in the databaseList
+  if (
+    activeDatabase &&
+    !databaseList.find((db) => db.Database === activeDatabase)
+  ) {
+    throw new Error(
+      'Database not found in the database list. Case not handled for now.'
+    );
+  }
 
   // redirect to the current database if we are not on a "database" page
   const expectedUrl = `/connections/${connectionName}/${activeDatabase}${
     openedTable ? `/tables/${openedTable}` : ''
   }`;
 
-  if (new URL(request.url).pathname !== expectedUrl) {
+  // redirect if we are not on the expected page
+  if (
+    new URL(request.url).pathname !==
+    new URL(expectedUrl, window.location.origin).pathname
+  ) {
     return redirect(expectedUrl);
   }
 
