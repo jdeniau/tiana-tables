@@ -28,6 +28,7 @@ function requireEnvSignString(
 const config: ForgeConfig = {
   packagerConfig: {
     executableName: 'tiana-tables',
+    icon: 'images/icons/icon',
     osxSign: {
       identity: requireEnvSignString(
         process.env.APPLE_SIGN_ID,
@@ -47,10 +48,20 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
+    new MakerSquirrel({
+      setupIcon: 'images/icons/icon.ico',
+    }),
     new MakerZIP({}, ['darwin']),
-    new MakerRpm({}),
-    new MakerDeb({}),
+    new MakerRpm({
+      options: {
+        icon: 'images/icons/icon.png',
+      },
+    }),
+    new MakerDeb({
+      options: {
+        icon: 'images/icons/icon.png',
+      },
+    }),
     // new MakerDMG({}),
   ],
   publishers: [
