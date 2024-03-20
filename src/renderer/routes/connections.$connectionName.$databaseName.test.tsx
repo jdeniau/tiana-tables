@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment jsdom
+ */
 import { redirect } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_THEME } from '../../configuration/themes';
