@@ -9,11 +9,17 @@ import invariant from 'tiny-invariant';
 
 const isStartScript = process.argv[1].includes('electron-forge-start');
 const willSign = !isStartScript;
+const isMac = process.platform === 'darwin';
 
-function requireEnvSignString(
+function requireAppleEnvSignString(
   value: string | undefined,
   envVariableName: string
 ): string {
+  if (!isMac) {
+    // do not care about thoses values when not signing, as we are not on a mac
+    return '';
+  }
+
   if (willSign) {
     invariant(value, `"${envVariableName}" environment variable is required`);
   }
@@ -30,7 +36,7 @@ const config: ForgeConfig = {
     executableName: 'tiana-tables',
     icon: 'images/icons/icon',
     osxSign: {
-      identity: requireEnvSignString(
+      identity: requireAppleEnvSignString(
         process.env.APPLE_SIGN_ID,
         'APPLE_SIGN_ID'
       ), // TODO :Do we need to pass this ? It "should" be handled automatically by osx-sign
@@ -38,12 +44,15 @@ const config: ForgeConfig = {
     }, // object must exist even if empty
     osxNotarize: {
       // option 1
-      appleId: requireEnvSignString(process.env.APPLE_ID, 'APPLE_ID'),
-      appleIdPassword: requireEnvSignString(
+      appleId: requireAppleEnvSignString(process.env.APPLE_ID, 'APPLE_ID'),
+      appleIdPassword: requireAppleEnvSignString(
         process.env.APPLE_APP_PASSWORD,
         'APPLE_APP_PASSWORD'
       ),
-      teamId: requireEnvSignString(process.env.APPLE_TEAM_ID, 'APPLE_TEAM_ID'),
+      teamId: requireAppleEnvSignString(
+        process.env.APPLE_TEAM_ID,
+        'APPLE_TEAM_ID'
+      ),
     },
   },
   rebuildConfig: {},
