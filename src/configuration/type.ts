@@ -3,6 +3,7 @@ import { ConnectionObject } from '../sql/types';
 export type Configuration = {
   version: 1;
   theme: string;
+  locale: string;
   connections: Record<string, EncryptedConnectionObject>;
 };
 

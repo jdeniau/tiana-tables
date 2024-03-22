@@ -11,6 +11,7 @@ import {
   setActiveTable,
   testables,
 } from '.';
+import { DEFAULT_LOCALE } from './locale';
 
 const { getBaseConfig, resetConfiguration } = testables;
 
@@ -53,6 +54,8 @@ function mockExistingConfig(
   config: Configuration = {
     version: 1,
     theme: DEFAULT_THEME.name,
+    locale: DEFAULT_LOCALE,
+
     connections: {
       local: {
         name: 'local',
@@ -359,6 +362,8 @@ describe('set connection appState', async () => {
     mockExistingConfig({
       version: 1,
       theme: DEFAULT_THEME.name,
+      locale: DEFAULT_LOCALE,
+
       connections: {
         local: {
           name: 'local',

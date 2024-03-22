@@ -1,4 +1,4 @@
-import i18n, { t } from 'i18next';
+import i18n, { changeLanguage, t } from 'i18next';
 import { initReactI18next, useTranslation } from 'react-i18next';
 import en from '../locales/en';
 import fr from '../locales/fr';
@@ -35,4 +35,4 @@ i18n
     },
   });
 
-export { useTranslation, t };
+export { useTranslation, t, changeLanguage };

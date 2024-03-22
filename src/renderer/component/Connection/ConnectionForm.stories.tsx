@@ -13,12 +13,13 @@ const meta: Meta<typeof ConnectionForm> = {
   component: ConnectionForm,
   decorators: [
     reactRouterDecorator,
-    (Story, { globals: { theme } }) => (
+    (Story, { globals: { theme, locale } }) => (
       <ConfigurationContext.Provider
         value={{
           configuration: {
             version: 1,
             theme,
+            locale,
             connections: {},
           },
           addConnectionToConfig: (connection) => {

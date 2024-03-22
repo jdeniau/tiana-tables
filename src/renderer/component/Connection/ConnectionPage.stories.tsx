@@ -1,6 +1,7 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
 import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
+import { DEFAULT_LOCALE } from '../../../configuration/locale';
 import { DEFAULT_THEME } from '../../../configuration/themes';
 import { testables } from '../../../contexts/ConfigurationContext';
 import { ConnectionContext } from '../../../contexts/ConnectionContext';
@@ -31,6 +32,7 @@ const meta: Meta<typeof ConnectionPage> = {
           configuration: {
             version: 1,
             theme: DEFAULT_THEME.name,
+            locale: DEFAULT_LOCALE,
             connections: {
               test: {
                 name: 'test',

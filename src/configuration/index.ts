@@ -5,6 +5,7 @@ import log from 'electron-log';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
 import { ConnectionObject, ConnectionObjectWithoutSlug } from '../sql/types';
 import { getConfigurationPath } from './filePaths';
+import { DEFAULT_LOCALE } from './locale';
 import { DEFAULT_THEME } from './themes';
 import {
   Configuration,
@@ -21,6 +22,7 @@ function getBaseConfig(): Configuration {
   return {
     version: 1,
     theme: DEFAULT_THEME.name,
+    locale: DEFAULT_LOCALE,
     connections: {},
   };
 }
