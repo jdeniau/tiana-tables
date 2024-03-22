@@ -19,7 +19,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "yarn lint:eslint && yarn lint:types",
+    "lint": "yarn lint:types && yarn lint:eslint",
     "lint:eslint": "eslint --quiet .",
     "lint:types": "tsc --noEmit",
     "test": "vitest",

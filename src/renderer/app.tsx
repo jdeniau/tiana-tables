@@ -4,21 +4,21 @@ import { RouterProvider, createHashRouter } from 'react-router-dom';
 import invariant from 'tiny-invariant';
 import Connect from './routes/connect';
 import Create from './routes/connect/create';
-import Edit from './routes/connect/edit.$connectionName';
+import Edit from './routes/connect/edit.$connectionSlug';
 import ConnectionDetailPage, {
   loader as connectionDetailPageLoader,
-} from './routes/connections.$connectionName';
+} from './routes/connections.$connectionSlug';
 import DatabaseDetailPage, {
   loader as databaseDetailPageLoader,
-} from './routes/connections.$connectionName.$databaseName';
+} from './routes/connections.$connectionSlug.$databaseName';
 import TableNamePage, {
   loader as tableNamePageLoader,
-} from './routes/connections.$connectionName.$databaseName.$tableName';
+} from './routes/connections.$connectionSlug.$databaseName.$tableName';
 import ConnectionErrorPage from './routes/errors/ConnectionsErrorPage';
 import RootErrorPage from './routes/errors/RootErrorPage';
 import { Home } from './routes/home';
 import Root from './routes/root';
-import SqlPage, { action as sqlPageAction } from './routes/sql.$connectionName';
+import SqlPage, { action as sqlPageAction } from './routes/sql.$connectionSlug';
 
 const appElement = document.getElementById('App');
 
@@ -53,16 +53,16 @@ const router = createHashRouter([
             element: <Create />,
           },
           {
-            path: 'edit/:connectionName',
+            path: 'edit/:connectionSlug',
             element: <Edit />,
           },
         ],
       },
       {
-        path: 'connections/:connectionName',
+        path: 'connections/:connectionSlug',
         loader: connectionDetailPageLoader,
         shouldRevalidate: ({ currentParams, nextParams }) => {
-          return currentParams.connectionName !== nextParams.connectionName;
+          return currentParams.connectionSlug !== nextParams.connectionSlug;
         },
         element: <ConnectionDetailPage />,
         children: [

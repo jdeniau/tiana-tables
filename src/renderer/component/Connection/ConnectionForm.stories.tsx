@@ -85,6 +85,7 @@ export const Edit: Story = {
   args: {
     connection: {
       name: 'test',
+      slug: 'test',
       host: 'localhost',
       port: 3307,
       user: 'test-user',

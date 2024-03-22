@@ -4,7 +4,7 @@ import invariant from 'tiny-invariant';
 import TableLayout from '../component/TableLayout';
 
 interface RouteParams extends LoaderFunctionArgs {
-  params: Params<'connectionName' | 'databaseName' | 'tableName'>;
+  params: Params<'connectionSlug' | 'databaseName' | 'tableName'>;
 }
 
 interface ShowKeyRow extends RowDataPacket {
@@ -12,20 +12,20 @@ interface ShowKeyRow extends RowDataPacket {
 }
 
 export async function loader({ params }: RouteParams) {
-  const { connectionName, databaseName, tableName } = params;
+  const { connectionSlug, databaseName, tableName } = params;
 
-  invariant(connectionName, 'Connection name is required');
+  invariant(connectionSlug, 'Connection slug is required');
   invariant(databaseName, 'Database name is required');
   invariant(tableName, 'Table name is required');
 
   const [result] = await window.sql.executeQuery<ShowKeyRow[]>(
-    connectionName,
+    connectionSlug,
     `SHOW KEYS FROM ${databaseName}.${tableName} WHERE Key_name = 'PRIMARY';`
   );
 
   const primaryKeys = result.map((row) => row.Column_name);
 
-  window.config.setActiveTable(connectionName, databaseName, tableName);
+  window.config.setActiveTable(connectionSlug, databaseName, tableName);
 
   return {
     primaryKeys,

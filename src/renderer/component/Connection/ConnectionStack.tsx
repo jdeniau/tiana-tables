@@ -16,19 +16,19 @@ interface Props {
 
 function ConnectionStack({ children }: Props) {
   const navigate = useNavigate();
-  const currentConnectionName = useMatch('connections/:connectionName/*')
-    ?.params.connectionName;
-  const databaseName = useMatch('connections/:connectionName/:databaseName/*')
+  const currentConnectionSlug = useMatch('connections/:connectionSlug/*')
+    ?.params.connectionSlug;
+  const databaseName = useMatch('connections/:connectionSlug/:databaseName/*')
     ?.params.databaseName;
 
-  const [connectionNameList, setConnectionNameList] = useState<Array<string>>(
+  const [connectionSlugList, setConnectionNameList] = useState<Array<string>>(
     []
   );
 
   useEffect(() => {
     return () => {
       window.sql.closeAllConnections();
-      // connectionNameList.forEach((connection) => {
+      // connectionSlugList.forEach((connection) => {
       //   connection.end();
       // });
     };
@@ -36,32 +36,32 @@ function ConnectionStack({ children }: Props) {
 
   // inform the main process that the connection name has changed
   useEffect(() => {
-    window.sql.connectionNameChanged(currentConnectionName, databaseName);
-  }, [currentConnectionName, databaseName]);
+    window.sql.connectionNameChanged(currentConnectionSlug, databaseName);
+  }, [currentConnectionSlug, databaseName]);
 
   // TODO we might need to change that into the proper route as reload will not work
-  const addConnectionToList = useCallback(async (connectionName: string) => {
+  const addConnectionToList = useCallback(async (connectionSlug: string) => {
     setConnectionNameList((prev) =>
-      Array.from(new Set([...prev, connectionName]))
+      Array.from(new Set([...prev, connectionSlug]))
     );
   }, []);
 
   const handleSetDatabase = useCallback(
     (database: string) => {
-      invariant(currentConnectionName, 'Connection name is required');
+      invariant(currentConnectionSlug, 'Connection slug is required');
 
-      navigate(`/connections/${currentConnectionName}/${database}`);
+      navigate(`/connections/${currentConnectionSlug}/${database}`);
     },
-    [currentConnectionName, navigate]
+    [currentConnectionSlug, navigate]
   );
 
   const connectionContextValue = useMemo(
     (): ConnexionContextProps => ({
-      connectionNameList,
-      currentConnectionName: currentConnectionName ?? null,
+      connectionSlugList,
+      currentConnectionSlug: currentConnectionSlug ?? null,
       addConnectionToList,
     }),
-    [connectionNameList, currentConnectionName, addConnectionToList]
+    [connectionSlugList, currentConnectionSlug, addConnectionToList]
   );
 
   const databateContextValue = useMemo(
@@ -70,14 +70,14 @@ function ConnectionStack({ children }: Props) {
       setDatabase: handleSetDatabase,
       executeQuery: (query) => {
         invariant(
-          currentConnectionName,
-          'Connection name is required to execute a query'
+          currentConnectionSlug,
+          'Connection slug is required to execute a query'
         );
 
-        return window.sql.executeQuery(currentConnectionName, query);
+        return window.sql.executeQuery(currentConnectionSlug, query);
       },
     }),
-    [currentConnectionName, databaseName, handleSetDatabase]
+    [currentConnectionSlug, databaseName, handleSetDatabase]
   );
 
   return (

@@ -8,11 +8,11 @@ import ModalLike from '../../component/Style/ModalLike';
 export default function Edit() {
   const { t } = useTranslation();
   const { configuration } = useConfiguration();
-  const { connectionName } = useParams();
+  const { connectionSlug } = useParams();
 
-  invariant(connectionName, 'Connection name is required');
+  invariant(connectionSlug, 'Connection slug is required');
 
-  const connection = configuration.connections[connectionName];
+  const connection = configuration.connections[connectionSlug];
 
   if (!connection) {
     // TODO migrate this in a route loader and trigger a 404 ?

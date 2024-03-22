@@ -15,8 +15,8 @@ const meta: Meta<typeof ConnectionPage> = {
     (Story) => (
       <ConnectionContext.Provider
         value={{
-          currentConnectionName: null,
-          connectionNameList: [],
+          currentConnectionSlug: null,
+          connectionSlugList: [],
           addConnectionToList: async (connectionName) => {
             action('addConnectionToList')(connectionName);
           },
@@ -34,6 +34,7 @@ const meta: Meta<typeof ConnectionPage> = {
             connections: {
               test: {
                 name: 'test',
+                slug: 'test',
                 host: 'localhost',
                 port: 3307,
                 user: 'root',
@@ -41,6 +42,7 @@ const meta: Meta<typeof ConnectionPage> = {
               },
               'production connection': {
                 name: 'prod',
+                slug: 'prod',
                 host: 'localhost',
                 port: 3306,
                 user: 'root',

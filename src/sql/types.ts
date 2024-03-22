@@ -22,11 +22,14 @@ export type QueryResult<T extends QueryReturnType = QueryReturnType> = Promise<
  */
 export type ConnectionObject = {
   name: string;
+  slug: string;
   host: string;
   port: number;
   user: string;
   password: string;
 };
+
+export type ConnectionObjectWithoutSlug = Omit<ConnectionObject, 'slug'>;
 
 /**
  * Represent the return type of "SHOW DATABASES;" query.

@@ -12,8 +12,8 @@ const meta: Meta<typeof TableList> = {
     (Story) => (
       <ConnectionContext.Provider
         value={{
-          currentConnectionName: 'test',
-          connectionNameList: ['test'],
+          currentConnectionSlug: 'test',
+          connectionSlugList: ['test'],
           addConnectionToList: async (connectionName) => {
             action('addConnectionToList')(connectionName);
           },

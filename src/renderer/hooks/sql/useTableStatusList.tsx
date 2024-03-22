@@ -7,14 +7,14 @@ export interface TableStatusRow extends RowDataPacket {
   Name: string;
 }
 export function useTableStatusList(): TableStatusRow[] | null {
-  const { currentConnectionName } = useConnectionContext();
+  const { currentConnectionSlug } = useConnectionContext();
   const { executeQuery, database } = useDatabaseContext();
   const [tableStatusList, setTableStatusList] = useState<
     TableStatusRow[] | null
   >(null);
 
   useEffect(() => {
-    if (!currentConnectionName || !database) {
+    if (!currentConnectionSlug || !database) {
       return;
     }
 
@@ -23,7 +23,7 @@ export function useTableStatusList(): TableStatusRow[] | null {
     ).then(([result]) => {
       setTableStatusList(result);
     });
-  }, [currentConnectionName, database, executeQuery]);
+  }, [currentConnectionSlug, database, executeQuery]);
 
   return tableStatusList;
 }

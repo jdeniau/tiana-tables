@@ -25,24 +25,24 @@ const Sider = styled(Layout.Sider)`
 `;
 
 interface RouteParams extends LoaderFunctionArgs {
-  params: Params<'connectionName'>;
+  params: Params<'connectionSlug'>;
   request: Request;
 }
 
 export async function loader({ params, request }: RouteParams) {
-  const { connectionName } = params;
+  const { connectionSlug } = params;
 
-  invariant(connectionName, 'Connection name is required');
+  invariant(connectionSlug, 'Connection slug is required');
 
   const [databaseList] = await window.sql.executeQuery<ShowDatabasesResult>(
-    connectionName,
+    connectionSlug,
     'SHOW DATABASES;'
   );
 
   const configuration = await window.config.getConfiguration();
 
   const { activeDatabase: configDatabase, activeTableByDatabase } =
-    configuration.connections[connectionName]?.appState || {};
+    configuration.connections[connectionSlug]?.appState || {};
 
   const openedTable = configDatabase
     ? activeTableByDatabase?.[configDatabase]
@@ -66,7 +66,7 @@ export async function loader({ params, request }: RouteParams) {
   }
 
   // redirect to the current database if we are not on a "database" page
-  const expectedUrl = `/connections/${connectionName}/${activeDatabase}${
+  const expectedUrl = `/connections/${connectionSlug}/${activeDatabase}${
     openedTable ? `/tables/${openedTable}` : ''
   }`;
 
@@ -92,13 +92,13 @@ export default function ConnectionDetailPage() {
   const { openNavigateModal } = useNavigateModalContext();
   const { addConnectionToList } = useConnectionContext();
 
-  const { connectionName } = useParams();
+  const { connectionSlug } = useParams();
 
   useEffect(() => {
-    if (connectionName) {
-      addConnectionToList(connectionName);
+    if (connectionSlug) {
+      addConnectionToList(connectionSlug);
     }
-  }, [addConnectionToList, connectionName]);
+  }, [addConnectionToList, connectionSlug]);
 
   return (
     <Layout>

@@ -8,7 +8,7 @@ import { ConnectionObject } from './types';
 class ConnectionStack {
   #connections: Map<string, Connection> = new Map();
 
-  #currentConnectionName: string | undefined;
+  #currentConnectionSlug: string | undefined;
 
   #databaseName: string | undefined;
 
@@ -19,11 +19,11 @@ class ConnectionStack {
   };
 
   #ipcMainOn = {
-    [SQL_CHANNEL.ON_CONNECTION_CHANGED]: this.onConnectionNameChanged,
+    [SQL_CHANNEL.ON_CONNECTION_CHANGED]: this.onConnectionSlugChanged,
   };
 
-  get currentConnectionName(): string | undefined {
-    return this.#currentConnectionName;
+  get currentConnectionSlug(): string | undefined {
+    return this.#currentConnectionSlug;
   }
 
   get databaseName(): string | undefined {
@@ -49,11 +49,11 @@ class ConnectionStack {
   }
 
   async executeQueryAndRetry(
-    connectionName: string,
+    connectionSlug: string,
     query: string
   ): QueryResultOrError {
     try {
-      return this.executeQuery(connectionName, query);
+      return this.executeQuery(connectionSlug, query);
     } catch (error) {
       const message = error instanceof Error ? error.message : error;
 
@@ -62,9 +62,9 @@ class ConnectionStack {
         message.includes('connection is in closed state')
       ) {
         // retry once
-        this.#connections.delete(connectionName);
+        this.#connections.delete(connectionSlug);
 
-        return this.executeQuery(connectionName, query);
+        return this.executeQuery(connectionSlug, query);
       }
 
       throw error;
@@ -72,12 +72,12 @@ class ConnectionStack {
   }
 
   async executeQuery(
-    connectionName: string,
+    connectionSlug: string,
     query: string
   ): QueryResultOrError {
-    const connection = await this.#getConnection(connectionName);
+    const connection = await this.#getConnection(connectionSlug);
 
-    log.debug(`Execute query on "${connectionName}": "${query}"`);
+    log.debug(`Execute query on "${connectionSlug}": "${query}"`);
 
     try {
       return { result: await connection.query(query), error: undefined };
@@ -86,13 +86,13 @@ class ConnectionStack {
     }
   }
 
-  async onConnectionNameChanged(
-    connectionName: string | undefined,
+  async onConnectionSlugChanged(
+    connectionSlug: string | undefined,
     databaseName: string | undefined
   ): Promise<void> {
-    log.debug(`Connection changed to "${connectionName}:${databaseName}"`);
+    log.debug(`Connection changed to "${connectionSlug}:${databaseName}"`);
 
-    this.#currentConnectionName = connectionName;
+    this.#currentConnectionSlug = connectionSlug;
     this.#databaseName = databaseName;
   }
 
@@ -106,14 +106,17 @@ class ConnectionStack {
     this.#connections.clear();
   }
 
-  async #getConnection(connectionName: string): Promise<Connection> {
-    const connection = this.#connections.get(connectionName);
+  async #getConnection(connectionSlug: string): Promise<Connection> {
+    const connection = this.#connections.get(connectionSlug);
 
     if (!connection) {
-      // throw new Error('No connection');
+      const { connections } = getConfiguration();
 
-      const { appState: _, ...connectionConfig } =
-        getConfiguration().connections[connectionName];
+      if (!(connectionSlug in connections)) {
+        throw new Error(`Connection "${connectionSlug}" not found`);
+      }
+
+      const { appState: _, ...connectionConfig } = connections[connectionSlug];
 
       return await this.#connect(connectionConfig);
     }
@@ -122,26 +125,26 @@ class ConnectionStack {
   }
 
   async #connect(params: ConnectionObject): Promise<Connection> {
-    const { name, ...rest } = params;
+    const { slug, ...rest } = params;
 
     // don't connect twice to the same connection
-    if (this.#connections.has(name)) {
-      throw new Error(`Connection already opened on "${name}"`);
+    if (this.#connections.has(slug)) {
+      throw new Error(`Connection already opened on "${slug}"`);
     }
 
-    log.debug(`Open connection to "${name}"`);
+    log.debug(`Open connection to "${slug}"`);
 
     // TODO use a connection pool instead ? https://github.com/mysqljs/mysql?tab=readme-ov-file#establishing-connections
     const connection = await createConnection(rest);
 
     connection.on('end', () => {
-      log.debug(`Connection to "${name}" ended`);
-      this.#connections.delete(name);
+      log.debug(`Connection to "${slug}" ended`);
+      this.#connections.delete(slug);
     });
 
     await connection.connect();
 
-    this.#connections.set(name, connection);
+    this.#connections.set(slug, connection);
 
     return connection;
   }

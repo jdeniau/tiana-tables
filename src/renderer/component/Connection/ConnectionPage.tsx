@@ -19,11 +19,11 @@ function ConnectionPage() {
     <div>
       {connectionList.map(
         (connection: EncryptedConnectionObject): JSX.Element => (
-          <Flex key={connection.name} gap="small">
-            <ButtonLink to={`/connections/${connection.name}`} block>
+          <Flex key={connection.slug} gap="small">
+            <ButtonLink to={`/connections/${connection.slug}`} block>
               {connection.name}
             </ButtonLink>
-            <ButtonLink to={`/connect/edit/${connection.name}`}>
+            <ButtonLink to={`/connect/edit/${connection.slug}`}>
               {t('edit')}
             </ButtonLink>
           </Flex>

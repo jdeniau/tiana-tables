@@ -24,7 +24,7 @@ export default function NavigateModal({
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
   const tableStatusList = useTableStatusList();
-  const { currentConnectionName } = useConnectionContext();
+  const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const navigate = useNavigate();
   const searchRef = useRef<InputRef>(null);
@@ -45,10 +45,10 @@ export default function NavigateModal({
     (item: TableStatusRow) => {
       setIsNavigateModalOpen(false);
       navigate(
-        `/connections/${currentConnectionName}/${database}/tables/${item.Name}`
+        `/connections/${currentConnectionSlug}/${database}/tables/${item.Name}`
       );
     },
-    [currentConnectionName, database, navigate, setIsNavigateModalOpen]
+    [currentConnectionSlug, database, navigate, setIsNavigateModalOpen]
   );
 
   // focus input when the modal shows up

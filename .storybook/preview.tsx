@@ -52,11 +52,11 @@ const preview: Preview = {
             addConnectionToConfig: (connection) => {
               action('addConnectionToConfig')(connection);
             },
-            setActiveDatabase: (connectionName, value) => {
-              action('setActiveDatabase')(connectionName, value);
+            setActiveDatabase: (connectionSlug, value) => {
+              action('setActiveDatabase')(connectionSlug, value);
             },
-            setActiveTable: (connectionName, database, tableName) => {
-              action('setActiveTable')(connectionName, database, tableName);
+            setActiveTable: (connectionSlug, database, tableName) => {
+              action('setActiveTable')(connectionSlug, database, tableName);
             },
             editConnection: (name, connection) => {
               action('editConnection')(name, connection);
