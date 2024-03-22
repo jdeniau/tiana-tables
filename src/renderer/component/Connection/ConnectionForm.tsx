@@ -3,7 +3,10 @@ import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
-import type { ConnectionObject } from '../../../sql/types';
+import type {
+  ConnectionObject,
+  ConnectionObjectWithoutSlug,
+} from '../../../sql/types';
 
 type Props = { connection?: ConnectionObject };
 
@@ -19,7 +22,7 @@ function getSubmitButtonLabel(
 }
 
 function ConnectionForm({ connection }: Props) {
-  const initialValues: ConnectionObject = connection ?? {
+  const initialValues: ConnectionObjectWithoutSlug = connection ?? {
     name: '',
     host: 'localhost',
     port: 3306,
@@ -32,10 +35,10 @@ function ConnectionForm({ connection }: Props) {
   const navigate = useNavigate();
   const [form] = Form.useForm();
 
-  const handleSubmit = (formData: ConnectionObject): void => {
+  const handleSubmit = (formData: ConnectionObjectWithoutSlug): void => {
     if (connection) {
       // edit connection
-      editConnection(connection.name, formData);
+      editConnection(connection.slug, formData);
 
       navigate('/connect');
       return;

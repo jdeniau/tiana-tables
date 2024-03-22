@@ -14,7 +14,7 @@ const StyledNavLink = styled(NavLink)`
 `;
 
 export default function TableList(): ReactElement | null {
-  const { currentConnectionName } = useConnectionContext();
+  const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const tableStatusList = useTableStatusList();
 
@@ -27,7 +27,7 @@ export default function TableList(): ReactElement | null {
       {tableStatusList.map((rowDataPacket: TableStatusRow) => (
         <div key={rowDataPacket.Name}>
           <StyledNavLink
-            to={`/connections/${currentConnectionName}/${database}/tables/${rowDataPacket.Name}`}
+            to={`/connections/${currentConnectionSlug}/${database}/tables/${rowDataPacket.Name}`}
             style={({ isActive }: { isActive: boolean }) => ({
               fontWeight: isActive ? 'bold' : undefined,
             })}

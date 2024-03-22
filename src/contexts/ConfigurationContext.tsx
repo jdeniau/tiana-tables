@@ -1,14 +1,17 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Configuration } from '../configuration/type';
-import { ConnectionObject } from '../sql/types';
+import { ConnectionObjectWithoutSlug } from '../sql/types';
 
 type ConfigurationContextType = {
   configuration: Configuration;
-  addConnectionToConfig: (connection: ConnectionObject) => void;
-  editConnection: (name: string, connection: ConnectionObject) => void;
-  setActiveDatabase: (connectionName: string, database: string) => void;
+  addConnectionToConfig: (connection: ConnectionObjectWithoutSlug) => void;
+  editConnection: (
+    slug: string,
+    connection: ConnectionObjectWithoutSlug
+  ) => void;
+  setActiveDatabase: (connectionSlug: string, database: string) => void;
   setActiveTable: (
-    connectionName: string,
+    connectionSlug: string,
     database: string,
     tableName: string
   ) => void;
@@ -47,7 +50,7 @@ export function ConfigurationContextProvider({
   }
 
   const value: ConfigurationContextType = useMemo(
-    () => ({
+    (): ConfigurationContextType => ({
       // force `as` here as we will break if configuration is null, but the hook needs to be before it.
       // We don't want to use ts-expect-error, as we want to test other properties of the object.
       configuration: configuration as Configuration,

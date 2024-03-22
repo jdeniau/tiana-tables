@@ -1,14 +1,14 @@
 import { createContext, useContext } from 'react';
 
 export interface ConnexionContextProps {
-  currentConnectionName: string | null;
-  connectionNameList: Array<string>;
-  addConnectionToList: (connectionName: string) => void;
+  currentConnectionSlug: string | null;
+  connectionSlugList: Array<string>;
+  addConnectionToList: (connectionSlug: string) => void;
 }
 
 export const ConnectionContext = createContext<ConnexionContextProps>({
-  currentConnectionName: null,
-  connectionNameList: [],
+  currentConnectionSlug: null,
+  connectionSlugList: [],
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   addConnectionToList: () => {},
 });

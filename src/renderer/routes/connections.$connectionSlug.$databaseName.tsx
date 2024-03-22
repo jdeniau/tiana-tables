@@ -2,21 +2,21 @@ import { LoaderFunctionArgs, Outlet, Params, redirect } from 'react-router';
 import invariant from 'tiny-invariant';
 
 interface RouteParams extends LoaderFunctionArgs {
-  params: Params<'connectionName' | 'databaseName'>;
+  params: Params<'connectionSlug' | 'databaseName'>;
 }
 
 export async function loader({ params, request }: RouteParams) {
-  const { connectionName, databaseName } = params;
+  const { connectionSlug, databaseName } = params;
 
-  invariant(connectionName, 'Connection name is required');
+  invariant(connectionSlug, 'Connection slug is required');
   invariant(databaseName, 'Database name is required');
 
   const configuration = await window.config.getConfiguration();
 
-  window.config.setActiveDatabase(connectionName, databaseName);
+  window.config.setActiveDatabase(connectionSlug, databaseName);
 
   const { activeTableByDatabase } =
-    configuration.connections[connectionName]?.appState || {};
+    configuration.connections[connectionSlug]?.appState || {};
 
   const openedTable = activeTableByDatabase?.[databaseName];
 
@@ -29,7 +29,7 @@ export async function loader({ params, request }: RouteParams) {
     );
 
     if (needsRedirect) {
-      const expectedUrl = `/connections/${connectionName}/${databaseName}/tables/${openedTable}`;
+      const expectedUrl = `/connections/${connectionSlug}/${databaseName}/tables/${openedTable}`;
 
       return redirect(expectedUrl);
     }

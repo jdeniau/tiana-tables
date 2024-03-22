@@ -6,21 +6,21 @@ import { SQL_CHANNEL } from './sqlChannel';
 
 interface Sql {
   executeQuery<T extends QueryReturnType>(
-    connectionName: string,
+    connectionSlug: string,
     query: string
   ): QueryResult<T>;
   closeAllConnections(): Promise<void>;
   connectionNameChanged(
-    connectionName: string | undefined,
+    connectionSlug: string | undefined,
     databaseName?: string | undefined
   ): void;
 }
 
 export const sql: Sql = {
-  executeQuery: async (connectionName: string, query: string) => {
+  executeQuery: async (connectionSlug: string, query: string) => {
     const { result, error } = await ipcRenderer.invoke(
       SQL_CHANNEL.EXECUTE_QUERY,
-      connectionName,
+      connectionSlug,
       query
     );
 

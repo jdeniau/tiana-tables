@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
 import { dirname } from 'node:path';
 import log from 'electron-log';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
-import { ConnectionObject } from '../sql/types';
+import { ConnectionObject, ConnectionObjectWithoutSlug } from '../sql/types';
 import { getConfigurationPath } from './filePaths';
 import { DEFAULT_THEME } from './themes';
 import {
@@ -11,6 +11,7 @@ import {
   EncryptedConfiguration,
   EncryptedConnectionObject,
 } from './type';
+import { slugify } from './utils';
 
 const configurationPath = getConfigurationPath();
 
@@ -70,8 +71,8 @@ function loadConfiguration(): Configuration {
   return {
     ...config,
     connections: Object.fromEntries(
-      Object.entries(config.connections ?? {}).map(([name, connection]) => [
-        name,
+      Object.entries(config.connections ?? {}).map(([slug, connection]) => [
+        slug,
         decryptConnection(connection),
       ])
     ),
@@ -82,8 +83,8 @@ function writeConfiguration(config: Configuration): void {
   const encryptedConfig = {
     ...config,
     connections: Object.fromEntries(
-      Object.entries(config.connections).map(([name, connection]) => [
-        name,
+      Object.entries(config.connections).map(([slug, connection]) => [
+        slug,
         encryptConnection(connection),
       ])
     ),
@@ -109,7 +110,7 @@ function writeConfiguration(config: Configuration): void {
 }
 
 export function addConnectionToConfig(
-  connection: ConnectionObject
+  connection: ConnectionObjectWithoutSlug
 ): Configuration {
   const config = getConfiguration();
 
@@ -117,7 +118,9 @@ export function addConnectionToConfig(
     config.connections = {};
   }
 
-  config.connections[connection.name] = connection;
+  const slug = slugify(connection.name);
+
+  config.connections[slug] = { ...connection, slug };
 
   writeConfiguration(config);
 
@@ -125,8 +128,8 @@ export function addConnectionToConfig(
 }
 
 export function editConnection(
-  connectionName: string,
-  connection: ConnectionObject
+  oldSlug: string,
+  connection: ConnectionObjectWithoutSlug
 ): Configuration {
   const config = getConfiguration();
 
@@ -134,12 +137,14 @@ export function editConnection(
     config.connections = {};
   }
 
-  if (connectionName !== connection.name) {
-    // if name change, replace the old connection by the new one
-    delete config.connections[connectionName];
+  const newSlug = slugify(connection.name);
+
+  if (oldSlug !== newSlug) {
+    // if slugname change, replace the old connection by the new one
+    delete config.connections[oldSlug];
   }
 
-  config.connections[connection.name] = connection;
+  config.connections[newSlug] = { ...connection, slug: newSlug };
 
   writeConfiguration(config);
 
@@ -153,10 +158,10 @@ export function changeTheme(theme: string): void {
   writeConfiguration(config);
 }
 
-export function setActiveDatabase(connectionName: string, database: string) {
+export function setActiveDatabase(connectionSlug: string, database: string) {
   const config = getConfiguration();
 
-  const connection = config.connections[connectionName];
+  const connection = config.connections[connectionSlug];
 
   if (!connection) {
     return;
@@ -175,13 +180,13 @@ export function setActiveDatabase(connectionName: string, database: string) {
 }
 
 export function setActiveTable(
-  connectionName: string,
+  connectionSlug: string,
   database: string,
   tableName: string
 ) {
   const config = getConfiguration();
 
-  const connection = config.connections[connectionName];
+  const connection = config.connections[connectionSlug];
 
   if (!connection) {
     return;

@@ -20,8 +20,8 @@ const meta: Meta<typeof Nav> = {
     (Story) => (
       <ConnectionContext.Provider
         value={{
-          currentConnectionName: 'production',
-          connectionNameList: ['test', 'production', 'staging', 'development'],
+          currentConnectionSlug: 'production',
+          connectionSlugList: ['test', 'production', 'staging', 'development'],
           addConnectionToList: () => {},
         }}
       >

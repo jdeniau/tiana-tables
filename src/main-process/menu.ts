@@ -77,17 +77,17 @@ export function createMenu(mainWindow: BrowserWindow) {
           accelerator: 'CmdOrCtrl+T',
           enabled: false, // wait for a connection to be selected
           click: () => {
-            const { currentConnectionName, databaseName } =
+            const { currentConnectionSlug, databaseName } =
               connectionStackInstance;
 
-            if (!currentConnectionName || !databaseName) {
+            if (!currentConnectionSlug || !databaseName) {
               // should not happen as the menu item is disabled
               return;
             }
 
             mainWindow.webContents.send(
               'navigate',
-              `/connections/${currentConnectionName}/${databaseName}/sql`
+              `/connections/${currentConnectionSlug}/${databaseName}/sql`
             );
           },
         },
@@ -185,7 +185,7 @@ export function createMenu(mainWindow: BrowserWindow) {
         }
 
         sqlPanelLink.enabled = Boolean(
-          connectionStackInstance.currentConnectionName &&
+          connectionStackInstance.currentConnectionSlug &&
             connectionStackInstance.databaseName
         );
       });

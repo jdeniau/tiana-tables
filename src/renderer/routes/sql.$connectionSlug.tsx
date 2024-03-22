@@ -1,10 +1,10 @@
 import { Button, Flex, Form } from 'antd';
 import { ActionFunctionArgs, useFetcher } from 'react-router-dom';
 import invariant from 'tiny-invariant';
-import { QueryResult } from '../..//sql/types';
 import { useTranslation } from '../../i18n';
 import { SqlError } from '../../sql/errorSerializer';
 import { isSqlError } from '../../sql/isSqlError';
+import { QueryResult } from '../../sql/types';
 import { RawSqlEditor } from '../component/MonacoEditor/RawSqlEditor';
 import RawSqlResult from '../component/Query/RawSqlResult/RowDataPacketResult';
 
@@ -22,9 +22,9 @@ export async function action({
   request,
   params,
 }: ActionFunctionArgs): Promise<SqlActionReturnTypes> {
-  const { databaseName, connectionName } = params;
+  const { databaseName, connectionSlug } = params;
 
-  invariant(connectionName, 'Connection name is required');
+  invariant(connectionSlug, 'Connection slug is required');
   invariant(databaseName, 'Database name is required');
 
   const formData = await request.formData();
@@ -33,8 +33,8 @@ export async function action({
   invariant(typeof query === 'string', 'Query as string is required');
 
   try {
-    await window.sql.executeQuery(connectionName, `USE ${databaseName};`);
-    const result = await window.sql.executeQuery(connectionName, query);
+    await window.sql.executeQuery(connectionSlug, `USE ${databaseName};`);
+    const result = await window.sql.executeQuery(connectionSlug, query);
 
     return { result };
   } catch (error) {

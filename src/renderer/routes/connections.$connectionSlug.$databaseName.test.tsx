@@ -5,10 +5,10 @@ import { redirect } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { Configuration } from '../../configuration/type';
-import { loader } from './connections.$connectionName';
+import { loader } from './connections.$connectionSlug';
 
 function setConfiguration(
-  connectionName: string | undefined,
+  connectionSlug: string | undefined,
   activeDatabase: string | undefined
 ): void {
   const config: Configuration = {
@@ -17,9 +17,10 @@ function setConfiguration(
     connections: {},
   };
 
-  if (connectionName && activeDatabase) {
-    config.connections[connectionName] = {
-      name: connectionName,
+  if (connectionSlug && activeDatabase) {
+    config.connections[connectionSlug] = {
+      name: connectionSlug,
+      slug: connectionSlug,
       host: 'localhost',
       port: 3306,
       user: 'root',
@@ -65,18 +66,18 @@ describe('loader', () => {
   });
 
   test('should redirect to the first database if no database is provided', async () => {
-    const params = { connectionName: 'connectionName' };
+    const params = { connectionSlug: 'connectionSlug' };
 
     setConfiguration(undefined, undefined);
 
     expect(
       await loader({ params, request: new Request('http://localhost') })
-    ).toEqual(redirect('/connections/connectionName/databaseName1'));
+    ).toEqual(redirect('/connections/connectionSlug/databaseName1'));
   });
 
   test('should throw if there is not database (for now)', async () => {
     // TODO handle this case
-    const params = { connectionName: 'connectionName' };
+    const params = { connectionSlug: 'connectionSlug' };
 
     // @ts-expect-error return is OK here, type is too complex or now
     window.sql.executeQuery = vi.fn(() => Promise.resolve([[]]));
@@ -90,9 +91,9 @@ describe('loader', () => {
 
   test('current database is not in the database list', () => {
     // TODO handle this case
-    const params = { connectionName: 'connectionName' };
+    const params = { connectionSlug: 'connectionSlug' };
 
-    setConfiguration('connectionName', 'inexistant');
+    setConfiguration('connectionSlug', 'inexistant');
 
     expect(() =>
       loader({ params, request: new Request('http://localhost') })
@@ -102,25 +103,25 @@ describe('loader', () => {
   });
 
   test('get active database from config', async () => {
-    const params = { connectionName: 'connectionName' };
+    const params = { connectionSlug: 'connectionSlug' };
 
-    setConfiguration('connectionName', 'databaseName2');
+    setConfiguration('connectionSlug', 'databaseName2');
 
     expect(
       await loader({ params, request: new Request('http://localhost') })
-    ).toEqual(redirect('/connections/connectionName/databaseName2'));
+    ).toEqual(redirect('/connections/connectionSlug/databaseName2'));
   });
 
   test('do not redirect if we are already on the right page', async () => {
-    const params = { connectionName: 'connectionName' };
+    const params = { connectionSlug: 'connectionSlug' };
 
-    setConfiguration('connectionName', 'databaseName2');
+    setConfiguration('connectionSlug', 'databaseName2');
 
     expect(
       await loader({
         params,
         request: new Request(
-          'http://localhost/connections/connectionName/databaseName2'
+          'http://localhost/connections/connectionSlug/databaseName2'
         ),
       })
     ).toEqual({
@@ -132,7 +133,7 @@ describe('loader', () => {
   });
 
   test('handle connection name that are url-encoded', async () => {
-    const params = { connectionName: 'connection + name' };
+    const params = { connectionSlug: 'connection + name' };
 
     setConfiguration('connection + name', 'databaseName2');
 

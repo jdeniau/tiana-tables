@@ -60,6 +60,7 @@ function mockExistingConfig(
         user: 'root',
         port: 3306,
         password: Buffer.from('encrypted-password').toString('base64'),
+        slug: 'local',
       },
       prod: {
         name: 'prod',
@@ -67,6 +68,7 @@ function mockExistingConfig(
         user: 'root',
         port: 3306,
         password: Buffer.from('encrypted-password').toString('base64'),
+        slug: 'prod',
       },
     },
   }
@@ -132,6 +134,7 @@ describe('read configuration from file', () => {
           user: 'root',
           port: 3306,
           password: 'password',
+          slug: 'local',
         },
         prod: {
           name: 'prod',
@@ -139,6 +142,7 @@ describe('read configuration from file', () => {
           user: 'root',
           port: 3306,
           password: 'password',
+          slug: 'prod',
         },
       },
     });
@@ -169,6 +173,7 @@ describe('add connection to config', () => {
               user: 'root',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'local',
             },
           },
         },
@@ -238,6 +243,7 @@ describe('add connection to config', () => {
               port: 3306,
               user: 'root',
               password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'test',
             },
           },
         },
@@ -360,6 +366,7 @@ describe('set connection appState', async () => {
           user: 'root',
           port: 3306,
           password: Buffer.from('encrypted-password').toString('base64'),
+          slug: 'local',
         },
         prod: {
           name: 'prod',
@@ -367,6 +374,7 @@ describe('set connection appState', async () => {
           user: 'root',
           port: 3306,
           password: Buffer.from('encrypted-password').toString('base64'),
+          slug: 'prod',
           appState: {
             activeDatabase: 'db',
             activeTableByDatabase: {},
@@ -390,6 +398,7 @@ describe('set connection appState', async () => {
               user: 'root',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'local',
             },
             prod: {
               name: 'prod',
@@ -397,6 +406,7 @@ describe('set connection appState', async () => {
               user: 'root',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'prod',
               appState: {
                 activeDatabase: 'db',
                 activeTableByDatabase: {},
@@ -434,6 +444,7 @@ describe('set connection appState', async () => {
               user: 'root',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'local',
             },
             prod: {
               name: 'prod',
@@ -441,6 +452,7 @@ describe('set connection appState', async () => {
               user: 'root',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'prod',
               appState: {
                 activeDatabase: 'db',
                 activeTableByDatabase: {
@@ -487,6 +499,7 @@ describe('edit', () => {
               user: 'root',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'local',
             },
             prod: {
               name: 'prod',
@@ -494,6 +507,7 @@ describe('edit', () => {
               user: 'root2',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'prod',
             },
           },
         },
@@ -511,15 +525,21 @@ describe('edit', () => {
     mockExistingConfig();
 
     const configuration = editConnection('local', {
-      name: 'local2',
+      name: 'my new local connection',
       host: 'local2',
       user: 'root2',
       port: 3306,
       password: 'password',
     });
 
+    expect(Object.keys(configuration.connections)).toEqual([
+      'prod',
+      'my-new-local-connection',
+    ]);
     expect(configuration.connections.local).toBeUndefined();
-    expect(configuration.connections.local2.host).toBe('local2');
+    expect(configuration.connections['my-new-local-connection'].host).toBe(
+      'local2'
+    );
 
     expect(mockWriteFile).toHaveBeenCalledWith(
       'userData/config/config.json',
@@ -534,13 +554,15 @@ describe('edit', () => {
               user: 'root',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'prod',
             },
-            local2: {
-              name: 'local2',
+            'my-new-local-connection': {
+              name: 'my new local connection',
               host: 'local2',
               user: 'root2',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'my-new-local-connection',
             },
           },
         },

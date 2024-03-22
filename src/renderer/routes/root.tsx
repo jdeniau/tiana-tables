@@ -31,17 +31,17 @@ const Content = styled(Layout.Content)`
 `;
 
 function ToggleRawSqlButton() {
-  const { currentConnectionName } = useConnectionContext();
+  const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const { t } = useTranslation();
 
-  if (!currentConnectionName) {
+  if (!currentConnectionSlug) {
     return null;
   }
 
   return (
     <KeyboardShortcutTooltip cmdOrCtrl pressedKey="t">
-      <ButtonLink to={`/connections/${currentConnectionName}/${database}/sql`}>
+      <ButtonLink to={`/connections/${currentConnectionSlug}/${database}/sql`}>
         {t('sqlPanel.callerButton')}
       </ButtonLink>
     </KeyboardShortcutTooltip>

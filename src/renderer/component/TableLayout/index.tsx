@@ -6,17 +6,17 @@ import { TableLayout } from './TableLayout';
 type Props = { primaryKeys: Array<string> };
 
 function TableLayoutPageContent({ primaryKeys }: Props) {
-  const { currentConnectionName } = useConnectionContext();
+  const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const { tableName } = useParams();
 
-  if (!currentConnectionName || !database || !tableName) {
+  if (!currentConnectionSlug || !database || !tableName) {
     return null;
   }
 
   return (
     <TableLayout
-      key={`${currentConnectionName}|${database}|${tableName}`}
+      key={`${currentConnectionSlug}|${database}|${tableName}`}
       tableName={tableName}
       database={database}
       primaryKeys={primaryKeys}
