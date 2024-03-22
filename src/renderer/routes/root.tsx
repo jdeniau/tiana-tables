@@ -13,6 +13,7 @@ import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
 import Debug from '../component/Debug';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
+import LangSelector from '../component/LangSelector';
 import ThemeSelector from '../component/ThemeSelector';
 import { getSetting } from '../theme';
 import NavigateModalContextProvider from '../useNavigationListener';
@@ -77,9 +78,10 @@ export default function Root() {
 
                 <ConnectionNav />
 
-                <div>
+                <Flex gap="small" align="center">
+                  {t('language.switch.label')} <LangSelector />
                   {t('theme.switch.label')} <ThemeSelector />
-                </div>
+                </Flex>
 
                 <ToggleRawSqlButton />
               </Header>

@@ -3,6 +3,7 @@
  */
 import { redirect } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { DEFAULT_LOCALE } from '../../configuration/locale';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { Configuration } from '../../configuration/type';
 import { loader } from './connections.$connectionSlug';
@@ -14,6 +15,7 @@ function setConfiguration(
   const config: Configuration = {
     version: 1,
     theme: DEFAULT_THEME.name,
+    locale: DEFAULT_LOCALE,
     connections: {},
   };
 

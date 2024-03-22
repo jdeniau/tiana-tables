@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Configuration } from '../configuration/type';
+import { changeLanguage } from '../i18n';
 import { ConnectionObjectWithoutSlug } from '../sql/types';
 
 type ConfigurationContextType = {
@@ -15,6 +16,7 @@ type ConfigurationContextType = {
     database: string,
     tableName: string
   ) => void;
+  changeLanguage: (language: string) => void;
 };
 
 const ConfigurationContext = createContext<null | ConfigurationContextType>(
@@ -32,7 +34,8 @@ export function ConfigurationContextProvider({
   );
 
   useEffect(() => {
-    window.config.getConfiguration().then((c) => {
+    window.config.getConfiguration().then(async (c) => {
+      changeLanguage(c.locale);
       setConfiguration(c);
     });
   }, []);
@@ -60,6 +63,11 @@ export function ConfigurationContextProvider({
       setActiveDatabase: window.config.setActiveDatabase,
       setActiveTable: window.config.setActiveTable,
       editConnection: willChangeConfiguration(window.config.editConnection),
+      changeLanguage: willChangeConfiguration((lang: string) => {
+        changeLanguage(lang);
+
+        return window.config.changeLanguage(lang);
+      }),
     }),
     [configuration]
   );

@@ -99,5 +99,3 @@ root.render(
     <App />
   </React.StrictMode>
 );
-
-// root.render(<div>coucou</div>);

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { Preview } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import { testables } from '../src/contexts/ConfigurationContext';
 import { ThemeContextProvider } from '../src/contexts/ThemeContext';
-import { MemoryRouter } from 'react-router';
+import { changeLanguage } from '../src/i18n';
 import { DEFAULT_THEME, THEME_LIST } from '../src/configuration/themes';
+import { DEFAULT_LOCALE } from '../src/configuration/locale';
 import { getSetting } from '../src/renderer/theme';
 
 const { ConfigurationContext } = testables;
@@ -36,9 +37,23 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    locale: {
+      description: 'Global locale for components',
+      defaultValue: DEFAULT_LOCALE,
+      toolbar: {
+        title: 'Locale',
+        icon: 'globe',
+        items: ['en', 'fr'],
+        dynamicTitle: true,
+      },
+    },
   },
   decorators: [
-    (Story, { globals: { theme } }) => {
+    (Story, { globals: { theme, locale } }) => {
+      useEffect(() => {
+        changeLanguage(locale);
+      }, [locale]);
+
       return (
         <ConfigurationContext.Provider
           // weirdly needed to force storybook to re-render
@@ -47,6 +62,7 @@ const preview: Preview = {
             configuration: {
               version: 1,
               theme,
+              locale,
               connections: {},
             },
             addConnectionToConfig: (connection) => {
