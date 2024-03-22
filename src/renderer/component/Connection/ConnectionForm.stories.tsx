@@ -35,6 +35,9 @@ const meta: Meta<typeof ConnectionForm> = {
           editConnection: (name, connection) => {
             action('editConnection')(name, connection);
           },
+          changeLanguage: (language) => {
+            action('changeLanguage')(language);
+          },
         }}
       >
         <Story />

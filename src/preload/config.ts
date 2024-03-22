@@ -12,6 +12,8 @@ interface Config {
 
   changeTheme(theme: string): void;
 
+  changeLanguage(language: string): Promise<Configuration>;
+
   setActiveDatabase(connectionSlug: string, value: string): Promise<void>;
 
   setActiveTable(
@@ -30,6 +32,7 @@ export const config: Config = {
   getConfiguration: bindChannel(CONFIGURATION_CHANNEL.GET),
   addConnectionToConfig: bindChannel(CONFIGURATION_CHANNEL.ADD_CONNECTION),
   changeTheme: bindChannel(CONFIGURATION_CHANNEL.CHANGE_THEME),
+  changeLanguage: bindChannel(CONFIGURATION_CHANNEL.CHANGE_LANGUAGE),
   setActiveDatabase: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE),
   setActiveTable: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE),
   editConnection: bindChannel(CONFIGURATION_CHANNEL.EDIT_CONNECTION),

@@ -1,9 +1,11 @@
 import { existsSync, readFileSync, writeFile } from 'node:fs';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { DEFAULT_LOCALE } from './locale';
 import { DEFAULT_THEME } from './themes';
 import { Configuration } from './type';
 import {
   addConnectionToConfig,
+  changeLanguage,
   changeTheme,
   editConnection,
   getConfiguration,
@@ -11,7 +13,6 @@ import {
   setActiveTable,
   testables,
 } from '.';
-import { DEFAULT_LOCALE } from './locale';
 
 const { getBaseConfig, resetConfiguration } = testables;
 
@@ -130,6 +131,7 @@ describe('read configuration from file', () => {
     expect(getConfiguration()).toStrictEqual({
       version: 1,
       theme: DEFAULT_THEME.name,
+      locale: DEFAULT_LOCALE,
       connections: {
         local: {
           name: 'local',
@@ -168,7 +170,8 @@ describe('add connection to config', () => {
       JSON.stringify(
         {
           version: 1,
-          theme: 'Dracula',
+          theme: DEFAULT_THEME.name,
+          locale: DEFAULT_LOCALE,
           connections: {
             local: {
               name: 'local',
@@ -273,6 +276,7 @@ describe('set theme', () => {
         {
           version: 1,
           theme: 'test',
+          locale: DEFAULT_LOCALE,
           connections: {},
         },
         null,
@@ -339,6 +343,32 @@ describe('set theme', () => {
   });
 });
 
+describe('language', () => {
+  test('change language', async () => {
+    mockExistsSync.mockReturnValue(false);
+
+    const newConfiguration = await changeLanguage('fr');
+
+    expect(newConfiguration.locale).toBe('fr');
+
+    expect(mockWriteFile).toHaveBeenCalledWith(
+      'userData/config/config.json',
+      JSON.stringify(
+        {
+          version: 1,
+          theme: DEFAULT_THEME.name,
+          locale: 'fr',
+          connections: {},
+        },
+        null,
+        2
+      ),
+      'utf-8',
+      expect.any(Function)
+    );
+  });
+});
+
 describe('set connection appState', async () => {
   test('empty file', async () => {
     mockExistsSync.mockReturnValue(false);
@@ -396,6 +426,7 @@ describe('set connection appState', async () => {
         {
           version: 1,
           theme: DEFAULT_THEME.name,
+          locale: DEFAULT_LOCALE,
           connections: {
             local: {
               name: 'local',
@@ -442,6 +473,7 @@ describe('set connection appState', async () => {
         {
           version: 1,
           theme: DEFAULT_THEME.name,
+          locale: DEFAULT_LOCALE,
           connections: {
             local: {
               name: 'local',
@@ -497,6 +529,7 @@ describe('edit', () => {
         {
           version: 1,
           theme: DEFAULT_THEME.name,
+          locale: DEFAULT_LOCALE,
           connections: {
             local: {
               name: 'local',
@@ -552,6 +585,7 @@ describe('edit', () => {
         {
           version: 1,
           theme: DEFAULT_THEME.name,
+          locale: DEFAULT_LOCALE,
           connections: {
             prod: {
               name: 'prod',

@@ -160,6 +160,15 @@ export function changeTheme(theme: string): void {
   writeConfiguration(config);
 }
 
+export function changeLanguage(language: string): Configuration {
+  const config = getConfiguration();
+  config.locale = language;
+
+  writeConfiguration(config);
+
+  return config;
+}
+
 export function setActiveDatabase(connectionSlug: string, database: string) {
   const config = getConfiguration();
 
@@ -214,6 +223,7 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.ADD_CONNECTION]: addConnectionToConfig,
   [CONFIGURATION_CHANNEL.EDIT_CONNECTION]: editConnection,
   [CONFIGURATION_CHANNEL.CHANGE_THEME]: changeTheme,
+  [CONFIGURATION_CHANNEL.CHANGE_LANGUAGE]: changeLanguage,
   [CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE]: setActiveDatabase,
   [CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE]: setActiveTable,
 } as const;

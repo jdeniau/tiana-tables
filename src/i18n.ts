@@ -2,6 +2,7 @@ import i18n, { changeLanguage, t } from 'i18next';
 import { initReactI18next, useTranslation } from 'react-i18next';
 import en from '../locales/en';
 import fr from '../locales/fr';
+import { DEFAULT_LOCALE } from './configuration/locale';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -28,7 +29,7 @@ i18n
     // or even better, manage them via a UI: https://react.i18next.com/guides/multiple-translation-files#manage-your-translations-with-a-management-gui)
     resources,
     // lng: 'en', // if you're using a language detector, do not define the lng option
-    fallbackLng: 'en',
+    fallbackLng: DEFAULT_LOCALE,
 
     interpolation: {
       escapeValue: false, // react already safes from xss => https://www.i18next.com/translation-function/interpolation#unescape
