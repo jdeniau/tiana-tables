@@ -33,24 +33,18 @@ updateElectronApp({
 const createWindow = () => {
   const configuration = getConfiguration();
 
+  // create handle that will manage the window size state
   const mainWindowStateHandler = new WindowStateKeeper(
     configuration.windowState,
     saveWindowState
   );
 
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: mainWindowStateHandler.width,
-    height: mainWindowStateHandler.height,
-    x: mainWindowStateHandler.x,
-    y: mainWindowStateHandler.y,
+  const mainWindow = mainWindowStateHandler.createBrowserWindow({
     icon: 'images/icons/icon.png',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
-
-  mainWindowStateHandler.manage(mainWindow);
 
   Menu.setApplicationMenu(createMenu(mainWindow));
 

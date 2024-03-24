@@ -1,15 +1,19 @@
 // Imported from https://github.com/mawie81/electron-window-state
 // without the part that saves the window state to a file
 
-import { BrowserWindow, screen } from 'electron';
+import {
+  BrowserWindow,
+  BrowserWindowConstructorOptions,
+  screen,
+} from 'electron';
 
 const EVENT_HANDLING_DELAY = 100;
 
 const DEFAULT_STATE: WindowState = {
   width: 1024,
   height: 768,
-  x: 0,
-  y: 0,
+  x: undefined,
+  y: undefined,
 };
 
 export type WindowState = {
@@ -21,11 +25,6 @@ export type WindowState = {
   isMaximized?: boolean | undefined;
   isFullScreen?: boolean | undefined;
 };
-
-// type WindowStateWithXY = WindowState & {
-//   x: number;
-//   y: number;
-// };
 
 type SaveWindowStateFunction = (state: WindowState) => void;
 
@@ -207,6 +206,22 @@ export default class WindowStateKeeper {
     this.#winRef.removeListener('close', this.closeHandler);
     this.#winRef.removeListener('closed', this.closedHandler);
     this.#winRef = undefined;
+  }
+
+  createBrowserWindow(
+    options?: BrowserWindowConstructorOptions
+  ): BrowserWindow {
+    const window = new BrowserWindow({
+      width: this.width,
+      height: this.height,
+      x: this.x,
+      y: this.y,
+      ...options,
+    });
+
+    this.manage(window);
+
+    return window;
   }
 
   get x() {
