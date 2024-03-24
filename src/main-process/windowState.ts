@@ -164,11 +164,9 @@ export default class WindowStateKeeper {
     // Handles both 'resize' and 'move'
     if (this.#stateChangeTimer) {
       clearTimeout(this.#stateChangeTimer);
-      this.#stateChangeTimer = setTimeout(
-        this.updateState,
-        EVENT_HANDLING_DELAY
-      );
     }
+
+    this.#stateChangeTimer = setTimeout(this.updateState, EVENT_HANDLING_DELAY);
   }
 
   closeHandler(): void {
