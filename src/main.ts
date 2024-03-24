@@ -11,7 +11,7 @@ import { getLogPath } from './configuration/filePaths';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
 import { installReactDevToolsExtension } from './main-process/installReactDevToolsExtension';
 import { createMenu } from './main-process/menu';
-import windowStateKeeper from './main-process/windowState';
+import WindowStateKeeper from './main-process/windowState';
 import connectionStackInstance from './sql';
 
 const isMac = isMacPlatform();
@@ -33,19 +33,9 @@ updateElectronApp({
 const createWindow = () => {
   const configuration = getConfiguration();
 
-  const mainWindowStateHandler = windowStateKeeper(
-    configuration.windowState ?? {
-      width: 1024,
-      height: 768,
-      x: 0,
-      y: 0,
-    }
-  );
-
-  console.log(
-    'mainWindowStateHandler',
-    mainWindowStateHandler,
-    configuration.windowState
+  const mainWindowStateHandler = new WindowStateKeeper(
+    configuration.windowState,
+    saveWindowState
   );
 
   // Create the browser window.
