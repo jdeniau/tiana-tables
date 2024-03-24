@@ -1,5 +1,6 @@
 // Imported from https://github.com/mawie81/electron-window-state
 // without the part that saves the window state to a file
+// and modified a lot
 
 import {
   BrowserWindow,
@@ -52,12 +53,6 @@ export default class WindowStateKeeper {
     this.closeHandler = this.closeHandler.bind(this);
     this.closedHandler = this.closedHandler.bind(this);
   }
-
-  //   const config = {
-  //     maximize: true,
-  //     fullScreen: true,
-  //     ...options,
-  //   };
 
   isNormal(win: BrowserWindow): boolean {
     return !win.isMaximized() && !win.isMinimized() && !win.isFullScreen();
@@ -144,20 +139,9 @@ export default class WindowStateKeeper {
     }
   }
 
-  saveState(/* win?: BrowserWindow */): void {
-    // Update window this.state only if it was provided
-    // if (win) {
-    //   this.updateState(win);
-    // }
-
+  saveState(): void {
     // Save this.state
     this.#saveWindowState(this.#state);
-    // try {
-    //   mkdirp.sync(path.dirname(fullStoreFileName));
-    //   jsonfile.writeFileSync(fullStoreFileName, this.state);
-    // } catch (err) {
-    //   // Don't care
-    // }
   }
 
   stateChangeHandler(): void {
@@ -237,20 +221,4 @@ export default class WindowStateKeeper {
   get height() {
     return this.#state.height;
   }
-
-  // get displayBounds() {
-  //   return this.state.displayBounds;
-  // },
-  // get isMaximized() {
-  //   return this.#state.isMaximized;
-  // }
-
-  // get isFullScreen() {
-  //   return this.#state.isFullScreen;
-  // }
-
-  //   // this.saveState,
-  //   // this.unmanage,
-  //   manage,
-  //   // this.resetStateToDefault,
 }
