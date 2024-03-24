@@ -2,6 +2,7 @@ import { dialog, safeStorage } from 'electron';
 import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
 import { dirname } from 'node:path';
 import log from 'electron-log';
+import { WindowState } from '../main-process/windowState';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
 import { ConnectionObject, ConnectionObjectWithoutSlug } from '../sql/types';
 import { getConfigurationPath } from './filePaths';
@@ -214,6 +215,14 @@ export function setActiveTable(
     ...connection.appState.activeTableByDatabase,
     [database]: tableName,
   };
+
+  writeConfiguration(config);
+}
+
+export function saveWindowState(windowState: WindowState): void {
+  const config = getConfiguration();
+
+  config.windowState = windowState;
 
   writeConfiguration(config);
 }

@@ -1,3 +1,4 @@
+import { WindowState } from '../main-process/windowState';
 import { ConnectionObject } from '../sql/types';
 
 export type Configuration = {
@@ -5,6 +6,7 @@ export type Configuration = {
   theme: string;
   locale: string;
   connections: Record<string, EncryptedConnectionObject>;
+  windowState?: WindowState;
 };
 
 type ConnectionAppState = {

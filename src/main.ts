@@ -2,11 +2,16 @@ import { BrowserWindow, Menu, app, ipcMain, session } from 'electron';
 import path from 'node:path';
 import log from 'electron-log/main';
 import { updateElectronApp } from 'update-electron-app';
-import { bindIpcMain as bindIpcMainConfiguration } from './configuration';
+import {
+  bindIpcMain as bindIpcMainConfiguration,
+  getConfiguration,
+  saveWindowState,
+} from './configuration';
 import { getLogPath } from './configuration/filePaths';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
 import { installReactDevToolsExtension } from './main-process/installReactDevToolsExtension';
 import { createMenu } from './main-process/menu';
+import windowStateKeeper from './main-process/windowState';
 import connectionStackInstance from './sql';
 
 const isMac = isMacPlatform();
@@ -26,15 +31,36 @@ updateElectronApp({
 });
 
 const createWindow = () => {
+  const configuration = getConfiguration();
+
+  const mainWindowStateHandler = windowStateKeeper(
+    configuration.windowState ?? {
+      width: 1024,
+      height: 768,
+      x: 0,
+      y: 0,
+    }
+  );
+
+  console.log(
+    'mainWindowStateHandler',
+    mainWindowStateHandler,
+    configuration.windowState
+  );
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    width: mainWindowStateHandler.width,
+    height: mainWindowStateHandler.height,
+    x: mainWindowStateHandler.x,
+    y: mainWindowStateHandler.y,
     icon: 'images/icons/icon.png',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+
+  mainWindowStateHandler.manage(mainWindow);
 
   Menu.setApplicationMenu(createMenu(mainWindow));
 
