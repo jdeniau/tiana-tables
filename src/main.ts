@@ -2,11 +2,16 @@ import { BrowserWindow, Menu, app, ipcMain, session } from 'electron';
 import path from 'node:path';
 import log from 'electron-log/main';
 import { updateElectronApp } from 'update-electron-app';
-import { bindIpcMain as bindIpcMainConfiguration } from './configuration';
+import {
+  bindIpcMain as bindIpcMainConfiguration,
+  getConfiguration,
+  saveWindowState,
+} from './configuration';
 import { getLogPath } from './configuration/filePaths';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
 import { installReactDevToolsExtension } from './main-process/installReactDevToolsExtension';
 import { createMenu } from './main-process/menu';
+import WindowStateKeeper from './main-process/windowState';
 import connectionStackInstance from './sql';
 
 const isMac = isMacPlatform();
@@ -26,10 +31,15 @@ updateElectronApp({
 });
 
 const createWindow = () => {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 1024,
-    height: 768,
+  const configuration = getConfiguration();
+
+  // create handle that will manage the window size state
+  const mainWindowStateHandler = new WindowStateKeeper(
+    configuration.windowState,
+    saveWindowState
+  );
+
+  const mainWindow = mainWindowStateHandler.createBrowserWindow({
     icon: 'images/icons/icon.png',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
