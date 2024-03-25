@@ -11,25 +11,27 @@ export default function ThemeSelector() {
       popupMatchSelectWidth={false}
       onChange={changeTheme}
       value={themeName}
-      options={Object.keys(THEME_LIST).map((key) => ({
-        value: key,
-        label: (
-          <>
-            <span
-              style={{
-                background: getSetting(THEME_LIST[key], 'background'),
-                color: getSetting(THEME_LIST[key], 'selection'),
-                marginRight: 4,
-                padding: '0 5px 0 4px',
-                borderRadius: 2,
-              }}
-            >
-              𝅘𝅥𝅯
-            </span>
-            {key}
-          </>
-        ),
-      }))}
+      options={Object.keys(THEME_LIST)
+        .sort((a, b) => a.localeCompare(b))
+        .map((key) => ({
+          value: key,
+          label: (
+            <>
+              <span
+                style={{
+                  background: getSetting(THEME_LIST[key], 'background'),
+                  color: getSetting(THEME_LIST[key], 'selection'),
+                  marginRight: 4,
+                  padding: '0 5px 0 4px',
+                  borderRadius: 2,
+                }}
+              >
+                𝅘𝅥𝅯
+              </span>
+              {key}
+            </>
+          ),
+        }))}
     />
   );
 }
