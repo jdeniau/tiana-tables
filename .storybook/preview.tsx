@@ -65,6 +65,9 @@ const preview: Preview = {
               locale,
               connections: {},
             },
+            changeLanguage: (newLocale) => {
+              action('changeLanguage')(newLocale);
+            },
             addConnectionToConfig: (connection) => {
               action('addConnectionToConfig')(connection);
             },

@@ -25,11 +25,8 @@ export default function Nav(): ReactElement | null {
   }
 
   const items = Array.from(connectionSlugList).map((connectionSlug) => {
-    if (!configuration.connections[connectionSlug]) {
-      return null;
-    }
-
-    const connectionName = configuration.connections[connectionSlug].name;
+    const connectionName =
+      configuration.connections[connectionSlug]?.name || connectionSlug;
 
     return {
       key: connectionSlug,
