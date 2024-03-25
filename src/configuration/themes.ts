@@ -1,6 +1,7 @@
 import * as NightOwl from '../renderer/theme/Night Owl.tmTheme.json';
 import * as active4d from '../renderer/theme/active4d.json';
 import * as base16Eva from '../renderer/theme/base16-eva.tmTheme.json';
+import * as base16UnikittyLight from '../renderer/theme/base16-unikitty-light.tmTheme.json';
 import * as dracula from '../renderer/theme/dracula.json';
 import * as visualStudio from '../renderer/theme/visualStudio.json';
 
@@ -16,6 +17,7 @@ const THEME_LIST_AS_ARRAY: TmTheme[] = [
   active4d,
   NightOwl,
   base16Eva,
+  base16UnikittyLight,
 ] as const;
 
 const DARK_THEME_LIST_NAME = [dracula.name, NightOwl.name, base16Eva.name];

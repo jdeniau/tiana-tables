@@ -17,7 +17,12 @@ const BaseCell = styled.div`
 `;
 
 const NullSpan = styled(BaseCell)`
-  color: ${(props) => getColor(props.theme, 'constant.language', 'foreground')};
+  color: ${(props) =>
+    getColor(
+      props.theme,
+      ['constant.language.null', 'constant.language'],
+      'foreground'
+    )};
 `;
 
 function NullCell() {

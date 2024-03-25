@@ -443,6 +443,288 @@ exports[`convertTextmateThemeToMonaco > should convert Base16 Eva theme to Monac
 }
 `;
 
+exports[`convertTextmateThemeToMonaco > should convert Base16 Unikitty Light theme to Monaco theme 1`] = `
+{
+  "base": "vs",
+  "colors": {
+    "editor.background": "#ffffff",
+    "editor.foreground": "#6c696e",
+    "editor.lineHighlightBackground": "#a7a5a855",
+    "editor.selectionBackground": "#c4c3c5",
+    "editorCursor.foreground": "#6c696e",
+    "editorWhitespace.foreground": "#a7a5a8",
+  },
+  "inherit": true,
+  "rules": [
+    {
+      "foreground": "6c696e",
+      "token": "variable.parameter.function",
+    },
+    {
+      "foreground": "a7a5a8",
+      "token": "comment",
+    },
+    {
+      "foreground": "a7a5a8",
+      "token": "punctuation.definition.comment",
+    },
+    {
+      "foreground": "6c696e",
+      "token": "punctuation.definition.string",
+    },
+    {
+      "foreground": "6c696e",
+      "token": "punctuation.definition.variable",
+    },
+    {
+      "foreground": "6c696e",
+      "token": "punctuation.definition.string",
+    },
+    {
+      "foreground": "6c696e",
+      "token": "punctuation.definition.parameters",
+    },
+    {
+      "foreground": "6c696e",
+      "token": "punctuation.definition.string",
+    },
+    {
+      "foreground": "6c696e",
+      "token": "punctuation.definition.array",
+    },
+    {
+      "foreground": "6c696e",
+      "token": "none",
+    },
+    {
+      "foreground": "6c696e",
+      "token": "keyword.operator",
+    },
+    {
+      "foreground": "aa17e6",
+      "token": "keyword",
+    },
+    {
+      "foreground": "d8137f",
+      "token": "variable",
+    },
+    {
+      "foreground": "775dff",
+      "token": "entity.name.function",
+    },
+    {
+      "foreground": "775dff",
+      "token": "meta.require",
+    },
+    {
+      "foreground": "775dff",
+      "token": "support.function.any-method",
+    },
+    {
+      "foreground": "dc8a0e",
+      "token": "support.class",
+    },
+    {
+      "foreground": "dc8a0e",
+      "token": "entity.name.class",
+    },
+    {
+      "foreground": "dc8a0e",
+      "token": "entity.name.type.class",
+    },
+    {
+      "foreground": "322d34",
+      "token": "meta.class",
+    },
+    {
+      "foreground": "775dff",
+      "token": "keyword.other.special-method",
+    },
+    {
+      "foreground": "aa17e6",
+      "token": "storage",
+    },
+    {
+      "foreground": "149bda",
+      "token": "support.function",
+    },
+    {
+      "foreground": "149bda",
+      "token": "support.type",
+    },
+    {
+      "foreground": "17ad98",
+      "token": "string",
+    },
+    {
+      "foreground": "17ad98",
+      "token": "constant.other.symbol",
+    },
+    {
+      "foreground": "17ad98",
+      "token": "entity.other.inherited-class",
+    },
+    {
+      "foreground": "d65407",
+      "token": "constant.numeric",
+    },
+    {
+      "foreground": "d65407",
+      "token": "none",
+    },
+    {
+      "foreground": "d65407",
+      "token": "none",
+    },
+    {
+      "foreground": "d65407",
+      "token": "constant",
+    },
+    {
+      "foreground": "d65407",
+      "token": "constant.language",
+    },
+    {
+      "foreground": "d8137f",
+      "token": "entity.name.tag",
+    },
+    {
+      "foreground": "d65407",
+      "token": "entity.other.attribute-name",
+    },
+    {
+      "foreground": "775dff",
+      "token": "entity.other.attribute-name.id",
+    },
+    {
+      "foreground": "775dff",
+      "token": "punctuation.definition.entity",
+    },
+    {
+      "foreground": "aa17e6",
+      "token": "meta.selector",
+    },
+    {
+      "foreground": "d65407",
+      "token": "none",
+    },
+    {
+      "foreground": "775dff",
+      "token": "markup.heading punctuation.definition.heading",
+    },
+    {
+      "foreground": "775dff",
+      "token": "entity.name.section",
+    },
+    {
+      "foreground": "d65407",
+      "token": "keyword.other.unit",
+    },
+    {
+      "fontStyle": "bold",
+      "foreground": "dc8a0e",
+      "token": "markup.bold",
+    },
+    {
+      "fontStyle": "bold",
+      "foreground": "dc8a0e",
+      "token": "punctuation.definition.bold",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "aa17e6",
+      "token": "markup.italic",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "aa17e6",
+      "token": "punctuation.definition.italic",
+    },
+    {
+      "foreground": "17ad98",
+      "token": "markup.raw.inline",
+    },
+    {
+      "foreground": "d8137f",
+      "token": "string.other.link",
+    },
+    {
+      "foreground": "d8137f",
+      "token": "punctuation.definition.string.end.markdown",
+    },
+    {
+      "foreground": "d65407",
+      "token": "meta.link",
+    },
+    {
+      "foreground": "d8137f",
+      "token": "markup.list",
+    },
+    {
+      "foreground": "d65407",
+      "token": "markup.quote",
+    },
+    {
+      "background": "c4c3c5",
+      "foreground": "6c696e",
+      "token": "meta.separator",
+    },
+    {
+      "foreground": "17ad98",
+      "token": "markup.inserted",
+    },
+    {
+      "foreground": "d8137f",
+      "token": "markup.deleted",
+    },
+    {
+      "foreground": "aa17e6",
+      "token": "markup.changed",
+    },
+    {
+      "foreground": "149bda",
+      "token": "constant.other.color",
+    },
+    {
+      "foreground": "149bda",
+      "token": "string.regexp",
+    },
+    {
+      "foreground": "149bda",
+      "token": "constant.character.escape",
+    },
+    {
+      "foreground": "aa17e6",
+      "token": "punctuation.section.embedded",
+    },
+    {
+      "foreground": "aa17e6",
+      "token": "variable.interpolation",
+    },
+    {
+      "background": "d8137f",
+      "foreground": "322d34",
+      "token": "invalid.illegal",
+    },
+    {
+      "background": "d65407",
+      "foreground": "ffffff",
+      "token": "invalid.broken",
+    },
+    {
+      "background": "e013d0",
+      "foreground": "322d34",
+      "token": "invalid.deprecated",
+    },
+    {
+      "background": "a7a5a8",
+      "foreground": "322d34",
+      "token": "invalid.unimplemented",
+    },
+  ],
+}
+`;
+
 exports[`convertTextmateThemeToMonaco > should convert Dracula theme to Monaco theme 1`] = `
 {
   "base": "vs-dark",

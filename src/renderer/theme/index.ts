@@ -7,20 +7,30 @@ import {
 
 export function getColor(
   currentTheme: TmTheme,
-  scopeToFind: string,
+  scopeToFind: string | Array<string>,
   settingToFind: string
 ): string | undefined {
-  const item = currentTheme.settings
-    .filter(isScopedSetting)
-    .find(({ scope }: TmThemeScopedSetting) => {
-      if (Array.isArray(scope)) {
-        return scope.includes(scopeToFind);
-      }
-      return scope === scopeToFind;
-    });
+  const scopeToFindArray = Array.isArray(scopeToFind)
+    ? scopeToFind
+    : [scopeToFind];
+
+  let item;
+
+  for (const innerScopeToFind of scopeToFindArray) {
+    item = currentTheme.settings
+      .filter(isScopedSetting)
+      .find(({ scope }: TmThemeScopedSetting) => {
+        if (Array.isArray(scope)) {
+          return scope.includes(innerScopeToFind);
+        }
+        return scope === innerScopeToFind;
+      });
+  }
 
   if (!item) {
-    throw new Error(`color not found for scope "${scopeToFind}"`);
+    throw new Error(
+      `color not found for scope "${scopeToFindArray.join(', ')}"`
+    );
   }
 
   return item.settings[settingToFind];
