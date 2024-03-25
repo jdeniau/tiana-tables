@@ -81,6 +81,15 @@ export function ThemeContextProvider({
           colorLink: getColor(theme, 'support.type', 'foreground'),
           algorithm: true,
         },
+        Menu: {
+          itemHeight: 32,
+          itemColor: getColor(theme, 'support.type', 'foreground'),
+          padding: 8, // reduce default padding from 16 to 8
+
+          // swap colors for selected item
+          itemSelectedBg: getColor(theme, 'support.type', 'foreground'),
+          itemSelectedColor: getSetting(theme, 'background'),
+        },
       },
     }),
     [theme]

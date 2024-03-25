@@ -16,8 +16,12 @@ export function useTableHeight(): [number, React.RefObject<HTMLDivElement>] {
         const tableHeaderHeight =
           tableHeader?.getBoundingClientRect().height ?? 0;
 
+        const titleHeader =
+          resizeRef.current?.querySelector('.ant-table-title');
+        const titleHeight = titleHeader?.getBoundingClientRect().height ?? 0;
+
         // I don't know why we need to subtract 1 from the height, but if not, the div will have a scrollbar
-        setYTableScroll(divHeight - tableHeaderHeight - 1);
+        setYTableScroll(divHeight - tableHeaderHeight - titleHeight - 1);
       }),
     []
   );
