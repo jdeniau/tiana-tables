@@ -14,6 +14,9 @@ import DatabaseDetailPage, {
 import TableNamePage, {
   loader as tableNamePageLoader,
 } from './routes/connections.$connectionSlug.$databaseName.$tableName';
+import TableStructure, {
+  loader as tableStructureLoader,
+} from './routes/connections.$connectionSlug.$databaseName.$tableName.structure';
 import ConnectionErrorPage from './routes/errors/ConnectionsErrorPage';
 import RootErrorPage from './routes/errors/RootErrorPage';
 import { Home } from './routes/home';
@@ -74,8 +77,18 @@ const router = createHashRouter([
             children: [
               {
                 path: 'tables/:tableName',
-                loader: tableNamePageLoader,
-                element: <TableNamePage />,
+                children: [
+                  {
+                    index: true,
+                    loader: tableNamePageLoader,
+                    element: <TableNamePage />,
+                  },
+                  {
+                    path: 'structure',
+                    loader: tableStructureLoader,
+                    element: <TableStructure />,
+                  },
+                ],
               },
               {
                 path: 'sql',

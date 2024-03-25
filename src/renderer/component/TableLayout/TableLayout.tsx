@@ -1,8 +1,10 @@
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Button, Flex } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
+import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
 import { useTranslation } from '../../../i18n';
+import ButtonLink from '../ButtonLink';
 import WhereFilter from '../Query/WhereFilter';
 import TableGrid from '../TableGrid';
 
@@ -19,6 +21,7 @@ export function TableLayout({
   primaryKeys,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
+  const { currentConnectionSlug } = useConnectionContext();
   const { executeQuery } = useDatabaseContext();
   const [result, setResult] = useState<null | RowDataPacket[]>(null);
   const [fields, setFields] = useState<null | FieldPacket[]>(null);
@@ -72,7 +75,17 @@ export function TableLayout({
         fields={fields}
         result={result}
         primaryKeys={primaryKeys}
-        title={() => tableName}
+        title={() => (
+          <>
+            {tableName}
+            <ButtonLink
+              style={{ marginLeft: '1em' }}
+              to={`/connections/${currentConnectionSlug}/${database}/tables/${tableName}/structure`}
+            >
+              STRUCTURE
+            </ButtonLink>
+          </>
+        )}
       />
 
       <Flex justify="center" align="center">

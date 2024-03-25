@@ -23,6 +23,8 @@ export async function loader({ params }: RouteParams) {
     `SHOW KEYS FROM ${databaseName}.${tableName} WHERE Key_name = 'PRIMARY';`
   );
 
+  console.log(result);
+
   const primaryKeys = result.map((row) => row.Column_name);
 
   window.config.setActiveTable(connectionSlug, databaseName, tableName);
