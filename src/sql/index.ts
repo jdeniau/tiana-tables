@@ -1,5 +1,6 @@
 import log from 'electron-log';
 import { Connection, createConnection } from 'mysql2/promise';
+import invariant from 'tiny-invariant';
 import { getConfiguration } from '../configuration';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import { QueryResultOrError, encodeError } from './errorSerializer';
@@ -15,6 +16,7 @@ class ConnectionStack {
   // List of IPC events and their handlers
   #ipcMainHandler = {
     [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQueryAndRetry,
+    [SQL_CHANNEL.GET_FOREIGN_KEYS]: this.getForeignKeys,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
 
@@ -46,6 +48,27 @@ class ConnectionStack {
         handler.bind(this)(...args)
       );
     }
+  }
+
+  async getForeignKeys(tableName: string): QueryResultOrError {
+    invariant(this.#databaseName, 'Database name is required');
+    invariant(this.#currentConnectionSlug, 'Connection slug is required');
+
+    const query = `
+      SELECT
+        TABLE_NAME,
+        COLUMN_NAME,
+        CONSTRAINT_NAME,
+        REFERENCED_TABLE_NAME,
+        REFERENCED_COLUMN_NAME
+      FROM
+        INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+      WHERE
+        TABLE_SCHEMA = '${this.#databaseName}' AND
+        TABLE_NAME = '${tableName}' 
+    `;
+
+    return this.executeQueryAndRetry(this.#currentConnectionSlug, query);
   }
 
   async executeQueryAndRetry(
