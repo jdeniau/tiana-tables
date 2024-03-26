@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
 import { Menu, MenuProps } from 'antd';
-import { NavLink, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import {
@@ -24,11 +24,11 @@ export default function TableList(): ReactElement | null {
     (rowDataPacket: TableStatusRow) => ({
       key: rowDataPacket.Name,
       label: (
-        <NavLink
+        <Link
           to={`/connections/${currentConnectionSlug}/${database}/tables/${rowDataPacket.Name}`}
         >
           {rowDataPacket.Name}
-        </NavLink>
+        </Link>
       ),
       title: rowDataPacket.Name,
     })
