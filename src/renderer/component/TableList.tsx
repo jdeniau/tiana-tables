@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
 import { Menu, MenuProps } from 'antd';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import {
@@ -14,6 +14,7 @@ export default function TableList(): ReactElement | null {
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const tableStatusList = useTableStatusList();
+  const { tableName } = useParams();
 
   if (!tableStatusList) {
     return null;
@@ -33,5 +34,7 @@ export default function TableList(): ReactElement | null {
     })
   );
 
-  return <Menu items={items} />;
+  return (
+    <Menu items={items} selectedKeys={tableName ? [tableName] : undefined} />
+  );
 }
