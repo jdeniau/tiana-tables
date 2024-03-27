@@ -5,7 +5,11 @@ import { getConfiguration } from '../configuration';
 import { KeyColumnUsageRow, ShowKeyRow } from '../preload/sql';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import { QueryResultOrError, encodeError } from './errorSerializer';
-import { ConnectionObject, QueryReturnType } from './types';
+import {
+  ConnectionObject,
+  QueryReturnType,
+  ShowDatabasesResult,
+} from './types';
 
 class ConnectionStack {
   #connections: Map<string, Connection> = new Map();
@@ -19,6 +23,7 @@ class ConnectionStack {
     [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQueryAndRetry,
     [SQL_CHANNEL.GET_FOREIGN_KEYS]: this.getForeignKeys,
     [SQL_CHANNEL.GET_PRIMARY_KEYS]: this.getPrimaryKeys,
+    [SQL_CHANNEL.SHOW_DATABASES]: this.showDatabases,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
 
@@ -89,6 +94,15 @@ class ConnectionStack {
     return this.executeQueryAndRetry<ShowKeyRow[]>(
       this.#currentConnectionSlug,
       query
+    );
+  }
+
+  async showDatabases(): QueryResultOrError<ShowDatabasesResult> {
+    invariant(this.#currentConnectionSlug, 'Connection slug is required');
+
+    return this.executeQueryAndRetry<ShowDatabasesResult>(
+      this.#currentConnectionSlug,
+      'SHOW DATABASES'
     );
   }
 

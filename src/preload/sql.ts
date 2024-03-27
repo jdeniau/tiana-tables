@@ -1,7 +1,11 @@
 import { ipcRenderer } from 'electron';
 import { RowDataPacket } from 'mysql2';
 import { decodeError } from '../sql/errorSerializer';
-import type { QueryResult, QueryReturnType } from '../sql/types';
+import type {
+  QueryResult,
+  QueryReturnType,
+  ShowDatabasesResult,
+} from '../sql/types';
 import { bindChannel, bindEvent } from './bindChannel';
 import { SQL_CHANNEL } from './sqlChannel';
 
@@ -28,6 +32,7 @@ interface Sql {
     databaseName?: string | undefined
   ): void;
   getForeignKeys(tableName: string): QueryResult<KeyColumnUsageRow[]>;
+  showDatabases(): QueryResult<ShowDatabasesResult>;
   getPrimaryKeys(tableName: string): QueryResult<ShowKeyRow[]>;
 }
 
@@ -62,6 +67,18 @@ export const sql: Sql = {
     const { result, error } = await ipcRenderer.invoke(
       SQL_CHANNEL.GET_PRIMARY_KEYS,
       tableName
+    );
+
+    if (error) {
+      throw decodeError(error);
+    }
+
+    return result;
+  },
+
+  showDatabases: async () => {
+    const { result, error } = await ipcRenderer.invoke(
+      SQL_CHANNEL.SHOW_DATABASES
     );
 
     if (error) {

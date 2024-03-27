@@ -12,7 +12,6 @@ import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useTranslation } from '../../i18n';
-import { ShowDatabasesResult } from '../../sql/types';
 import DatabaseSelector from '../component/DatabaseSelector';
 import { KeyboardShortcut } from '../component/KeyboardShortcut';
 import TableList from '../component/TableList';
@@ -36,10 +35,7 @@ export async function loader({ params, request }: RouteParams) {
 
   window.sql.connectionNameChanged(connectionSlug, undefined);
 
-  const [databaseList] = await window.sql.executeQuery<ShowDatabasesResult>(
-    connectionSlug,
-    'SHOW DATABASES;'
-  );
+  const [databaseList] = await window.sql.showDatabases();
 
   const configuration = await window.config.getConfiguration();
 
