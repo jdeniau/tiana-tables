@@ -38,3 +38,13 @@ interface ShowDatabaseRow extends RowDataPacket {
   Database: string;
 }
 export type ShowDatabasesResult = ShowDatabaseRow[];
+
+export interface ShowTableStatus extends RowDataPacket {
+  Name: string;
+  Rows: number;
+  Data_length: number;
+  Comment: string;
+  // And more, but not useful for now
+}
+
+export type ShowTableStatusResult = ShowTableStatus[];

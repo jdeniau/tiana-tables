@@ -22,6 +22,7 @@ import RootErrorPage from './routes/errors/RootErrorPage';
 import { Home } from './routes/home';
 import Root from './routes/root';
 import SqlPage, { action as sqlPageAction } from './routes/sql.$connectionSlug';
+import NavigateModalContextProvider from './useNavigationListener';
 
 const appElement = document.getElementById('App');
 

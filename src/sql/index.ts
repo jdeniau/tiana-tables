@@ -9,6 +9,7 @@ import {
   ConnectionObject,
   QueryReturnType,
   ShowDatabasesResult,
+  ShowTableStatusResult,
 } from './types';
 
 class ConnectionStack {
@@ -24,6 +25,7 @@ class ConnectionStack {
     [SQL_CHANNEL.GET_FOREIGN_KEYS]: this.getForeignKeys,
     [SQL_CHANNEL.GET_PRIMARY_KEYS]: this.getPrimaryKeys,
     [SQL_CHANNEL.SHOW_DATABASES]: this.showDatabases,
+    [SQL_CHANNEL.SHOW_TABLE_STATUS]: this.showTableStatus,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
 
@@ -103,6 +105,16 @@ class ConnectionStack {
     return this.executeQueryAndRetry<ShowDatabasesResult>(
       this.#currentConnectionSlug,
       'SHOW DATABASES'
+    );
+  }
+
+  async showTableStatus(): QueryResultOrError<ShowTableStatusResult> {
+    invariant(this.#databaseName, 'Database name is required');
+    invariant(this.#currentConnectionSlug, 'Connection slug is required');
+
+    return this.executeQueryAndRetry<ShowTableStatusResult>(
+      this.#currentConnectionSlug,
+      `SHOW TABLE STATUS FROM ${this.#databaseName}`
     );
   }
 

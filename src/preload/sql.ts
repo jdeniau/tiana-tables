@@ -5,6 +5,7 @@ import type {
   QueryResult,
   QueryReturnType,
   ShowDatabasesResult,
+  ShowTableStatusResult,
 } from '../sql/types';
 import { bindChannel, bindEvent } from './bindChannel';
 import { SQL_CHANNEL } from './sqlChannel';
@@ -34,6 +35,7 @@ interface Sql {
   getForeignKeys(tableName: string): QueryResult<KeyColumnUsageRow[]>;
   showDatabases(): QueryResult<ShowDatabasesResult>;
   getPrimaryKeys(tableName: string): QueryResult<ShowKeyRow[]>;
+  showTableStatus(): QueryResult<ShowTableStatusResult>;
 }
 
 export const sql: Sql = {
@@ -79,6 +81,18 @@ export const sql: Sql = {
   showDatabases: async () => {
     const { result, error } = await ipcRenderer.invoke(
       SQL_CHANNEL.SHOW_DATABASES
+    );
+
+    if (error) {
+      throw decodeError(error);
+    }
+
+    return result;
+  },
+
+  showTableStatus: async () => {
+    const { result, error } = await ipcRenderer.invoke(
+      SQL_CHANNEL.SHOW_TABLE_STATUS
     );
 
     if (error) {

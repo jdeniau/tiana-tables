@@ -65,32 +65,30 @@ export default function Root() {
     <ConfigurationContextProvider>
       <ThemeContextProvider>
         <ConnectionStack>
-          <NavigateModalContextProvider>
-            <Layout>
-              <Debug />
-              <Header>
-                <Flex align="center" gap="small">
-                  <h2>
-                    <RootLink to="/">Tiana Tables</RootLink>
-                  </h2>
-                  <span>v{packageJson.version}</span>
-                </Flex>
+          <Layout>
+            <Debug />
+            <Header>
+              <Flex align="center" gap="small">
+                <h2>
+                  <RootLink to="/">Tiana Tables</RootLink>
+                </h2>
+                <span>v{packageJson.version}</span>
+              </Flex>
 
-                <ConnectionNav />
+              <ConnectionNav />
 
-                <Flex gap="small" align="center">
-                  {t('language.switch.label')} <LangSelector />
-                  {t('theme.switch.label')} <ThemeSelector />
-                </Flex>
+              <Flex gap="small" align="center">
+                {t('language.switch.label')} <LangSelector />
+                {t('theme.switch.label')} <ThemeSelector />
+              </Flex>
 
-                <ToggleRawSqlButton />
-              </Header>
+              <ToggleRawSqlButton />
+            </Header>
 
-              <Content>
-                <Outlet />
-              </Content>
-            </Layout>
-          </NavigateModalContextProvider>
+            <Content>
+              <Outlet />
+            </Content>
+          </Layout>
         </ConnectionStack>
       </ThemeContextProvider>
     </ConfigurationContextProvider>
