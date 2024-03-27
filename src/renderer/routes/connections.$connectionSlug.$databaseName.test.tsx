@@ -57,6 +57,7 @@ describe('loader', () => {
           [],
         ])
       ),
+      connectionNameChanged: vi.fn(),
     };
   });
 

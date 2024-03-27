@@ -34,6 +34,8 @@ export async function loader({ params, request }: RouteParams) {
 
   invariant(connectionSlug, 'Connection slug is required');
 
+  window.sql.connectionNameChanged(connectionSlug, undefined);
+
   const [databaseList] = await window.sql.executeQuery<ShowDatabasesResult>(
     connectionSlug,
     'SHOW DATABASES;'
