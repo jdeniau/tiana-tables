@@ -3,8 +3,7 @@ import { Menu, MenuProps } from 'antd';
 import { Link, useParams } from 'react-router-dom';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
-import { ShowTableStatusResult } from '../../sql/types';
-import { TableStatusRow } from '../hooks/sql/useTableStatusList';
+import { ShowTableStatus, ShowTableStatusResult } from '../../sql/types';
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -24,7 +23,7 @@ export default function TableList({
   }
 
   const items: MenuItem[] = tableStatusList.map(
-    (rowDataPacket: TableStatusRow) => ({
+    (rowDataPacket: ShowTableStatus) => ({
       key: rowDataPacket.Name,
       label: (
         <Link

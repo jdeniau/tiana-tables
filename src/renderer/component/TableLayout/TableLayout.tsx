@@ -2,7 +2,6 @@ import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Button, Flex } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
-import { useDatabaseContext } from '../../../contexts/DatabaseContext';
 import { useTranslation } from '../../../i18n';
 import ButtonLink from '../ButtonLink';
 import WhereFilter from '../Query/WhereFilter';
@@ -22,7 +21,6 @@ export function TableLayout({
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
   const { currentConnectionSlug } = useConnectionContext();
-  const { executeQuery } = useDatabaseContext();
   const [result, setResult] = useState<null | RowDataPacket[]>(null);
   const [fields, setFields] = useState<null | FieldPacket[]>(null);
   const [error, setError] = useState<null | Error>(null);
@@ -35,7 +33,8 @@ export function TableLayout({
         where ? ` WHERE ${where}` : ''
       } LIMIT ${DEFAULT_LIMIT} OFFSET ${offset};`;
 
-      executeQuery<RowDataPacket[]>(query)
+      window.sql
+        .executeQuery<RowDataPacket[]>(query)
         .then(([result, fields]) => {
           setCurrentOffset(offset);
           setFields(fields || null);
@@ -47,7 +46,7 @@ export function TableLayout({
           setError(err);
         });
     },
-    [database, tableName, where, executeQuery]
+    [database, tableName, where]
   );
 
   useEffect(() => {

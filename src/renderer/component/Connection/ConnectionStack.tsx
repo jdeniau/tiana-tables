@@ -63,16 +63,8 @@ function ConnectionStack({ children }: Props) {
     (): DatabaseContextProps => ({
       database: databaseName ?? null,
       setDatabase: handleSetDatabase,
-      executeQuery: (query) => {
-        invariant(
-          currentConnectionSlug,
-          'Connection slug is required to execute a query'
-        );
-
-        return window.sql.executeQuery(currentConnectionSlug, query);
-      },
     }),
-    [currentConnectionSlug, databaseName, handleSetDatabase]
+    [databaseName, handleSetDatabase]
   );
 
   return (

@@ -16,7 +16,6 @@ import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import LangSelector from '../component/LangSelector';
 import ThemeSelector from '../component/ThemeSelector';
 import { getSetting } from '../theme';
-import NavigateModalContextProvider from '../useNavigationListener';
 
 const Header = styled(Layout.Header)`
   display: flex;

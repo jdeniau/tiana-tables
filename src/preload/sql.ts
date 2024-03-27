@@ -23,10 +23,7 @@ export interface ShowKeyRow extends RowDataPacket {
 }
 
 interface Sql {
-  executeQuery<T extends QueryReturnType>(
-    connectionSlug: string,
-    query: string
-  ): QueryResult<T>;
+  executeQuery<T extends QueryReturnType>(query: string): QueryResult<T>;
   closeAllConnections(): Promise<void>;
   connectionNameChanged(
     connectionSlug: string | undefined,
@@ -49,8 +46,8 @@ async function doInvokeQuery(sqlChannel: SQL_CHANNEL, ...params: unknown[]) {
 }
 
 export const sql: Sql = {
-  executeQuery: async (connectionSlug, query) =>
-    doInvokeQuery(SQL_CHANNEL.EXECUTE_QUERY, connectionSlug, query),
+  executeQuery: async (query) =>
+    doInvokeQuery(SQL_CHANNEL.EXECUTE_QUERY, query),
 
   getForeignKeys: (tableName) =>
     doInvokeQuery(SQL_CHANNEL.GET_FOREIGN_KEYS, tableName),

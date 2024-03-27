@@ -63,7 +63,6 @@ class ConnectionStack {
     tableName: string
   ): QueryResultOrError<KeyColumnUsageRow[]> {
     invariant(this.#databaseName, 'Database name is required');
-    invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
     const query = `
       SELECT
@@ -79,51 +78,38 @@ class ConnectionStack {
         TABLE_NAME = '${tableName}' 
     `;
 
-    return this.executeQueryAndRetry<KeyColumnUsageRow[]>(
-      this.#currentConnectionSlug,
-      query
-    );
+    return this.executeQueryAndRetry<KeyColumnUsageRow[]>(query);
   }
 
   async getPrimaryKeys(tableName: string): QueryResultOrError<ShowKeyRow[]> {
     invariant(this.#databaseName, 'Database name is required');
-    invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
     const query = `
       SHOW KEYS FROM ${this.#databaseName}.${tableName} WHERE Key_name = 'PRIMARY';
     `;
 
-    return this.executeQueryAndRetry<ShowKeyRow[]>(
-      this.#currentConnectionSlug,
-      query
-    );
+    return this.executeQueryAndRetry<ShowKeyRow[]>(query);
   }
 
   async showDatabases(): QueryResultOrError<ShowDatabasesResult> {
-    invariant(this.#currentConnectionSlug, 'Connection slug is required');
-
-    return this.executeQueryAndRetry<ShowDatabasesResult>(
-      this.#currentConnectionSlug,
-      'SHOW DATABASES'
-    );
+    return this.executeQueryAndRetry<ShowDatabasesResult>('SHOW DATABASES');
   }
 
   async showTableStatus(): QueryResultOrError<ShowTableStatusResult> {
     invariant(this.#databaseName, 'Database name is required');
-    invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
     return this.executeQueryAndRetry<ShowTableStatusResult>(
-      this.#currentConnectionSlug,
       `SHOW TABLE STATUS FROM ${this.#databaseName}`
     );
   }
 
   async executeQueryAndRetry<T extends QueryReturnType = QueryReturnType>(
-    connectionSlug: string,
     query: string
   ): QueryResultOrError<T> {
+    invariant(this.#currentConnectionSlug, 'Connection slug is required');
+
     try {
-      return this.executeQuery<T>(connectionSlug, query);
+      return this.executeQuery<T>(this.#currentConnectionSlug, query);
     } catch (error) {
       const message = error instanceof Error ? error.message : error;
 
@@ -132,9 +118,9 @@ class ConnectionStack {
         message.includes('connection is in closed state')
       ) {
         // retry once
-        this.#connections.delete(connectionSlug);
+        this.#connections.delete(this.#currentConnectionSlug);
 
-        return this.executeQuery<T>(connectionSlug, query);
+        return this.executeQuery<T>(this.#currentConnectionSlug, query);
       }
 
       throw error;

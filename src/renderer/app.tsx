@@ -22,7 +22,6 @@ import RootErrorPage from './routes/errors/RootErrorPage';
 import { Home } from './routes/home';
 import Root from './routes/root';
 import SqlPage, { action as sqlPageAction } from './routes/sql.$connectionSlug';
-import NavigateModalContextProvider from './useNavigationListener';
 
 const appElement = document.getElementById('App');
 
@@ -66,7 +65,10 @@ const router = createHashRouter([
         path: 'connections/:connectionSlug',
         loader: connectionDetailPageLoader,
         shouldRevalidate: ({ currentParams, nextParams }) => {
-          return currentParams.connectionSlug !== nextParams.connectionSlug;
+          return (
+            currentParams.connectionSlug !== nextParams.connectionSlug ||
+            currentParams.databaseName !== nextParams.databaseName
+          );
         },
         element: <ConnectionDetailPage />,
         children: [
