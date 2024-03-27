@@ -22,9 +22,8 @@ export async function action({
   request,
   params,
 }: ActionFunctionArgs): Promise<SqlActionReturnTypes> {
-  const { databaseName, connectionSlug } = params;
+  const { databaseName } = params;
 
-  invariant(connectionSlug, 'Connection slug is required');
   invariant(databaseName, 'Database name is required');
 
   const formData = await request.formData();
@@ -33,8 +32,8 @@ export async function action({
   invariant(typeof query === 'string', 'Query as string is required');
 
   try {
-    await window.sql.executeQuery(connectionSlug, `USE ${databaseName};`);
-    const result = await window.sql.executeQuery(connectionSlug, query);
+    await window.sql.executeQuery(`USE ${databaseName};`);
+    const result = await window.sql.executeQuery(query);
 
     return { result };
   } catch (error) {

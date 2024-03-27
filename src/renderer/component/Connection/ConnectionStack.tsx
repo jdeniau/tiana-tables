@@ -34,11 +34,6 @@ function ConnectionStack({ children }: Props) {
     };
   }, []);
 
-  // inform the main process that the connection name has changed
-  useEffect(() => {
-    window.sql.connectionNameChanged(currentConnectionSlug, databaseName);
-  }, [currentConnectionSlug, databaseName]);
-
   // TODO we might need to change that into the proper route as reload will not work
   const addConnectionToList = useCallback(async (connectionSlug: string) => {
     setConnectionNameList((prev) =>
@@ -68,16 +63,8 @@ function ConnectionStack({ children }: Props) {
     (): DatabaseContextProps => ({
       database: databaseName ?? null,
       setDatabase: handleSetDatabase,
-      executeQuery: (query) => {
-        invariant(
-          currentConnectionSlug,
-          'Connection slug is required to execute a query'
-        );
-
-        return window.sql.executeQuery(currentConnectionSlug, query);
-      },
     }),
-    [currentConnectionSlug, databaseName, handleSetDatabase]
+    [databaseName, handleSetDatabase]
   );
 
   return (

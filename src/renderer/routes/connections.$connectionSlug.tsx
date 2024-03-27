@@ -12,12 +12,13 @@ import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useTranslation } from '../../i18n';
-import { ShowDatabasesResult } from '../../sql/types';
 import DatabaseSelector from '../component/DatabaseSelector';
 import { KeyboardShortcut } from '../component/KeyboardShortcut';
 import TableList from '../component/TableList';
 import { getSetting } from '../theme';
-import { useNavigateModalContext } from '../useNavigationListener';
+import NavigateModalContextProvider, {
+  useNavigateModalContext,
+} from '../useNavigationListener';
 
 const Sider = styled(Layout.Sider)`
   border-right: 1px solid ${(props) => getSetting(props.theme, 'foreground')};
@@ -34,10 +35,9 @@ export async function loader({ params, request }: RouteParams) {
 
   invariant(connectionSlug, 'Connection slug is required');
 
-  const [databaseList] = await window.sql.executeQuery<ShowDatabasesResult>(
-    connectionSlug,
-    'SHOW DATABASES;'
-  );
+  window.sql.connectionNameChanged(connectionSlug, undefined);
+
+  const [databaseList] = await window.sql.showDatabases();
 
   const configuration = await window.config.getConfiguration();
 
@@ -78,20 +78,20 @@ export async function loader({ params, request }: RouteParams) {
     return redirect(expectedUrl);
   }
 
+  const [tableStatusList] = await window.sql.showTableStatus();
+
   return {
     databaseList,
+    tableStatusList,
   };
 }
 
 export default function ConnectionDetailPage() {
-  const { databaseList } = useLoaderData() as Exclude<
+  const { databaseList, tableStatusList } = useLoaderData() as Exclude<
     Awaited<ReturnType<typeof loader>>,
     Response
   >;
-  const { t } = useTranslation();
-  const { openNavigateModal } = useNavigateModalContext();
   const { addConnectionToList } = useConnectionContext();
-
   const { connectionSlug } = useParams();
 
   useEffect(() => {
@@ -101,20 +101,31 @@ export default function ConnectionDetailPage() {
   }, [addConnectionToList, connectionSlug]);
 
   return (
-    <Layout>
-      <Sider width={200} style={{ overflow: 'auto' }}>
-        <Flex vertical gap="small">
-          <DatabaseSelector databaseList={databaseList} />
-          <Button block size="small" onClick={openNavigateModal}>
-            {t('tableList.navigate')}
-            <KeyboardShortcut cmdOrCtrl pressedKey="k" />
-          </Button>
-          <TableList />
-        </Flex>
-      </Sider>
-      <Layout.Content style={{ overflow: 'auto' }}>
-        <Outlet />
-      </Layout.Content>
-    </Layout>
+    <NavigateModalContextProvider tableStatusList={tableStatusList}>
+      <Layout>
+        <Sider width={200} style={{ overflow: 'auto' }}>
+          <Flex vertical gap="small">
+            <DatabaseSelector databaseList={databaseList} />
+            <OpenNavigateModalButton />
+            <TableList tableStatusList={tableStatusList} />
+          </Flex>
+        </Sider>
+        <Layout.Content style={{ overflow: 'auto' }}>
+          <Outlet />
+        </Layout.Content>
+      </Layout>
+    </NavigateModalContextProvider>
+  );
+}
+
+function OpenNavigateModalButton() {
+  const { t } = useTranslation();
+  const { openNavigateModal } = useNavigateModalContext();
+
+  return (
+    <Button block size="small" onClick={openNavigateModal}>
+      {t('tableList.navigate')}
+      <KeyboardShortcut cmdOrCtrl pressedKey="k" />
+    </Button>
   );
 }
