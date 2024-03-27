@@ -38,69 +38,29 @@ interface Sql {
   showTableStatus(): QueryResult<ShowTableStatusResult>;
 }
 
+async function doInvokeQuery(sqlChannel: SQL_CHANNEL, ...params: unknown[]) {
+  const { result, error } = await ipcRenderer.invoke(sqlChannel, ...params);
+
+  if (error) {
+    throw decodeError(error);
+  }
+
+  return result;
+}
+
 export const sql: Sql = {
-  executeQuery: async (connectionSlug: string, query: string) => {
-    const { result, error } = await ipcRenderer.invoke(
-      SQL_CHANNEL.EXECUTE_QUERY,
-      connectionSlug,
-      query
-    );
+  executeQuery: async (connectionSlug, query) =>
+    doInvokeQuery(SQL_CHANNEL.EXECUTE_QUERY, connectionSlug, query),
 
-    if (error) {
-      throw decodeError(error);
-    }
+  getForeignKeys: (tableName) =>
+    doInvokeQuery(SQL_CHANNEL.GET_FOREIGN_KEYS, tableName),
 
-    return result;
-  },
-  getForeignKeys: async (tableName) => {
-    const { result, error } = await ipcRenderer.invoke(
-      SQL_CHANNEL.GET_FOREIGN_KEYS,
-      tableName
-    );
+  getPrimaryKeys: async (tableName) =>
+    doInvokeQuery(SQL_CHANNEL.GET_PRIMARY_KEYS, tableName),
 
-    if (error) {
-      throw decodeError(error);
-    }
+  showDatabases: async () => doInvokeQuery(SQL_CHANNEL.SHOW_DATABASES),
 
-    return result;
-  },
-
-  getPrimaryKeys: async (tableName) => {
-    const { result, error } = await ipcRenderer.invoke(
-      SQL_CHANNEL.GET_PRIMARY_KEYS,
-      tableName
-    );
-
-    if (error) {
-      throw decodeError(error);
-    }
-
-    return result;
-  },
-
-  showDatabases: async () => {
-    const { result, error } = await ipcRenderer.invoke(
-      SQL_CHANNEL.SHOW_DATABASES
-    );
-
-    if (error) {
-      throw decodeError(error);
-    }
-
-    return result;
-  },
-
-  showTableStatus: async () => {
-    const { result, error } = await ipcRenderer.invoke(
-      SQL_CHANNEL.SHOW_TABLE_STATUS
-    );
-
-    if (error) {
-      throw decodeError(error);
-    }
-
-    return result;
-  },
+  showTableStatus: async () => doInvokeQuery(SQL_CHANNEL.SHOW_TABLE_STATUS),
 
   closeAllConnections: bindChannel(SQL_CHANNEL.CLOSE_ALL),
 
