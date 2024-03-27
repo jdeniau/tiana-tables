@@ -5,12 +5,16 @@ import type { QueryResult, QueryReturnType } from '../sql/types';
 import { bindChannel, bindEvent } from './bindChannel';
 import { SQL_CHANNEL } from './sqlChannel';
 
-interface KeyColumnUsageRow extends RowDataPacket {
+export interface KeyColumnUsageRow extends RowDataPacket {
   TABLE_NAME: string;
   COLUMN_NAME: string;
   CONSTRAINT_NAME: string;
   REFERENCED_TABLE_NAME: string;
   REFERENCED_COLUMN_NAME: string;
+}
+
+export interface ShowKeyRow extends RowDataPacket {
+  Column_name: string;
 }
 
 interface Sql {
@@ -24,6 +28,7 @@ interface Sql {
     databaseName?: string | undefined
   ): void;
   getForeignKeys(tableName: string): QueryResult<KeyColumnUsageRow[]>;
+  getPrimaryKeys(tableName: string): QueryResult<ShowKeyRow[]>;
 }
 
 export const sql: Sql = {
@@ -52,6 +57,20 @@ export const sql: Sql = {
 
     return result;
   },
+
+  getPrimaryKeys: async (tableName) => {
+    const { result, error } = await ipcRenderer.invoke(
+      SQL_CHANNEL.GET_PRIMARY_KEYS,
+      tableName
+    );
+
+    if (error) {
+      throw decodeError(error);
+    }
+
+    return result;
+  },
+
   closeAllConnections: bindChannel(SQL_CHANNEL.CLOSE_ALL),
 
   // events

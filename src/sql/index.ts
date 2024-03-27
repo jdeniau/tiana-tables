@@ -2,9 +2,10 @@ import log from 'electron-log';
 import { Connection, createConnection } from 'mysql2/promise';
 import invariant from 'tiny-invariant';
 import { getConfiguration } from '../configuration';
+import { KeyColumnUsageRow, ShowKeyRow } from '../preload/sql';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import { QueryResultOrError, encodeError } from './errorSerializer';
-import { ConnectionObject } from './types';
+import { ConnectionObject, QueryReturnType } from './types';
 
 class ConnectionStack {
   #connections: Map<string, Connection> = new Map();
@@ -17,6 +18,7 @@ class ConnectionStack {
   #ipcMainHandler = {
     [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQueryAndRetry,
     [SQL_CHANNEL.GET_FOREIGN_KEYS]: this.getForeignKeys,
+    [SQL_CHANNEL.GET_PRIMARY_KEYS]: this.getPrimaryKeys,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
 
@@ -50,7 +52,9 @@ class ConnectionStack {
     }
   }
 
-  async getForeignKeys(tableName: string): QueryResultOrError {
+  async getForeignKeys(
+    tableName: string
+  ): QueryResultOrError<KeyColumnUsageRow[]> {
     invariant(this.#databaseName, 'Database name is required');
     invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
@@ -68,15 +72,32 @@ class ConnectionStack {
         TABLE_NAME = '${tableName}' 
     `;
 
-    return this.executeQueryAndRetry(this.#currentConnectionSlug, query);
+    return this.executeQueryAndRetry<KeyColumnUsageRow[]>(
+      this.#currentConnectionSlug,
+      query
+    );
   }
 
-  async executeQueryAndRetry(
+  async getPrimaryKeys(tableName: string): QueryResultOrError<ShowKeyRow[]> {
+    invariant(this.#databaseName, 'Database name is required');
+    invariant(this.#currentConnectionSlug, 'Connection slug is required');
+
+    const query = `
+      SHOW KEYS FROM ${this.#databaseName}.${tableName} WHERE Key_name = 'PRIMARY';
+    `;
+
+    return this.executeQueryAndRetry<ShowKeyRow[]>(
+      this.#currentConnectionSlug,
+      query
+    );
+  }
+
+  async executeQueryAndRetry<T extends QueryReturnType = QueryReturnType>(
     connectionSlug: string,
     query: string
-  ): QueryResultOrError {
+  ): QueryResultOrError<T> {
     try {
-      return this.executeQuery(connectionSlug, query);
+      return this.executeQuery<T>(connectionSlug, query);
     } catch (error) {
       const message = error instanceof Error ? error.message : error;
 
@@ -87,17 +108,17 @@ class ConnectionStack {
         // retry once
         this.#connections.delete(connectionSlug);
 
-        return this.executeQuery(connectionSlug, query);
+        return this.executeQuery<T>(connectionSlug, query);
       }
 
       throw error;
     }
   }
 
-  async executeQuery(
+  async executeQuery<T extends QueryReturnType = QueryReturnType>(
     connectionSlug: string,
     query: string
-  ): QueryResultOrError {
+  ): QueryResultOrError<T> {
     const connection = await this.#getConnection(connectionSlug);
 
     log.debug(`Execute query on "${connectionSlug}": "${query}"`);
@@ -148,7 +169,7 @@ class ConnectionStack {
   }
 
   async #connect(params: ConnectionObject): Promise<Connection> {
-    const { slug, ...rest } = params;
+    const { slug, name: _, ...rest } = params;
 
     // don't connect twice to the same connection
     if (this.#connections.has(slug)) {
