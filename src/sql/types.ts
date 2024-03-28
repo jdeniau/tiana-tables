@@ -48,3 +48,15 @@ export interface ShowTableStatus extends RowDataPacket {
 }
 
 export type ShowTableStatusResult = ShowTableStatus[];
+
+export interface KeyColumnUsageRow extends RowDataPacket {
+  TABLE_NAME: string;
+  COLUMN_NAME: string;
+  CONSTRAINT_NAME: string;
+  REFERENCED_TABLE_NAME: string;
+  REFERENCED_COLUMN_NAME: string;
+}
+
+export interface ShowKeyRow extends RowDataPacket {
+  Column_name: string;
+}

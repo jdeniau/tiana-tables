@@ -6,13 +6,13 @@ import { styled } from 'styled-components';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useTranslation } from '../../i18n';
-import { ShowTableStatus, ShowTableStatusResult } from '../../sql/types';
+import { ShowTableStatus } from '../../sql/types';
 import { getSetting } from '../theme';
 
 type Props = {
   isNavigateModalOpen: boolean;
   setIsNavigateModalOpen: (isOpened: boolean) => void;
-  tableStatusList: ShowTableStatusResult;
+  tableStatusList: ShowTableStatus[];
 };
 
 export default function NavigateModal({

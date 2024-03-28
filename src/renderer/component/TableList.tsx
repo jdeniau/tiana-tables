@@ -3,12 +3,12 @@ import { Menu, MenuProps } from 'antd';
 import { Link, useParams } from 'react-router-dom';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
-import { ShowTableStatus, ShowTableStatusResult } from '../../sql/types';
+import { ShowTableStatus } from '../../sql/types';
 
 type MenuItem = Required<MenuProps>['items'][number];
 
 type Props = {
-  tableStatusList: ShowTableStatusResult;
+  tableStatusList: ShowTableStatus[];
 };
 
 export default function TableList({

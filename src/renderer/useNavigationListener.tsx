@@ -6,12 +6,12 @@ import {
   useState,
 } from 'react';
 import { useNavigate } from 'react-router';
-import { ShowTableStatusResult } from '../sql/types';
+import { ShowTableStatus } from '../sql/types';
 import NavigateModal from './component/NavigateModal';
 
 type ReturnType = {
   NavigateModal: React.FunctionComponent<{
-    tableStatusList: ShowTableStatusResult;
+    tableStatusList: ShowTableStatus[];
   }>;
   openNavigateModal: () => void;
 };
@@ -36,7 +36,7 @@ function useNavigationListener(): ReturnType {
   const NavigateModalComponent = ({
     tableStatusList,
   }: {
-    tableStatusList: ShowTableStatusResult;
+    tableStatusList: ShowTableStatus[];
   }) => (
     <NavigateModal
       isNavigateModalOpen={isNavigateModalOpen}
@@ -60,7 +60,7 @@ function NavigateModalContextProvider({
   tableStatusList,
 }: {
   children: ReactNode;
-  tableStatusList: ShowTableStatusResult;
+  tableStatusList: ShowTableStatus[];
 }): JSX.Element {
   const { NavigateModal, openNavigateModal } = useNavigationListener();
 

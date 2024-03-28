@@ -2,13 +2,14 @@ import log from 'electron-log';
 import { Connection, createConnection } from 'mysql2/promise';
 import invariant from 'tiny-invariant';
 import { getConfiguration } from '../configuration';
-import { KeyColumnUsageRow, ShowKeyRow } from '../preload/sql';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import { QueryResultOrError, encodeError } from './errorSerializer';
 import {
   ConnectionObject,
+  KeyColumnUsageRow,
   QueryReturnType,
   ShowDatabasesResult,
+  ShowKeyRow,
   ShowTableStatusResult,
 } from './types';
 
