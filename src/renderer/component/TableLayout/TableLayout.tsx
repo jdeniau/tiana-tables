@@ -1,8 +1,9 @@
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Button, Flex } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
-import { useDatabaseContext } from '../../../contexts/DatabaseContext';
+import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
+import ButtonLink from '../ButtonLink';
 import WhereFilter from '../Query/WhereFilter';
 import TableGrid from '../TableGrid';
 
@@ -19,7 +20,7 @@ export function TableLayout({
   primaryKeys,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
-  const { executeQuery } = useDatabaseContext();
+  const { currentConnectionSlug } = useConnectionContext();
   const [result, setResult] = useState<null | RowDataPacket[]>(null);
   const [fields, setFields] = useState<null | FieldPacket[]>(null);
   const [error, setError] = useState<null | Error>(null);
@@ -32,7 +33,8 @@ export function TableLayout({
         where ? ` WHERE ${where}` : ''
       } LIMIT ${DEFAULT_LIMIT} OFFSET ${offset};`;
 
-      executeQuery<RowDataPacket[]>(query)
+      window.sql
+        .executeQuery<RowDataPacket[]>(query)
         .then(([result, fields]) => {
           setCurrentOffset(offset);
           setFields(fields || null);
@@ -44,7 +46,7 @@ export function TableLayout({
           setError(err);
         });
     },
-    [database, tableName, where, executeQuery]
+    [database, tableName, where]
   );
 
   useEffect(() => {
@@ -72,7 +74,17 @@ export function TableLayout({
         fields={fields}
         result={result}
         primaryKeys={primaryKeys}
-        title={() => tableName}
+        title={() => (
+          <>
+            {tableName}
+            <ButtonLink
+              style={{ marginLeft: '1em' }}
+              to={`/connections/${currentConnectionSlug}/${database}/tables/${tableName}/structure`}
+            >
+              STRUCTURE
+            </ButtonLink>
+          </>
+        )}
       />
 
       <Flex justify="center" align="center">

@@ -11,6 +11,8 @@ export async function loader({ params, request }: RouteParams) {
   invariant(connectionSlug, 'Connection slug is required');
   invariant(databaseName, 'Database name is required');
 
+  window.sql.connectionNameChanged(connectionSlug, databaseName);
+
   const configuration = await window.config.getConfiguration();
 
   window.config.setActiveDatabase(connectionSlug, databaseName);

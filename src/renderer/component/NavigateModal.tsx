@@ -6,24 +6,22 @@ import { styled } from 'styled-components';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useTranslation } from '../../i18n';
-import {
-  TableStatusRow,
-  useTableStatusList,
-} from '../hooks/sql/useTableStatusList';
+import { ShowTableStatus } from '../../sql/types';
 import { getSetting } from '../theme';
 
 type Props = {
   isNavigateModalOpen: boolean;
   setIsNavigateModalOpen: (isOpened: boolean) => void;
+  tableStatusList: ShowTableStatus[];
 };
 
 export default function NavigateModal({
   isNavigateModalOpen,
   setIsNavigateModalOpen,
+  tableStatusList,
 }: Props): ReactElement {
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
-  const tableStatusList = useTableStatusList();
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const navigate = useNavigate();
@@ -42,7 +40,7 @@ export default function NavigateModal({
   }
 
   const navigateToItem = useCallback(
-    (item: TableStatusRow) => {
+    (item: ShowTableStatus) => {
       setIsNavigateModalOpen(false);
       navigate(
         `/connections/${currentConnectionSlug}/${database}/tables/${item.Name}`
@@ -146,7 +144,7 @@ export default function NavigateModal({
             style={{ overflow: 'auto' }}
             bordered
             dataSource={filteredTableStatusList}
-            renderItem={(item: TableStatusRow, index: number) => (
+            renderItem={(item: ShowTableStatus, index: number) => (
               <ItemListWithHover
                 key={item.Name}
                 $active={index === activeIndex}

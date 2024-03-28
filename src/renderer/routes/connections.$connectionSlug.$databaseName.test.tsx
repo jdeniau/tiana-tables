@@ -44,7 +44,7 @@ describe('loader', () => {
   beforeEach(() => {
     window.sql = {
       // @ts-expect-error return is OK here, type is too complex or now
-      executeQuery: vi.fn(() =>
+      showDatabases: vi.fn(() =>
         Promise.resolve([
           [
             {
@@ -57,6 +57,26 @@ describe('loader', () => {
           [],
         ])
       ),
+      // @ts-expect-error return is OK here, type is too complex or now
+      showTableStatus: vi.fn(() =>
+        Promise.resolve([
+          [
+            {
+              Name: 'table1',
+              Rows: 1,
+              Data_length: 1,
+              Comment: 'table1 comment',
+            },
+            {
+              Name: 'table2',
+              Rows: 2,
+              Data_length: 2,
+              Comment: 'table2 comment',
+            },
+          ],
+        ])
+      ),
+      connectionNameChanged: vi.fn(),
     };
   });
 
@@ -82,7 +102,7 @@ describe('loader', () => {
     const params = { connectionSlug: 'connectionSlug' };
 
     // @ts-expect-error return is OK here, type is too complex or now
-    window.sql.executeQuery = vi.fn(() => Promise.resolve([[]]));
+    window.sql.showDatabases = vi.fn(() => Promise.resolve([[]]));
 
     setConfiguration(undefined, undefined);
 
@@ -130,6 +150,20 @@ describe('loader', () => {
       databaseList: [
         { Database: 'databaseName1' },
         { Database: 'databaseName2' },
+      ],
+      tableStatusList: [
+        {
+          Name: 'table1',
+          Rows: 1,
+          Data_length: 1,
+          Comment: 'table1 comment',
+        },
+        {
+          Name: 'table2',
+          Rows: 2,
+          Data_length: 2,
+          Comment: 'table2 comment',
+        },
       ],
     });
   });

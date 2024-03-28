@@ -3,17 +3,19 @@ import { Menu, MenuProps } from 'antd';
 import { Link, useParams } from 'react-router-dom';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
-import {
-  TableStatusRow,
-  useTableStatusList,
-} from '../hooks/sql/useTableStatusList';
+import { ShowTableStatus } from '../../sql/types';
 
 type MenuItem = Required<MenuProps>['items'][number];
 
-export default function TableList(): ReactElement | null {
+type Props = {
+  tableStatusList: ShowTableStatus[];
+};
+
+export default function TableList({
+  tableStatusList,
+}: Props): ReactElement | null {
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
-  const tableStatusList = useTableStatusList();
   const { tableName } = useParams();
 
   if (!tableStatusList) {
@@ -21,7 +23,7 @@ export default function TableList(): ReactElement | null {
   }
 
   const items: MenuItem[] = tableStatusList.map(
-    (rowDataPacket: TableStatusRow) => ({
+    (rowDataPacket: ShowTableStatus) => ({
       key: rowDataPacket.Name,
       label: (
         <Link
