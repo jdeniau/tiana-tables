@@ -22,7 +22,10 @@ function Debug(): ReactElement | null {
 
   return (
     <DebugContainer>
-      <Url>{location.pathname}</Url>
+      <Url>
+        {location.pathname}
+        {location.search}
+      </Url>
     </DebugContainer>
   );
 }

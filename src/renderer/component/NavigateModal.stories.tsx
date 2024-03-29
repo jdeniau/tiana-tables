@@ -1,8 +1,6 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
-import { ConnectionContext } from '../../contexts/ConnectionContext';
-import { DatabaseContext } from '../../contexts/DatabaseContext';
 import NavigateModal from './NavigateModal';
 // eslint-disable-next-line import/no-unresolved
 
@@ -12,44 +10,7 @@ const meta: Meta<typeof NavigateModal> = {
     isNavigateModalOpen: true,
     setIsNavigateModalOpen: action('setIsNavigateModalOpen'),
   },
-  decorators: [
-    reactRouterDecorator,
-    (Story) => (
-      <ConnectionContext.Provider
-        value={{
-          currentConnectionSlug: 'test',
-          connectionSlugList: ['test'],
-          addConnectionToList: async (connectionName) => {
-            action('addConnectionToList')(connectionName);
-          },
-        }}
-      >
-        <DatabaseContext.Provider
-          value={{
-            database: 'mocked-db',
-            setDatabase: () => {},
-            // @ts-expect-error -- we don't need to implement the whole context
-            executeQuery: async (query) => {
-              action('executeQuery')(query);
-
-              return Promise.resolve([
-                [
-                  { Name: 'departments' },
-                  { Name: 'dept_emp' },
-                  { Name: 'dept_manager' },
-                  { Name: 'employees' },
-                  { Name: 'salaries' },
-                  { Name: 'titles' },
-                ],
-              ]);
-            },
-          }}
-        >
-          <Story />
-        </DatabaseContext.Provider>
-      </ConnectionContext.Provider>
-    ),
-  ],
+  decorators: [reactRouterDecorator],
 };
 
 export default meta;
@@ -60,4 +21,21 @@ type Story = StoryObj<typeof NavigateModal>;
  * See https://storybook.js.org/docs/api/csf
  * to learn how to use render functions.
  */
-export const Primary: Story = {};
+export const Primary: Story = {
+  args: {
+    tableStatusList: [
+      // @ts-expect-error don't want all data, only the name
+      { Name: 'departments' },
+      // @ts-expect-error don't want all data, only the name
+      { Name: 'dept_emp' },
+      // @ts-expect-error don't want all data, only the name
+      { Name: 'dept_manager' },
+      // @ts-expect-error don't want all data, only the name
+      { Name: 'employees' },
+      // @ts-expect-error don't want all data, only the name
+      { Name: 'salaries' },
+      // @ts-expect-error don't want all data, only the name
+      { Name: 'titles' },
+    ],
+  },
+};

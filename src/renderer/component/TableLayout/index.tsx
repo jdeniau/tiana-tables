@@ -3,9 +3,12 @@ import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
 import { TableLayout } from './TableLayout';
 
-type Props = { primaryKeys: Array<string> };
+type Props = {
+  primaryKeys: Array<string>;
+  where?: string;
+};
 
-function TableLayoutPageContent({ primaryKeys }: Props) {
+function TableLayoutPageContent({ primaryKeys, where }: Props) {
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const { tableName } = useParams();
@@ -20,6 +23,7 @@ function TableLayoutPageContent({ primaryKeys }: Props) {
       tableName={tableName}
       database={database}
       primaryKeys={primaryKeys}
+      where={where}
     />
   );
 }

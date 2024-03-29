@@ -2,6 +2,7 @@ import { ReactElement, ReactNode } from 'react';
 import { Table } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import Cell from './Cell';
+import ForeignKeyLink from './ForeignKeyLink';
 import { useTableHeight } from './TableLayout/useTableHeight';
 
 interface TableGridProps<R extends RowDataPacket> {
@@ -37,7 +38,15 @@ function TableGrid<Row extends RowDataPacket>({
           fixed: primaryKeys?.includes(field.name) ? 'left' : undefined,
 
           // how to render a data cell in this column
-          render: (value: Row) => <Cell type={field.type} value={value} />,
+          render: (value) => (
+            <>
+              <Cell
+                type={field.type}
+                value={value}
+                link={<ForeignKeyLink columnName={field.name} value={value} />}
+              />
+            </>
+          ),
         }))}
         // the list of sql rows
         dataSource={result ?? []}

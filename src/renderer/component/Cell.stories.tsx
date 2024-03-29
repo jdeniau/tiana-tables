@@ -110,43 +110,10 @@ export const WithENUMType: Story = {
   },
 };
 
-// stories.add('with NULL value', () => (
-//     <Cell type={Types.VARCHAR} value={null} />
-//   ));
-
-//   stories.add('with string type', () => (
-//     <Cell type={Types.VARCHAR} value={text('VARCHAR', 'VARCHAR value')} />
-//   ));
-
-//   stories.add('with number type', () => (
-//     <Cell type={Types.FLOAT} value={number('FLOAT', 123.45)} />
-//   ));
-
-//   stories.add('with date type', () => {
-//     const defaultDate = new Date('Jan 20 2020');
-//     const dateString = date('DATETIME', defaultDate);
-
-//     return <Cell type={Types.DATETIME} value={new Date(dateString)} />;
-//   });
-
-//   stories.add('with blob type', () => (
-//     <Cell type={Types.BLOB} value={text('BLOB', 'BLOB value')} />
-//   ));
-
-//   stories.add('with JSON type', () => {
-//     const label = 'Styles';
-//     const defaultValue = {
-//       backgroundColor: 'red',
-//     };
-
-//     return (
-//       <Cell
-//         type={Types.JSON}
-//         value={JSON.stringify(object(label, defaultValue))}
-//       />
-//     );
-//   });
-
-//   stories.add('with ENUM/SET type', () => (
-//     <Cell type={Types.ENUM} value={text('ENUM', 'ENUM value')} />
-//   ));
+export const WithForeignKey: Story = {
+  args: {
+    type: Types.FLOAT,
+    value: 8,
+    link: <a href="#link">LINK</a>,
+  },
+};

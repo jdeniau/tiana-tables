@@ -53,6 +53,11 @@ export interface KeyColumnUsageRow extends RowDataPacket {
   TABLE_NAME: string;
   COLUMN_NAME: string;
   CONSTRAINT_NAME: string;
+  REFERENCED_TABLE_NAME: string | null;
+  REFERENCED_COLUMN_NAME: string | null;
+}
+
+export interface ForeignKeyRow extends KeyColumnUsageRow {
   REFERENCED_TABLE_NAME: string;
   REFERENCED_COLUMN_NAME: string;
 }

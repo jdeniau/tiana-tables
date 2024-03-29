@@ -13,7 +13,7 @@ export async function loader({ params }: RouteParams) {
 
   invariant(tableName, 'Table name is required');
 
-  const data = await window.sql.getForeignKeys(tableName);
+  const data = await window.sql.getKeyColumnUsage(tableName);
 
   return {
     data,
@@ -27,7 +27,11 @@ export default function TableStructure() {
 
   return (
     <Flex vertical style={{ height: '100%' }}>
-      <TableGrid title={() => 'FOREIGN KEYS'} result={result} fields={fields} />
+      <TableGrid
+        title={() => 'KEY COLUMN USAGE'}
+        result={result}
+        fields={fields}
+      />
     </Flex>
   );
 }

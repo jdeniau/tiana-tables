@@ -11,6 +11,7 @@ interface TableNameProps {
   tableName: string;
   database: string;
   primaryKeys: Array<string>;
+  where?: string;
 }
 const DEFAULT_LIMIT = 100;
 
@@ -18,6 +19,7 @@ export function TableLayout({
   tableName,
   database,
   primaryKeys,
+  where: defaultWhere,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
   const { currentConnectionSlug } = useConnectionContext();
@@ -25,7 +27,7 @@ export function TableLayout({
   const [fields, setFields] = useState<null | FieldPacket[]>(null);
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
-  const [where, setWhere] = useState<string>('');
+  const [where, setWhere] = useState<string>(defaultWhere ?? '');
 
   const fetchTableData = useCallback(
     (offset: number) => {
