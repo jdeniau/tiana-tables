@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
+import { useConnectionContext } from '../../contexts/ConnectionContext';
+import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import { getColor, getSetting } from '../theme';
 
@@ -21,6 +23,8 @@ export default function ForeignKeyLink({
   columnName,
   value,
 }: Props): JSX.Element | null {
+  const { currentConnectionSlug } = useConnectionContext();
+  const { database } = useDatabaseContext();
   const foreignKeys = useForeignKeysContext();
 
   const foreignKey = foreignKeys[columnName];
@@ -29,8 +33,8 @@ export default function ForeignKeyLink({
     return null;
   }
 
-  const to = `/connections/dev/ticketing/tables/${foreignKey.referencedTableName}?where=${encodeURIComponent(
-    `${foreignKey.referencedColumnName}=${value}`
+  const to = `/connections/${currentConnectionSlug}/${database}/tables/${foreignKey.referencedTableName}?where=${encodeURIComponent(
+    `${foreignKey.referencedColumnName}="${value}"`
   )}`;
 
   return <StyledLink to={to}>↗️</StyledLink>;
