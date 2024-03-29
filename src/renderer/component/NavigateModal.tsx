@@ -1,5 +1,5 @@
 import { ReactElement, useCallback, useEffect, useRef, useState } from 'react';
-import { Flex, Input, InputRef, List, Modal, Spin } from 'antd';
+import { Flex, Input, InputRef, List, Modal } from 'antd';
 import Fuse from 'fuse.js';
 import { useNavigate } from 'react-router-dom';
 import { styled } from 'styled-components';
@@ -134,29 +134,22 @@ export default function NavigateModal({
           }}
         />
 
-        {!filteredTableStatusList ? (
-          // display loader
-          <Flex justify="center">
-            <Spin />
-          </Flex>
-        ) : (
-          <List
-            style={{ overflow: 'auto' }}
-            bordered
-            dataSource={filteredTableStatusList}
-            renderItem={(item: ShowTableStatus, index: number) => (
-              <ItemListWithHover
-                key={item.Name}
-                $active={index === activeIndex}
-                onClick={() => {
-                  navigateToItem(item);
-                }}
-              >
-                {item.Name}
-              </ItemListWithHover>
-            )}
-          />
-        )}
+        <List
+          style={{ overflow: 'auto' }}
+          bordered
+          dataSource={filteredTableStatusList}
+          renderItem={(item: ShowTableStatus, index: number) => (
+            <ItemListWithHover
+              key={item.Name}
+              $active={index === activeIndex}
+              onClick={() => {
+                navigateToItem(item);
+              }}
+            >
+              {item.Name}
+            </ItemListWithHover>
+          )}
+        />
       </Flex>
     </Modal>
   );
