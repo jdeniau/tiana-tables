@@ -3,6 +3,7 @@ import { Button, Flex } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
+import { KeyColumnUsageRow } from '../../../sql/types';
 import ButtonLink from '../ButtonLink';
 import WhereFilter from '../Query/WhereFilter';
 import TableGrid from '../TableGrid';
@@ -11,6 +12,8 @@ interface TableNameProps {
   tableName: string;
   database: string;
   primaryKeys: Array<string>;
+  foreignKeys: KeyColumnUsageRow[];
+  where?: string;
 }
 const DEFAULT_LIMIT = 100;
 
@@ -18,6 +21,8 @@ export function TableLayout({
   tableName,
   database,
   primaryKeys,
+  foreignKeys,
+  where: defaultWhere,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
   const { currentConnectionSlug } = useConnectionContext();
@@ -25,7 +30,7 @@ export function TableLayout({
   const [fields, setFields] = useState<null | FieldPacket[]>(null);
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
-  const [where, setWhere] = useState<string>('');
+  const [where, setWhere] = useState<string>(defaultWhere ?? '');
 
   const fetchTableData = useCallback(
     (offset: number) => {
@@ -74,6 +79,7 @@ export function TableLayout({
         fields={fields}
         result={result}
         primaryKeys={primaryKeys}
+        foreignKeys={foreignKeys}
         title={() => (
           <>
             {tableName}

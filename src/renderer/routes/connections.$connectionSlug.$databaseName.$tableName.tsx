@@ -1,4 +1,9 @@
-import { LoaderFunctionArgs, Params, useLoaderData } from 'react-router';
+import {
+  LoaderFunctionArgs,
+  Params,
+  useLoaderData,
+  useLocation,
+} from 'react-router';
 import invariant from 'tiny-invariant';
 import TableLayout from '../component/TableLayout';
 
@@ -13,19 +18,34 @@ export async function loader({ params }: RouteParams) {
   invariant(databaseName, 'Database name is required');
   invariant(tableName, 'Table name is required');
 
-  const [result] = await window.sql.getPrimaryKeys(tableName);
+  const [primaryKeyResult] = await window.sql.getPrimaryKeys(tableName);
+  const [foreignKeys] = await window.sql.getForeignKeys(tableName);
 
-  const primaryKeys = result.map((row) => row.Column_name);
+  const primaryKeys = primaryKeyResult.map((row) => row.Column_name);
 
   window.config.setActiveTable(connectionSlug, databaseName, tableName);
 
   return {
     primaryKeys,
+    foreignKeys,
   };
 }
 
 export default function TableNamePage() {
-  const { primaryKeys } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
+  const { primaryKeys, foreignKeys } = useLoaderData() as Awaited<
+    ReturnType<typeof loader>
+  >;
+  const location = useLocation();
 
-  return <TableLayout primaryKeys={primaryKeys} />;
+  const where = new URLSearchParams(location.search).get('where');
+
+  console.log(where);
+
+  return (
+    <TableLayout
+      primaryKeys={primaryKeys}
+      foreignKeys={foreignKeys}
+      where={where ?? ''}
+    />
+  );
 }

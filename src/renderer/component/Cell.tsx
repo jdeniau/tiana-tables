@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+import { Flex } from 'antd';
 import { Types } from 'mysql'; // immporting from mysql2 will import the commonjs package and will fail
 import { styled } from 'styled-components';
 import { getColor, getSetting } from '../theme';
@@ -121,4 +123,14 @@ function TableCellFactory({ type, value }: TableCellFactoryProps) {
   }
 }
 
-export default TableCellFactory;
+export default function TableCellFactoryContainer({
+  link,
+  ...rest
+}: TableCellFactoryProps & { link?: ReactNode }) {
+  return (
+    <Flex>
+      <TableCellFactory {...rest} />
+      {link}
+    </Flex>
+  );
+}
