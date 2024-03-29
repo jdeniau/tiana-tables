@@ -3,7 +3,6 @@ import { Button, Flex } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
-import { KeyColumnUsageRow } from '../../../sql/types';
 import ButtonLink from '../ButtonLink';
 import WhereFilter from '../Query/WhereFilter';
 import TableGrid from '../TableGrid';
@@ -12,7 +11,6 @@ interface TableNameProps {
   tableName: string;
   database: string;
   primaryKeys: Array<string>;
-  foreignKeys: KeyColumnUsageRow[];
   where?: string;
 }
 const DEFAULT_LIMIT = 100;
@@ -21,7 +19,6 @@ export function TableLayout({
   tableName,
   database,
   primaryKeys,
-  foreignKeys,
   where: defaultWhere,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
@@ -79,7 +76,6 @@ export function TableLayout({
         fields={fields}
         result={result}
         primaryKeys={primaryKeys}
-        foreignKeys={foreignKeys}
         title={() => (
           <>
             {tableName}

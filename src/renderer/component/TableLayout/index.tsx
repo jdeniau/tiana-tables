@@ -1,16 +1,14 @@
 import { useParams } from 'react-router-dom';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
-import { KeyColumnUsageRow } from '../../../sql/types';
 import { TableLayout } from './TableLayout';
 
 type Props = {
   primaryKeys: Array<string>;
-  foreignKeys: KeyColumnUsageRow[];
   where?: string;
 };
 
-function TableLayoutPageContent({ primaryKeys, foreignKeys, where }: Props) {
+function TableLayoutPageContent({ primaryKeys, where }: Props) {
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const { tableName } = useParams();
@@ -25,7 +23,6 @@ function TableLayoutPageContent({ primaryKeys, foreignKeys, where }: Props) {
       tableName={tableName}
       database={database}
       primaryKeys={primaryKeys}
-      foreignKeys={foreignKeys}
       where={where}
     />
   );

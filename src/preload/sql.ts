@@ -18,7 +18,7 @@ interface Sql {
     connectionSlug: string | undefined,
     databaseName?: string | undefined
   ): void;
-  getForeignKeys(tableName: string): QueryResult<KeyColumnUsageRow[]>;
+  getKeyColumnUsage(tableName: string): QueryResult<KeyColumnUsageRow[]>;
   showDatabases(): QueryResult<ShowDatabasesResult>;
   getPrimaryKeys(tableName: string): QueryResult<ShowKeyRow[]>;
   showTableStatus(): QueryResult<ShowTableStatus[]>;
@@ -38,8 +38,8 @@ export const sql: Sql = {
   executeQuery: async (query) =>
     doInvokeQuery(SQL_CHANNEL.EXECUTE_QUERY, query),
 
-  getForeignKeys: (tableName) =>
-    doInvokeQuery(SQL_CHANNEL.GET_FOREIGN_KEYS, tableName),
+  getKeyColumnUsage: (tableName) =>
+    doInvokeQuery(SQL_CHANNEL.GET_KEY_COLUMN_USAGE, tableName),
 
   getPrimaryKeys: async (tableName) =>
     doInvokeQuery(SQL_CHANNEL.GET_PRIMARY_KEYS, tableName),

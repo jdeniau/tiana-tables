@@ -23,7 +23,7 @@ class ConnectionStack {
   // List of IPC events and their handlers
   #ipcMainHandler = {
     [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQueryAndRetry,
-    [SQL_CHANNEL.GET_FOREIGN_KEYS]: this.getForeignKeys,
+    [SQL_CHANNEL.GET_KEY_COLUMN_USAGE]: this.getKeyColumnUsage,
     [SQL_CHANNEL.GET_PRIMARY_KEYS]: this.getPrimaryKeys,
     [SQL_CHANNEL.SHOW_DATABASES]: this.showDatabases,
     [SQL_CHANNEL.SHOW_TABLE_STATUS]: this.showTableStatus,
@@ -60,7 +60,7 @@ class ConnectionStack {
     }
   }
 
-  async getForeignKeys(
+  async getKeyColumnUsage(
     tableName: string
   ): QueryResultOrError<KeyColumnUsageRow[]> {
     invariant(this.#databaseName, 'Database name is required');
