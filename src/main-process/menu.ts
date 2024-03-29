@@ -65,6 +65,20 @@ export function createMenu(mainWindow: BrowserWindow) {
       label: t('menu.navigate'),
       submenu: [
         {
+          label: t('menu.navigate.previous'),
+          accelerator: 'Alt+Left',
+          click: () => {
+            mainWindow.webContents.send('navigate', -1);
+          },
+        },
+        {
+          label: t('menu.navigate.next'),
+          accelerator: 'Alt+Right',
+          click: () => {
+            mainWindow.webContents.send('navigate', 1);
+          },
+        },
+        {
           label: t('menu.navigate.newConnection'),
           accelerator: 'CmdOrCtrl+N',
           click: () => {

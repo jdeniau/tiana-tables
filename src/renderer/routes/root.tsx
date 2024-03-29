@@ -1,5 +1,5 @@
 import { Flex, Layout } from 'antd';
-import { Outlet } from 'react-router';
+import { Outlet, useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
 import packageJson from '../../../package.json';
@@ -15,6 +15,7 @@ import Debug from '../component/Debug';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import LangSelector from '../component/LangSelector';
 import ThemeSelector from '../component/ThemeSelector';
+import useEffectOnce from '../hooks/useEffectOnce';
 import { getSetting } from '../theme';
 
 const Header = styled(Layout.Header)`
@@ -59,6 +60,16 @@ const RootLink = styled(Link)`
 
 export default function Root() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  // Use `useEffectOnce` here as we don't want to register twice the same event
+  // Do not use elsewhere, it's a hacky hook
+  useEffectOnce(() => {
+    window.navigationListener.onNavigate((path) => {
+      console.log('onNavigate called with path: ', path);
+      navigate(path);
+    });
+  });
 
   return (
     <ConfigurationContextProvider>

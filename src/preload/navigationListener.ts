@@ -9,7 +9,9 @@ type NavigationListener = {
 
 export const navigationListener: NavigationListener = {
   onNavigate: (callback) =>
-    ipcRenderer.on('navigate', (_event, value) => callback(value)),
+    ipcRenderer.on('navigate', (_event, value) => {
+      callback(value);
+    }),
 
   onOpenNavigationPanel: (callback) =>
     ipcRenderer.on('openNavigationPanel', callback),
