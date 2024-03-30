@@ -1,0 +1,97 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`style helpers > background > Active4D 1`] = `"#FFFFFF"`;
+
+exports[`style helpers > background > Base16 Eva 1`] = `"#2a3b4d"`;
+
+exports[`style helpers > background > Base16 Unikitty Light 1`] = `"#ffffff"`;
+
+exports[`style helpers > background > Dracula 1`] = `"#282a36"`;
+
+exports[`style helpers > background > Night Owl 1`] = `"#002B36"`;
+
+exports[`style helpers > background > Visual Studio 1`] = `"#FFFFFF"`;
+
+exports[`style helpers > constantLanguageForeground > Active4D 1`] = `"#A535AE"`;
+
+exports[`style helpers > constantLanguageForeground > Base16 Eva 1`] = `"#ff9966"`;
+
+exports[`style helpers > constantLanguageForeground > Base16 Unikitty Light 1`] = `"#d65407"`;
+
+exports[`style helpers > constantLanguageForeground > Dracula 1`] = `"#bd93f9"`;
+
+exports[`style helpers > constantLanguageForeground > Night Owl 1`] = `"#82AAFF"`;
+
+exports[`style helpers > constantLanguageForeground > Visual Studio 1`] = `"#000000"`;
+
+exports[`style helpers > constantLanguageNullForeground > Active4D 1`] = `"#A535AE"`;
+
+exports[`style helpers > constantLanguageNullForeground > Base16 Eva 1`] = `"#ff9966"`;
+
+exports[`style helpers > constantLanguageNullForeground > Base16 Unikitty Light 1`] = `"#d65407"`;
+
+exports[`style helpers > constantLanguageNullForeground > Dracula 1`] = `"#bd93f9"`;
+
+exports[`style helpers > constantLanguageNullForeground > Night Owl 1`] = `"#82AAFF"`;
+
+exports[`style helpers > constantLanguageNullForeground > Visual Studio 1`] = `"#000000"`;
+
+exports[`style helpers > constantNumericForeground > Active4D 1`] = `"#A8017E"`;
+
+exports[`style helpers > constantNumericForeground > Base16 Eva 1`] = `"#ff9966"`;
+
+exports[`style helpers > constantNumericForeground > Base16 Unikitty Light 1`] = `"#d65407"`;
+
+exports[`style helpers > constantNumericForeground > Dracula 1`] = `"#bd93f9"`;
+
+exports[`style helpers > constantNumericForeground > Night Owl 1`] = `"#F78C6C"`;
+
+exports[`style helpers > constantNumericForeground > Visual Studio 1`] = `"#A31515"`;
+
+exports[`style helpers > foreground > Active4D 1`] = `"#3B3B3B"`;
+
+exports[`style helpers > foreground > Base16 Eva 1`] = `"#9fa2a6"`;
+
+exports[`style helpers > foreground > Base16 Unikitty Light 1`] = `"#6c696e"`;
+
+exports[`style helpers > foreground > Dracula 1`] = `"#f8f8f2"`;
+
+exports[`style helpers > foreground > Night Owl 1`] = `"#839496"`;
+
+exports[`style helpers > foreground > Visual Studio 1`] = `"#000000"`;
+
+exports[`style helpers > selection > Active4D 1`] = `"#BAD6FD"`;
+
+exports[`style helpers > selection > Base16 Eva 1`] = `"#4b6988"`;
+
+exports[`style helpers > selection > Base16 Unikitty Light 1`] = `"#c4c3c5"`;
+
+exports[`style helpers > selection > Dracula 1`] = `"#44475a"`;
+
+exports[`style helpers > selection > Night Owl 1`] = `"#073642"`;
+
+exports[`style helpers > selection > Visual Studio 1`] = `"#9DA7C3"`;
+
+exports[`style helpers > stringForeground > Active4D 1`] = `"#666666"`;
+
+exports[`style helpers > stringForeground > Base16 Eva 1`] = `"#66ff66"`;
+
+exports[`style helpers > stringForeground > Base16 Unikitty Light 1`] = `"#17ad98"`;
+
+exports[`style helpers > stringForeground > Dracula 1`] = `"#f1fa8c"`;
+
+exports[`style helpers > stringForeground > Night Owl 1`] = `"#addb67"`;
+
+exports[`style helpers > stringForeground > Visual Studio 1`] = `"#A31515"`;
+
+exports[`style helpers > supportTypeForeground > Active4D 1`] = `"#A535AE"`;
+
+exports[`style helpers > supportTypeForeground > Base16 Eva 1`] = `"#4b8f77"`;
+
+exports[`style helpers > supportTypeForeground > Base16 Unikitty Light 1`] = `"#149bda"`;
+
+exports[`style helpers > supportTypeForeground > Dracula 1`] = `"#66d9ef"`;
+
+exports[`style helpers > supportTypeForeground > Night Owl 1`] = `"#addb67"`;
+
+exports[`style helpers > supportTypeForeground > Visual Studio 1`] = `"#000000"`;

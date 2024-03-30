@@ -1,7 +1,7 @@
 import { Select } from 'antd';
 import { THEME_LIST } from '../../configuration/themes';
 import { useTheme } from '../../contexts/ThemeContext';
-import { getSetting } from '../theme';
+import { background, selection } from '../theme';
 
 export default function ThemeSelector() {
   const { themeName, changeTheme } = useTheme();
@@ -19,8 +19,8 @@ export default function ThemeSelector() {
             <>
               <span
                 style={{
-                  background: getSetting(THEME_LIST[key], 'background'),
-                  color: getSetting(THEME_LIST[key], 'selection'),
+                  background: background({ theme: THEME_LIST[key] }),
+                  color: selection({ theme: THEME_LIST[key] }),
                   marginRight: 4,
                   padding: '0 5px 0 4px',
                   borderRadius: 2,

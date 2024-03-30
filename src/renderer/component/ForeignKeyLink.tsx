@@ -3,7 +3,7 @@ import { styled } from 'styled-components';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
-import { getColor, getSetting } from '../theme';
+import { foreground, supportTypeForeground } from '../theme';
 
 type Props = {
   columnName: string;
@@ -11,11 +11,11 @@ type Props = {
 };
 
 const StyledLink = styled(Link)`
-  color: ${({ theme }) => getColor(theme, 'support.type', 'foreground')};
+  color: ${supportTypeForeground};
   text-decoration: none;
 
   &:hover {
-    color: ${({ theme }) => getSetting(theme, 'foreground')};
+    color: ${foreground};
   }
 `;
 

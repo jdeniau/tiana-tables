@@ -5,7 +5,7 @@ import {
   isUnscopedSetting,
 } from '../../configuration/themes';
 
-export function getColor(
+function getColor(
   currentTheme: TmTheme,
   scopeToFind: string | Array<string>,
   settingToFind: string
@@ -36,10 +36,7 @@ export function getColor(
   return item.settings[settingToFind];
 }
 
-export function getSetting(
-  currentTheme: TmTheme,
-  key: string
-): string | undefined {
+function getSetting(currentTheme: TmTheme, key: string): string | undefined {
   const settings = currentTheme.settings.filter(isUnscopedSetting);
 
   if (!settings) {
@@ -48,3 +45,37 @@ export function getSetting(
 
   return settings[0].settings[key];
 }
+
+type StyledProps = { theme: TmTheme };
+
+export const foreground = (props: StyledProps): string | undefined =>
+  getSetting(props.theme, 'foreground');
+
+export const background = (props: StyledProps): string | undefined =>
+  getSetting(props.theme, 'background');
+
+export const selection = (props: StyledProps): string | undefined =>
+  getSetting(props.theme, 'selection');
+
+export const stringForeground = (props: StyledProps): string | undefined =>
+  getColor(props.theme, 'string', 'foreground');
+
+export const supportTypeForeground = (props: StyledProps): string | undefined =>
+  getColor(props.theme, 'support.type', 'foreground');
+
+export const constantLanguageForeground = (
+  props: StyledProps
+): string | undefined =>
+  getColor(props.theme, 'constant.language', 'foreground');
+
+export const constantNumericForeground = (
+  props: StyledProps
+): string | undefined =>
+  getColor(props.theme, 'constant.numeric', 'foreground');
+
+export const constantLanguageNullForeground = (props: StyledProps) =>
+  getColor(
+    props.theme,
+    ['constant.language.null', 'constant.language'],
+    'foreground'
+  );

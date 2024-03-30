@@ -2,7 +2,12 @@ import { ReactNode } from 'react';
 import { Flex } from 'antd';
 import { Types } from 'mysql'; // immporting from mysql2 will import the commonjs package and will fail
 import { styled } from 'styled-components';
-import { getColor, getSetting } from '../theme';
+import {
+  constantLanguageNullForeground,
+  constantNumericForeground,
+  foreground,
+  stringForeground,
+} from '../theme';
 
 interface TableCellFactoryProps {
   type: number | undefined;
@@ -19,12 +24,7 @@ const BaseCell = styled.div`
 `;
 
 const NullSpan = styled(BaseCell)`
-  color: ${(props) =>
-    getColor(
-      props.theme,
-      ['constant.language.null', 'constant.language'],
-      'foreground'
-    )};
+  color: ${constantLanguageNullForeground};
 `;
 
 function NullCell() {
@@ -32,7 +32,7 @@ function NullCell() {
 }
 
 const ForegroundSpan = styled(BaseCell)`
-  color: ${(props) => getSetting(props.theme, 'foreground')};
+  color: ${foreground};
 `;
 
 function DatetimeCell({ value }: { value: Date }) {
@@ -40,14 +40,14 @@ function DatetimeCell({ value }: { value: Date }) {
 }
 
 const StringSpan = styled(BaseCell)`
-  color: ${(props) => getColor(props.theme, 'string', 'foreground')};
+  color: ${stringForeground};
 `;
 function StringCell({ value }: { value: string }) {
   return <StringSpan>{value}</StringSpan>;
 }
 
 const NumberSpan = styled(BaseCell)`
-  color: ${(props) => getColor(props.theme, 'constant.numeric', 'foreground')};
+  color: ${constantNumericForeground};
 `;
 function NumberCell({ value }: { value: number }) {
   return <NumberSpan>{value}</NumberSpan>;
