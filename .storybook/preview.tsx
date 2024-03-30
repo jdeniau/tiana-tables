@@ -6,7 +6,7 @@ import { ThemeContextProvider } from '../src/contexts/ThemeContext';
 import { changeLanguage } from '../src/i18n';
 import { DEFAULT_THEME, THEME_LIST } from '../src/configuration/themes';
 import { DEFAULT_LOCALE } from '../src/configuration/locale';
-import { getSetting } from '../src/renderer/theme';
+import { background } from '../src/renderer/theme';
 
 const { ConfigurationContext } = testables;
 
@@ -94,7 +94,7 @@ const preview: Preview = {
         <style>
           {`
 .sb-show-main {
-  background:  ${getSetting(THEME_LIST[theme], 'background')} !important;
+  background:  ${background({ theme: THEME_LIST[theme] })} !important;
   transition: background 0s;
 }`}
         </style>

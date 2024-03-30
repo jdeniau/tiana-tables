@@ -16,19 +16,19 @@ import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import LangSelector from '../component/LangSelector';
 import ThemeSelector from '../component/ThemeSelector';
 import useEffectOnce from '../hooks/useEffectOnce';
-import { getSetting } from '../theme';
+import { background, foreground, selection } from '../theme';
 
 const Header = styled(Layout.Header)`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: ${({ theme }) => getSetting(theme, 'selection')};
+  background-color: ${selection};
 `;
 
 const Content = styled(Layout.Content)`
   display: flex;
   flex-direction: column;
-  background-color: ${({ theme }) => getSetting(theme, 'background')};
+  background-color: ${background};
 `;
 
 function ToggleRawSqlButton() {
@@ -50,11 +50,11 @@ function ToggleRawSqlButton() {
 }
 
 const RootLink = styled(Link)`
-  color: ${({ theme }) => getSetting(theme, 'foreground')};
+  color: ${foreground};
   text-decoration: none;
 
   &:hover {
-    color: ${({ theme }) => getSetting(theme, 'foreground')};
+    color: ${foreground};
   }
 `;
 

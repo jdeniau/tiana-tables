@@ -3,14 +3,14 @@ import { Layout } from 'antd';
 import { styled } from 'styled-components';
 import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
 import { ConnectionContext } from '../../../contexts/ConnectionContext';
-import { getSetting } from '../../theme';
+import { selection } from '../../theme';
 import Nav from './Nav';
 
 const Header = styled(Layout.Header)`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: ${({ theme }) => getSetting(theme, 'selection')};
+  background-color: ${selection};
 `;
 
 const meta: Meta<typeof Nav> = {

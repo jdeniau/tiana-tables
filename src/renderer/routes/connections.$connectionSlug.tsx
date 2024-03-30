@@ -15,14 +15,14 @@ import { useTranslation } from '../../i18n';
 import DatabaseSelector from '../component/DatabaseSelector';
 import { KeyboardShortcut } from '../component/KeyboardShortcut';
 import TableList from '../component/TableList';
-import { getSetting } from '../theme';
+import { background, foreground } from '../theme';
 import NavigateModalContextProvider, {
   useNavigateModalContext,
 } from '../useNavigationListener';
 
 const Sider = styled(Layout.Sider)`
-  border-right: 1px solid ${(props) => getSetting(props.theme, 'foreground')};
-  background: ${(props) => getSetting(props.theme, 'background')} !important;
+  border-right: 1px solid ${foreground};
+  background: ${background} !important;
 `;
 
 interface RouteParams extends LoaderFunctionArgs {

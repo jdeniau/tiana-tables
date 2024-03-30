@@ -7,7 +7,7 @@ import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useTranslation } from '../../i18n';
 import { ShowTableStatus } from '../../sql/types';
-import { getSetting } from '../theme';
+import { selection } from '../theme';
 
 type Props = {
   isNavigateModalOpen: boolean;
@@ -159,9 +159,9 @@ const ItemListWithHover = styled(List.Item)<{ $active: boolean }>`
   cursor: pointer;
 
   &:hover {
-    background-color: ${({ theme }) => getSetting(theme, 'selection')};
+    background-color: ${selection};
   }
 
   ${({ $active, theme }) =>
-    $active ? `background-color: ${getSetting(theme, 'selection')};` : ''}
+    $active ? `background-color: ${selection({ theme })};` : ''}
 `;

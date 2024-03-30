@@ -17,7 +17,12 @@ import {
   THEME_LIST,
   isDarkTheme,
 } from '../configuration/themes';
-import { getColor, getSetting } from '../renderer/theme';
+import {
+  background,
+  constantLanguageForeground,
+  foreground,
+  supportTypeForeground,
+} from '../renderer/theme';
 import { useConfiguration } from './ConfigurationContext';
 
 interface ChangeThemeFunc {
@@ -39,8 +44,8 @@ const LayoutDiv = styled.div`
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: ${(props) => getSetting(props.theme, 'background')};
-  color: ${(props) => getSetting(props.theme, 'foreground')};
+  background: ${background};
+  color: ${foreground};
 `;
 
 export function ThemeContextProvider({
@@ -70,25 +75,25 @@ export function ThemeContextProvider({
       algorithm: isDarkTheme(theme) ? antdTheme.darkAlgorithm : undefined,
       token: {
         // Seed Token
-        colorPrimary: getSetting(theme, 'foreground'),
+        colorPrimary: foreground({ theme }),
 
         // Alias Token
-        colorBgContainer: getSetting(theme, 'background'),
+        colorBgContainer: background({ theme }),
       },
       components: {
         Button: {
-          colorPrimary: getColor(theme, 'constant.language', 'foreground'),
-          colorLink: getColor(theme, 'support.type', 'foreground'),
+          colorPrimary: constantLanguageForeground({ theme }),
+          colorLink: supportTypeForeground({ theme }),
           algorithm: true,
         },
         Menu: {
           itemHeight: 32,
-          itemColor: getColor(theme, 'support.type', 'foreground'),
+          itemColor: supportTypeForeground({ theme }),
           padding: 8, // reduce default padding from 16 to 8
 
           // swap colors for selected item
-          itemSelectedBg: getColor(theme, 'support.type', 'foreground'),
-          itemSelectedColor: getSetting(theme, 'background'),
+          itemSelectedBg: supportTypeForeground({ theme }),
+          itemSelectedColor: background({ theme }),
         },
       },
     }),

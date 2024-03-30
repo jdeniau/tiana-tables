@@ -5,14 +5,14 @@ import { styled } from 'styled-components';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
-import { getSetting } from '../../theme';
+import { selection } from '../../theme';
 import ButtonLink from '../ButtonLink';
 import { KeyboardShortcutTooltip } from '../KeyboardShortcut';
 
 const StyledMenu = styled(Menu)`
   flex: 1;
   min-width: 0;
-  background-color: ${({ theme }) => getSetting(theme, 'selection')};
+  background-color: ${selection};
 `;
 
 export default function Nav(): ReactElement | null {
