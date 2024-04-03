@@ -117,7 +117,9 @@ export default class WindowStateKeeper {
     }
   }
 
-  updateState(win: BrowserWindow | undefined = this.#winRef): void {
+  updateState(): void {
+    const win = this.#winRef;
+
     if (!win) {
       return;
     }
@@ -150,7 +152,10 @@ export default class WindowStateKeeper {
       clearTimeout(this.#stateChangeTimer);
     }
 
-    this.#stateChangeTimer = setTimeout(this.updateState, EVENT_HANDLING_DELAY);
+    this.#stateChangeTimer = setTimeout(
+      () => this.updateState(),
+      EVENT_HANDLING_DELAY
+    );
   }
 
   closeHandler(): void {
