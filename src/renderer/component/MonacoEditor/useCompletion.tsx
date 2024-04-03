@@ -8,6 +8,7 @@ import {
 } from 'monaco-editor/esm/vs/editor/editor.api';
 import invariant from 'tiny-invariant';
 import { useTableListContext } from '../../../contexts/TableListContext';
+import { generateTableAlias } from '../../../sql/tableName';
 import { ShowTableStatus } from '../../../sql/types';
 
 const SQL_KEYWORDS = [
@@ -67,18 +68,27 @@ function provideCompletionItems(
       const tableLength = matches[3]?.length ?? 0;
       const startColumn = range.startColumn + fullLength - tableLength;
 
+      const usedAliases: string[] = [];
+
       return {
-        suggestions: tableList.map((table) => ({
-          label: table.Name,
-          kind: languages.CompletionItemKind.Variable,
-          insertText: table.Name,
-          range: new Range(
-            range.startLineNumber,
-            startColumn,
-            position.lineNumber,
-            position.column
-          ),
-        })),
+        suggestions: tableList.map((table) => {
+          // TODO actually, we do extract the alias from the list of table names. See https://github.com/jdeniau/tiana-tables/issues/83
+          const alias = generateTableAlias(table.Name, usedAliases);
+
+          usedAliases.push(alias);
+
+          return {
+            label: table.Name,
+            kind: languages.CompletionItemKind.Variable,
+            insertText: `${table.Name} ${alias} `,
+            range: new Range(
+              range.startLineNumber,
+              startColumn,
+              position.lineNumber,
+              position.column
+            ),
+          };
+        }),
       };
     }
 

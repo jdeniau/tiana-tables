@@ -40,14 +40,14 @@ describe('provideCompletionItems', () => {
   });
 
   test.each([
-    { sql: 'SELECT * FROM' },
+    { sql: 'SELECT * FROM' }, // TODO should not allow a table, or should add a spacing
+    { sql: 'SELECT * FROM table_name LEFT JOIN' }, // TODO should not allow a table, or should add a spacing
     { sql: 'SELECT * FROM ' },
     { sql: 'SELECT * FROM database.' },
     { sql: 'SELECT * FROM WHERE foo = bar ', column: 15 },
     { sql: 'SELECT * FROM table_name WHERE foo = bar ', column: 15 },
     { sql: 'SELECT * FROM table_name JOIN ' },
     { sql: 'SELECT * FROM table_name LEFT JOIN ' },
-    { sql: 'SELECT * FROM table_name LEFT JOIN' },
   ])(
     'should return tablelist if we are after FROM or JOIN',
     ({ sql, column }) => {
@@ -71,12 +71,20 @@ describe('provideCompletionItems', () => {
       );
 
       expect(result).toEqual({
-        suggestions: tableList.map((table) => ({
-          label: table.Name,
-          kind: monaco.languages.CompletionItemKind.Variable,
-          insertText: table.Name,
-          range: new monaco.Range(1, definedColumn, 1, definedColumn),
-        })),
+        suggestions: [
+          {
+            label: 'table1',
+            kind: monaco.languages.CompletionItemKind.Variable,
+            insertText: `table1 t `,
+            range: new monaco.Range(1, definedColumn, 1, definedColumn),
+          },
+          {
+            label: 'table2',
+            kind: monaco.languages.CompletionItemKind.Variable,
+            insertText: `table2 ta `,
+            range: new monaco.Range(1, definedColumn, 1, definedColumn),
+          },
+        ],
       });
     }
   );
