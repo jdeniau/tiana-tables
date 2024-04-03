@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { TableListContextProvider } from '../../../contexts/TableListContext';
 import { RawSqlEditor } from './RawSqlEditor';
 
 const meta: Meta<typeof RawSqlEditor> = {
@@ -6,6 +7,13 @@ const meta: Meta<typeof RawSqlEditor> = {
   args: {
     style: { width: '100vw', height: '35vh' },
   },
+  decorators: [
+    (Story) => (
+      <TableListContextProvider tableList={[]}>
+        <Story />
+      </TableListContextProvider>
+    ),
+  ],
 };
 
 export default meta;

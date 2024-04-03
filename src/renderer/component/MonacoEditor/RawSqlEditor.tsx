@@ -3,6 +3,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import './userWorker';
 import { useTheme } from 'styled-components';
 import { convertTextmateThemeToMonaco } from './themes';
+import useCompletion from './useCompletion';
 
 type Props = {
   defaultValue?: string;
@@ -29,6 +30,8 @@ export function RawSqlEditor({
   const monacoTheme = convertTextmateThemeToMonaco(textmateTheme);
 
   monaco.editor.defineTheme('currentTheme', monacoTheme);
+
+  useCompletion(monaco);
 
   const memoizedMonacoOptions = useMemo(() => monacoOptions, [monacoOptions]);
 

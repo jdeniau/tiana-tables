@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
+import { useTableListContext } from '../../contexts/TableListContext';
 import { useTranslation } from '../../i18n';
 import { ShowTableStatus } from '../../sql/types';
 import { selection } from '../theme';
@@ -12,13 +13,11 @@ import { selection } from '../theme';
 type Props = {
   isNavigateModalOpen: boolean;
   setIsNavigateModalOpen: (isOpened: boolean) => void;
-  tableStatusList: ShowTableStatus[];
 };
 
 export default function NavigateModal({
   isNavigateModalOpen,
   setIsNavigateModalOpen,
-  tableStatusList,
 }: Props): ReactElement {
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
@@ -27,6 +26,7 @@ export default function NavigateModal({
   const navigate = useNavigate();
   const searchRef = useRef<InputRef>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const tableStatusList = useTableListContext();
 
   let filteredTableStatusList = tableStatusList;
 

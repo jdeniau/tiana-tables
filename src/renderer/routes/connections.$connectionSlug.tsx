@@ -11,6 +11,7 @@ import {
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
+import { TableListContextProvider } from '../../contexts/TableListContext';
 import { useTranslation } from '../../i18n';
 import DatabaseSelector from '../component/DatabaseSelector';
 import { KeyboardShortcut } from '../component/KeyboardShortcut';
@@ -101,20 +102,22 @@ export default function ConnectionDetailPage() {
   }, [addConnectionToList, connectionSlug]);
 
   return (
-    <NavigateModalContextProvider tableStatusList={tableStatusList}>
-      <Layout>
-        <Sider width={200} style={{ overflow: 'auto' }}>
-          <Flex vertical gap="small">
-            <DatabaseSelector databaseList={databaseList} />
-            <OpenNavigateModalButton />
-            <TableList tableStatusList={tableStatusList} />
-          </Flex>
-        </Sider>
-        <Layout.Content style={{ overflow: 'auto' }}>
-          <Outlet />
-        </Layout.Content>
-      </Layout>
-    </NavigateModalContextProvider>
+    <TableListContextProvider tableList={tableStatusList}>
+      <NavigateModalContextProvider>
+        <Layout>
+          <Sider width={200} style={{ overflow: 'auto' }}>
+            <Flex vertical gap="small">
+              <DatabaseSelector databaseList={databaseList} />
+              <OpenNavigateModalButton />
+              <TableList tableStatusList={tableStatusList} />
+            </Flex>
+          </Sider>
+          <Layout.Content style={{ overflow: 'auto' }}>
+            <Outlet />
+          </Layout.Content>
+        </Layout>
+      </NavigateModalContextProvider>
+    </TableListContextProvider>
   );
 }
 
