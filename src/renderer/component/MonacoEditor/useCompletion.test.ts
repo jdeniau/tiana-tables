@@ -14,7 +14,7 @@ describe('provideCompletionItems', () => {
     { sql: 'SELECT * ' },
     { sql: 'SELECT * FROM table_name ' },
     { sql: 'SELECT * FROM table_name ', column: 1 },
-    { sql: 'SELECT * FROM table_name WHERE foo = bar ' },
+    { sql: 'SELECT * FROM table_name WHERE foo = "foo" ' },
   ])('should return suggestions for SQL keywords', ({ sql, column }) => {
     const definedColumn = column ?? sql.length + 1;
     const tableList: ShowTableStatus[] = [];
