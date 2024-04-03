@@ -1,6 +1,7 @@
 import { Spin } from 'antd';
 import { Fetcher } from 'react-router';
 import invariant from 'tiny-invariant';
+import { ForeignKeysContextProvider } from '../../../../contexts/ForeignKeysContext';
 import { useTranslation } from '../../../../i18n';
 import { SqlError } from '../../../../sql/errorSerializer';
 import {
@@ -47,11 +48,14 @@ export default function RawSqlResult({ fetcher }: Props) {
   return (
     <>
       {result && isRowDataPacketArray(result[0]) && (
-        <TableGrid
-          result={result[0]}
-          fields={result[1]}
-          title={() => t('rawSql.result.title')}
-        />
+        // TOOD maybe fetch foreign keys of queried table to activate navlinks
+        <ForeignKeysContextProvider foreignKeys={{}}>
+          <TableGrid
+            result={result[0]}
+            fields={result[1]}
+            title={() => t('rawSql.result.title')}
+          />
+        </ForeignKeysContextProvider>
       )}
 
       {result && isResultSetHeader(result[0]) && (
