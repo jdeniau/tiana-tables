@@ -43,7 +43,13 @@ function TableGrid<Row extends RowDataPacket>({
               <Cell
                 type={field.type}
                 value={value}
-                link={<ForeignKeyLink columnName={field.name} value={value} />}
+                link={
+                  <ForeignKeyLink
+                    tableName={field.table}
+                    columnName={field.name}
+                    value={value}
+                  />
+                }
               />
             </>
           ),

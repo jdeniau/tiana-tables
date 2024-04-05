@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext';
 import { TableListContextProvider } from '../../../contexts/TableListContext';
 import { RawSqlEditor } from './RawSqlEditor';
 
@@ -9,9 +10,11 @@ const meta: Meta<typeof RawSqlEditor> = {
   },
   decorators: [
     (Story) => (
-      <TableListContextProvider tableList={[]}>
-        <Story />
-      </TableListContextProvider>
+      <ForeignKeysContextProvider keyColumnUsageRows={[]}>
+        <TableListContextProvider tableList={[]}>
+          <Story />
+        </TableListContextProvider>
+      </ForeignKeysContextProvider>
     ),
   ],
 };
@@ -35,14 +38,48 @@ LIMIT 10;`,
   },
 };
 
-// export const Edit: Story = {
-//   args: {
-//     connection: {
-//       name: 'test',
-//       host: 'localhost',
-//       port: 3307,
-//       user: 'test-user',
-//       password: '',
-//     },
-//   },
-// };
+export const WithTablesAnsForeignKeys: Story = {
+  args: {
+    defaultValue: `SELECT *
+FROM employe e
+JOIN 
+`,
+  },
+  decorators: [
+    (Story) => (
+      <ForeignKeysContextProvider
+        keyColumnUsageRows={[
+          // @ts-expect-error issue with contstructor name
+          {
+            TABLE_NAME: 'employe',
+            COLUMN_NAME: 'title_id',
+            REFERENCED_TABLE_NAME: 'title',
+            REFERENCED_COLUMN_NAME: 'id',
+            CONSTRAINT_NAME: 'employe_title_id_fkey',
+          },
+          // @ts-expect-error issue with contstructor name
+          {
+            TABLE_NAME: 'planning',
+            COLUMN_NAME: 'employe_id',
+            REFERENCED_TABLE_NAME: 'employe',
+            REFERENCED_COLUMN_NAME: 'id',
+            CONSTRAINT_NAME: 'planning_employe_id_fkey',
+          },
+        ]}
+      >
+        <TableListContextProvider
+          tableList={[
+            // @ts-expect-error don't want all data, only the name
+            { Name: 'employe' },
+            // @ts-expect-error don't want all data, only the name
+            { Name: 'title' },
+            // @ts-expect-error don't want all data, only the name
+            { Name: 'planning' },
+          ]}
+        >
+          <Story />
+        </TableListContextProvider>
+      </ForeignKeysContextProvider>
+    ),
+  ],
+};

@@ -7,8 +7,14 @@ import {
   languages,
 } from 'monaco-editor/esm/vs/editor/editor.api';
 import invariant from 'tiny-invariant';
+import { useForeignKeysContext } from '../../../contexts/ForeignKeysContext';
 import { useTableListContext } from '../../../contexts/TableListContext';
-import { generateTableAlias } from '../../../sql/tableName';
+import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
+import {
+  extractTableAliases,
+  extractTableNames,
+  generateTableAlias,
+} from '../../../sql/tableName';
 import { ShowTableStatus } from '../../../sql/types';
 
 const SQL_KEYWORDS = [
@@ -26,7 +32,8 @@ const SQL_KEYWORDS = [
 
 function provideCompletionItems(
   languages: typeof import('monaco-editor/esm/vs/editor/editor.api').languages,
-  tableList: ShowTableStatus[]
+  tableList: ShowTableStatus[],
+  foreignKeys: ForeignKeysHelper
 ): languages.CompletionItemProvider['provideCompletionItems'] {
   return (
     model: editor.ITextModel,
@@ -37,12 +44,13 @@ function provideCompletionItems(
     _token: CancellationToken
   ) => {
     // console.log(model, position);
-    // const textUntilPosition = model.getValueInRange({
-    //   startLineNumber: 1,
-    //   startColumn: 1,
-    //   endLineNumber: position.lineNumber,
-    //   endColumn: position.column,
-    // });
+    const textUntilPosition = model.getValueInRange({
+      startLineNumber: 1,
+      startColumn: 1,
+      endLineNumber: position.lineNumber,
+      endColumn: position.column,
+    });
+
     // const hasFromBefore = textUntilPosition.match(/FROM\s*$/i);
     const isAfterFromOrJoin = model.findMatches(
       '(from|join)\\s*(?<database>\\w*\\.)?(?<tablename>\\w+)?$', // searchString
@@ -68,19 +76,25 @@ function provideCompletionItems(
       const tableLength = matches[3]?.length ?? 0;
       const startColumn = range.startColumn + fullLength - tableLength;
 
-      const usedAliases: string[] = [];
+      const usedAliases: string[] = extractTableAliases(textUntilPosition);
+      const usedTables = extractTableNames(textUntilPosition);
 
       return {
         suggestions: tableList.map((table) => {
-          // TODO actually, we do extract the alias from the list of table names. See https://github.com/jdeniau/tiana-tables/issues/83
           const alias = generateTableAlias(table.Name, usedAliases);
 
-          usedAliases.push(alias);
+          const fk = foreignKeys.getLinkBetweenTables(table.Name, usedTables);
+
+          const joinString = fk
+            ? `ON ${alias}.${fk.referencedColumnName} = ${fk.alias || fk.referencedTableName}.${fk.columnName} `
+            : '';
+
+          const insertText = `${table.Name} ${alias} ${joinString}`;
 
           return {
             label: table.Name,
             kind: languages.CompletionItemKind.Variable,
-            insertText: `${table.Name} ${alias} `,
+            insertText,
             range: new Range(
               range.startLineNumber,
               startColumn,
@@ -114,6 +128,7 @@ export default function useCompletion(
   monaco: typeof import('monaco-editor/esm/vs/editor/editor.api')
 ) {
   const tableList = useTableListContext();
+  const foreignKeys = useForeignKeysContext();
 
   useEffect(() => {
     // interesting examples :
@@ -123,14 +138,24 @@ export default function useCompletion(
       monaco.languages.registerCompletionItemProvider('sql', {
         provideCompletionItems: provideCompletionItems(
           monaco.languages,
-          tableList
+          tableList,
+          foreignKeys
         ),
+        // This function can be used to resolve additional information for the item that is being auto completed.
+        // resolveCompletionItem: async (item, token) => {
+        //   console.log('resolveCompletionItem', item, token);
+        //
+        //   const table = item.label;
+        //   item.insertText += ` ON a.id = b.a_id`;
+        //
+        //   return item;
+        // },
       });
 
     return () => {
       completionItemProvider.dispose();
     };
-  }, [monaco.Range, monaco.languages, tableList]);
+  }, [foreignKeys, monaco.Range, monaco.languages, tableList]);
 }
 
 export const testables = { provideCompletionItems, SQL_KEYWORDS };

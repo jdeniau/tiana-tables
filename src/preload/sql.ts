@@ -18,7 +18,7 @@ interface Sql {
     connectionSlug: string | undefined,
     databaseName?: string | undefined
   ): void;
-  getKeyColumnUsage(tableName: string): QueryResult<KeyColumnUsageRow[]>;
+  getKeyColumnUsage(tableName?: string): QueryResult<KeyColumnUsageRow[]>;
   showDatabases(): QueryResult<ShowDatabasesResult>;
   getPrimaryKeys(tableName: string): QueryResult<ShowKeyRow[]>;
   showTableStatus(): QueryResult<ShowTableStatus[]>;

@@ -76,6 +76,8 @@ describe('loader', () => {
           ],
         ])
       ),
+      // @ts-expect-error return is OK here, type is too complex or now
+      getKeyColumnUsage: vi.fn(() => []),
       connectionNameChanged: vi.fn(),
     };
   });

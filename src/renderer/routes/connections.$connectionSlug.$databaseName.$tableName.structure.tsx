@@ -31,6 +31,7 @@ export default function TableStructure() {
         title={() => 'KEY COLUMN USAGE'}
         result={result}
         fields={fields}
+        primaryKeys={['TABLE_NAME', 'COLUMN_NAME']}
       />
     </Flex>
   );

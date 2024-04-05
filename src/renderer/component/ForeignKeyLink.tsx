@@ -6,6 +6,7 @@ import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import { foreground, supportTypeForeground } from '../theme';
 
 type Props = {
+  tableName: string;
   columnName: string;
   value: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
@@ -20,14 +21,16 @@ const StyledLink = styled(Link)`
 `;
 
 export default function ForeignKeyLink({
+  tableName,
   columnName,
   value,
 }: Props): JSX.Element | null {
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
+
   const foreignKeys = useForeignKeysContext();
 
-  const foreignKey = foreignKeys[columnName];
+  const foreignKey = foreignKeys.getForeignKey(tableName, columnName);
 
   if (!foreignKey) {
     return null;

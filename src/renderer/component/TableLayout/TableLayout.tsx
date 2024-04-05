@@ -39,7 +39,7 @@ export function TableLayout({
         .executeQuery<RowDataPacket[]>(query)
         .then(([result, fields]) => {
           setCurrentOffset(offset);
-          setFields(fields || null);
+          setFields(fields.map((field) => ({ ...field, table: tableName })));
           setResult((prev) =>
             offset > 0 && prev ? prev.concat(result) : result
           );

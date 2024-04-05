@@ -1,4 +1,3 @@
-// TODO : handle context where alias is already used
 export function generateTableAlias(
   tableName: string,
   usedAliases: Array<string>
@@ -54,4 +53,50 @@ export function generateTableAlias(
   }
 
   return newAlias;
+}
+
+const FORBIDDEN_ALIASES = ['JOIN', 'INNER', 'LEFT', 'RIGHT', 'FULL'];
+const FORBIDDEN_ALIASES_JOINED = FORBIDDEN_ALIASES.join('|');
+
+const TABLE_NAME_REGEX = new RegExp(
+  `(from|join)\\s+(?<database>\\w*\\.)?(?<tablename>\\w+)?\\s*(as\\s+)?(?!${FORBIDDEN_ALIASES_JOINED})(?<alias>\\w+)?`,
+  'gi'
+);
+
+/**
+ * Extract all table names from the given query.
+ * This function does not check that the table exist,
+ * but do only extract the table names from the SQL syntax
+ */
+export function extractTableNames(
+  sql: string
+): Array<{ tableName: string; alias: string | undefined }> {
+  // TODO add "alias" to the return type
+  const matches = sql.matchAll(TABLE_NAME_REGEX);
+
+  const arrayMatches = [...matches];
+
+  // console.log(arrayMatches);
+
+  return arrayMatches
+    .map((m) => ({ tableName: m.groups?.tablename, alias: m.groups?.alias }))
+    .filter(
+      (m): m is { tableName: string; alias: string | undefined } =>
+        typeof m.tableName === 'string'
+    );
+}
+
+export function extractTableAliases(sql: string): Array<string> {
+  const matches = sql.matchAll(TABLE_NAME_REGEX);
+
+  const arrayMatches = [...matches];
+
+  // console.log(arrayMatches);
+
+  return arrayMatches
+    .map((m) => m.groups?.alias)
+    .filter(
+      (m): m is string =>
+        typeof m === 'string' && !FORBIDDEN_ALIASES.includes(m)
+    );
 }
