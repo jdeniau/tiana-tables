@@ -61,7 +61,7 @@ class ConnectionStack {
   }
 
   async getKeyColumnUsage(
-    tableName: string
+    tableName?: string
   ): QueryResultOrError<KeyColumnUsageRow[]> {
     invariant(this.#databaseName, 'Database name is required');
 
@@ -75,8 +75,8 @@ class ConnectionStack {
       FROM
         INFORMATION_SCHEMA.KEY_COLUMN_USAGE
       WHERE
-        TABLE_SCHEMA = '${this.#databaseName}' AND
-        TABLE_NAME = '${tableName}' 
+        TABLE_SCHEMA = '${this.#databaseName}'
+        ${tableName ? `AND TABLE_NAME = '${tableName}'` : ''}
     `;
 
     return this.executeQueryAndRetry<KeyColumnUsageRow[]>(query);

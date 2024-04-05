@@ -1,30 +1,26 @@
 import { createContext, useContext } from 'react';
+import { ForeignKeysHelper } from '../sql/ForeignKeysHelper';
+import { KeyColumnUsageRow } from '../sql/types';
 
-export type ForeignKeysContext = Record<
-  string,
-  {
-    referencedTableName: string;
-    referencedColumnName: string;
-  }
->;
-
-const foreignKeysContext = createContext<ForeignKeysContext | null>(null);
+const foreignKeysContext = createContext<ForeignKeysHelper | null>(null);
 
 export function ForeignKeysContextProvider({
   children,
-  foreignKeys,
+  keyColumnUsageRows,
 }: {
   children: React.ReactNode;
-  foreignKeys: ForeignKeysContext;
+  keyColumnUsageRows: KeyColumnUsageRow[];
 }) {
+  const foreignKeysHelper = new ForeignKeysHelper(keyColumnUsageRows);
+
   return (
-    <foreignKeysContext.Provider value={foreignKeys}>
+    <foreignKeysContext.Provider value={foreignKeysHelper}>
       {children}
     </foreignKeysContext.Provider>
   );
 }
 
-export function useForeignKeysContext(): ForeignKeysContext {
+export function useForeignKeysContext(): ForeignKeysHelper {
   const context = useContext(foreignKeysContext);
 
   if (context === null) {
