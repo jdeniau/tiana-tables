@@ -1,7 +1,8 @@
 {
   "name": "tiana-tables",
   "productName": "Tiana Tables",
-  "description": "My Electron application description",
+  "description": "A SQL query tool for developers.",
+  "homepage": "https://github.com/jdeniau/tiana-tables#readme",
   "license": "MIT",
   "version": "0.0.15",
   "main": ".vite/build/main.js",
