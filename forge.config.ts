@@ -3,6 +3,7 @@ import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerRpm } from '@electron-forge/maker-rpm';
+import { MakerSnap } from '@electron-forge/maker-snap';
 // import { MakerDMG } from '@electron-forge/maker-dmg';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import invariant from 'tiny-invariant';
@@ -72,6 +73,16 @@ const config: ForgeConfig = {
       },
     }),
     // new MakerDMG({}),
+    new MakerSnap({
+      config: {
+        features: {
+          audio: true,
+          mpris: 'me.deniau.tiana-tables',
+          webgl: true,
+        },
+        summary: 'Tiana Tables: A SQL client for developers',
+      },
+    }),
   ],
   publishers: [
     {
@@ -83,6 +94,12 @@ const config: ForgeConfig = {
         },
         prerelease: true,
         draft: true,
+      },
+    },
+    {
+      name: '@electron-forge/publisher-snapcraft',
+      config: {
+        release: '[latest/edge, insider/stable]',
       },
     },
   ],
