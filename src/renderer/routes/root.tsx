@@ -18,7 +18,7 @@ import ThemeSelector from '../component/ThemeSelector';
 import useEffectOnce from '../hooks/useEffectOnce';
 import { background, foreground, selection } from '../theme';
 
-const Header = styled(Layout.Header)`
+export const Header = styled(Layout.Header)`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -29,6 +29,15 @@ const Content = styled(Layout.Content)`
   display: flex;
   flex-direction: column;
   background-color: ${background};
+`;
+
+export const RootLink = styled(Link)`
+  color: ${foreground};
+  text-decoration: none;
+
+  &:hover {
+    color: ${foreground};
+  }
 `;
 
 function ToggleRawSqlButton() {
@@ -48,15 +57,6 @@ function ToggleRawSqlButton() {
     </KeyboardShortcutTooltip>
   );
 }
-
-const RootLink = styled(Link)`
-  color: ${foreground};
-  text-decoration: none;
-
-  &:hover {
-    color: ${foreground};
-  }
-`;
 
 export default function Root() {
   const { t } = useTranslation();
