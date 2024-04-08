@@ -73,6 +73,7 @@ export function TableLayout({
       </div>
 
       <TableGrid
+        editable
         fields={fields}
         result={result}
         primaryKeys={primaryKeys}

@@ -49,6 +49,7 @@ export default function RawSqlResult({ fetcher }: Props) {
       {result && isRowDataPacketArray(result[0]) && (
         // TOOD maybe fetch foreign keys of queried table to activate navlinks
         <TableGrid
+          editable // TODO need propers primary keys to really b editable
           result={result[0]}
           fields={result[1]}
           title={() => t('rawSql.result.title')}

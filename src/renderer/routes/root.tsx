@@ -82,7 +82,7 @@ export default function Root() {
                 <h2>
                   <RootLink to="/">Tiana Tables</RootLink>
                 </h2>
-                <span>v{packageJson.version}</span>
+                <span>{window.isDev ? 'dev' : `v${packageJson.version}`}</span>
               </Flex>
 
               <ConnectionNav />
