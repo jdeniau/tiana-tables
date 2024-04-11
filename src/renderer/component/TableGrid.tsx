@@ -1,14 +1,15 @@
 import {
+  FocusEvent,
+  KeyboardEvent,
   ReactElement,
   ReactNode,
-  createContext,
-  useContext,
   useEffect,
   useRef,
   useState,
 } from 'react';
-import { Form, GetRef, Input, InputRef, Table } from 'antd';
+import { Input, InputRef, Table } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
+import { usePendingEditContext } from '../../contexts/PendingEditContext';
 import Cell from './Cell';
 import ForeignKeyLink from './ForeignKeyLink';
 import { useTableHeight } from './TableLayout/useTableHeight';
@@ -57,6 +58,7 @@ function TableGrid<Row extends RowDataPacket>({
             // editable: col.editable,
             dataIndex: field.name,
             title: field.name,
+            tableName: field.table,
             // handleSave,
             primaryKeys,
           }),
@@ -79,7 +81,6 @@ function TableGrid<Row extends RowDataPacket>({
         components={{
           body: {
             cell: EditableCell,
-            row: EditableRow,
           },
         }}
         // the list of sql rows
@@ -99,30 +100,11 @@ function TableGrid<Row extends RowDataPacket>({
   );
 }
 
-type FormInstance<T> = GetRef<typeof Form<T>>;
-
-const EditableContext = createContext<FormInstance<any> | null>(null);
-
-interface EditableRowProps {
-  index: number;
-}
-
-function EditableRow({ index, ...props }: EditableRowProps) {
-  const [form] = Form.useForm();
-
-  return (
-    <Form form={form} component={false}>
-      <EditableContext.Provider value={form}>
-        <tr {...props} />
-      </EditableContext.Provider>
-    </Form>
-  );
-}
-
 type CellProps = {
   children: ReactNode;
   dataIndex: string;
   title: string;
+  tableName: string;
   value: RowDataPacket;
   primaryKeys: Array<string>;
   editable: boolean;
@@ -132,6 +114,7 @@ function EditableCell({
   children,
   dataIndex,
   title,
+  tableName,
   value,
   primaryKeys,
   editable,
@@ -139,9 +122,9 @@ function EditableCell({
 }: CellProps) {
   // console.log(rest);
 
-  const form = useContext(EditableContext)!;
   const inputRef = useRef<InputRef>(null);
   const [editing, setEditing] = useState(false);
+  const { addPendingEdit } = usePendingEditContext();
 
   useEffect(() => {
     if (editing) {
@@ -151,38 +134,40 @@ function EditableCell({
 
   const toggleEdit = () => {
     setEditing(!editing);
-    form.setFieldsValue({ [dataIndex]: value[dataIndex] });
   };
 
-  const save = async (e) => {
-    // console.log(e);
-    try {
-      const values = await form.validateFields();
+  const save = async (
+    e: KeyboardEvent<HTMLInputElement> | FocusEvent<HTMLInputElement>
+  ) => {
+    const { value: newValue } = e.currentTarget;
 
+    if (value[dataIndex] === newValue) {
+      // data did not change, do not save anything
       toggleEdit();
-      console.log(
-        Object.fromEntries(primaryKeys.map((pk) => [pk, value[pk]])),
-        { ...values }
-      );
-      // handleSave({ ...record, ...values });
+      return;
+    }
+
+    try {
+      toggleEdit();
+      addPendingEdit({
+        tableName,
+        primaryKeys: Object.fromEntries(
+          primaryKeys.map((pk) => [pk, value[pk]])
+        ),
+        values: { [dataIndex]: newValue },
+      });
     } catch (errInfo) {
       console.log('Save failed:', errInfo);
     }
   };
 
   const childNode = editing ? (
-    <Form.Item
-      style={{ margin: 0 }}
-      name={dataIndex}
-      rules={[
-        {
-          required: true,
-          message: `${title} is required.`,
-        },
-      ]}
-    >
-      <Input ref={inputRef} onPressEnter={save} onBlur={save} />
-    </Form.Item>
+    <Input
+      ref={inputRef}
+      defaultValue={value[dataIndex]}
+      onPressEnter={save}
+      onBlur={save}
+    />
   ) : (
     <div
       className="editable-cell-value-wrap"
