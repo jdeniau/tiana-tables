@@ -3,6 +3,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useState,
 } from 'react';
 import { Button } from 'antd';
@@ -51,8 +52,13 @@ export function PendingEditContextProvider({
     [currentConnectionSlug]
   );
 
+  const value = useMemo(
+    () => ({ pendingEdits, addPendingEdit }),
+    [pendingEdits, addPendingEdit]
+  );
+
   return (
-    <PendingEditContext.Provider value={{ pendingEdits, addPendingEdit }}>
+    <PendingEditContext.Provider value={value}>
       {children}
     </PendingEditContext.Provider>
   );
