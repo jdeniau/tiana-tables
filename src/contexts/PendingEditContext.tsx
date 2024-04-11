@@ -9,16 +9,22 @@ import { Button } from 'antd';
 import invariant from 'tiny-invariant';
 import { useConnectionContext } from './ConnectionContext';
 
+enum PendingEditState {
+  Pending = 'pending',
+  Applied = 'applied',
+}
+
 type PendingEdit = {
   connectionSlug: string;
   tableName: string;
   primaryKeys: Record<string, unknown>;
   values: Record<string, unknown>;
+  state: PendingEditState;
 };
 
 type PendingEditContextType = {
   pendingEdits: Array<PendingEdit>;
-  addPendingEdit: (edit: Omit<PendingEdit, 'connectionSlug'>) => void;
+  addPendingEdit: (edit: Omit<PendingEdit, 'connectionSlug' | 'state'>) => void;
 };
 const PendingEditContext = createContext<PendingEditContextType | null>(null);
 export function PendingEditContextProvider({
@@ -30,12 +36,16 @@ export function PendingEditContextProvider({
   const [pendingEdits, setPendingEdits] = useState<Array<PendingEdit>>([]);
 
   const addPendingEdit = useCallback(
-    (edit: Omit<PendingEdit, 'connectionSlug'>) => {
+    (edit: Omit<PendingEdit, 'connectionSlug' | 'state'>) => {
       invariant(currentConnectionSlug, 'Current connection slug should be set');
 
       setPendingEdits((prev) => [
         ...prev,
-        { connectionSlug: currentConnectionSlug, ...edit },
+        {
+          state: PendingEditState.Pending,
+          connectionSlug: currentConnectionSlug,
+          ...edit,
+        },
       ]);
     },
     [currentConnectionSlug]
@@ -65,7 +75,10 @@ export function PendingEditDebug() {
   return (
     <Button
       title="Synchronize"
-      danger={pendingEdits.length > 0}
+      danger={
+        pendingEdits.filter((edit) => edit.state === PendingEditState.Pending)
+          .length > 0
+      }
       onClick={() => {
         alert(JSON.stringify(pendingEdits, null, 2));
       }}

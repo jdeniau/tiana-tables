@@ -64,18 +64,8 @@ function TableGrid<Row extends RowDataPacket>({
           }),
 
           // how to render a data cell in this column
-          render: (value) => (
-            <Cell
-              type={field.type}
-              value={value}
-              link={
-                <ForeignKeyLink
-                  tableName={field.table}
-                  columnName={field.name}
-                  value={value}
-                />
-              }
-            />
+          render: (value, record) => (
+            <CellWithPendingValue field={field} value={value} record={record} />
           ),
         }))}
         components={{
@@ -95,6 +85,46 @@ function TableGrid<Row extends RowDataPacket>({
         }}
         pagination={false}
         scroll={{ x: true, y: yTableScroll }}
+      />
+    </div>
+  );
+}
+
+function CellWithPendingValue({
+  value,
+  field,
+  record,
+}: {
+  value: any;
+  field: FieldPacket;
+  record: RowDataPacket;
+}) {
+  const { pendingEdits } = usePendingEditContext();
+
+  const pendingEdit = pendingEdits.findLast(
+    (edit) =>
+      edit.tableName === field.table &&
+      field.name in edit.values &&
+      Object.entries(edit.primaryKeys).every(
+        ([columnName, pkValue]) => record[columnName] === pkValue
+      )
+  );
+
+  const pendingEditValue = pendingEdit?.values[field.name];
+  const futureValue = pendingEditValue ?? value;
+
+  return (
+    <div style={pendingEditValue ? { background: 'orange' } : undefined}>
+      <Cell
+        type={field.type}
+        value={futureValue}
+        link={
+          <ForeignKeyLink
+            tableName={field.table}
+            columnName={field.name}
+            value={futureValue}
+          />
+        }
       />
     </div>
   );
