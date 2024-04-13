@@ -4,6 +4,7 @@ import {
   ReactElement,
   ReactNode,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -118,13 +119,16 @@ function CellWithPendingValue({
       <Cell
         type={field.type}
         value={futureValue}
-        link={
-          <ForeignKeyLink
-            tableName={field.table}
-            columnName={field.name}
-            value={futureValue}
-          />
-        }
+        link={useMemo(
+          () => (
+            <ForeignKeyLink
+              tableName={field.table}
+              columnName={field.name}
+              value={futureValue}
+            />
+          ),
+          [field.table, field.name, futureValue]
+        )}
       />
     </div>
   );

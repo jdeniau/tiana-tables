@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useReducer,
   useState,
 } from 'react';
 import { Button } from 'antd';
@@ -28,33 +29,47 @@ type PendingEditContextType = {
   addPendingEdit: (edit: Omit<PendingEdit, 'connectionSlug' | 'state'>) => void;
 };
 const PendingEditContext = createContext<PendingEditContextType | null>(null);
+
+type State = Array<PendingEdit>;
+
+type Action = { type: 'add'; edit: PendingEdit };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'add':
+      return [...state, action.edit];
+    default:
+      return state;
+  }
+}
+
 export function PendingEditContextProvider({
   children,
 }: {
   children: ReactNode;
 }) {
   const { currentConnectionSlug } = useConnectionContext();
-  const [pendingEdits, setPendingEdits] = useState<Array<PendingEdit>>([]);
+  const [pendingEdits, dispatch] = useReducer(reducer, []);
 
   const addPendingEdit = useCallback(
     (edit: Omit<PendingEdit, 'connectionSlug' | 'state'>) => {
       invariant(currentConnectionSlug, 'Current connection slug should be set');
 
-      setPendingEdits((prev) => [
-        ...prev,
-        {
+      dispatch({
+        type: 'add',
+        edit: {
           state: PendingEditState.Pending,
           connectionSlug: currentConnectionSlug,
           ...edit,
         },
-      ]);
+      });
     },
     [currentConnectionSlug]
   );
 
   const value = useMemo(
     () => ({ pendingEdits, addPendingEdit }),
-    [pendingEdits, addPendingEdit]
+    [addPendingEdit, pendingEdits]
   );
 
   return (
