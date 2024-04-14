@@ -11,6 +11,7 @@ import {
 import { Input, InputRef, Table } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { usePendingEditContext } from '../../contexts/PendingEditContext';
+import { PendingEditState } from '../../sql/types';
 import Cell from './Cell';
 import ForeignKeyLink from './ForeignKeyLink';
 import { useTableHeight } from './TableLayout/useTableHeight';
@@ -100,22 +101,21 @@ function CellWithPendingValue({
   field: FieldPacket;
   record: RowDataPacket;
 }) {
-  const { pendingEdits } = usePendingEditContext();
+  const { findPendingEdit } = usePendingEditContext();
 
-  const pendingEdit = pendingEdits.findLast(
-    (edit) =>
-      edit.tableName === field.table &&
-      field.name in edit.values &&
-      Object.entries(edit.primaryKeys).every(
-        ([columnName, pkValue]) => record[columnName] === pkValue
-      )
-  );
+  const pendingEdit = findPendingEdit(record, field);
 
   const pendingEditValue = pendingEdit?.values[field.name];
   const futureValue = pendingEditValue ?? value;
 
   return (
-    <div style={pendingEditValue ? { background: 'orange' } : undefined}>
+    <div
+      style={
+        pendingEditValue && pendingEdit.state === PendingEditState.Pending
+          ? { background: 'orange' }
+          : undefined
+      }
+    >
       <Cell
         type={field.type}
         value={futureValue}

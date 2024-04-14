@@ -65,3 +65,16 @@ export interface ForeignKeyRow extends KeyColumnUsageRow {
 export interface ShowKeyRow extends RowDataPacket {
   Column_name: string;
 }
+
+export enum PendingEditState {
+  Pending = 'pending',
+  Applied = 'applied',
+}
+
+export type PendingEdit = {
+  connectionSlug: string;
+  tableName: string;
+  primaryKeys: Record<string, unknown>;
+  values: Record<string, unknown>;
+  state: PendingEditState;
+};

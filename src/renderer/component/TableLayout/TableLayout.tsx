@@ -2,6 +2,7 @@ import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Button, Flex } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
+import { usePendingEditContext } from '../../../contexts/PendingEditContext';
 import { useTranslation } from '../../../i18n';
 import ButtonLink from '../ButtonLink';
 import WhereFilter from '../Query/WhereFilter';
@@ -28,6 +29,7 @@ export function TableLayout({
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
   const [where, setWhere] = useState<string>(defaultWhere ?? '');
+  const { findPendingEdits } = usePendingEditContext();
 
   const fetchTableData = useCallback(
     (offset: number) => {
@@ -59,6 +61,19 @@ export function TableLayout({
     return <div>{error.message}</div>;
   }
 
+  const resultWithActiveEdits = result?.map((row) => {
+    const pendingEdits = findPendingEdits(row, tableName);
+
+    return pendingEdits.reduce((acc, pendingEdit) => {
+      const { values } = pendingEdit;
+
+      return {
+        ...acc,
+        ...values,
+      };
+    }, row);
+  });
+
   return (
     <Flex vertical gap="small" style={{ height: '100%' }}>
       <div>
@@ -75,7 +90,7 @@ export function TableLayout({
       <TableGrid
         editable
         fields={fields}
-        result={result}
+        result={resultWithActiveEdits}
         primaryKeys={primaryKeys}
         title={() => (
           <>

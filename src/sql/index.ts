@@ -1,5 +1,5 @@
 import log from 'electron-log';
-import { Connection, createConnection } from 'mysql2/promise';
+import { Connection, ResultSetHeader, createConnection } from 'mysql2/promise';
 import invariant from 'tiny-invariant';
 import { getConfiguration } from '../configuration';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
@@ -7,6 +7,9 @@ import { QueryResultOrError, encodeError } from './errorSerializer';
 import {
   ConnectionObject,
   KeyColumnUsageRow,
+  PendingEdit,
+  PendingEditState,
+  QueryResult,
   QueryReturnType,
   ShowDatabasesResult,
   ShowKeyRow,
@@ -27,6 +30,7 @@ class ConnectionStack {
     [SQL_CHANNEL.GET_PRIMARY_KEYS]: this.getPrimaryKeys,
     [SQL_CHANNEL.SHOW_DATABASES]: this.showDatabases,
     [SQL_CHANNEL.SHOW_TABLE_STATUS]: this.showTableStatus,
+    [SQL_CHANNEL.HANDLE_PENDING_EDITS]: this.handlePendingEdits,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
 
@@ -141,6 +145,51 @@ class ConnectionStack {
     } catch (error) {
       return { result: undefined, error: encodeError(error) };
     }
+  }
+
+  async handlePendingEdits(
+    pendingEdits: Array<PendingEdit>
+  ): Promise<Array<QueryResult<ResultSetHeader>>> {
+    invariant(this.#currentConnectionSlug, 'Connection slug is required');
+
+    const connection = await this.#getConnection(this.#currentConnectionSlug);
+
+    return await Promise.all(
+      pendingEdits
+        .filter(
+          (edit) =>
+            edit.connectionSlug === this.#currentConnectionSlug &&
+            edit.state === PendingEditState.Pending
+        )
+        .map(async (edit) => {
+          const { tableName, primaryKeys, values } = edit;
+
+          const keys = Object.keys(primaryKeys);
+          const where = keys
+            .map((key) => `${key} = ${connection.escape(primaryKeys[key])}`)
+            .join(' AND ');
+
+          const set = Object.keys(values)
+            .map((key) => `${key} = ${connection.escape(values[key])}`)
+            .join(', ');
+
+          const query = `
+          UPDATE ${this.#databaseName}.${tableName}
+          SET ${set}
+          WHERE ${where}
+        `;
+
+          log.debug(
+            `Execute pending edit on "${this.#currentConnectionSlug}": "${query}"`
+          );
+
+          try {
+            return { result: await connection.query(query), error: undefined };
+          } catch (error) {
+            return { result: undefined, error: encodeError(error) };
+          }
+        })
+    );
   }
 
   async onConnectionSlugChanged(
