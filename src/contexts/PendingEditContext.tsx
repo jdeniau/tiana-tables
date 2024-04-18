@@ -6,7 +6,6 @@ import {
   useMemo,
   useReducer,
 } from 'react';
-import { Button } from 'antd';
 import { FieldPacket, RowDataPacket } from 'mysql2';
 import invariant from 'tiny-invariant';
 import { PendingEdit, PendingEditState } from '../sql/types';
@@ -29,13 +28,20 @@ const PendingEditContext = createContext<PendingEditContextType | null>(null);
 
 type State = Array<PendingEdit>;
 
-type Action = { type: 'add'; edit: PendingEdit } | { type: 'markAllAsApplied' };
+enum ActionType {
+  Add = 'add',
+  MarkAllAsApplied = 'MarkAllAsApplied',
+}
+
+type Action =
+  | { type: ActionType.Add; edit: PendingEdit }
+  | { type: ActionType.MarkAllAsApplied };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case 'add':
+    case ActionType.Add:
       return [...state, action.edit];
-    case 'markAllAsApplied':
+    case ActionType.MarkAllAsApplied:
       return state.map((edit) => ({
         ...edit,
         state: PendingEditState.Applied,
@@ -58,7 +64,7 @@ export function PendingEditContextProvider({
       invariant(currentConnectionSlug, 'Current connection slug should be set');
 
       dispatch({
-        type: 'add',
+        type: ActionType.Add,
         edit: {
           state: PendingEditState.Pending,
           connectionSlug: currentConnectionSlug,
@@ -70,7 +76,7 @@ export function PendingEditContextProvider({
   );
 
   const markAllAsApplied = useCallback(
-    () => dispatch({ type: 'markAllAsApplied' }),
+    () => dispatch({ type: ActionType.MarkAllAsApplied }),
     []
   );
 
@@ -134,29 +140,7 @@ export function usePendingEditContext() {
 
   return context;
 }
-export function PendingEditDebug() {
-  const { pendingEdits, markAllAsApplied } = usePendingEditContext();
-
-  const unappliedPendingEdits = pendingEdits.filter(
-    (edit) => edit.state === PendingEditState.Pending
-  );
-
-  return (
-    <Button
-      title="Synchronize"
-      danger={unappliedPendingEdits.length > 0}
-      onClick={() => {
-        window.sql.handlePendingEdits(pendingEdits).then((r) => {
-          console.log(r);
-
-          // Mark all as applied
-          markAllAsApplied();
-        });
-        // alert(JSON.stringify(pendingEdits, null, 2));
-      }}
-    >
-      🔃
-      {unappliedPendingEdits.length}
-    </Button>
-  );
-}
+export const testables = {
+  reducer,
+  ActionType,
+};

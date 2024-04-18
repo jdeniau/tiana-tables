@@ -1,6 +1,6 @@
 import { Select } from 'antd';
-import { LOCALE_LIST } from '../../configuration/locale';
-import { useConfiguration } from '../../contexts/ConfigurationContext';
+import { LOCALE_LIST } from '../../../configuration/locale';
+import { useConfiguration } from '../../../contexts/ConfigurationContext';
 
 export default function LangSelector() {
   const { configuration, changeLanguage } = useConfiguration();

@@ -6,10 +6,7 @@ import packageJson from '../../../package.json';
 import { ConfigurationContextProvider } from '../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
-import {
-  PendingEditContextProvider,
-  PendingEditDebug,
-} from '../../contexts/PendingEditContext';
+import { PendingEditContextProvider } from '../../contexts/PendingEditContext';
 import { ThemeContextProvider } from '../../contexts/ThemeContext';
 import { useTranslation } from '../../i18n';
 import ButtonLink from '../component/ButtonLink';
@@ -17,8 +14,9 @@ import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
 import Debug from '../component/Debug';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
-import LangSelector from '../component/LangSelector';
-import ThemeSelector from '../component/ThemeSelector';
+import LangSelector from '../component/Layout/LangSelector';
+import { PendingEditSyncButton } from '../component/Layout/PendingEditSyncButton';
+import ThemeSelector from '../component/Layout/ThemeSelector';
 import useEffectOnce from '../hooks/useEffectOnce';
 import { background, foreground, selection } from '../theme';
 
@@ -95,7 +93,7 @@ export default function Root() {
                 <ConnectionNav />
 
                 <Flex gap="small" align="center">
-                  <PendingEditDebug />
+                  <PendingEditSyncButton />
                   {t('language.switch.label')} <LangSelector />
                   {t('theme.switch.label')} <ThemeSelector />
                 </Flex>
