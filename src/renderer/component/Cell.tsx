@@ -1,24 +1,15 @@
 import { ReactNode } from 'react';
 // use temporal polyfill to test it as it's really promissing !
-import { toTemporalInstant } from '@js-temporal/polyfill';
 import { Flex } from 'antd';
 import { Types } from 'mysql'; // immporting from mysql2 will import the commonjs package and will fail
 import { styled } from 'styled-components';
+import { useConfiguration } from '../../contexts/ConfigurationContext';
 import {
   constantLanguageNullForeground,
   constantNumericForeground,
   foreground,
   stringForeground,
 } from '../theme';
-
-// polyfill Date's `toTemporalInstant`
-declare global {
-  interface Date {
-    toTemporalInstant: typeof toTemporalInstant;
-  }
-}
-
-Date.prototype.toTemporalInstant = toTemporalInstant;
 
 interface TableCellFactoryProps {
   type: number | undefined;
@@ -47,9 +38,14 @@ const ForegroundSpan = styled(BaseCell)`
 `;
 
 function DatetimeCell({ value }: { value: Date }) {
-  return (
-    <ForegroundSpan>{value.toTemporalInstant().toString()}</ForegroundSpan>
-  );
+  const { configuration } = useConfiguration();
+
+  const formatter = new Intl.DateTimeFormat(configuration.locale, {
+    dateStyle: 'long',
+    timeStyle: 'medium',
+  });
+
+  return <ForegroundSpan>{formatter.format(value)}</ForegroundSpan>;
 }
 
 const StringSpan = styled(BaseCell)`

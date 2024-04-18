@@ -2798,16 +2798,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@js-temporal/polyfill@npm:^0.4.4":
-  version: 0.4.4
-  resolution: "@js-temporal/polyfill@npm:0.4.4"
-  dependencies:
-    jsbi: "npm:^4.3.0"
-    tslib: "npm:^2.4.1"
-  checksum: 10c0/9edd8431f38837235c7dc88c48bfb2235ca13ec24f22848cd3ca7ebfdb169a2cb9654e04a7efca1488d2b67b851d84013f0bfa8dc3df207bd496ad13560ec937
-  languageName: node
-  linkType: hard
-
 "@malept/cross-spawn-promise@npm:^1.0.0, @malept/cross-spawn-promise@npm:^1.1.0":
   version: 1.1.1
   resolution: "@malept/cross-spawn-promise@npm:1.1.1"
@@ -9960,13 +9950,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsbi@npm:^4.3.0":
-  version: 4.3.0
-  resolution: "jsbi@npm:4.3.0"
-  checksum: 10c0/1817ac1b50ea3f4438bcd84cadc9aee7a8657829f65b55ea6f151f401dbbd3babedbfdd3e4f481bd7b5472abb7823efa640fd7e5eee7c30cea6431f7a8b74696
-  languageName: node
-  linkType: hard
-
 "jsbn@npm:1.1.0":
   version: 1.1.0
   resolution: "jsbn@npm:1.1.0"
@@ -14462,7 +14445,6 @@ __metadata:
     "@electron-forge/plugin-auto-unpack-natives": "npm:^7.2.0"
     "@electron-forge/plugin-vite": "npm:^7.2.0"
     "@electron-forge/publisher-github": "npm:^7.3.0"
-    "@js-temporal/polyfill": "npm:^0.4.4"
     "@storybook/addon-essentials": "npm:^8.0.0-rc.3"
     "@storybook/addon-interactions": "npm:^8.0.0-rc.3"
     "@storybook/addon-links": "npm:^8.0.0-rc.3"
@@ -14746,7 +14728,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.0.1, tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.4.1":
+"tslib@npm:^2.0.1, tslib@npm:^2.1.0, tslib@npm:^2.4.0":
   version: 2.6.2
   resolution: "tslib@npm:2.6.2"
   checksum: 10c0/e03a8a4271152c8b26604ed45535954c0a45296e32445b4b87f8a5abdb2421f40b59b4ca437c4346af0f28179780d604094eb64546bee2019d903d01c6c19bdb
