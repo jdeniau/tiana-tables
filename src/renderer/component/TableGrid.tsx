@@ -66,7 +66,7 @@ function TableGrid<Row extends RowDataPacket>({
           }),
 
           // how to render a data cell in this column
-          render: (value, record) => (
+          render: (value: Row[keyof Row], record: Row) => (
             <CellWithPendingValue field={field} value={value} record={record} />
           ),
         }))}
@@ -97,7 +97,7 @@ function CellWithPendingValue({
   field,
   record,
 }: {
-  value: any;
+  value: RowDataPacket[keyof RowDataPacket];
   field: FieldPacket;
   record: RowDataPacket;
 }) {
@@ -147,6 +147,7 @@ type CellProps = {
 function EditableCell({
   children,
   dataIndex,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   title,
   tableName,
   value,

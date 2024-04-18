@@ -1,4 +1,5 @@
 import { ipcRenderer } from 'electron';
+import { ResultSetHeader } from 'mysql2';
 import { decodeError } from '../sql/errorSerializer';
 import type {
   KeyColumnUsageRow,
@@ -11,7 +12,6 @@ import type {
 } from '../sql/types';
 import { bindChannel, bindEvent } from './bindChannel';
 import { SQL_CHANNEL } from './sqlChannel';
-import { ResultSetHeader } from 'mysql2';
 
 interface Sql {
   executeQuery<T extends QueryReturnType>(query: string): QueryResult<T>;
@@ -26,7 +26,7 @@ interface Sql {
   showTableStatus(): QueryResult<ShowTableStatus[]>;
   handlePendingEdits(
     PendingEdit: Array<PendingEdit>
-  ): Array<QueryResult<ResultSetHeader>>;
+  ): Promise<Array<QueryResult<ResultSetHeader>>>;
 }
 
 async function doInvokeQuery(sqlChannel: SQL_CHANNEL, ...params: unknown[]) {

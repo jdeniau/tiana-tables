@@ -61,18 +61,20 @@ export function TableLayout({
     return <div>{error.message}</div>;
   }
 
-  const resultWithActiveEdits = result?.map((row) => {
-    const pendingEdits = findPendingEdits(row, tableName);
+  const resultWithActiveEdits = result
+    ? result.map((row) => {
+        const pendingEdits = findPendingEdits(row, tableName);
 
-    return pendingEdits.reduce((acc, pendingEdit) => {
-      const { values } = pendingEdit;
+        return pendingEdits.reduce((acc, pendingEdit) => {
+          const { values } = pendingEdit;
 
-      return {
-        ...acc,
-        ...values,
-      };
-    }, row);
-  });
+          return {
+            ...acc,
+            ...values,
+          };
+        }, row);
+      })
+    : null;
 
   return (
     <Flex vertical gap="small" style={{ height: '100%' }}>

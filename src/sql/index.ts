@@ -9,7 +9,6 @@ import {
   KeyColumnUsageRow,
   PendingEdit,
   PendingEditState,
-  QueryResult,
   QueryReturnType,
   ShowDatabasesResult,
   ShowKeyRow,
@@ -149,19 +148,19 @@ class ConnectionStack {
 
   async handlePendingEdits(
     pendingEdits: Array<PendingEdit>
-  ): Promise<Array<QueryResult<ResultSetHeader>>> {
+  ): Promise<Array<Awaited<QueryResultOrError<ResultSetHeader>>>> {
     invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
     const connection = await this.#getConnection(this.#currentConnectionSlug);
 
-    return await Promise.all(
+    return Promise.all(
       pendingEdits
         .filter(
           (edit) =>
             edit.connectionSlug === this.#currentConnectionSlug &&
             edit.state === PendingEditState.Pending
         )
-        .map(async (edit) => {
+        .map(async (edit): Promise<QueryResultOrError<ResultSetHeader>> => {
           const { tableName, primaryKeys, values } = edit;
 
           const keys = Object.keys(primaryKeys);
