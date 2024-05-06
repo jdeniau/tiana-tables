@@ -70,7 +70,7 @@ export default function SqlPage() {
       >
         <Form.Item name="raw" valuePropName="defaultValue">
           <RawSqlEditor
-            style={{ width: '100vw', height: '35vh' }}
+            style={{ height: '35vh' }}
             onSubmit={() => {
               // trigger the form "onFinish" event
               form.submit();
