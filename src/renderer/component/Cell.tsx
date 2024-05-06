@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, memo } from 'react';
 import { Flex } from 'antd';
 import { Types } from 'mysql'; // immporting from mysql2 will import the commonjs package and will fail
 import { styled } from 'styled-components';
@@ -65,7 +65,10 @@ function EnumCell({ value }: { value: string }) {
   return <ForegroundSpan>{value}</ForegroundSpan>;
 }
 
-function TableCellFactory({ type, value }: TableCellFactoryProps) {
+const TableCellFactory = memo(function TableCellFactory({
+  type,
+  value,
+}: TableCellFactoryProps) {
   if (value === null || typeof value === 'undefined') {
     return <NullCell />;
   }
@@ -121,9 +124,9 @@ function TableCellFactory({ type, value }: TableCellFactoryProps) {
     default:
       throw new Error(`Type ${type} is not managed for now`);
   }
-}
+});
 
-export default function TableCellFactoryContainer({
+export default memo(function TableCellFactoryContainer({
   link,
   ...rest
 }: TableCellFactoryProps & { link?: ReactNode }) {
@@ -133,4 +136,4 @@ export default function TableCellFactoryContainer({
       {link}
     </Flex>
   );
-}
+});

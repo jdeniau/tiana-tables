@@ -1,6 +1,17 @@
-import { ReactElement, ReactNode } from 'react';
-import { Table } from 'antd';
+import {
+  FocusEvent,
+  KeyboardEvent,
+  ReactElement,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { Input, InputRef, Table } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
+import { usePendingEditContext } from '../../contexts/PendingEditContext';
+import { PendingEditState } from '../../sql/types';
 import Cell from './Cell';
 import ForeignKeyLink from './ForeignKeyLink';
 import { useTableHeight } from './TableLayout/useTableHeight';
@@ -10,13 +21,18 @@ interface TableGridProps<R extends RowDataPacket> {
   fields: null | FieldPacket[];
   primaryKeys?: Array<string>;
   title?: () => ReactNode;
+  editable?: boolean;
 }
+
+type EditableTableProps = Parameters<typeof Table>[0];
+type ColumnTypes = Exclude<EditableTableProps['columns'], undefined>;
 
 function TableGrid<Row extends RowDataPacket>({
   fields,
   result,
   primaryKeys,
   title,
+  editable = false,
 }: TableGridProps<Row>): ReactElement {
   const [yTableScroll, resizeRef] = useTableHeight();
 
@@ -26,7 +42,7 @@ function TableGrid<Row extends RowDataPacket>({
         title={title}
         bordered
         // the header, contains the column names
-        columns={fields?.map((field) => ({
+        columns={fields?.map((field): ColumnTypes[number] => ({
           title: field.name,
           dataIndex: field.name,
           key: field.name,
@@ -37,23 +53,28 @@ function TableGrid<Row extends RowDataPacket>({
           // if the field is a primary key, fix the column to the left when scrolling
           fixed: primaryKeys?.includes(field.name) ? 'left' : undefined,
 
+          // Add props to the cell
+          onCell: (value) => ({
+            value,
+            editable,
+            // editable: col.editable,
+            dataIndex: field.name,
+            title: field.name,
+            tableName: field.table,
+            // handleSave,
+            primaryKeys,
+          }),
+
           // how to render a data cell in this column
-          render: (value) => (
-            <>
-              <Cell
-                type={field.type}
-                value={value}
-                link={
-                  <ForeignKeyLink
-                    tableName={field.table}
-                    columnName={field.name}
-                    value={value}
-                  />
-                }
-              />
-            </>
+          render: (value: Row[keyof Row], record: Row) => (
+            <CellWithPendingValue field={field} value={value} record={record} />
           ),
         }))}
+        components={{
+          body: {
+            cell: EditableCell,
+          },
+        }}
         // the list of sql rows
         dataSource={result ?? []}
         rowKey={(record) => {
@@ -69,6 +90,130 @@ function TableGrid<Row extends RowDataPacket>({
       />
     </div>
   );
+}
+
+function CellWithPendingValue({
+  value,
+  field,
+  record,
+}: {
+  value: RowDataPacket[keyof RowDataPacket];
+  field: FieldPacket;
+  record: RowDataPacket;
+}) {
+  const { findPendingEdit } = usePendingEditContext();
+
+  const pendingEdit = findPendingEdit(record, field);
+
+  const pendingEditValue = pendingEdit?.values[field.name];
+  const futureValue = pendingEditValue ?? value;
+
+  return (
+    <div
+      style={
+        pendingEditValue && pendingEdit.state === PendingEditState.Pending
+          ? { background: 'orange' }
+          : undefined
+      }
+    >
+      <Cell
+        type={field.type}
+        value={futureValue}
+        link={useMemo(
+          () => (
+            <ForeignKeyLink
+              tableName={field.table}
+              columnName={field.name}
+              value={futureValue}
+            />
+          ),
+          [field.table, field.name, futureValue]
+        )}
+      />
+    </div>
+  );
+}
+
+type CellProps = {
+  children: ReactNode;
+  dataIndex: string;
+  title: string;
+  tableName: string;
+  value: RowDataPacket;
+  primaryKeys: Array<string>;
+  editable: boolean;
+};
+
+function EditableCell({
+  children,
+  dataIndex,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  title,
+  tableName,
+  value,
+  primaryKeys,
+  editable,
+  ...rest
+}: CellProps) {
+  // console.log(rest);
+
+  const inputRef = useRef<InputRef>(null);
+  const [editing, setEditing] = useState(false);
+  const { addPendingEdit } = usePendingEditContext();
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+    }
+  }, [editing]);
+
+  const toggleEdit = () => {
+    setEditing(!editing);
+  };
+
+  const save = async (
+    e: KeyboardEvent<HTMLInputElement> | FocusEvent<HTMLInputElement>
+  ) => {
+    const { value: newValue } = e.currentTarget;
+
+    if (value[dataIndex] === newValue) {
+      // data did not change, do not save anything
+      toggleEdit();
+      return;
+    }
+
+    try {
+      toggleEdit();
+      addPendingEdit({
+        tableName,
+        primaryKeys: Object.fromEntries(
+          primaryKeys.map((pk) => [pk, value[pk]])
+        ),
+        values: { [dataIndex]: newValue },
+      });
+    } catch (errInfo) {
+      console.log('Save failed:', errInfo);
+    }
+  };
+
+  const childNode = editing ? (
+    <Input
+      ref={inputRef}
+      defaultValue={value[dataIndex]}
+      onPressEnter={save}
+      onBlur={save}
+    />
+  ) : (
+    <div
+      className="editable-cell-value-wrap"
+      style={{ paddingRight: 24 }}
+      onClick={editable && primaryKeys ? toggleEdit : undefined}
+    >
+      {children}
+    </div>
+  );
+
+  return <td {...rest}>{childNode}</td>;
 }
 
 export default TableGrid;

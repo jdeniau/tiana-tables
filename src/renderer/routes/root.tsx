@@ -6,6 +6,7 @@ import packageJson from '../../../package.json';
 import { ConfigurationContextProvider } from '../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
+import { PendingEditContextProvider } from '../../contexts/PendingEditContext';
 import { ThemeContextProvider } from '../../contexts/ThemeContext';
 import { useTranslation } from '../../i18n';
 import ButtonLink from '../component/ButtonLink';
@@ -13,8 +14,9 @@ import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
 import Debug from '../component/Debug';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
-import LangSelector from '../component/LangSelector';
-import ThemeSelector from '../component/ThemeSelector';
+import LangSelector from '../component/Layout/LangSelector';
+import { PendingEditSyncButton } from '../component/Layout/PendingEditSyncButton';
+import ThemeSelector from '../component/Layout/ThemeSelector';
 import useEffectOnce from '../hooks/useEffectOnce';
 import { background, foreground, selection } from '../theme';
 
@@ -75,30 +77,35 @@ export default function Root() {
     <ConfigurationContextProvider>
       <ThemeContextProvider>
         <ConnectionStack>
-          <Layout>
-            <Debug />
-            <Header>
-              <Flex align="center" gap="small">
-                <h2>
-                  <RootLink to="/">Tiana Tables</RootLink>
-                </h2>
-                <span>v{packageJson.version}</span>
-              </Flex>
+          <PendingEditContextProvider>
+            <Layout>
+              <Debug />
+              <Header>
+                <Flex align="center" gap="small">
+                  <h2>
+                    <RootLink to="/">Tiana Tables</RootLink>
+                  </h2>
+                  <span>
+                    {window.isDev ? 'dev' : `v${packageJson.version}`}
+                  </span>
+                </Flex>
 
-              <ConnectionNav />
+                <ConnectionNav />
 
-              <Flex gap="small" align="center">
-                {t('language.switch.label')} <LangSelector />
-                {t('theme.switch.label')} <ThemeSelector />
-              </Flex>
+                <Flex gap="small" align="center">
+                  <PendingEditSyncButton />
+                  {t('language.switch.label')} <LangSelector />
+                  {t('theme.switch.label')} <ThemeSelector />
+                </Flex>
 
-              <ToggleRawSqlButton />
-            </Header>
+                <ToggleRawSqlButton />
+              </Header>
 
-            <Content>
-              <Outlet />
-            </Content>
-          </Layout>
+              <Content>
+                <Outlet />
+              </Content>
+            </Layout>
+          </PendingEditContextProvider>
         </ConnectionStack>
       </ThemeContextProvider>
     </ConfigurationContextProvider>

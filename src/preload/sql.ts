@@ -1,7 +1,9 @@
 import { ipcRenderer } from 'electron';
+import { ResultSetHeader } from 'mysql2';
 import { decodeError } from '../sql/errorSerializer';
 import type {
   KeyColumnUsageRow,
+  PendingEdit,
   QueryResult,
   QueryReturnType,
   ShowDatabasesResult,
@@ -22,6 +24,9 @@ interface Sql {
   showDatabases(): QueryResult<ShowDatabasesResult>;
   getPrimaryKeys(tableName: string): QueryResult<ShowKeyRow[]>;
   showTableStatus(): QueryResult<ShowTableStatus[]>;
+  handlePendingEdits(
+    PendingEdit: Array<PendingEdit>
+  ): Promise<Array<QueryResult<ResultSetHeader>>>;
 }
 
 async function doInvokeQuery(sqlChannel: SQL_CHANNEL, ...params: unknown[]) {
@@ -47,6 +52,8 @@ export const sql: Sql = {
   showDatabases: async () => doInvokeQuery(SQL_CHANNEL.SHOW_DATABASES),
 
   showTableStatus: async () => doInvokeQuery(SQL_CHANNEL.SHOW_TABLE_STATUS),
+
+  handlePendingEdits: bindChannel(SQL_CHANNEL.HANDLE_PENDING_EDITS),
 
   closeAllConnections: bindChannel(SQL_CHANNEL.CLOSE_ALL),
 

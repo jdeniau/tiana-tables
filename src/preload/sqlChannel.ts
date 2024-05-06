@@ -6,4 +6,5 @@ export enum SQL_CHANNEL {
   SHOW_TABLE_STATUS = 'sql:showTableStatus',
   CLOSE_ALL = 'sql:closeAll',
   ON_CONNECTION_CHANGED = 'sql:onConnectionChanged',
+  HANDLE_PENDING_EDITS = 'sql:handlePendingEdits',
 }

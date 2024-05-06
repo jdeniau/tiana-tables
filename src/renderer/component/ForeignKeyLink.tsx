@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
@@ -20,7 +21,7 @@ const StyledLink = styled(Link)`
   }
 `;
 
-export default function ForeignKeyLink({
+export default memo(function ForeignKeyLink({
   tableName,
   columnName,
   value,
@@ -41,4 +42,4 @@ export default function ForeignKeyLink({
   )}`;
 
   return <StyledLink to={to}>↗️</StyledLink>;
-}
+});
