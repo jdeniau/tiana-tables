@@ -86,17 +86,26 @@ export function extractTableNames(
     );
 }
 
-export function extractTableAliases(sql: string): Array<string> {
+export function extractTableAliases(sql: string): Record<string, string> {
   const matches = sql.matchAll(TABLE_NAME_REGEX);
 
   const arrayMatches = [...matches];
 
   // console.log(arrayMatches);
 
-  return arrayMatches
-    .map((m) => m.groups?.alias)
-    .filter(
-      (m): m is string =>
-        typeof m === 'string' && !FORBIDDEN_ALIASES.includes(m)
-    );
+  return Object.fromEntries(
+    arrayMatches
+      .filter((match) => {
+        const alias = match.groups?.alias;
+
+        return (
+          typeof alias === 'undefined' ||
+          (typeof alias === 'string' && !FORBIDDEN_ALIASES.includes(alias))
+        );
+      })
+      .map((match) => [
+        match.groups?.alias ?? match.groups?.tablename,
+        match.groups?.tablename,
+      ])
+  );
 }
