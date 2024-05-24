@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
+import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import { TableListContextProvider } from '../../contexts/TableListContext';
@@ -83,16 +84,18 @@ export async function loader({ params, request }: RouteParams) {
   const [tableStatusList] = await window.sql.showTableStatus();
 
   const [keyColumnUsageRows] = await window.sql.getKeyColumnUsage();
+  const [allColumns] = await window.sql.getAllColumns();
 
   return {
     databaseList,
     tableStatusList,
     keyColumnUsageRows,
+    allColumns,
   };
 }
 
 export default function ConnectionDetailPage() {
-  const { databaseList, tableStatusList, keyColumnUsageRows } =
+  const { databaseList, tableStatusList, keyColumnUsageRows, allColumns } =
     useLoaderData() as Exclude<Awaited<ReturnType<typeof loader>>, Response>;
   const { addConnectionToList } = useConnectionContext();
   const { connectionSlug } = useParams();
@@ -106,20 +109,22 @@ export default function ConnectionDetailPage() {
   return (
     <TableListContextProvider tableList={tableStatusList}>
       <ForeignKeysContextProvider keyColumnUsageRows={keyColumnUsageRows}>
-        <NavigateModalContextProvider>
-          <Layout>
-            <Sider width={200} style={{ overflow: 'auto' }}>
-              <Flex vertical gap="small">
-                <DatabaseSelector databaseList={databaseList} />
-                <OpenNavigateModalButton />
-                <TableList tableStatusList={tableStatusList} />
-              </Flex>
-            </Sider>
-            <Layout.Content style={{ overflow: 'auto' }}>
-              <Outlet />
-            </Layout.Content>
-          </Layout>
-        </NavigateModalContextProvider>
+        <AllColumnsContextProvider allColumns={allColumns}>
+          <NavigateModalContextProvider>
+            <Layout>
+              <Sider width={200} style={{ overflow: 'auto' }}>
+                <Flex vertical gap="small">
+                  <DatabaseSelector databaseList={databaseList} />
+                  <OpenNavigateModalButton />
+                  <TableList tableStatusList={tableStatusList} />
+                </Flex>
+              </Sider>
+              <Layout.Content style={{ overflow: 'auto' }}>
+                <Outlet />
+              </Layout.Content>
+            </Layout>
+          </NavigateModalContextProvider>
+        </AllColumnsContextProvider>
       </ForeignKeysContextProvider>
     </TableListContextProvider>
   );

@@ -7,8 +7,10 @@ import {
   languages,
 } from 'monaco-editor/esm/vs/editor/editor.api';
 import invariant from 'tiny-invariant';
+import { useAllColumnsContext } from '../../../contexts/AllColumnsContext';
 import { useForeignKeysContext } from '../../../contexts/ForeignKeysContext';
 import { useTableListContext } from '../../../contexts/TableListContext';
+import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
 import {
   extractTableAliases,
@@ -35,7 +37,7 @@ function provideCompletionItems(
   languages: typeof import('monaco-editor/esm/vs/editor/editor.api').languages,
   tableList: ShowTableStatus[],
   foreignKeys: ForeignKeysHelper,
-  allColumns: Array<{ Table: string; Column: string }>
+  allColumns: ColumnDetailHelper
 ): languages.CompletionItemProvider['provideCompletionItems'] {
   return (
     model: editor.ITextModel,
@@ -78,8 +80,6 @@ function provideCompletionItems(
       });
 
       invariant(matches, 'matches should be defined');
-
-      console.log(matches);
 
       const fullLength = matches[0]?.length ?? 0;
       const tableLength = matches[3]?.length ?? 0;
@@ -136,12 +136,14 @@ function provideCompletionItems(
     if (isAfterDot) {
       const { matches, range } = isAfterDot;
 
+      invariant(matches, 'matches should be defined');
+
       const tableOrAlias = matches[1];
 
       const tablename = tableAliases[tableOrAlias];
 
       const columns = allColumns
-        .filter((c) => c.Table === tablename)
+        .getColumnsForTable(tablename)
         .map((c) => c.Column);
 
       const startColumn = range.startColumn + tableOrAlias.length + 1;
@@ -185,6 +187,7 @@ export default function useCompletion(
 ) {
   const tableList = useTableListContext();
   const foreignKeys = useForeignKeysContext();
+  const allColumns = useAllColumnsContext();
 
   useEffect(() => {
     // interesting examples :
@@ -196,11 +199,7 @@ export default function useCompletion(
           monaco.languages,
           tableList,
           foreignKeys,
-          [
-            { Table: 'ticketing', Column: 'column_name1' },
-            { Table: 'ticketing', Column: 'column_name2' },
-            { Table: 'event_date', Column: 'column_name3' },
-          ]
+          allColumns
         ),
         // This function can be used to resolve additional information for the item that is being auto completed.
         // resolveCompletionItem: async (item, token) => {
@@ -216,7 +215,7 @@ export default function useCompletion(
     return () => {
       completionItemProvider.dispose();
     };
-  }, [foreignKeys, monaco.Range, monaco.languages, tableList]);
+  }, [allColumns, foreignKeys, monaco.Range, monaco.languages, tableList]);
 }
 
 export const testables = {
