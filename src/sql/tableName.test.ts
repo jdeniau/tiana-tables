@@ -1,9 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import {
-  extractTableAliases,
-  extractTableNames,
-  generateTableAlias,
-} from './tableName';
+import { extractTableAliases, generateTableAlias } from './tableName';
 
 describe('tableName', () => {
   test.each([
@@ -45,7 +41,7 @@ describe('tableName', () => {
 });
 
 describe('extractTableAliases', () => {
-  test.only.each([
+  test.each([
     ['SELECT * FROM ', {}],
     ['SELECT * FROM tablename', { tablename: 'tablename' }],
     ['SELECT * FROM   tablename t', { t: 'tablename' }],
@@ -75,6 +71,7 @@ describe('extractTableAliases', () => {
       'SELECT * FROM table_name t JOIN table2 t2 JOIN ',
       { t: 'table_name', t2: 'table2' },
     ],
+    ['SELECT ticketing. FROM ticketing LIMIT 10;', { ticketing: 'ticketing' }],
   ])('table aliases', (sql, expected) => {
     expect(extractTableAliases(sql)).toEqual(expected);
   });

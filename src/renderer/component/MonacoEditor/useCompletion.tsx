@@ -14,7 +14,6 @@ import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
 import {
   extractTableAliases,
-  extractTableNames,
   generateTableAlias,
 } from '../../../sql/tableName';
 import { ShowTableStatus } from '../../../sql/types';
@@ -88,7 +87,14 @@ function provideCompletionItems(
       const usedAliases: string[] = Object.keys(
         extractTableAliases(textUntilPosition)
       );
-      const usedTables = extractTableNames(textUntilPosition);
+      // adapter here, but we could modiy `getLinkBetweenTables` directly
+      // the new type may be Record<Alias extends string, TableName extends string>
+      const usedTables: Array<{
+        tableName: string;
+        alias: string | undefined;
+      }> = Object.entries(extractTableAliases(textUntilPosition)).map(
+        ([alias, tablename]) => ({ tableName: tablename, alias })
+      );
 
       return {
         suggestions: tableList.map((table) => {

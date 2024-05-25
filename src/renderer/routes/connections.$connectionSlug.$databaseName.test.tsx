@@ -78,6 +78,8 @@ describe('loader', () => {
       ),
       // @ts-expect-error return is OK here, type is too complex or now
       getKeyColumnUsage: vi.fn(() => []),
+      // @ts-expect-error return is OK here, type is too complex or now
+      getAllColumns: vi.fn(() => Promise.resolve([])),
       connectionNameChanged: vi.fn(),
     };
   });

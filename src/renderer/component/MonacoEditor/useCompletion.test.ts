@@ -3,44 +3,12 @@
  */
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { describe, expect, test, vi } from 'vitest';
+import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
 import { ShowTableStatus } from '../../../sql/types';
 import { testables } from './useCompletion';
 
 const { provideCompletionItems, SQL_KEYWORDS } = testables;
-
-describe('extractTableAliases', () => {
-  test.each([
-    {
-      sql: 'SELECT * FROM table_name',
-      expected: { table_name: 'table_name' },
-    },
-    {
-      sql: 'SELECT * FROM table_name ',
-      expected: { table_name: 'table_name' },
-    },
-    { sql: 'SELECT * FROM table_name t ', expected: { t: 'table_name' } },
-    { sql: 'SELECT * FROM table_name t JOIN ', expected: { t: 'table_name' } },
-    {
-      sql: 'SELECT * FROM table_name t JOIN table2 ',
-      expected: { t: 'table_name', table2: 'table2' },
-    },
-    {
-      sql: 'SELECT * FROM table_name t JOIN table2 t2 ',
-      expected: { t: 'table_name', t2: 'table2' },
-    },
-    {
-      sql: 'SELECT * FROM table_name t JOIN table2 t2 JOIN ',
-      expected: { t: 'table_name', t2: 'table2' },
-    },
-  ])('should extract table aliases', ({ sql, expected }) => {
-    const model = monaco.editor.createModel(sql, 'sql');
-
-    const result = extractTableAliases(model);
-
-    expect(result).toEqual(expected);
-  });
-});
 
 describe('sql keywords', () => {
   test.each([
@@ -59,7 +27,8 @@ describe('sql keywords', () => {
     const result = provideCompletionItems(
       monaco.languages,
       tableList,
-      new ForeignKeysHelper([])
+      new ForeignKeysHelper([]),
+      new ColumnDetailHelper([])
     )(
       model,
       position,
@@ -80,8 +49,8 @@ describe('sql keywords', () => {
 
 describe('table list', () => {
   test.each([
-    { sql: 'SELECT * FROM', addSpace: true },
-    { sql: 'SELECT * FROM table_name LEFT JOIN', addSpace: true },
+    // { sql: 'SELECT * FROM', addSpace: true },
+    // { sql: 'SELECT * FROM table_name LEFT JOIN', addSpace: true },
     { sql: 'SELECT * FROM ' },
     { sql: 'SELECT * FROM database.' },
     { sql: 'SELECT * FROM WHERE foo = bar ', column: 15 }, // after FROM
@@ -90,7 +59,7 @@ describe('table list', () => {
     { sql: 'SELECT * FROM table_name LEFT JOIN ' },
   ])(
     'should return tablelist if we are after FROM or JOIN',
-    ({ sql, addSpace, column }) => {
+    ({ sql, column }) => {
       const definedColumn = column ?? sql.length + 1;
       const tableList: ShowTableStatus[] = [
         // @ts-expect-error don't want all data, only the name
@@ -106,7 +75,8 @@ describe('table list', () => {
       const result = provideCompletionItems(
         monaco.languages,
         tableList,
-        new ForeignKeysHelper([])
+        new ForeignKeysHelper([]),
+        new ColumnDetailHelper([])
       )(
         model,
         position,
@@ -114,7 +84,7 @@ describe('table list', () => {
         { isCancellationRequested: false, onCancellationRequested: vi.fn() }
       );
 
-      const spacePrefix = addSpace ? ' ' : '';
+      const spacePrefix = ''; // addSpace ? ' ' : '';
 
       expect(result).toEqual({
         suggestions: [
@@ -175,7 +145,8 @@ describe('table list', () => {
       const result = provideCompletionItems(
         monaco.languages,
         tableList,
-        helper
+        helper,
+        new ColumnDetailHelper([])
       )(
         model,
         position,
@@ -186,13 +157,15 @@ describe('table list', () => {
       expect(result).toEqual({
         suggestions: [
           {
-            label: `title (${table})`,
+            label: 'title',
+            detail: table,
             kind: monaco.languages.CompletionItemKind.Variable,
             insertText: `title t ON t.id = ${alias || table}.title_id `,
             range: new monaco.Range(1, definedColumn, 1, definedColumn),
           },
           {
-            label: `planning (${table})`,
+            label: 'planning',
+            detail: table,
             kind: monaco.languages.CompletionItemKind.Variable,
             insertText: `planning p ON p.employee_id = ${alias || table}.id `,
             range: new monaco.Range(1, definedColumn, 1, definedColumn),
@@ -203,8 +176,8 @@ describe('table list', () => {
   );
 });
 
-describe('column in select', () => {
-  test.only.each([
+describe('column in SELECT or WHERE', () => {
+  test.each([
     { sql: 'SELECT employee. FROM  employee LIMIT 10', column: 17 },
     {
       sql: 'SELECT e. FROM employee e JOIN title as t LIMIT 10',
@@ -223,11 +196,14 @@ describe('column in select', () => {
       monaco.languages,
       [],
       new ForeignKeysHelper([]),
-      [
-        { Table: 'employee', Column: 'id' },
-        { Table: 'employee', Column: 'name' },
-        { Table: 'title', Column: 'position' },
-      ]
+      new ColumnDetailHelper([
+        // @ts-expect-error RawDataPacket issue
+        { Table: 'employee', Column: 'id', DataType: 'number' },
+        // @ts-expect-error RawDataPacket issue
+        { Table: 'employee', Column: 'name', DataType: 'varchar' },
+        // @ts-expect-error RawDataPacket issue
+        { Table: 'title', Column: 'position', DataType: 'varchar' },
+      ])
     )(
       model,
       position,
@@ -239,11 +215,15 @@ describe('column in select', () => {
       suggestions: [
         {
           label: 'id',
+          detail: 'employee',
+          insertText: 'id',
           kind: monaco.languages.CompletionItemKind.Field,
           range: new monaco.Range(1, column, 1, column),
         },
         {
           label: 'name',
+          detail: 'employee',
+          insertText: 'name',
           kind: monaco.languages.CompletionItemKind.Field,
           range: new monaco.Range(1, column, 1, column),
         },

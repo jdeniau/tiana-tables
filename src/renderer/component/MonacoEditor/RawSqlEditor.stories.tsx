@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { AllColumnsContextProvider } from '../../../contexts/AllColumnsContext';
 import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext';
 import { TableListContextProvider } from '../../../contexts/TableListContext';
 import { RawSqlEditor } from './RawSqlEditor';
@@ -12,7 +13,9 @@ const meta: Meta<typeof RawSqlEditor> = {
     (Story) => (
       <ForeignKeysContextProvider keyColumnUsageRows={[]}>
         <TableListContextProvider tableList={[]}>
-          <Story />
+          <AllColumnsContextProvider allColumns={[]}>
+            <Story />
+          </AllColumnsContextProvider>
         </TableListContextProvider>
       </ForeignKeysContextProvider>
     ),
