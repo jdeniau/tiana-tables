@@ -1,12 +1,13 @@
 import { ipcRenderer } from 'electron';
 import { decodeError } from '../sql/errorSerializer';
 import type {
+  ColumnDetailResult,
   KeyColumnUsageRow,
   QueryResult,
   QueryReturnType,
   ShowDatabasesResult,
   ShowKeyRow,
-  ShowTableStatus,
+  ShowTableStatusResult,
 } from '../sql/types';
 import { bindChannel, bindEvent } from './bindChannel';
 import { SQL_CHANNEL } from './sqlChannel';
@@ -19,9 +20,10 @@ interface Sql {
     databaseName?: string | undefined
   ): void;
   getKeyColumnUsage(tableName?: string): QueryResult<KeyColumnUsageRow[]>;
+  getAllColumns(): QueryResult<ColumnDetailResult>;
   showDatabases(): QueryResult<ShowDatabasesResult>;
   getPrimaryKeys(tableName: string): QueryResult<ShowKeyRow[]>;
-  showTableStatus(): QueryResult<ShowTableStatus[]>;
+  showTableStatus(): QueryResult<ShowTableStatusResult>;
 }
 
 async function doInvokeQuery(sqlChannel: SQL_CHANNEL, ...params: unknown[]) {
@@ -38,8 +40,10 @@ export const sql: Sql = {
   executeQuery: async (query) =>
     doInvokeQuery(SQL_CHANNEL.EXECUTE_QUERY, query),
 
-  getKeyColumnUsage: (tableName) =>
+  getKeyColumnUsage: async (tableName) =>
     doInvokeQuery(SQL_CHANNEL.GET_KEY_COLUMN_USAGE, tableName),
+
+  getAllColumns: async () => doInvokeQuery(SQL_CHANNEL.GET_ALL_COLUMNS),
 
   getPrimaryKeys: async (tableName) =>
     doInvokeQuery(SQL_CHANNEL.GET_PRIMARY_KEYS, tableName),

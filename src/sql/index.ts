@@ -5,6 +5,8 @@ import { getConfiguration } from '../configuration';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import { QueryResultOrError, encodeError } from './errorSerializer';
 import {
+  ColumnDetail,
+  ColumnDetailResult,
   ConnectionObject,
   KeyColumnUsageRow,
   QueryReturnType,
@@ -25,6 +27,7 @@ class ConnectionStack {
     [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQueryAndRetry,
     [SQL_CHANNEL.GET_KEY_COLUMN_USAGE]: this.getKeyColumnUsage,
     [SQL_CHANNEL.GET_PRIMARY_KEYS]: this.getPrimaryKeys,
+    [SQL_CHANNEL.GET_ALL_COLUMNS]: this.getAllColumns,
     [SQL_CHANNEL.SHOW_DATABASES]: this.showDatabases,
     [SQL_CHANNEL.SHOW_TABLE_STATUS]: this.showTableStatus,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
@@ -80,6 +83,21 @@ class ConnectionStack {
     `;
 
     return this.executeQueryAndRetry<KeyColumnUsageRow[]>(query);
+  }
+
+  async getAllColumns(): QueryResultOrError<Array<ColumnDetail>> {
+    const query = `
+      SELECT
+        TABLE_NAME AS \`Table\`,
+        COLUMN_NAME AS \`Column\`,
+        DATA_TYPE AS \`DataType\`
+      FROM
+        INFORMATION_SCHEMA.COLUMNS
+      WHERE
+        TABLE_SCHEMA = '${this.#databaseName}'
+    `;
+
+    return this.executeQueryAndRetry<ColumnDetailResult>(query);
   }
 
   async getPrimaryKeys(tableName: string): QueryResultOrError<ShowKeyRow[]> {

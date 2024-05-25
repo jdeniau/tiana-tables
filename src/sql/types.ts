@@ -57,6 +57,14 @@ export interface KeyColumnUsageRow extends RowDataPacket {
   REFERENCED_COLUMN_NAME: string | null;
 }
 
+export interface ColumnDetail extends RowDataPacket {
+  Table: string;
+  Column: string;
+  DataType: string;
+}
+
+export type ColumnDetailResult = ColumnDetail[];
+
 export interface ForeignKeyRow extends KeyColumnUsageRow {
   REFERENCED_TABLE_NAME: string;
   REFERENCED_COLUMN_NAME: string;

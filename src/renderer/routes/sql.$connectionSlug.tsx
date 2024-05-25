@@ -9,7 +9,7 @@ import { RawSqlEditor } from '../component/MonacoEditor/RawSqlEditor';
 import RawSqlResult from '../component/Query/RawSqlResult/RowDataPacketResult';
 
 // const DEFAULT_VALUE = `SELECT *  FROM employees e WHERE e.gender = 'F' LIMIT 10;`;
-const DEFAULT_VALUE = `SELECT *  
+const DEFAULT_VALUE = `SELECT t.
 FROM ticketing t
 JOIN 
 LIMIT 10;`;
