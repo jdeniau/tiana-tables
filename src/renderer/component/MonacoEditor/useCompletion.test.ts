@@ -200,7 +200,11 @@ describe('column in SELECT or WHERE', () => {
       column: 52,
     },
     // partial column name already typed
-    { sql: 'SELECT employee.n FROM  employee LIMIT 10', column: 18, startColumn: 17 },
+    {
+      sql: 'SELECT employee.n FROM  employee LIMIT 10',
+      column: 18,
+      startColumn: 17,
+    },
     {
       sql: 'SELECT e.n FROM employee e JOIN title as t LIMIT 10',
       column: 11,

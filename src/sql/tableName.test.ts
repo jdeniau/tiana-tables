@@ -19,10 +19,12 @@ describe('tableName', () => {
   test.each([
     ['available_story', 'as_2'],
     ['illegal_nurse', 'in_2'],
-  ])('should generate alias that is not a SQL reserved word', (tableName, expectedAlias) => {
-    expect(generateTableAlias(tableName, [])).toBe(expectedAlias);
-  });
-
+  ])(
+    'should generate alias that is not a SQL reserved word',
+    (tableName, expectedAlias) => {
+      expect(generateTableAlias(tableName, [])).toBe(expectedAlias);
+    }
+  );
 
   test.each([
     ['tablename', ['t'], 'ta'],

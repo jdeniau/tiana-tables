@@ -1,11 +1,12 @@
-import { SQL_RESERVED_KEYWORDS } from "./keywords";
+import { SQL_RESERVED_KEYWORDS } from './keywords';
 
 export function generateTableAlias(
   tableName: string,
   usedAliases: Array<string>
 ): string {
-
-  const isAliasForbidden = (alias: string) => usedAliases.includes(alias) || SQL_RESERVED_KEYWORDS.includes(alias.toUpperCase());
+  const isAliasForbidden = (alias: string) =>
+    usedAliases.includes(alias) ||
+    SQL_RESERVED_KEYWORDS.includes(alias.toUpperCase());
 
   // detect :
   // - the first letter
