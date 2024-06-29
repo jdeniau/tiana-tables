@@ -108,7 +108,7 @@ describe('table list', () => {
           {
             label: 'another_table',
             kind: monaco.languages.CompletionItemKind.Variable,
-            insertText: `${spacePrefix}another_table at `,
+            insertText: `${spacePrefix}another_table at_2 `,
             detail: undefined,
             range: new monaco.Range(1, definedColumn, 1, definedColumn),
           },
