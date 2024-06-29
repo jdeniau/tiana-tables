@@ -57,15 +57,18 @@ describe('table list', () => {
     { sql: 'SELECT * FROM table_name WHERE foo = bar ', column: 15 }, // after FROM
     { sql: 'SELECT * FROM table_name JOIN ' },
     { sql: 'SELECT * FROM table_name LEFT JOIN ' },
+    { sql: 'SELECT * FROM ta', startColumn: 15 }, // partial table name
   ])(
     'should return tablelist if we are after FROM or JOIN',
-    ({ sql, column }) => {
-      const definedColumn = column ?? sql.length + 1;
+    ({ sql, column, startColumn }) => {
+      const definedColumn = startColumn ?? column ?? sql.length + 1;
       const tableList: ShowTableStatus[] = [
         // @ts-expect-error don't want all data, only the name
         { Name: 'table1' },
         // @ts-expect-error don't want all data, only the name
         { Name: 'table2' },
+        // @ts-expect-error don't want all data, only the name
+        { Name: 'another_table' },
       ];
 
       const position = new monaco.Position(1, definedColumn);
@@ -92,12 +95,21 @@ describe('table list', () => {
             label: 'table1',
             kind: monaco.languages.CompletionItemKind.Variable,
             insertText: `${spacePrefix}table1 t `,
+            detail: undefined,
             range: new monaco.Range(1, definedColumn, 1, definedColumn),
           },
           {
             label: 'table2',
             kind: monaco.languages.CompletionItemKind.Variable,
             insertText: `${spacePrefix}table2 t `,
+            detail: undefined,
+            range: new monaco.Range(1, definedColumn, 1, definedColumn),
+          },
+          {
+            label: 'another_table',
+            kind: monaco.languages.CompletionItemKind.Variable,
+            insertText: `${spacePrefix}another_table at `,
+            detail: undefined,
             range: new monaco.Range(1, definedColumn, 1, definedColumn),
           },
         ],
@@ -187,7 +199,14 @@ describe('column in SELECT or WHERE', () => {
       sql: 'SELECT e.* FROM employee e JOIN title as t WHERE e. LIMIT 10',
       column: 52,
     },
-  ])('after alias', ({ sql, column }) => {
+    // partial column name already typed
+    { sql: 'SELECT employee.n FROM  employee LIMIT 10', column: 18, startColumn: 17 },
+    {
+      sql: 'SELECT e.n FROM employee e JOIN title as t LIMIT 10',
+      column: 11,
+      startColumn: 10,
+    },
+  ])('after alias', ({ sql, column, startColumn }) => {
     const position = new monaco.Position(1, column);
 
     const model = monaco.editor.createModel(sql, 'sql');
@@ -218,14 +237,14 @@ describe('column in SELECT or WHERE', () => {
           detail: 'employee',
           insertText: 'id',
           kind: monaco.languages.CompletionItemKind.Field,
-          range: new monaco.Range(1, column, 1, column),
+          range: new monaco.Range(1, column, 1, startColumn ?? column),
         },
         {
           label: 'name',
           detail: 'employee',
           insertText: 'name',
           kind: monaco.languages.CompletionItemKind.Field,
-          range: new monaco.Range(1, column, 1, column),
+          range: new monaco.Range(1, column, 1, startColumn ?? column),
         },
       ],
     });

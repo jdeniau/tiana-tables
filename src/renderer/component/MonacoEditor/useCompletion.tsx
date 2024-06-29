@@ -125,7 +125,7 @@ function provideCompletionItems(
     }
 
     const isAfterDot = model.findMatches(
-      '(?<alias>\\w*)\\.$', // searchString
+      '(?<alias>\\w*)\\.(?<columnStart>\\w+)?$', // searchString
       {
         startLineNumber: position.lineNumber,
         startColumn: 1,
