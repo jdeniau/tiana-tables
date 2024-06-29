@@ -1,7 +1,12 @@
+import { SQL_RESERVED_KEYWORDS } from "./keywords";
+
 export function generateTableAlias(
   tableName: string,
   usedAliases: Array<string>
 ): string {
+
+  const isAliasForbidden = (alias: string) => usedAliases.includes(alias) || SQL_RESERVED_KEYWORDS.includes(alias.toUpperCase());
+
   // detect :
   // - the first letter
   // - letters after a `_`
@@ -17,7 +22,7 @@ export function generateTableAlias(
     );
   }
 
-  if (!usedAliases.includes(alias)) {
+  if (!isAliasForbidden(alias)) {
     // alias is not used: perfect, return it
     return alias;
   }
@@ -30,14 +35,14 @@ export function generateTableAlias(
 
     while (
       // alias is still used, add one more letter
-      usedAliases.includes(newAlias) &&
+      isAliasForbidden(newAlias) &&
       // break if the alias is the table name
       newAlias !== tableName
     ) {
       newAlias += tableNameAsArray.shift();
     }
 
-    if (!usedAliases.includes(newAlias)) {
+    if (!isAliasForbidden(newAlias)) {
       // if the alias is not used, return it, else, it does mean that the alias is the table name AND that it is already used !
       return newAlias;
     }
@@ -47,7 +52,7 @@ export function generateTableAlias(
   let newAlias = alias;
   let i = 2;
 
-  while (usedAliases.includes(newAlias)) {
+  while (isAliasForbidden(newAlias)) {
     newAlias = `${alias}_${i}`;
     i++;
   }
