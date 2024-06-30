@@ -19,7 +19,6 @@ import TableStructure, {
 } from './routes/connections.$connectionSlug.$databaseName.$tableName.structure';
 import ConnectionErrorPage from './routes/errors/ConnectionsErrorPage';
 import RootErrorPage from './routes/errors/RootErrorPage';
-import { Home } from './routes/home';
 import Root from './routes/root';
 import SqlPage, { action as sqlPageAction } from './routes/sql.$connectionSlug';
 
