@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { RouterProvider, createHashRouter } from 'react-router-dom';
+import { Navigate, RouterProvider, createHashRouter } from 'react-router-dom';
 import invariant from 'tiny-invariant';
 import Connect from './routes/connect';
 import Create from './routes/connect/create';
@@ -19,7 +19,6 @@ import TableStructure, {
 } from './routes/connections.$connectionSlug.$databaseName.$tableName.structure';
 import ConnectionErrorPage from './routes/errors/ConnectionsErrorPage';
 import RootErrorPage from './routes/errors/RootErrorPage';
-import { Home } from './routes/home';
 import Root from './routes/root';
 import SqlPage, { action as sqlPageAction } from './routes/sql.$connectionSlug';
 
@@ -42,7 +41,7 @@ const router = createHashRouter([
     children: [
       {
         index: true,
-        element: <Home />,
+        element: <Navigate to="/connect" replace />,
       },
       {
         path: 'connect',

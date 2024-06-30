@@ -6,7 +6,6 @@ const fr: Translation = {
   save: 'Enregistrer',
   filter: 'Filtrer',
   'connect.new': 'Nouveau…',
-  'connect.pleaseConnect': 'Veuillez vous connecter',
   'connection.create.button': 'Créer une connexion…',
   'connection.form.action.connect': 'Connecter',
   'connection.form.action.saveAndConnect': 'Enregistrer et connecter',
