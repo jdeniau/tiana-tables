@@ -4,7 +4,6 @@ export default {
   save: 'Save',
   filter: 'Filter',
   'connect.new': 'New…',
-  'connect.pleaseConnect': 'Please connect',
   'connection.create.button': 'Create connection…',
   'connection.form.action.connect': 'Connect',
   'connection.form.action.saveAndConnect': 'Save and connect',
