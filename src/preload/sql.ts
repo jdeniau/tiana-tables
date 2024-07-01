@@ -13,7 +13,10 @@ import { bindChannel, bindEvent } from './bindChannel';
 import { SQL_CHANNEL } from './sqlChannel';
 
 interface Sql {
-  executeQuery<T extends QueryReturnType>(query: string): QueryResult<T>;
+  executeQuery<T extends QueryReturnType>(
+    query: string,
+    rowsAsArray?: boolean
+  ): QueryResult<T>;
   closeAllConnections(): Promise<void>;
   connectionNameChanged(
     connectionSlug: string | undefined,
@@ -37,8 +40,8 @@ async function doInvokeQuery(sqlChannel: SQL_CHANNEL, ...params: unknown[]) {
 }
 
 export const sql: Sql = {
-  executeQuery: async (query) =>
-    doInvokeQuery(SQL_CHANNEL.EXECUTE_QUERY, query),
+  executeQuery: async (query, rowsAsArray) =>
+    doInvokeQuery(SQL_CHANNEL.EXECUTE_QUERY, query, rowsAsArray),
 
   getKeyColumnUsage: async (tableName) =>
     doInvokeQuery(SQL_CHANNEL.GET_KEY_COLUMN_USAGE, tableName),
