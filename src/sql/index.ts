@@ -123,12 +123,17 @@ class ConnectionStack {
   }
 
   async executeQueryAndRetry<T extends QueryReturnType = QueryReturnType>(
-    query: string
+    query: string,
+    rowsAsArray = false
   ): QueryResultOrError<T> {
     invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
     try {
-      return this.executeQuery<T>(this.#currentConnectionSlug, query);
+      return this.executeQuery<T>(
+        this.#currentConnectionSlug,
+        query,
+        rowsAsArray
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : error;
 
@@ -139,7 +144,11 @@ class ConnectionStack {
         // retry once
         this.#connections.delete(this.#currentConnectionSlug);
 
-        return this.executeQuery<T>(this.#currentConnectionSlug, query);
+        return this.executeQuery<T>(
+          this.#currentConnectionSlug,
+          query,
+          rowsAsArray
+        );
       }
 
       throw error;
@@ -148,14 +157,18 @@ class ConnectionStack {
 
   async executeQuery<T extends QueryReturnType = QueryReturnType>(
     connectionSlug: string,
-    query: string
+    query: string,
+    rowsAsArray = false
   ): QueryResultOrError<T> {
     const connection = await this.#getConnection(connectionSlug);
 
     log.debug(`Execute query on "${connectionSlug}": "${query}"`);
 
     try {
-      return { result: await connection.query(query), error: undefined };
+      return {
+        result: await connection.query({ sql: query, rowsAsArray }),
+        error: undefined,
+      };
     } catch (error) {
       return { result: undefined, error: encodeError(error) };
     }

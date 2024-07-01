@@ -37,7 +37,7 @@ export async function action({
 
   try {
     await window.sql.executeQuery(`USE ${databaseName};`);
-    const result = await window.sql.executeQuery(query);
+    const result = await window.sql.executeQuery(query, true);
 
     return { result };
   } catch (error) {
@@ -87,7 +87,7 @@ export default function SqlPage() {
         </Button>
       </Form>
 
-      <RawSqlResult fetcher={fetcher} />
+      <RawSqlResult fetcher={fetcher} rowsAsArray />
     </Flex>
   );
 }

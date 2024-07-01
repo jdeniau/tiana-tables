@@ -6,6 +6,7 @@ import ForeignKeyLink from './ForeignKeyLink';
 import { useTableHeight } from './TableLayout/useTableHeight';
 
 interface TableGridProps<R extends RowDataPacket> {
+  rowsAsArray?: boolean;
   result: null | R[];
   fields: null | FieldPacket[];
   primaryKeys?: Array<string>;
@@ -17,6 +18,7 @@ function TableGrid<Row extends RowDataPacket>({
   result,
   primaryKeys,
   title,
+  rowsAsArray = false,
 }: TableGridProps<Row>): ReactElement {
   const [yTableScroll, resizeRef] = useTableHeight();
 
@@ -26,9 +28,9 @@ function TableGrid<Row extends RowDataPacket>({
         title={title}
         bordered
         // the header, contains the column names
-        columns={fields?.map((field) => ({
+        columns={fields?.map((field, i) => ({
           title: field.name,
-          dataIndex: field.name,
+          dataIndex: rowsAsArray ? i : field.name,
           key: field.name,
 
           // add "…" to the end of the cell if the content is too long
