@@ -12,6 +12,7 @@ import TableGrid from '../../TableGrid';
 import SqlErrorComponent from '../SqlErrorComponent';
 
 type Props = {
+  rowsAsArray: boolean;
   fetcher: Fetcher<
     | {
         result: Awaited<QueryResult>;
@@ -24,7 +25,7 @@ type Props = {
   >;
 };
 
-export default function RawSqlResult({ fetcher }: Props) {
+export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
   const { t } = useTranslation();
   const { data, state } = fetcher;
 
@@ -51,6 +52,7 @@ export default function RawSqlResult({ fetcher }: Props) {
         <TableGrid
           result={result[0]}
           fields={result[1]}
+          rowsAsArray={rowsAsArray}
           title={() => t('rawSql.result.title')}
         />
       )}
