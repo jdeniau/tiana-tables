@@ -11,6 +11,7 @@ import { getLogPath } from './configuration/filePaths';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
 import { installReactDevToolsExtension } from './main-process/installReactDevToolsExtension';
 import { createMenu } from './main-process/menu';
+import { bindIpcMainSqlFileStorage } from './main-process/sqlFileStorage';
 import WindowStateKeeper from './main-process/windowState';
 import connectionStackInstance from './sql';
 
@@ -84,6 +85,7 @@ app.whenReady().then(() => {
   installReactDevToolsExtension();
 
   bindIpcMainConfiguration(ipcMain);
+  bindIpcMainSqlFileStorage(ipcMain);
   connectionStackInstance.bindIpcMain(ipcMain);
 
   ipcMain.handle('get-is-dev', () => {

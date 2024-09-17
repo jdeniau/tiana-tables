@@ -1,11 +1,13 @@
 import { dialog, safeStorage } from 'electron';
-import { existsSync, mkdirSync, readFileSync, writeFile } from 'node:fs';
-import { dirname } from 'node:path';
+import { existsSync, readFileSync, writeFile } from 'node:fs';
 import log from 'electron-log';
 import { WindowState } from '../main-process/windowState';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
 import { ConnectionObject, ConnectionObjectWithoutSlug } from '../sql/types';
-import { getConfigurationPath } from './filePaths';
+import {
+  createConfigurationFolderIfNotExists,
+  getConfigurationPath,
+} from './filePaths';
 import { DEFAULT_LOCALE } from './locale';
 import { DEFAULT_THEME } from './themes';
 import {
@@ -93,12 +95,8 @@ function writeConfiguration(config: Configuration): void {
     ),
   };
 
-  // mkdirSync(configPath, { recursive: true });
-
   // create the folder of the `dataFilePath` if it does not exist
-  if (!existsSync(dirname(configurationPath))) {
-    mkdirSync(dirname(configurationPath), { recursive: true });
-  }
+  createConfigurationFolderIfNotExists();
 
   writeFile(
     configurationPath,
