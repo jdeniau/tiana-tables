@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Button, Flex, Form } from 'antd';
 import { ActionFunctionArgs, useFetcher } from 'react-router-dom';
 import invariant from 'tiny-invariant';
@@ -9,10 +10,19 @@ import { RawSqlEditor } from '../component/MonacoEditor/RawSqlEditor';
 import RawSqlResult from '../component/Query/RawSqlResult/RowDataPacketResult';
 
 // const DEFAULT_VALUE = `SELECT *  FROM employees e WHERE e.gender = 'F' LIMIT 10;`;
-const DEFAULT_VALUE = `SELECT t.
-FROM ticketing t
-JOIN 
-LIMIT 10;`;
+function useSqlFileStorage(): [string | null, (value: string) => void] {
+  const [sqlQuery, setSqlQuery] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.sqlFileStorage.loadLatest().then((v) => setSqlQuery(v ?? ''));
+  }, []);
+
+  const saveValue = (value: string) => {
+    window.sqlFileStorage.saveLatest(value);
+  };
+
+  return [sqlQuery, saveValue];
+}
 
 type SqlActionReturnTypes =
   | {
@@ -54,15 +64,21 @@ export default function SqlPage() {
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const fetcher = useFetcher<SqlActionReturnTypes>();
+  const [sqlQuery, saveSqlQuery] = useSqlFileStorage();
 
   const { state } = fetcher;
+
+  if (sqlQuery === null) {
+    return null;
+  }
 
   return (
     <Flex vertical gap="small" style={{ height: '100%' }}>
       <Form
         form={form}
-        initialValues={{ raw: DEFAULT_VALUE }}
+        initialValues={{ raw: sqlQuery }}
         onFinish={(values) => {
+          saveSqlQuery(values.raw);
           fetcher.submit(values, {
             method: 'post',
           });

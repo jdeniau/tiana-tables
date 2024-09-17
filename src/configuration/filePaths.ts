@@ -1,4 +1,5 @@
 import { app } from 'electron';
+import { existsSync, mkdirSync } from 'node:fs';
 import path, { dirname, resolve } from 'node:path';
 import { isDevApp } from '../main-process/helpers';
 
@@ -11,6 +12,14 @@ export function getConfigurationPath() {
 
 export function getConfigurationFolder() {
   return dirname(getConfigurationPath());
+}
+
+export function createConfigurationFolderIfNotExists() {
+  const configurationPah = getConfigurationPath();
+
+  if (!existsSync(dirname(configurationPah))) {
+    mkdirSync(dirname(configurationPah), { recursive: true });
+  }
 }
 
 export function getLogPath() {

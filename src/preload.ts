@@ -5,9 +5,11 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { config } from './preload/config';
 import { navigationListener } from './preload/navigationListener';
 import { sql } from './preload/sql';
+import { sqlFileStorage } from './preload/sqlFileStorage';
 
 contextBridge.exposeInMainWorld('config', config);
 contextBridge.exposeInMainWorld('sql', sql);
+contextBridge.exposeInMainWorld('sqlFileStorage', sqlFileStorage);
 contextBridge.exposeInMainWorld('navigationListener', navigationListener);
 
 ipcRenderer.invoke('get-is-dev').then((isDev) => {
@@ -25,6 +27,7 @@ declare global {
     isMac: boolean;
     config: typeof config;
     sql: typeof sql;
+    sqlFileStorage: typeof sqlFileStorage;
     navigationListener: typeof navigationListener;
   }
 }
