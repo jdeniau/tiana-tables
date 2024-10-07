@@ -14,7 +14,6 @@ const fr: Translation = {
   'connection.form.password.label': 'Mot de passe',
   'connection.form.port.label': 'Port',
   'connection.form.user.label': 'Utilisateur',
-  database: 'Base de données',
   'error.connection.notFound': 'Connexion introuvable',
   'errorPage.goHome': "Retourner à la page d'accueil",
   'errorPage.sorry': "Désolé, une erreur inattendue s'est produite.",

@@ -12,7 +12,6 @@ export default {
   'connection.form.password.label': 'Password',
   'connection.form.port.label': 'Port',
   'connection.form.user.label': 'User',
-  database: 'Database',
   'error.connection.notFound': 'Connection not found',
   'errorPage.goHome': 'Go back to the home page',
   'errorPage.sorry': 'Sorry, an unexpected error has occurred.',

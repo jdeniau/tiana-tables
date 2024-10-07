@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { DatabaseOutlined, TableOutlined } from '@ant-design/icons';
 import { Flex, Input, InputRef, List, Modal } from 'antd';
 import Fuse from 'fuse.js';
 import { useNavigate } from 'react-router-dom';
@@ -177,9 +178,15 @@ export default function NavigateModal({
                 navigateToItem(item);
               }}
             >
-              {isShowDatabaseRow(item)
-                ? `${t('database')}: ${item.Database}`
-                : item.Name}
+              {isShowDatabaseRow(item) ? (
+                <span>
+                  <DatabaseOutlined /> {item.Database}
+                </span>
+              ) : (
+                <span>
+                  <TableOutlined /> {item.Name}
+                </span>
+              )}
             </ItemListWithHover>
           )}
         />
