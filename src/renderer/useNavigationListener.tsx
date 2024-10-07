@@ -5,10 +5,15 @@ import {
   useEffect,
   useState,
 } from 'react';
+import { ShowDatabasesResult } from '../sql/types';
 import NavigateModal from './component/NavigateModal';
 
+type WithDatabaseListProps = {
+  databaseList: ShowDatabasesResult | undefined;
+};
+
 type ReturnType = {
-  NavigateModal: React.FunctionComponent;
+  NavigateModal: React.FunctionComponent<WithDatabaseListProps>;
   openNavigateModal: () => void;
 };
 
@@ -24,8 +29,9 @@ function useNavigationListener(): ReturnType {
     });
   }, []);
 
-  const NavigateModalComponent = () => (
+  const NavigateModalComponent = ({ databaseList }: WithDatabaseListProps) => (
     <NavigateModal
+      databaseList={databaseList}
       isNavigateModalOpen={isNavigateModalOpen}
       setIsNavigateModalOpen={setIsNavigateModalOpen}
     />
@@ -43,14 +49,15 @@ const NavigateModalContext = createContext<NavigateModalContext | null>(null);
 
 function NavigateModalContextProvider({
   children,
+  databaseList,
 }: {
   children: ReactNode;
-}): JSX.Element {
+} & WithDatabaseListProps): JSX.Element {
   const { NavigateModal, openNavigateModal } = useNavigationListener();
 
   return (
     <NavigateModalContext.Provider value={{ openNavigateModal }}>
-      <NavigateModal />
+      <NavigateModal databaseList={databaseList} />
 
       {children}
     </NavigateModalContext.Provider>

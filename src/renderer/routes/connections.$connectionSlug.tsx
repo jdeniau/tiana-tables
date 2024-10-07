@@ -110,7 +110,7 @@ export default function ConnectionDetailPage() {
     <TableListContextProvider tableList={tableStatusList}>
       <ForeignKeysContextProvider keyColumnUsageRows={keyColumnUsageRows}>
         <AllColumnsContextProvider allColumns={allColumns}>
-          <NavigateModalContextProvider>
+          <NavigateModalContextProvider databaseList={databaseList}>
             <Layout>
               <Sider width={200} style={{ overflow: 'auto' }}>
                 <Flex vertical gap="small">

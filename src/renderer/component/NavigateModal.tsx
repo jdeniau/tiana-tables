@@ -1,4 +1,11 @@
-import { ReactElement, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Flex, Input, InputRef, List, Modal } from 'antd';
 import Fuse from 'fuse.js';
 import { useNavigate } from 'react-router-dom';
@@ -7,17 +14,24 @@ import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useTableListContext } from '../../contexts/TableListContext';
 import { useTranslation } from '../../i18n';
-import { ShowTableStatus } from '../../sql/types';
+import { isShowDatabaseRow } from '../../sql/type-guard';
+import {
+  ShowDatabaseRow,
+  ShowDatabasesResult,
+  ShowTableStatus,
+} from '../../sql/types';
 import { selection } from '../theme';
 
 type Props = {
   isNavigateModalOpen: boolean;
   setIsNavigateModalOpen: (isOpened: boolean) => void;
+  databaseList: ShowDatabasesResult;
 };
 
 export default function NavigateModal({
   isNavigateModalOpen,
   setIsNavigateModalOpen,
+  databaseList,
 }: Props): ReactElement {
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
@@ -28,11 +42,16 @@ export default function NavigateModal({
   const [activeIndex, setActiveIndex] = useState(-1);
   const tableStatusList = useTableListContext();
 
-  let filteredTableStatusList = tableStatusList;
+  const allRowList = useMemo(
+    () => [...tableStatusList, ...databaseList],
+    [tableStatusList, databaseList]
+  );
+
+  let filteredTableStatusList = allRowList;
 
   if (searchText) {
-    const fuze = new Fuse(tableStatusList ?? [], {
-      keys: ['Name'],
+    const fuze = new Fuse(allRowList, {
+      keys: ['Name', 'Database'],
       threshold: 0.4,
     });
 
@@ -40,8 +59,13 @@ export default function NavigateModal({
   }
 
   const navigateToItem = useCallback(
-    (item: ShowTableStatus) => {
+    (item: ShowTableStatus | ShowDatabaseRow) => {
       setIsNavigateModalOpen(false);
+      if (isShowDatabaseRow(item)) {
+        navigate(`/connections/${currentConnectionSlug}/${item.Database}`);
+        return;
+      }
+
       navigate(
         `/connections/${currentConnectionSlug}/${database}/tables/${item.Name}`
       );
@@ -138,15 +162,24 @@ export default function NavigateModal({
           style={{ overflow: 'auto' }}
           bordered
           dataSource={filteredTableStatusList}
-          renderItem={(item: ShowTableStatus, index: number) => (
+          renderItem={(
+            item: ShowTableStatus | ShowDatabaseRow,
+            index: number
+          ) => (
             <ItemListWithHover
-              key={item.Name}
+              key={
+                isShowDatabaseRow(item)
+                  ? `database-${item.Database}`
+                  : `tablestatus-${item.Name}`
+              }
               $active={index === activeIndex}
               onClick={() => {
                 navigateToItem(item);
               }}
             >
-              {item.Name}
+              {isShowDatabaseRow(item)
+                ? `${t('database')}: ${item.Database}`
+                : item.Name}
             </ItemListWithHover>
           )}
         />
@@ -155,7 +188,9 @@ export default function NavigateModal({
   );
 }
 
-const ItemListWithHover = styled(List.Item)<{ $active: boolean }>`
+const ItemListWithHover = styled(List.Item)<{
+  $active: boolean;
+}>`
   cursor: pointer;
 
   &:hover {
