@@ -1,7 +1,7 @@
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { QueryReturnType } from './types';
 
-function isObjectAResultSetHeader(obj: object): boolean {
+function isObjectAResultSetHeader(obj: object): obj is ResultSetHeader {
   // test all keys that are present in ResultSetHeader (except deprecated "changedRows")
   return (
     'fieldCount' in obj &&
@@ -53,6 +53,11 @@ export function isRowDataPacketArray(
 ): obj is RowDataPacket[] {
   if (!Array.isArray(obj)) {
     return false;
+  }
+
+  if (obj.length === 0) {
+    // a result with no data
+    return true;
   }
 
   const firstItem = obj[0];
