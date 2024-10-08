@@ -1,6 +1,7 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
+import { DatabaseListContextProvider } from '../../contexts/DatabaseListContext';
 import { TableListContextProvider } from '../../contexts/TableListContext';
 import NavigateModal from './NavigateModal';
 // eslint-disable-next-line import/no-unresolved
@@ -23,34 +24,35 @@ type Story = StoryObj<typeof NavigateModal>;
  * to learn how to use render functions.
  */
 export const Primary: Story = {
-  args: {
-    databaseList: [
-      // @ts-expect-error don't want all data, only the name
-      { Database: 'mysql' },
-      // @ts-expect-error don't want all data, only the name
-      { Database: 'users' },
-    ],
-  },
   decorators: [
     (Story) => (
-      <TableListContextProvider
-        tableList={[
+      <DatabaseListContextProvider
+        databaseList={[
           // @ts-expect-error don't want all data, only the name
-          { Name: 'departments' },
+          { Database: 'mysql' },
           // @ts-expect-error don't want all data, only the name
-          { Name: 'dept_emp' },
-          // @ts-expect-error don't want all data, only the name
-          { Name: 'dept_manager' },
-          // @ts-expect-error don't want all data, only the name
-          { Name: 'employees' },
-          // @ts-expect-error don't want all data, only the name
-          { Name: 'salaries' },
-          // @ts-expect-error don't want all data, only the name
-          { Name: 'titles' },
+          { Database: 'users' },
         ]}
       >
-        <Story />
-      </TableListContextProvider>
+        <TableListContextProvider
+          tableList={[
+            // @ts-expect-error don't want all data, only the name
+            { Name: 'departments' },
+            // @ts-expect-error don't want all data, only the name
+            { Name: 'dept_emp' },
+            // @ts-expect-error don't want all data, only the name
+            { Name: 'dept_manager' },
+            // @ts-expect-error don't want all data, only the name
+            { Name: 'employees' },
+            // @ts-expect-error don't want all data, only the name
+            { Name: 'salaries' },
+            // @ts-expect-error don't want all data, only the name
+            { Name: 'titles' },
+          ]}
+        >
+          <Story />
+        </TableListContextProvider>
+      </DatabaseListContextProvider>
     ),
   ],
 };
