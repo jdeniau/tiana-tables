@@ -1,5 +1,5 @@
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
-import { QueryReturnType } from './types';
+import { QueryReturnType, ShowDatabaseRow } from './types';
 
 function isObjectAResultSetHeader(obj: object): obj is ResultSetHeader {
   // test all keys that are present in ResultSetHeader (except deprecated "changedRows")
@@ -70,3 +70,7 @@ export function isRowDataPacketArray(
 }
 
 // TODO handle ProcedureCallPacket ?
+
+export function isShowDatabaseRow(obj: object): obj is ShowDatabaseRow {
+  return 'Database' in obj;
+}

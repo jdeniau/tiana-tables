@@ -34,7 +34,7 @@ export type ConnectionObjectWithoutSlug = Omit<ConnectionObject, 'slug'>;
 /**
  * Represent the return type of "SHOW DATABASES;" query.
  */
-interface ShowDatabaseRow extends RowDataPacket {
+export interface ShowDatabaseRow extends RowDataPacket {
   Database: string;
 }
 export type ShowDatabasesResult = ShowDatabaseRow[];

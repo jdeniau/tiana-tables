@@ -12,6 +12,7 @@ import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
+import { DatabaseListContextProvider } from '../../contexts/DatabaseListContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import { TableListContextProvider } from '../../contexts/TableListContext';
 import { useTranslation } from '../../i18n';
@@ -107,26 +108,28 @@ export default function ConnectionDetailPage() {
   }, [addConnectionToList, connectionSlug]);
 
   return (
-    <TableListContextProvider tableList={tableStatusList}>
-      <ForeignKeysContextProvider keyColumnUsageRows={keyColumnUsageRows}>
-        <AllColumnsContextProvider allColumns={allColumns}>
-          <NavigateModalContextProvider>
-            <Layout>
-              <Sider width={200} style={{ overflow: 'auto' }}>
-                <Flex vertical gap="small">
-                  <DatabaseSelector databaseList={databaseList} />
-                  <OpenNavigateModalButton />
-                  <TableList tableStatusList={tableStatusList} />
-                </Flex>
-              </Sider>
-              <Layout.Content style={{ overflow: 'auto' }}>
-                <Outlet />
-              </Layout.Content>
-            </Layout>
-          </NavigateModalContextProvider>
-        </AllColumnsContextProvider>
-      </ForeignKeysContextProvider>
-    </TableListContextProvider>
+    <DatabaseListContextProvider databaseList={databaseList}>
+      <TableListContextProvider tableList={tableStatusList}>
+        <ForeignKeysContextProvider keyColumnUsageRows={keyColumnUsageRows}>
+          <AllColumnsContextProvider allColumns={allColumns}>
+            <NavigateModalContextProvider>
+              <Layout>
+                <Sider width={200} style={{ overflow: 'auto' }}>
+                  <Flex vertical gap="small">
+                    <DatabaseSelector databaseList={databaseList} />
+                    <OpenNavigateModalButton />
+                    <TableList tableStatusList={tableStatusList} />
+                  </Flex>
+                </Sider>
+                <Layout.Content style={{ overflow: 'auto' }}>
+                  <Outlet />
+                </Layout.Content>
+              </Layout>
+            </NavigateModalContextProvider>
+          </AllColumnsContextProvider>
+        </ForeignKeysContextProvider>
+      </TableListContextProvider>
+    </DatabaseListContextProvider>
   );
 }
 
