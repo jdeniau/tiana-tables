@@ -128,14 +128,14 @@ class ConnectionStack {
   ): QueryResultOrError<T> {
     invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
-    try {
-      return this.executeQuery<T>(
-        this.#currentConnectionSlug,
-        query,
-        rowsAsArray
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : error;
+    const queryResult = await this.#executeQuery<T>(
+      this.#currentConnectionSlug,
+      query,
+      rowsAsArray
+    );
+
+    if (queryResult.error) {
+      const message = queryResult.error.message;
 
       if (
         typeof message === 'string' &&
@@ -144,21 +144,21 @@ class ConnectionStack {
         // retry once
         this.#connections.delete(this.#currentConnectionSlug);
 
-        return this.executeQuery<T>(
+        return this.#executeQuery<T>(
           this.#currentConnectionSlug,
           query,
           rowsAsArray
         );
       }
-
-      throw error;
     }
+
+    return queryResult;
   }
 
-  async executeQuery<T extends QueryReturnType = QueryReturnType>(
+  async #executeQuery<T extends QueryReturnType = QueryReturnType>(
     connectionSlug: string,
     query: string,
-    rowsAsArray = false
+    rowsAsArray: boolean
   ): QueryResultOrError<T> {
     const connection = await this.#getConnection(connectionSlug);
 
@@ -228,6 +228,14 @@ class ConnectionStack {
     connection.on('end', () => {
       log.debug(`Connection to "${slug}" ended`);
       this.#connections.delete(slug);
+    });
+
+    connection.on('error', (err) => {
+      log.debug(`Received error from "${slug}" connection`);
+      log.error(err);
+
+      // end the connection from the stack. It will be regerenated on the next query
+      connection.end();
     });
 
     await connection.connect();
