@@ -1,4 +1,4 @@
-import { ReactElement } from 'react';
+import { ReactElement, useMemo } from 'react';
 import { Menu, MenuProps } from 'antd';
 import { Link, useParams } from 'react-router-dom';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
@@ -18,23 +18,25 @@ export default function TableList({
   const { database } = useDatabaseContext();
   const { tableName } = useParams();
 
+  const items: MenuItem[] = useMemo(
+    () =>
+      tableStatusList?.map((rowDataPacket: ShowTableStatus) => ({
+        key: rowDataPacket.Name,
+        label: (
+          <Link
+            to={`/connections/${currentConnectionSlug}/${database}/tables/${rowDataPacket.Name}`}
+          >
+            {rowDataPacket.Name}
+          </Link>
+        ),
+        title: rowDataPacket.Name,
+      })),
+    [currentConnectionSlug, database, tableStatusList]
+  );
+
   if (!tableStatusList) {
     return null;
   }
-
-  const items: MenuItem[] = tableStatusList.map(
-    (rowDataPacket: ShowTableStatus) => ({
-      key: rowDataPacket.Name,
-      label: (
-        <Link
-          to={`/connections/${currentConnectionSlug}/${database}/tables/${rowDataPacket.Name}`}
-        >
-          {rowDataPacket.Name}
-        </Link>
-      ),
-      title: rowDataPacket.Name,
-    })
-  );
 
   return (
     <Menu items={items} selectedKeys={tableName ? [tableName] : undefined} />
