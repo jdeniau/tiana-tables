@@ -84,8 +84,15 @@ export const WithNumberType: Story = {
 
 export const WithDateType: Story = {
   args: {
+    type: Types.DATE,
+    value: new Date('2020-01-01T12:00:00'),
+  },
+};
+
+export const WithDatetimeType: Story = {
+  args: {
     type: Types.DATETIME,
-    value: new Date('Jan 20 2020'),
+    value: new Date('2020-01-01T12:00:00'),
   },
 };
 
