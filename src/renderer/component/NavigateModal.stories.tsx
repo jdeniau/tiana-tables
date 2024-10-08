@@ -23,6 +23,14 @@ type Story = StoryObj<typeof NavigateModal>;
  * to learn how to use render functions.
  */
 export const Primary: Story = {
+  args: {
+    databaseList: [
+      // @ts-expect-error don't want all data, only the name
+      { Database: 'mysql' },
+      // @ts-expect-error don't want all data, only the name
+      { Database: 'users' },
+    ],
+  },
   decorators: [
     (Story) => (
       <TableListContextProvider

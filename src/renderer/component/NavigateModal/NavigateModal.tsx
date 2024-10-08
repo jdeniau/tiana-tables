@@ -1,58 +1,40 @@
-import {
-  ReactElement,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { DatabaseOutlined, TableOutlined } from '@ant-design/icons';
+import { ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import { Flex, Input, InputRef, List, Modal } from 'antd';
 import Fuse from 'fuse.js';
 import { useNavigate } from 'react-router-dom';
 import { styled } from 'styled-components';
-import { useConnectionContext } from '../../contexts/ConnectionContext';
-import { useDatabaseContext } from '../../contexts/DatabaseContext';
-import { useTableListContext } from '../../contexts/TableListContext';
-import { useTranslation } from '../../i18n';
-import { isShowDatabaseRow } from '../../sql/type-guard';
-import {
-  ShowDatabaseRow,
-  ShowDatabasesResult,
-  ShowTableStatus,
-} from '../../sql/types';
-import { selection } from '../theme';
+import { useTranslation } from '../../../i18n';
+import { selection } from '../../theme';
+
+export type NavigationItem = {
+  key: string;
+  name: string;
+  link: string;
+  Icon: ReactElement;
+};
 
 type Props = {
   isNavigateModalOpen: boolean;
   setIsNavigateModalOpen: (isOpened: boolean) => void;
-  databaseList: ShowDatabasesResult;
+  navigationItemList: Array<NavigationItem>;
 };
 
 export default function NavigateModal({
   isNavigateModalOpen,
   setIsNavigateModalOpen,
-  databaseList,
+  navigationItemList,
 }: Props): ReactElement {
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
-  const { currentConnectionSlug } = useConnectionContext();
-  const { database } = useDatabaseContext();
   const navigate = useNavigate();
   const searchRef = useRef<InputRef>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const tableStatusList = useTableListContext();
 
-  const allRowList = useMemo(
-    () => [...tableStatusList, ...databaseList],
-    [tableStatusList, databaseList]
-  );
-
-  let filteredTableStatusList = allRowList;
+  let filteredTableStatusList = navigationItemList;
 
   if (searchText) {
-    const fuze = new Fuse(allRowList, {
-      keys: ['Name', 'Database'],
+    const fuze = new Fuse(navigationItemList, {
+      keys: ['name'],
       threshold: 0.4,
     });
 
@@ -60,18 +42,12 @@ export default function NavigateModal({
   }
 
   const navigateToItem = useCallback(
-    (item: ShowTableStatus | ShowDatabaseRow) => {
+    (item: NavigationItem) => {
       setIsNavigateModalOpen(false);
-      if (isShowDatabaseRow(item)) {
-        navigate(`/connections/${currentConnectionSlug}/${item.Database}`);
-        return;
-      }
 
-      navigate(
-        `/connections/${currentConnectionSlug}/${database}/tables/${item.Name}`
-      );
+      navigate(item.link);
     },
-    [currentConnectionSlug, database, navigate, setIsNavigateModalOpen]
+    [navigate, setIsNavigateModalOpen]
   );
 
   // focus input when the modal shows up
@@ -163,30 +139,15 @@ export default function NavigateModal({
           style={{ overflow: 'auto' }}
           bordered
           dataSource={filteredTableStatusList}
-          renderItem={(
-            item: ShowTableStatus | ShowDatabaseRow,
-            index: number
-          ) => (
+          renderItem={(item: NavigationItem, index: number) => (
             <ItemListWithHover
-              key={
-                isShowDatabaseRow(item)
-                  ? `database-${item.Database}`
-                  : `tablestatus-${item.Name}`
-              }
+              key={item.key}
               $active={index === activeIndex}
               onClick={() => {
                 navigateToItem(item);
               }}
             >
-              {isShowDatabaseRow(item) ? (
-                <span>
-                  <DatabaseOutlined /> {item.Database}
-                </span>
-              ) : (
-                <span>
-                  <TableOutlined /> {item.Name}
-                </span>
-              )}
+              {item.Icon} {item.name}
             </ItemListWithHover>
           )}
         />

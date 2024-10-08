@@ -9,7 +9,7 @@ import { ShowDatabasesResult } from '../sql/types';
 import NavigateModal from './component/NavigateModal';
 
 type WithDatabaseListProps = {
-  databaseList: ShowDatabasesResult | undefined;
+  databaseList: ShowDatabasesResult;
 };
 
 type ReturnType = {
