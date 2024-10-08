@@ -8,6 +8,7 @@ import {
   foreground,
   stringForeground,
 } from '../theme';
+import { formatDate, formatDateTime } from '../utils/dateFormatter';
 
 interface TableCellFactoryProps {
   type: number | undefined;
@@ -35,8 +36,12 @@ const ForegroundSpan = styled(BaseCell)`
   color: ${foreground};
 `;
 
+function DateCell({ value }: { value: Date }) {
+  return <ForegroundSpan>{formatDate(value)}</ForegroundSpan>;
+}
+
 function DatetimeCell({ value }: { value: Date }) {
-  return <ForegroundSpan>{value.toISOString()}</ForegroundSpan>;
+  return <ForegroundSpan>{formatDateTime(value)}</ForegroundSpan>;
 }
 
 const StringSpan = styled(BaseCell)`
@@ -76,9 +81,11 @@ function TableCellFactory({ type, value }: TableCellFactoryProps) {
     case Types.DATETIME2: // aka DATETIME with fractional seconds
     case Types.TIMESTAMP: // aka TIMESTAMP
     case Types.TIMESTAMP2: // aka TIMESTAMP with fractional seconds
-    case Types.DATE: // aka DATE
     case Types.NEWDATE: // aka ?
       return <DatetimeCell value={value} />;
+
+    case Types.DATE: // aka DATE
+      return <DateCell value={value} />;
 
     // Numbers
     case Types.TINY: // aka TINYINT, 1 byte
