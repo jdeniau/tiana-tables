@@ -27,6 +27,11 @@ import NavigateModalContextProvider, {
 const Sider = styled(Layout.Sider)`
   border-right: 1px solid ${foreground};
   background: ${background} !important;
+  overflow: auto;
+`;
+
+const Content = styled(Layout.Content)`
+  overflow: auto;
 `;
 
 interface RouteParams extends LoaderFunctionArgs {
@@ -114,16 +119,16 @@ export default function ConnectionDetailPage() {
           <AllColumnsContextProvider allColumns={allColumns}>
             <NavigateModalContextProvider>
               <Layout>
-                <Sider width={200} style={{ overflow: 'auto' }}>
+                <Sider width={200}>
                   <Flex vertical gap="small">
                     <DatabaseSelector databaseList={databaseList} />
                     <OpenNavigateModalButton />
                     <TableList tableStatusList={tableStatusList} />
                   </Flex>
                 </Sider>
-                <Layout.Content style={{ overflow: 'auto' }}>
+                <Content>
                   <Outlet />
-                </Layout.Content>
+                </Content>
               </Layout>
             </NavigateModalContextProvider>
           </AllColumnsContextProvider>
