@@ -56,7 +56,7 @@ export const WithNULLValue: Story = {
     value: null,
   },
   argTypes: {
-    value: { control: { type: null } },
+    value: { control: { type: undefined } },
   },
 };
 
