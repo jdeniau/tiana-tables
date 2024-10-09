@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { Flex } from 'antd';
 import { Navigate } from 'react-router-dom';
 import { EncryptedConnectionObject } from '../../../configuration/type';

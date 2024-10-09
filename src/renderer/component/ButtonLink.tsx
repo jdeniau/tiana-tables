@@ -13,7 +13,7 @@ type Props = LinkProps & BaseButtonProps;
 const ButtonLink = forwardRef(
   (
     { onClick, replace = false, state, target, to, ...rest }: Props,
-    ref: Ref<HTMLElement>
+    ref: Ref<HTMLButtonElement>
   ) => {
     const href = useHref(to);
     const handleClick = useLinkClickHandler(to, {

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
  * Used only for navigation and callback registering. Do not use elsewhere.
  */
 export default function useEffectOnce(effect: () => void | (() => void)) {
-  const destroyFunc = useRef<void | (() => void)>();
+  const destroyFunc = useRef<void | (() => void)>(undefined);
   const effectCalled = useRef(false);
   const renderAfterCalled = useRef(false);
   const [_val, setVal] = useState<number>(0);

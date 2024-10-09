@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { type JSX, ReactNode } from 'react';
 import { Tooltip } from 'antd';
 import { styled } from 'styled-components';
 
