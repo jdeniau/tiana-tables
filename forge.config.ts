@@ -74,13 +74,15 @@ const config: ForgeConfig = {
     }),
     // new MakerDMG({}),
     new MakerSnap({
+      summary: 'Tiana Tables: A SQL client for developers',
+      description: 'Tiana Tables is a SQL client for developers',
+      base: 'core22', // Version of ubuntu ? See https://canonical-snapcraft.readthedocs-hosted.com/en/8.4.2/reference/bases/
       config: {
         features: {
           audio: true,
           mpris: 'me.deniau.tiana-tables',
           webgl: true,
         },
-        summary: 'Tiana Tables: A SQL client for developers',
       },
     }),
   ],
