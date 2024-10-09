@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { type JSX, useMemo } from 'react';
 import { DatabaseOutlined, TableOutlined } from '@ant-design/icons';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
@@ -23,13 +23,13 @@ export default function NavigateModalContainer(props: Props): JSX.Element {
         key: `Table-${table.Name}`,
         name: table.Name,
         link: `/connections/${currentConnectionSlug}/${database}/tables/${table.Name}`,
-        Icon: <TableOutlined />,
+        Icon: TableOutlined,
       })),
       ...databaseList.map((showDatabase) => ({
         key: `Database-${showDatabase.Database}`,
         name: showDatabase.Database,
         link: `/connections/${currentConnectionSlug}/${showDatabase.Database}`,
-        Icon: <DatabaseOutlined />,
+        Icon: DatabaseOutlined,
       })),
     ],
     [currentConnectionSlug, database, databaseList, tableStatusList]

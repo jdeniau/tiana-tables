@@ -10,7 +10,7 @@ export type NavigationItem = {
   key: string;
   name: string;
   link: string;
-  Icon: ReactElement;
+  Icon: React.ElementType;
 };
 
 type Props = {
@@ -147,7 +147,7 @@ export default function NavigateModal({
                 navigateToItem(item);
               }}
             >
-              {item.Icon} {item.name}
+              <item.Icon /> {item.name}
             </ItemListWithHover>
           )}
         />

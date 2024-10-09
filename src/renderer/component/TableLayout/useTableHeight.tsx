@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 export function useTableHeight(): [number, React.RefObject<HTMLDivElement>] {
   const [yTableScroll, setYTableScroll] = useState<number>(0);
-  const resizeRef = useRef<HTMLDivElement | null>(null);
+  const resizeRef = useRef<HTMLDivElement>(null);
 
   const resizeObserver = useMemo(
     () =>
