@@ -87,7 +87,11 @@ jobs:
 
       - name: Install snapcraft for linux
         if: startsWith(matrix.os, 'ubuntu')
-        run: sudo apt-get install snapcraft
+        run: sudo apt-get install snapcraft snapd
+
+      - name: install weird snapcraft dependencies
+        if: startsWith(matrix.os, 'ubuntu')
+        run: sudo snap install gnome-42-2204 gnome-42-2204-sdk gtk-common-themes
         # end snapcraft specific
 
       - name: Sign & Publish Electron app
