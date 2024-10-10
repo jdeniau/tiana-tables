@@ -81,10 +81,6 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: sudo apt-get install snapcraft
 
-      - name: Use Snacraft 7.x as we use base core18
-        if: startsWith(matrix.os, 'ubuntu')
-        run: sudo snap install snapcraft --channel 7.x
-
       - name: Sign & Publish Electron app
         run: yarn publish
         env:

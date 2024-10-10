@@ -76,6 +76,8 @@ const config: ForgeConfig = {
     new MakerSnap({
       summary: 'Tiana Tables: A SQL client for developers',
       description: 'Tiana Tables is a SQL client for developers',
+      base: 'core22', // Version of ubuntu ? See https://canonical-snapcraft.readthedocs-hosted.com/en/8.4.2/reference/bases/
+      confinement: 'classic', // classic is needed as "strict" build requires extension "gnome-3-34", which is only available on core18, which requires ubuntu  18, which is not available on github runners anymore
       config: {
         features: {
           audio: true,
