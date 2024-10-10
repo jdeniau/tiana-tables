@@ -92,6 +92,11 @@ jobs:
       - name: install weird snapcraft dependencies
         if: startsWith(matrix.os, 'ubuntu')
         run: sudo snap install gnome-42-2204 gnome-42-2204-sdk gtk-common-themes
+
+      - name: check snapcraft credentials
+        run: snapcraft whoami
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         # end snapcraft specific
 
       - name: Sign & Publish Electron app
@@ -102,5 +107,7 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # for snapcraft
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
           # For every platform
           GITHUB_TOKEN: ${{ github.token }}
