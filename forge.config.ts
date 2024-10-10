@@ -77,14 +77,16 @@ const config: ForgeConfig = {
       summary: 'Tiana Tables: A SQL client for developers',
       description: 'Tiana Tables is a SQL client for developers',
       base: 'core22', // Version of ubuntu ? See https://canonical-snapcraft.readthedocs-hosted.com/en/8.4.2/reference/bases/
-      extensions: ['gnome'],
-      config: {
-        features: {
-          audio: true,
-          mpris: 'me.deniau.tiana-tables',
-          webgl: true,
-        },
+      appConfig: {
+        extensions: ['gnome'],
       },
+      // config: {
+      //   features: {
+      //     audio: true,
+      //     mpris: 'me.deniau.tiana-tables',
+      //     webgl: true,
+      //   },
+      // },
     }),
   ],
   publishers: [
