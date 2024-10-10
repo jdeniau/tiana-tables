@@ -94,7 +94,9 @@ jobs:
         run: sudo snap install gnome-42-2204 gnome-42-2204-sdk gtk-common-themes
 
       - name: do not use "snapcraft.cfg" file
-        run: sed -i 's/if (!(await fs.pathExists(snapcraftCfgPath)))/if (false \&\& !(await fs.pathExists(snapcraftCfgPath)))/' node_modules/@electron-forge/publisher-snapcraft/src/PublisherSnapcraft.ts
+        # run: sed -i 's/if (!(await fs.pathExists(snapcraftCfgPath)))/if (false \&\& !(await fs.pathExists(snapcraftCfgPath)))/' node_modules/@electron-forge/publisher-snapcraft/src/PublisherSnapcraft.ts
+        run: sed -i 's/if (!(await fs_extra_1.default.pathExists(snapcraftCfgPath)))/if (false \&\& !(await fs_extra_1.default.pathExists(snapcraftCfgPath)))/' node_modules/@electron-forge/publisher-snapcraft/dist/PublisherSnapcraft.js
+
         # end snapcraft specific
 
       - name: Sign & Publish Electron app
