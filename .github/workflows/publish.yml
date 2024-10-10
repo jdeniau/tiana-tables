@@ -77,9 +77,15 @@ jobs:
         if: startsWith(matrix.os, 'macos-14')
         run: sudo launchctl limit maxfiles 999999 999999
 
+        # snapcraft specific
+      - name: Setup LXD
+        uses: canonical/setup-lxd@main
+        if: startsWith(matrix.os, 'ubuntu')
+
       - name: Install snapcraft for linux
         if: startsWith(matrix.os, 'ubuntu')
         run: sudo apt-get install snapcraft
+        # end snapcraft specific
 
       - name: Sign & Publish Electron app
         run: yarn publish
