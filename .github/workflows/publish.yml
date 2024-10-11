@@ -97,6 +97,10 @@ jobs:
         # run: sed -i 's/if (!(await fs.pathExists(snapcraftCfgPath)))/if (false \&\& !(await fs.pathExists(snapcraftCfgPath)))/' node_modules/@electron-forge/publisher-snapcraft/src/PublisherSnapcraft.ts
         run: sed -i 's/if (!(await fs_extra_1.default.pathExists(snapcraftCfgPath)))/if (false \&\& !(await fs_extra_1.default.pathExists(snapcraftCfgPath)))/' node_modules/@electron-forge/publisher-snapcraft/dist/PublisherSnapcraft.js
 
+      - name: fix issue with Snapcraft path
+        # run: sed -i 's/if (!(await fs.pathExists(snapcraftCfgPath)))/if (false \&\& !(await fs.pathExists(snapcraftCfgPath)))/' node_modules/@electron-forge/publisher-snapcraft/src/PublisherSnapcraft.ts
+        run: sed -i 's/snapcraft = new Snapcraft();/snapcraft = new Snapcraft();await snapcraft.ensureInstalled();/' node_modules/@electron-forge/publisher-snapcraft/dist/PublisherSnapcraft.js
+
         # end snapcraft specific
 
       - name: Sign & Publish Electron app
