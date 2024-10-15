@@ -1,6 +1,7 @@
 import { BrowserWindow, Menu, app, ipcMain, session } from 'electron';
 import path from 'node:path';
 import log from 'electron-log/main';
+import started from 'electron-squirrel-startup';
 import { updateElectronApp } from 'update-electron-app';
 import {
   bindIpcMain as bindIpcMainConfiguration,
@@ -19,7 +20,7 @@ const isMac = isMacPlatform();
 const isDev = isDevApp();
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) {
+if (started) {
   app.quit();
 }
 

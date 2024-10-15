@@ -2536,6 +2536,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/electron-squirrel-startup@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "@types/electron-squirrel-startup@npm:1.0.2"
+  checksum: 10c0/d6d6b7b26ef1a0814f7fec15649032d3d518c961155ac3b8e08408d1fff6b08d0e1597ef2926ede34e37dee091129b72e064ba711820a91b3d9f12574a3666a8
+  languageName: node
+  linkType: hard
+
 "@types/escodegen@npm:^0.0.6":
   version: 0.0.6
   resolution: "@types/escodegen@npm:0.0.6"
@@ -11036,6 +11043,7 @@ __metadata:
     "@storybook/react": "npm:^8.3.5"
     "@storybook/react-vite": "npm:^8.3.5"
     "@storybook/test": "npm:^8.3.5"
+    "@types/electron-squirrel-startup": "npm:^1.0.2"
     "@types/mysql": "npm:^2.15.26"
     "@types/node": "npm:^20.16.11"
     "@types/react": "npm:^18.3.11"
