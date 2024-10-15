@@ -94,15 +94,33 @@ jobs:
         run: sudo snap install gnome-42-2204 gnome-42-2204-sdk gtk-common-themes
 
       - name: do not use "snapcraft.cfg" file
-        # run: sed -i 's/if (!(await fs.pathExists(snapcraftCfgPath)))/if (false \&\& !(await fs.pathExists(snapcraftCfgPath)))/' node_modules/@electron-forge/publisher-snapcraft/src/PublisherSnapcraft.ts
+        if: startsWith(matrix.os, 'ubuntu')
         run: sed -i 's/if (!(await fs_extra_1.default.pathExists(snapcraftCfgPath)))/if (false \&\& !(await fs_extra_1.default.pathExists(snapcraftCfgPath)))/' node_modules/@electron-forge/publisher-snapcraft/dist/PublisherSnapcraft.js
 
       - name: fix issue with Snapcraft path
-        # run: sed -i 's/if (!(await fs.pathExists(snapcraftCfgPath)))/if (false \&\& !(await fs.pathExists(snapcraftCfgPath)))/' node_modules/@electron-forge/publisher-snapcraft/src/PublisherSnapcraft.ts
+        if: startsWith(matrix.os, 'ubuntu')
         run: sed -i 's/snapcraft = new Snapcraft();/snapcraft = new Snapcraft();await snapcraft.ensureInstalled();/' node_modules/@electron-forge/publisher-snapcraft/dist/PublisherSnapcraft.js
 
       - name: fix issue with Snapcraft files
+        if: startsWith(matrix.os, 'ubuntu')
         run: sed -i 's/snapcraft.run(dir, '\''push'\'', this.config, snapArtifacts)/snapcraft.run(dir, '\''push '\'' + snapArtifacts.join('\'' '\''), this.config)/' node_modules/@electron-forge/publisher-snapcraft/dist/PublisherSnapcraft.js
+
+      - name: fix electron-installer-snap
+        if: startsWith(matrix.os, 'ubuntu')
+        run: sed -i '67s/if (debug.enabled) {/if (command.startsWith('\''push'\'') \&\& debug.enabled) { args.push('\''--verbose'\'') } else if (debug.enabled) {/' node_modules/electron-installer-snap/src/snapcraft.js
+
+      - name: print file content
+        if: startsWith(matrix.os, 'ubuntu')
+        run: cat node_modules/electron-installer-snap/src/snapcraft.js
+
+      - name: print snapcraft help
+        if: startsWith(matrix.os, 'ubuntu')
+        run: snapcraft --help
+
+      - name: print snapcraft push help
+        if: startsWith(matrix.os, 'ubuntu')
+        run: snapcraft push --help
+
         # end snapcraft specific
 
       - name: Sign & Publish Electron app
