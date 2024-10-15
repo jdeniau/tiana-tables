@@ -103,7 +103,11 @@ jobs:
 
       - name: fix issue with Snapcraft files
         if: startsWith(matrix.os, 'ubuntu')
-        run: sed -i 's/snapcraft.run(dir, '\''push'\'', this.config, snapArtifacts)/snapcraft.run(dir, '\''push '\'' + snapArtifacts.join('\'' '\''), this.config)/' node_modules/@electron-forge/publisher-snapcraft/dist/PublisherSnapcraft.js
+        run: sed -i '97s/options/options, extraArgs/' node_modules/electron-installer-snap/src/snapcraft.js
+
+      - name: fix issue with Snapcraft files
+        if: startsWith(matrix.os, 'ubuntu')
+        run: sed -i '98s/options/options, extraArgs/' node_modules/electron-installer-snap/src/snapcraft.js
 
       - name: fix electron-installer-snap
         if: startsWith(matrix.os, 'ubuntu')
