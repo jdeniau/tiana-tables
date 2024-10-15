@@ -104,7 +104,7 @@ const config: ForgeConfig = {
     {
       name: '@electron-forge/publisher-snapcraft',
       config: {
-        release: '[latest/edge, insider/stable]',
+        release: 'latest/edge',
       },
     },
   ],
