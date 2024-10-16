@@ -102,12 +102,12 @@ const config: ForgeConfig = {
         draft: true,
       },
     },
-    {
-      name: '@electron-forge/publisher-snapcraft',
-      config: {
-        release: 'latest/edge',
-      },
-    },
+    // {
+    //   name: '@electron-forge/publisher-snapcraft',
+    //   config: {
+    //     release: 'latest/edge',
+    //   },
+    // },
   ],
   plugins: [
     new VitePlugin({

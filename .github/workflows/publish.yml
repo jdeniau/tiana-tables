@@ -130,7 +130,18 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # for snapcraft
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
           # For every platform
           GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Publish to snapcraft store manually
+        if: startsWith(matrix.os, 'ubuntu')
+        working-directory: out/make/snap/x64/
+        run: |
+          unsquashfs tiana-tables*.snap && \
+          chmod 755 ./squashfs-root/tiana-tables/chrome-sandbox && \
+          snapcraft pack ./squashfs-root && \
+          snapcraft push --release=latest/edge --verbose tiana-tables_*.snap
+
+        env:
+          # for snapcraft
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
