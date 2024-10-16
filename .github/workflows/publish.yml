@@ -117,14 +117,9 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: cat node_modules/electron-installer-snap/src/snapcraft.js
 
-      - name: print snapcraft help
-        if: startsWith(matrix.os, 'ubuntu')
-        run: snapcraft --help
-
-      - name: print snapcraft push help
-        if: startsWith(matrix.os, 'ubuntu')
-        run: snapcraft push --help
-
+        # node_modules/@electron-forge/maker-snap/dist/MakerSnap.js make function can access `arguments[0].forgeConfig.packagerConfig.name`
+      - name: fix executableName not handled properly (not getting the config parameter)
+        run: sed -i '40s/data.executableName/'\''tiana-tables'\'' || data.executableName/' node_modules/electron-installer-snap/src/launcher.js
         # end snapcraft specific
 
       - name: Sign & Publish Electron app
