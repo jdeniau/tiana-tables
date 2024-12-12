@@ -26,10 +26,10 @@ function WhereFilter({ defaultValue, onSubmit }: Props): ReactElement {
           defaultValue={where}
           onChange={setWhere}
           style={{
-            height: '32px',
             // If this line is not set, then the width will be 100% of the window size,
             // And then push the button outside of the viewport
             minWidth: '0',
+            minHeight: '2lh',
             flex: 1,
           }}
           monacoOptions={{
