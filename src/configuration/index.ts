@@ -233,8 +233,6 @@ export function setTableFilter(
     config.connections[connectionSlug]
   );
 
-  console.log(connection);
-
   const newConfig = ensureConnectionAppStateIsCorrect(
     connection.appState.configByDatabase[database]
   );
