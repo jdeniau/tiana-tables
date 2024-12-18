@@ -11,6 +11,7 @@ import {
   getConfiguration,
   setActiveDatabase,
   setActiveTable,
+  setTableFilter,
   testables,
 } from '.';
 
@@ -412,7 +413,7 @@ describe('set connection appState', async () => {
           slug: 'prod',
           appState: {
             activeDatabase: 'db',
-            activeTableByDatabase: {},
+            configByDatabase: {},
           },
         },
       },
@@ -445,7 +446,7 @@ describe('set connection appState', async () => {
               slug: 'prod',
               appState: {
                 activeDatabase: 'db',
-                activeTableByDatabase: {},
+                configByDatabase: {},
               },
             },
           },
@@ -492,9 +493,130 @@ describe('set connection appState', async () => {
               slug: 'prod',
               appState: {
                 activeDatabase: 'db',
-                activeTableByDatabase: {
-                  db: 'table',
-                  db2: 'table2',
+                configByDatabase: {
+                  db: {
+                    activeTable: 'table',
+                    tables: {},
+                  },
+                  db2: {
+                    activeTable: 'table2',
+                    tables: {},
+                  },
+                },
+              },
+            },
+          },
+        },
+        null,
+        2
+      ),
+      'utf-8',
+      expect.any(Function)
+    );
+  });
+
+  test('setActiveTable with appState but no configByDatabase', async () => {
+    mockExistingConfig({
+      version: 1,
+      theme: DEFAULT_THEME.name,
+      locale: DEFAULT_LOCALE,
+
+      connections: {
+        prod: {
+          name: 'prod',
+          host: 'prod',
+          user: 'root',
+          port: 3306,
+          password: Buffer.from('encrypted-password').toString('base64'),
+          slug: 'prod',
+          // @ts-expect-error -- testing edge case with existing configuration
+          appState: {
+            activeDatabase: 'ticketing',
+          },
+        },
+      },
+    });
+
+    await setActiveDatabase('prod', 'db');
+    await setActiveTable('prod', 'db', 'table');
+
+    expect(mockWriteFile).toHaveBeenCalledWith(
+      'userData/config/config.json',
+      JSON.stringify(
+        {
+          version: 1,
+          theme: DEFAULT_THEME.name,
+          locale: DEFAULT_LOCALE,
+          connections: {
+            prod: {
+              name: 'prod',
+              host: 'prod',
+              user: 'root',
+              port: 3306,
+              password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'prod',
+              appState: {
+                activeDatabase: 'db',
+                configByDatabase: {
+                  db: {
+                    activeTable: 'table',
+                    tables: {},
+                  },
+                },
+              },
+            },
+          },
+        },
+        null,
+        2
+      ),
+      'utf-8',
+      expect.any(Function)
+    );
+  });
+});
+
+describe('setTableFilter', () => {
+  test('with basic configuration', async () => {
+    mockExistingConfig();
+
+    await setTableFilter('prod', 'db', 'sometable', 'id = 1');
+
+    expect(mockWriteFile).toHaveBeenCalledWith(
+      'userData/config/config.json',
+      JSON.stringify(
+        {
+          version: 1,
+          theme: DEFAULT_THEME.name,
+          locale: DEFAULT_LOCALE,
+
+          connections: {
+            local: {
+              name: 'local',
+              host: 'localhost',
+              user: 'root',
+              port: 3306,
+              password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'local',
+            },
+            prod: {
+              name: 'prod',
+              host: 'prod',
+              user: 'root',
+              port: 3306,
+              password: Buffer.from('encrypted-password').toString('base64'),
+              slug: 'prod',
+              appState: {
+                activeDatabase: '',
+                configByDatabase: {
+                  db: {
+                    activeTable: '',
+                    tables: {
+                      sometable: {
+                        currentFilter: 'id = 1',
+                      },
+                    },
+                  },
                 },
               },
             },

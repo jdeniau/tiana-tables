@@ -22,6 +22,13 @@ interface Config {
     tableName: string
   ): Promise<void>;
 
+  setTableFilter(
+    connectionSlug: string,
+    database: string,
+    tableName: string,
+    filter: string
+  ): Promise<void>;
+
   editConnection(
     connectionSlug: string,
     connection: ConnectionObjectWithoutSlug
@@ -35,5 +42,6 @@ export const config: Config = {
   changeLanguage: bindChannel(CONFIGURATION_CHANNEL.CHANGE_LANGUAGE),
   setActiveDatabase: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE),
   setActiveTable: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE),
+  setTableFilter: bindChannel(CONFIGURATION_CHANNEL.SET_TABLE_FILTER),
   editConnection: bindChannel(CONFIGURATION_CHANNEL.EDIT_CONNECTION),
 };

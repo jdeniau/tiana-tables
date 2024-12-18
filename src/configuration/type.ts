@@ -9,9 +9,18 @@ export type Configuration = {
   windowState?: WindowState;
 };
 
+type TableConfig = {
+  currentFilter?: string;
+};
+
+export type DatabaseConfig = {
+  activeTable: string;
+  tables: Record<string, TableConfig>;
+};
+
 type ConnectionAppState = {
   activeDatabase: string;
-  activeTableByDatabase: Record<string, string>;
+  configByDatabase: Record<string, DatabaseConfig>;
 };
 
 export type EncryptedConnectionObject = {

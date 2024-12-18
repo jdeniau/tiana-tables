@@ -6,4 +6,5 @@ export enum CONFIGURATION_CHANNEL {
   CHANGE_LANGUAGE = 'config:language:change',
   SET_ACTIVE_DATABASE = 'config:connection:setActiveDatabase',
   SET_ACTIVE_TABLE = 'config:connection:setActiveTable',
+  SET_TABLE_FILTER = 'config:connection:setTableFilter',
 }

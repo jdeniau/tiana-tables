@@ -29,7 +29,7 @@ function setConfiguration(
       password: '',
       appState: {
         activeDatabase: activeDatabase,
-        activeTableByDatabase: {},
+        configByDatabase: {},
       },
     };
   }

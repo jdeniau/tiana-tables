@@ -19,7 +19,7 @@ export function TableLayout({
   tableName,
   database,
   primaryKeys,
-  where: defaultWhere,
+  where,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
   const { currentConnectionSlug } = useConnectionContext();
@@ -27,7 +27,6 @@ export function TableLayout({
   const [fields, setFields] = useState<null | FieldPacket[]>(null);
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
-  const [where, setWhere] = useState<string>(defaultWhere ?? '');
 
   const fetchTableData = useCallback(
     (offset: number) => {
@@ -55,48 +54,44 @@ export function TableLayout({
     fetchTableData(currentOffset);
   }, [fetchTableData, currentOffset]);
 
-  if (error) {
-    return <div>{error.message}</div>;
-  }
-
   return (
     <Flex vertical gap="small" style={{ height: '100%' }}>
       <div>
         <h3>{t('table.filters.title')}</h3>
-        <WhereFilter
-          defaultValue={where}
-          onSubmit={(where) => {
-            setCurrentOffset(0);
-            setWhere(where);
-          }}
-        />
+        <WhereFilter defaultValue={where ?? ''} />
       </div>
 
-      <TableGrid
-        fields={fields}
-        result={result}
-        primaryKeys={primaryKeys}
-        title={() => (
-          <>
-            {tableName}
-            <ButtonLink
-              style={{ marginLeft: '1em' }}
-              to={`/connections/${currentConnectionSlug}/${database}/tables/${tableName}/structure`}
-            >
-              STRUCTURE
-            </ButtonLink>
-          </>
-        )}
-      />
+      {error ? (
+        error.message
+      ) : (
+        <>
+          <TableGrid
+            fields={fields}
+            result={result}
+            primaryKeys={primaryKeys}
+            title={() => (
+              <>
+                {tableName}
+                <ButtonLink
+                  style={{ marginLeft: '1em' }}
+                  to={`/connections/${currentConnectionSlug}/${database}/tables/${tableName}/structure`}
+                >
+                  STRUCTURE
+                </ButtonLink>
+              </>
+            )}
+          />
 
-      <Flex justify="center" align="center">
-        <Button
-          onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}
-          type="primary"
-        >
-          {t('table.rows.loadMore')}
-        </Button>
-      </Flex>
+          <Flex justify="center" align="center">
+            <Button
+              onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}
+              type="primary"
+            >
+              {t('table.rows.loadMore')}
+            </Button>
+          </Flex>
+        </>
+      )}
     </Flex>
   );
 }
