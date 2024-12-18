@@ -17,10 +17,10 @@ export async function loader({ params, request }: RouteParams) {
 
   window.config.setActiveDatabase(connectionSlug, databaseName);
 
-  const { activeTableByDatabase } =
+  const { configByDatabase } =
     configuration.connections[connectionSlug]?.appState || {};
 
-  const openedTable = activeTableByDatabase?.[databaseName];
+  const openedTable = configByDatabase?.[databaseName]?.activeTable;
 
   // redirect to the current database if we are not on a "database" root page
   if (openedTable) {

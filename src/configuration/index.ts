@@ -12,6 +12,7 @@ import { DEFAULT_LOCALE } from './locale';
 import { DEFAULT_THEME } from './themes';
 import {
   Configuration,
+  DatabaseConfig,
   EncryptedConfiguration,
   EncryptedConnectionObject,
 } from './type';
@@ -180,7 +181,7 @@ export function setActiveDatabase(connectionSlug: string, database: string) {
   if (!connection.appState) {
     connection.appState = {
       activeDatabase: '',
-      activeTableByDatabase: {},
+      configByDatabase: {},
     };
   }
 
@@ -193,25 +194,57 @@ export function setActiveTable(
   connectionSlug: string,
   database: string,
   tableName: string
-) {
+): void {
   const config = getConfiguration();
 
-  const connection = config.connections[connectionSlug];
-
-  if (!connection) {
+  if (!config.connections[connectionSlug]) {
     return;
   }
 
-  if (!connection.appState) {
-    connection.appState = {
-      activeDatabase: '',
-      activeTableByDatabase: {},
-    };
+  const connection = ensureConnectionAppStateExist(
+    config.connections[connectionSlug]
+  );
+
+  const newConfig = ensureConnectionAppStateIsCorrect(
+    connection.appState.configByDatabase[database]
+  );
+
+  connection.appState.configByDatabase[database] = {
+    ...newConfig,
+    activeTable: tableName,
+  };
+
+  writeConfiguration(config);
+}
+
+export function setTableFilter(
+  connectionSlug: string,
+  database: string,
+  tableName: string,
+  filter: string
+): void {
+  const config = getConfiguration();
+
+  if (!config.connections[connectionSlug]) {
+    return;
   }
 
-  connection.appState.activeTableByDatabase = {
-    ...connection.appState.activeTableByDatabase,
-    [database]: tableName,
+  const connection = ensureConnectionAppStateExist(
+    config.connections[connectionSlug]
+  );
+
+  console.log(connection);
+
+  const newConfig = ensureConnectionAppStateIsCorrect(
+    connection.appState.configByDatabase[database]
+  );
+
+  newConfig.tables[tableName] = {
+    currentFilter: filter,
+  };
+
+  connection.appState.configByDatabase[database] = {
+    ...newConfig,
   };
 
   writeConfiguration(config);
@@ -225,6 +258,55 @@ export function saveWindowState(windowState: WindowState): void {
   writeConfiguration(config);
 }
 
+function hasAppState(
+  connection: EncryptedConnectionObject
+): connection is EncryptedConnectionObject &
+  Required<Pick<EncryptedConnectionObject, 'appState'>> {
+  return typeof connection.appState !== 'undefined';
+}
+
+function ensureConnectionAppStateExist(
+  connection: EncryptedConnectionObject
+): EncryptedConnectionObject &
+  Required<Pick<EncryptedConnectionObject, 'appState'>> {
+  if (hasAppState(connection)) {
+    if (!connection.appState.configByDatabase) {
+      connection.appState.configByDatabase = {};
+    }
+
+    return connection;
+  }
+
+  connection.appState = {
+    activeDatabase: '',
+    configByDatabase: {},
+  };
+
+  if (!hasAppState(connection)) {
+    throw new Error('Could not create app state for connection');
+  }
+
+  return connection;
+}
+
+function ensureConnectionAppStateIsCorrect(
+  databaseConfig: Partial<DatabaseConfig>
+): DatabaseConfig {
+  if (!databaseConfig) {
+    databaseConfig = {};
+  }
+
+  if (!databaseConfig.activeTable) {
+    databaseConfig.activeTable = '';
+  }
+
+  if (!databaseConfig.tables) {
+    databaseConfig.tables = {};
+  }
+
+  return databaseConfig as DatabaseConfig;
+}
+
 const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.GET]: getConfiguration,
   [CONFIGURATION_CHANNEL.ADD_CONNECTION]: addConnectionToConfig,
@@ -233,6 +315,7 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.CHANGE_LANGUAGE]: changeLanguage,
   [CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE]: setActiveDatabase,
   [CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE]: setActiveTable,
+  [CONFIGURATION_CHANNEL.SET_TABLE_FILTER]: setTableFilter,
 } as const;
 
 export function bindIpcMain(ipcMain: Electron.IpcMain): void {

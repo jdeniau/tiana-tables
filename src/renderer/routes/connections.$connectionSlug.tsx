@@ -50,11 +50,11 @@ export async function loader({ params, request }: RouteParams) {
 
   const configuration = await window.config.getConfiguration();
 
-  const { activeDatabase: configDatabase, activeTableByDatabase } =
+  const { activeDatabase: configDatabase, configByDatabase } =
     configuration.connections[connectionSlug]?.appState || {};
 
   const openedTable = configDatabase
-    ? activeTableByDatabase?.[configDatabase]
+    ? configByDatabase?.[configDatabase]?.activeTable
     : undefined;
 
   if (!databaseList || !databaseList[0]) {

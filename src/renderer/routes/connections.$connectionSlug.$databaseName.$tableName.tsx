@@ -1,9 +1,4 @@
-import {
-  LoaderFunctionArgs,
-  Params,
-  useLoaderData,
-  useLocation,
-} from 'react-router';
+import { LoaderFunctionArgs, Params, useLoaderData } from 'react-router';
 import invariant from 'tiny-invariant';
 import TableLayout from '../component/TableLayout';
 
@@ -11,7 +6,7 @@ interface RouteParams extends LoaderFunctionArgs {
   params: Params<'connectionSlug' | 'databaseName' | 'tableName'>;
 }
 
-export async function loader({ params }: RouteParams) {
+export async function loader({ params, request }: RouteParams) {
   const { connectionSlug, databaseName, tableName } = params;
 
   invariant(connectionSlug, 'Connection slug is required');
@@ -23,16 +18,33 @@ export async function loader({ params }: RouteParams) {
 
   window.config.setActiveTable(connectionSlug, databaseName, tableName);
 
+  const configuration = await window.config.getConfiguration();
+
+  const whereFilter =
+    configuration.connections[connectionSlug]?.appState?.configByDatabase?.[
+      databaseName
+    ]?.tables[tableName]?.currentFilter || '';
+
+  const where = new URL(request.url).searchParams.get('where') || whereFilter;
+
+  window.config.setTableFilter(connectionSlug, databaseName, tableName, where);
+
   return {
     primaryKeys,
+    whereFilter: where,
   };
 }
 
 export default function TableNamePage() {
-  const { primaryKeys } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
-  const location = useLocation();
+  const { primaryKeys, whereFilter } = useLoaderData() as Awaited<
+    ReturnType<typeof loader>
+  >;
 
-  const where = new URLSearchParams(location.search).get('where');
-
-  return <TableLayout primaryKeys={primaryKeys} where={where ?? ''} />;
+  return (
+    <TableLayout
+      key={whereFilter}
+      primaryKeys={primaryKeys}
+      where={whereFilter}
+    />
+  );
 }

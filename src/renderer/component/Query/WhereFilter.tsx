@@ -1,26 +1,22 @@
 import { ReactElement, useRef, useState } from 'react';
 import { Button, Space } from 'antd';
+import { Form } from 'react-router-dom';
 import { useTranslation } from '../../../i18n';
 import { RawSqlEditor } from '../MonacoEditor/RawSqlEditor';
 
 interface Props {
-  onSubmit: (where: string) => void;
   defaultValue: string;
 }
 
-function WhereFilter({ defaultValue, onSubmit }: Props): ReactElement {
+function WhereFilter({ defaultValue }: Props): ReactElement {
   const { t } = useTranslation();
   const [where, setWhere] = useState<string>(defaultValue);
   const ref = useRef<HTMLFormElement>(null);
 
   return (
-    <form
-      ref={ref}
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit(where);
-      }}
-    >
+    <Form ref={ref}>
+      <input type="hidden" name="where" value={where} />
+
       <Space.Compact style={{ width: '100%', marginBottom: '0.5em' }}>
         <RawSqlEditor
           defaultValue={where}
@@ -45,7 +41,7 @@ function WhereFilter({ defaultValue, onSubmit }: Props): ReactElement {
           {t('filter')}
         </Button>
       </Space.Compact>
-    </form>
+    </Form>
   );
 }
 
