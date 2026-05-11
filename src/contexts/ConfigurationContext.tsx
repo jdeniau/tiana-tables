@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { DEFAULT_LOCALE } from '../configuration/locale';
+import { DEFAULT_THEME } from '../configuration/themes';
 import { Configuration } from '../configuration/type';
 import { changeLanguage } from '../i18n';
 import { ConnectionObjectWithoutSlug } from '../sql/types';
@@ -24,20 +26,36 @@ const ConfigurationContext = createContext<null | ConfigurationContextType>(
 );
 ConfigurationContext.displayName = 'ConfigurationContext';
 
+const DEFAULT_CONFIGURATION: Configuration = {
+  version: 1,
+  theme: DEFAULT_THEME.name,
+  locale: DEFAULT_LOCALE,
+  connections: {},
+};
+
 export function ConfigurationContextProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [configuration, setConfiguration] = useState<null | Configuration>(
-    null
-  );
+  const [configuration, setConfiguration] =
+    useState<Configuration>(DEFAULT_CONFIGURATION);
 
   useEffect(() => {
+    let isCanceled = false;
+
     window.config.getConfiguration().then(async (c) => {
+      if (isCanceled) {
+        return;
+      }
+
       changeLanguage(c.locale);
       setConfiguration(c);
     });
+
+    return () => {
+      isCanceled = true;
+    };
   }, []);
 
   function willChangeConfiguration<P extends unknown[]>(
@@ -54,9 +72,7 @@ export function ConfigurationContextProvider({
 
   const value: ConfigurationContextType = useMemo(
     (): ConfigurationContextType => ({
-      // force `as` here as we will break if configuration is null, but the hook needs to be before it.
-      // We don't want to use ts-expect-error, as we want to test other properties of the object.
-      configuration: configuration as Configuration,
+      configuration,
       addConnectionToConfig: willChangeConfiguration(
         window.config.addConnectionToConfig
       ),
@@ -71,10 +87,6 @@ export function ConfigurationContextProvider({
     }),
     [configuration]
   );
-
-  if (!configuration) {
-    return null;
-  }
 
   return (
     <ConfigurationContext.Provider value={value}>

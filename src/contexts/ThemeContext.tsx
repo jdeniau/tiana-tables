@@ -1,6 +1,7 @@
 import {
   createContext,
   useCallback,
+  useEffect,
   useContext,
   useMemo,
   useState,
@@ -55,6 +56,10 @@ export function ThemeContextProvider({
 }): React.ReactElement {
   const { configuration } = useConfiguration();
   const [themeName, setThemeName] = useState(configuration.theme);
+
+  useEffect(() => {
+    setThemeName(configuration.theme);
+  }, [configuration.theme]);
 
   const changeTheme = useCallback((newTheme: string) => {
     window.config.changeTheme(newTheme);

@@ -1,5 +1,6 @@
 import { BrowserWindow, Menu, app, ipcMain, session } from 'electron';
 import path from 'node:path';
+import { performance } from 'node:perf_hooks';
 import log from 'electron-log/main';
 import started from 'electron-squirrel-startup';
 import { updateElectronApp } from 'update-electron-app';
@@ -36,10 +37,6 @@ log.transports.file.resolvePathFn = () => getLogPath();
 log.initialize();
 logStartupMilestone('module-initialized');
 
-updateElectronApp({
-  logger: log,
-});
-
 const createWindow = () => {
   logStartupMilestone('create-window-start');
   const configuration = getConfiguration();
@@ -68,6 +65,29 @@ const createWindow = () => {
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
     );
   }
+  logStartupMilestone('main-window-load-triggered');
+
+  mainWindow.webContents.once('did-finish-load', () => {
+    logStartupMilestone('main-window-did-finish-load');
+  });
+
+  mainWindow.once('ready-to-show', () => {
+    logStartupMilestone('main-window-ready-to-show');
+
+    setTimeout(() => {
+      if (!isDev) {
+        updateElectronApp({
+          logger: log,
+        });
+        logStartupMilestone('auto-update-initialized');
+      }
+
+      if (isDev) {
+        installReactDevToolsExtension();
+        logStartupMilestone('react-devtools-install-triggered');
+      }
+    }, 0);
+  });
 
   logStartupMilestone('main-window-load-triggered');
 
@@ -123,6 +143,7 @@ app.whenReady().then(() => {
   bindIpcMainConfiguration(ipcMain);
   bindIpcMainSqlFileStorage(ipcMain);
   connectionStackInstance.bindIpcMain(ipcMain);
+  logStartupMilestone('ipc-bound');
 
   logStartupMilestone('ipc-bound');
   ipcMain.handle('get-is-dev', () => {

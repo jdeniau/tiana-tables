@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { Flex, Layout } from 'antd';
 import { Outlet, useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
@@ -11,12 +12,13 @@ import { useTranslation } from '../../i18n';
 import ButtonLink from '../component/ButtonLink';
 import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
-import Debug from '../component/Debug';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import LangSelector from '../component/LangSelector';
 import ThemeSelector from '../component/ThemeSelector';
 import useEffectOnce from '../hooks/useEffectOnce';
 import { background, foreground, selection } from '../theme';
+
+const Debug = lazy(() => import('../component/Debug'));
 
 export const Header = styled(Layout.Header)`
   display: flex;
@@ -80,7 +82,11 @@ export default function Root() {
       <ThemeContextProvider>
         <ConnectionStack>
           <Layout>
-            <Debug />
+            {window.isDev ? (
+              <Suspense fallback={null}>
+                <Debug />
+              </Suspense>
+            ) : null}
             <Header>
               <Flex align="center" gap="small">
                 <h2>
