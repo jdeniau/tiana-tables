@@ -74,6 +74,7 @@ const createWindow = () => {
   mainWindow.once('ready-to-show', () => {
     logStartupMilestone('main-window-ready-to-show');
 
+    // Defer non-critical initialization to the next tick after first window display.
     setTimeout(() => {
       if (!isDev) {
         updateElectronApp({

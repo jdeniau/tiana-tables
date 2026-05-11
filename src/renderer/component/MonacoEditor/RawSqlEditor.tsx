@@ -37,6 +37,7 @@ export function RawSqlEditor({
   useEffect(() => {
     let isCanceled = false;
 
+    // `userWorker` configures Monaco workers through module side effects.
     Promise.all([
       import('monaco-editor/esm/vs/editor/editor.api'),
       import('./userWorker'),

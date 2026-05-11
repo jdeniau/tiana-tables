@@ -25,9 +25,10 @@ const ConfigurationContext = createContext<null | ConfigurationContextType>(
   null
 );
 ConfigurationContext.displayName = 'ConfigurationContext';
+const DEFAULT_CONFIGURATION_VERSION = 1;
 
 const DEFAULT_CONFIGURATION: Configuration = {
-  version: 1,
+  version: DEFAULT_CONFIGURATION_VERSION,
   theme: DEFAULT_THEME.name,
   locale: DEFAULT_LOCALE,
   connections: {},
