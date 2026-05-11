@@ -74,18 +74,16 @@ const createWindow = () => {
   mainWindow.once('ready-to-show', () => {
     logStartupMilestone('main-window-ready-to-show');
 
-    // Defer non-critical initialization to the next tick after first window display.
+    // Defer non-critical initialization to the next event-loop task after first window display.
     setTimeout(() => {
-      if (!isDev) {
+      if (isDev) {
+        void installReactDevToolsExtension();
+        logStartupMilestone('react-devtools-install-triggered');
+      } else {
         updateElectronApp({
           logger: log,
         });
         logStartupMilestone('auto-update-initialized');
-      }
-
-      if (isDev) {
-        installReactDevToolsExtension();
-        logStartupMilestone('react-devtools-install-triggered');
       }
     }, 0);
   });

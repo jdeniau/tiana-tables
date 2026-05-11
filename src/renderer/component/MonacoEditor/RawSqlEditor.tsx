@@ -45,6 +45,11 @@ export function RawSqlEditor({
       if (!isCanceled) {
         setMonacoInstance(loadedMonaco);
       }
+    }).catch((error) => {
+      console.error(
+        'Unable to load Monaco editor. Reload the SQL tab or restart the app, then check bundled assets loading in developer tools.',
+        error
+      );
     });
 
     return () => {

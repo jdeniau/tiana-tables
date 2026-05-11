@@ -10,9 +10,11 @@ export function installReactDevToolsExtension() {
     return;
   }
 
-  void installExtension(REACT_DEVELOPER_TOOLS)
+  return installExtension(REACT_DEVELOPER_TOOLS)
     .then((name) => {
       log.debug(`Added Extension:  ${name}`);
     })
-    .catch((err) => console.error('Unable to install extension: ', err));
+    .catch((err) => {
+      console.error('Unable to install extension: ', err);
+    });
 }
