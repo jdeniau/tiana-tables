@@ -1,32 +1,21 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Navigate, RouterProvider, createHashRouter } from 'react-router-dom';
+import {
+  Navigate,
+  RouteObject,
+  RouterProvider,
+  createHashRouter,
+} from 'react-router-dom';
 import invariant from 'tiny-invariant';
-import Connect from './routes/connect';
-import Create from './routes/connect/create';
-import Edit from './routes/connect/edit.$connectionSlug';
-import ConnectionDetailPage, {
-  loader as connectionDetailPageLoader,
-} from './routes/connections.$connectionSlug';
-import DatabaseDetailPage, {
-  loader as databaseDetailPageLoader,
-} from './routes/connections.$connectionSlug.$databaseName';
-import TableNamePage, {
-  loader as tableNamePageLoader,
-} from './routes/connections.$connectionSlug.$databaseName.$tableName';
-import TableStructure, {
-  loader as tableStructureLoader,
-} from './routes/connections.$connectionSlug.$databaseName.$tableName.structure';
 import ConnectionErrorPage from './routes/errors/ConnectionsErrorPage';
 import RootErrorPage from './routes/errors/RootErrorPage';
-import Root from './routes/root';
-import SqlPage, { action as sqlPageAction } from './routes/sql.$connectionSlug';
 
 const appElement = document.getElementById('App');
 
 invariant(appElement, 'App element not found');
 
 const root = createRoot(appElement);
+const rendererStart = performance.now();
 
 function logRendererStartupMilestone(name: string): void {
   console.info(
@@ -41,7 +30,11 @@ function logRendererStartupMilestone(name: string): void {
 const router = createHashRouter([
   {
     path: '/',
-    element: <Root />,
+    lazy: async () => {
+      const routeModule = await import('./routes/root');
+
+      return { Component: routeModule.default };
+    },
     errorElement: <RootErrorPage />,
     children: [
       {
@@ -53,54 +46,108 @@ const router = createHashRouter([
         children: [
           {
             index: true,
-            element: <Connect />,
+            lazy: async () => {
+              const routeModule = await import('./routes/connect');
+
+              return { Component: routeModule.default };
+            },
           },
           {
             path: 'create',
-            element: <Create />,
+            lazy: async () => {
+              const routeModule = await import('./routes/connect/create');
+
+              return { Component: routeModule.default };
+            },
           },
           {
             path: 'edit/:connectionSlug',
-            element: <Edit />,
+            lazy: async () => {
+              const routeModule = await import(
+                './routes/connect/edit.$connectionSlug'
+              );
+
+              return { Component: routeModule.default };
+            },
           },
         ],
       },
       {
         path: 'connections/:connectionSlug',
-        loader: connectionDetailPageLoader,
         shouldRevalidate: ({ currentParams, nextParams }) => {
           return (
             currentParams.connectionSlug !== nextParams.connectionSlug ||
             currentParams.databaseName !== nextParams.databaseName
           );
         },
-        element: <ConnectionDetailPage />,
+        lazy: async () => {
+          const routeModule = await import(
+            './routes/connections.$connectionSlug'
+          );
+
+          return {
+            loader: routeModule.loader,
+            Component: routeModule.default,
+          };
+        },
         children: [
           {
             path: ':databaseName',
-            loader: databaseDetailPageLoader,
-            element: <DatabaseDetailPage />,
             errorElement: <ConnectionErrorPage />,
+            lazy: async () => {
+              const routeModule = await import(
+                './routes/connections.$connectionSlug.$databaseName'
+              );
+
+              return {
+                loader: routeModule.loader,
+                Component: routeModule.default,
+              };
+            },
             children: [
               {
                 path: 'tables/:tableName',
                 children: [
                   {
                     index: true,
-                    loader: tableNamePageLoader,
-                    element: <TableNamePage />,
+                    lazy: async () => {
+                      const routeModule = await import(
+                        './routes/connections.$connectionSlug.$databaseName.$tableName'
+                      );
+
+                      return {
+                        loader: routeModule.loader,
+                        Component: routeModule.default,
+                      };
+                    },
                   },
                   {
                     path: 'structure',
-                    loader: tableStructureLoader,
-                    element: <TableStructure />,
+                    lazy: async () => {
+                      const routeModule = await import(
+                        './routes/connections.$connectionSlug.$databaseName.$tableName.structure'
+                      );
+
+                      return {
+                        loader: routeModule.loader,
+                        Component: routeModule.default,
+                      };
+                    },
                   },
                 ],
               },
               {
                 path: 'sql',
-                element: <SqlPage />,
-                action: sqlPageAction,
+                lazy: async () => {
+                  const routeModule = await import(
+                    './routes/sql.$connectionSlug'
+                  );
+
+                  return {
+                    action: routeModule.action,
+                    Component: routeModule.default,
+                  };
+                },
               },
             ],
           },
@@ -108,7 +155,7 @@ const router = createHashRouter([
       },
     ],
   },
-]);
+] as RouteObject[]);
 
 export function App() {
   useEffect(() => {
@@ -119,7 +166,11 @@ export function App() {
     });
   }, []);
 
-  return <RouterProvider router={router} />;
+  return (
+    <Suspense fallback={null}>
+      <RouterProvider router={router} />
+    </Suspense>
+  );
 }
 
 logRendererStartupMilestone('app-entry');
