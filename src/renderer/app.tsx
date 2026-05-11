@@ -15,7 +15,6 @@ const appElement = document.getElementById('App');
 invariant(appElement, 'App element not found');
 
 const root = createRoot(appElement);
-const rendererStart = performance.now();
 
 function logRendererStartupMilestone(name: string): void {
   console.info(
