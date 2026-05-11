@@ -115,7 +115,7 @@ function provideCompletionItems(
           return {
             label: table.Name,
             detail: fk?.referencedTableName ?? undefined,
-            kind: languages.CompletionItemKind.Variable,
+            kind: monaco.languages.CompletionItemKind.Variable,
             insertText,
             range: new monaco.Range(
               range.startLineNumber,
@@ -162,7 +162,7 @@ function provideCompletionItems(
         suggestions: columns.map((column) => ({
           label: column,
           insertText: column,
-          kind: languages.CompletionItemKind.Field,
+          kind: monaco.languages.CompletionItemKind.Field,
           detail: tablename,
           range: new monaco.Range(
             range.startLineNumber,
@@ -184,7 +184,7 @@ function provideCompletionItems(
     return {
       suggestions: SQL_KEYWORDS.map((keyword) => ({
         label: keyword,
-        kind: languages.CompletionItemKind.Keyword,
+        kind: monaco.languages.CompletionItemKind.Keyword,
         insertText: keyword,
         range: defaultRange,
       })),
