@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Navigate, RouterProvider, createHashRouter } from 'react-router-dom';
 import invariant from 'tiny-invariant';
@@ -28,6 +28,11 @@ invariant(appElement, 'App element not found');
 
 const root = createRoot(appElement);
 
+function logRendererStartupMilestone(name: string): void {
+  console.info(
+    `[startup][renderer] ${name}: +${Math.round(performance.now())}ms`
+  );
+}
 // A possibility is also to create history manually to call `history.push('/path')`
 // import { createMemoryHistory } from 'history';
 // export const history = createMemoryHistory();
@@ -106,8 +111,18 @@ const router = createHashRouter([
 ]);
 
 export function App() {
+  useEffect(() => {
+    logRendererStartupMilestone('router-mounted');
+
+    requestAnimationFrame(() => {
+      logRendererStartupMilestone('first-animation-frame');
+    });
+  }, []);
+
   return <RouterProvider router={router} />;
 }
+
+logRendererStartupMilestone('app-entry');
 
 root.render(
   <React.StrictMode>

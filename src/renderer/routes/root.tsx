@@ -65,6 +65,10 @@ export default function Root() {
   // Use `useEffectOnce` here as we don't want to register twice the same event
   // Do not use elsewhere, it's a hacky hook
   useEffectOnce(() => {
+    console.info(
+      `[startup][renderer] root-route-ready: +${Math.round(performance.now())}ms`
+    );
+
     window.navigationListener.onNavigate((path) => {
       console.log('onNavigate called with path: ', path);
       navigate(path);

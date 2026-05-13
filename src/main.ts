@@ -18,6 +18,13 @@ import connectionStackInstance from './sql';
 
 const isMac = isMacPlatform();
 const isDev = isDevApp();
+const startupStart = performance.now();
+
+function logStartupMilestone(name: string): void {
+  log.info(
+    `[startup][main] ${name}: +${Math.round(performance.now() - startupStart)}ms`
+  );
+}
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -27,12 +34,14 @@ if (started) {
 // log files are stored in the userData folder, and the file name is different in dev and prod
 log.transports.file.resolvePathFn = () => getLogPath();
 log.initialize();
+logStartupMilestone('module-initialized');
 
 updateElectronApp({
   logger: log,
 });
 
 const createWindow = () => {
+  logStartupMilestone('create-window-start');
   const configuration = getConfiguration();
 
   // create handle that will manage the window size state
@@ -47,6 +56,7 @@ const createWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+  logStartupMilestone('main-window-created');
 
   Menu.setApplicationMenu(createMenu(mainWindow));
 
@@ -59,6 +69,29 @@ const createWindow = () => {
     );
   }
 
+  logStartupMilestone('main-window-load-triggered');
+
+  mainWindow.webContents.once('did-finish-load', () => {
+    logStartupMilestone('main-window-did-finish-load');
+  });
+
+  mainWindow.once('ready-to-show', () => {
+    logStartupMilestone('main-window-ready-to-show');
+
+    // Defer non-critical initialization to the next event-loop task after first window display.
+    setTimeout(() => {
+      if (isDev) {
+        void installReactDevToolsExtension();
+        logStartupMilestone('react-devtools-install-triggered');
+      } else {
+        updateElectronApp({
+          logger: log,
+        });
+        logStartupMilestone('auto-update-initialized');
+      }
+    }, 0);
+  });
+
   // Open the DevTools.
   if (isDev) {
     mainWindow.webContents.openDevTools();
@@ -68,9 +101,13 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  logStartupMilestone('app-ready');
+  createWindow();
+});
 
 app.whenReady().then(() => {
+  logStartupMilestone('app-when-ready');
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
@@ -83,12 +120,11 @@ app.whenReady().then(() => {
     });
   });
 
-  installReactDevToolsExtension();
-
   bindIpcMainConfiguration(ipcMain);
   bindIpcMainSqlFileStorage(ipcMain);
   connectionStackInstance.bindIpcMain(ipcMain);
 
+  logStartupMilestone('ipc-bound');
   ipcMain.handle('get-is-dev', () => {
     return isDev;
   });
