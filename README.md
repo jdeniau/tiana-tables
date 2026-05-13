@@ -14,7 +14,7 @@ The main purpose of Tiana tables is to be:
 
 What you won't find in Tiana tables (or at least for a long time):
 
-- database and user administration : you will probably want to use another tool more "admin"-friendly like sql workbench or similar (or you can still use plain SQL queries to do what you want). 
+- database and user administration : you will probably want to use another tool more "admin"-friendly like sql workbench or similar (or you can still use plain SQL queries to do what you want).
 
 ### DB support
 
@@ -31,3 +31,13 @@ You can download the latest release in the [Release page](https://github.com/jde
 ## Contributing
 
 See [CONTRIBUTING.md](.github/CONTRIBUTING.md)
+
+## Release a new version
+
+```sh
+yarn version minor
+git add package.json
+git commit -m "Release version x.y.z"
+git push origin main
+git push origin --tags
+```
