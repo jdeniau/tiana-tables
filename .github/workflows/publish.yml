@@ -1,8 +1,14 @@
 name: Publish release
 
 on:
-  release: ~
+  release:
+    types: [published]
   workflow_dispatch: ~
+
+concurrency:
+  # event if the workflow twice, do block the other one to avoid race condition
+  group: publish-${{ github.event.release.tag_name || github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
