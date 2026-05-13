@@ -37,7 +37,8 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md)
 ```sh
 yarn version minor
 git add package.json
-git commit -m "Release version x.y.z"
+git commit -m "Release version v$(node -p "require('./package.json').version")"
+git tag v$(node -p "require('./package.json').version")
 git push origin main
 git push origin --tags
 ```
