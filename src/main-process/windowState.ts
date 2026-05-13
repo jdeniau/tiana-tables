@@ -136,7 +136,7 @@ export default class WindowStateKeeper {
       this.#state.isMaximized = win.isMaximized();
       this.#state.isFullScreen = win.isFullScreen();
       this.#state.displayBounds = !!screen.getDisplayMatching(winBounds).bounds;
-    } catch (err) {
+    } catch {
       // Don't care
     }
   }

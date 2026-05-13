@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
-import type { Preview } from '@storybook/react';
+import { useEffect } from 'react';
 import { action } from '@storybook/addon-actions';
+import type { Preview } from '@storybook/react';
+import { DEFAULT_LOCALE } from '../src/configuration/locale';
+import { DEFAULT_THEME, THEME_LIST } from '../src/configuration/themes';
 import { testables } from '../src/contexts/ConfigurationContext';
 import { ThemeContextProvider } from '../src/contexts/ThemeContext';
 import { changeLanguage } from '../src/i18n';
-import { DEFAULT_THEME, THEME_LIST } from '../src/configuration/themes';
-import { DEFAULT_LOCALE } from '../src/configuration/locale';
 import { background } from '../src/renderer/theme';
 
 const { ConfigurationContext } = testables;

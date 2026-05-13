@@ -1,5 +1,5 @@
 import * as monaco from 'monaco-editor';
-/* eslint-disable import/no-unresolved */
+/* eslint-disable import-x/no-unresolved, import-x/default */
 // @ts-expect-error this is workink and taken from monaco-editor documentation
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 // @ts-expect-error this is workink and taken from monaco-editor documentation
@@ -10,7 +10,7 @@ import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 // @ts-expect-error this is workink and taken from monaco-editor documentation
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
-/* eslint-enable import/no-unresolved */
+/* eslint-enable import-x/no-unresolved, import-x/default */
 
 self.MonacoEnvironment = {
   getWorker(_: unknown, label: string) {

@@ -11,7 +11,9 @@
       "PowerShell(yarn start *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "WebFetch(domain:www.electronjs.org)"
+      "WebFetch(domain:www.electronjs.org)",
+      "Bash(yarn lint:eslint *)",
+      "Bash(yarn lint *)"
     ]
   }
 }
