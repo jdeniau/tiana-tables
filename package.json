@@ -81,7 +81,7 @@
     "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
-    "@vitejs/plugin-react": "^4.7.0",
+    "@vitejs/plugin-react": "^6.0.1",
     "chromatic": "^11.29.0",
     "electron": "^41.5.2",
     "electron-devtools-installer": "^4.0.0",
@@ -102,8 +102,8 @@
     "ts-node": "^10.9.2",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.59.3",
-    "vite": "^5.4.21",
-    "vitest": "^2.1.9"
+    "vite": "^8.0.12",
+    "vitest": "^4.1.6"
   },
   "packageManager": "yarn@4.5.0"
 }
