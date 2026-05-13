@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 import { describe, expect, test, vi } from 'vitest';
 import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';

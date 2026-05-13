@@ -4,7 +4,7 @@ import type {
   Position,
   editor,
   languages,
-} from 'monaco-editor/esm/vs/editor/editor.api';
+} from 'monaco-editor';
 import invariant from 'tiny-invariant';
 import { useAllColumnsContext } from '../../../contexts/AllColumnsContext';
 import { useForeignKeysContext } from '../../../contexts/ForeignKeysContext';
@@ -31,10 +31,7 @@ const SQL_KEYWORDS = [
   'LIMIT',
 ];
 
-type MonacoApi = Pick<
-  typeof import('monaco-editor/esm/vs/editor/editor.api'),
-  'Range' | 'languages'
->;
+type MonacoApi = Pick<typeof import('monaco-editor'), 'Range' | 'languages'>;
 
 function provideCompletionItems(
   monaco: MonacoApi,
@@ -193,9 +190,7 @@ function provideCompletionItems(
 }
 
 export default function useCompletion(
-  monaco:
-    | typeof import('monaco-editor/esm/vs/editor/editor.api')
-    | null
+  monaco: typeof import('monaco-editor') | null
 ) {
   const tableList = useTableListContext();
   const foreignKeys = useForeignKeysContext();
