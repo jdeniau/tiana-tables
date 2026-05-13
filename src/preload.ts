@@ -1,11 +1,19 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
+console.info(
+  `[startup][preload] preload-start: +${Math.round(performance.now())}ms`
+);
+
 import { contextBridge, ipcRenderer } from 'electron';
 import { config } from './preload/config';
 import { navigationListener } from './preload/navigationListener';
 import { sql } from './preload/sql';
 import { sqlFileStorage } from './preload/sqlFileStorage';
+
+console.info(
+  `[startup][preload] preload-end: +${Math.round(performance.now())}ms`
+);
 
 contextBridge.exposeInMainWorld('config', config);
 contextBridge.exposeInMainWorld('sql', sql);

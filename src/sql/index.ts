@@ -1,5 +1,5 @@
 import log from 'electron-log';
-import { Connection, createConnection } from 'mysql2/promise';
+import type { Connection } from 'mysql2/promise';
 import invariant from 'tiny-invariant';
 import { getConfiguration } from '../configuration';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
@@ -221,6 +221,10 @@ class ConnectionStack {
     }
 
     log.debug(`Open connection to "${slug}"`);
+
+    // Lazy-load mysql2 only when the user actually opens a connection,
+    // to keep app startup light.
+    const { createConnection } = await import('mysql2/promise');
 
     // TODO use a connection pool instead ? https://github.com/mysqljs/mysql?tab=readme-ov-file#establishing-connections
     const connection = await createConnection(rest);

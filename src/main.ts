@@ -67,35 +67,33 @@ const createWindow = () => {
   }
   logStartupMilestone('main-window-load-triggered');
 
+  // Forward renderer console messages tagged "[startup]" to the main log file
+  // so we can measure renderer startup in production builds.
+  mainWindow.webContents.on('console-message', (_event, _level, message) => {
+    if (message.includes('[startup]')) {
+      log.info(message);
+    }
+  });
+
+  mainWindow.webContents.once('did-start-loading', () => {
+    logStartupMilestone('webcontents-did-start-loading');
+  });
+
+  mainWindow.webContents.once('dom-ready', () => {
+    logStartupMilestone('webcontents-dom-ready');
+  });
+
+  mainWindow.webContents.once('did-stop-loading', () => {
+    logStartupMilestone('webcontents-did-stop-loading');
+  });
+
   mainWindow.webContents.once('did-finish-load', () => {
     logStartupMilestone('main-window-did-finish-load');
   });
 
   mainWindow.once('ready-to-show', () => {
     logStartupMilestone('main-window-ready-to-show');
-
-    // Defer non-critical initialization to the next event-loop task after first window display.
-    setTimeout(() => {
-      if (isDev) {
-        void installReactDevToolsExtension();
-        logStartupMilestone('react-devtools-install-triggered');
-      } else {
-        updateElectronApp({
-          logger: log,
-        });
-        logStartupMilestone('auto-update-initialized');
-      }
-    }, 0);
-  });
-
-  logStartupMilestone('main-window-load-triggered');
-
-  mainWindow.webContents.once('did-finish-load', () => {
-    logStartupMilestone('main-window-did-finish-load');
-  });
-
-  mainWindow.once('ready-to-show', () => {
-    logStartupMilestone('main-window-ready-to-show');
+    mainWindow.show();
 
     // Defer non-critical initialization to the next event-loop task after first window display.
     setTimeout(() => {
@@ -144,7 +142,6 @@ app.whenReady().then(() => {
   connectionStackInstance.bindIpcMain(ipcMain);
   logStartupMilestone('ipc-bound');
 
-  logStartupMilestone('ipc-bound');
   ipcMain.handle('get-is-dev', () => {
     return isDev;
   });

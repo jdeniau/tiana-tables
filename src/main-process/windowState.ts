@@ -203,6 +203,8 @@ export default class WindowStateKeeper {
       height: this.height,
       x: this.x,
       y: this.y,
+      show: false,
+      backgroundColor: '#1e1e1e',
       ...options,
     });
 

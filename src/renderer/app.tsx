@@ -7,8 +7,12 @@ import {
   createHashRouter,
 } from 'react-router-dom';
 import invariant from 'tiny-invariant';
+import Connect from './routes/connect';
+import Create from './routes/connect/create';
+import Edit from './routes/connect/edit.$connectionSlug';
 import ConnectionErrorPage from './routes/errors/ConnectionsErrorPage';
 import RootErrorPage from './routes/errors/RootErrorPage';
+import Root from './routes/root';
 
 const appElement = document.getElementById('App');
 
@@ -29,11 +33,7 @@ function logRendererStartupMilestone(name: string): void {
 const router = createHashRouter([
   {
     path: '/',
-    lazy: async () => {
-      const routeModule = await import('./routes/root');
-
-      return { Component: routeModule.default };
-    },
+    element: <Root />,
     errorElement: <RootErrorPage />,
     children: [
       {
@@ -45,32 +45,26 @@ const router = createHashRouter([
         children: [
           {
             index: true,
-            lazy: async () => {
-              const routeModule = await import('./routes/connect');
-
-              return { Component: routeModule.default };
-            },
+            element: <Connect />,
           },
           {
             path: 'create',
-            lazy: async () => {
-              const routeModule = await import('./routes/connect/create');
-
-              return { Component: routeModule.default };
-            },
+            element: <Create />,
           },
           {
             path: 'edit/:connectionSlug',
-            lazy: async () => {
-              const routeModule = await import(
-                './routes/connect/edit.$connectionSlug'
-              );
-
-              return { Component: routeModule.default };
-            },
+            element: <Edit />,
           },
         ],
       },
+      // The `connections/*` and `sql/*` subtrees stay lazy on purpose: they pull
+      // in TableGrid (~515 KB) and Monaco (~3 MB of editor + workers), which we
+      // do not want in the initial bundle. The startup path is `/` → `/connect`,
+      // so these chunks only load once the user opens a connection — and the
+      // MySQL handshake masks the chunk fetch.
+      //
+      // React Router 7 in framework mode would handle this automatically with
+      // smarter pre-fetching; revisit if/when we migrate from RR 6.
       {
         path: 'connections/:connectionSlug',
         shouldRevalidate: ({ currentParams, nextParams }) => {
