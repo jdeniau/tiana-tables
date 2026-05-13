@@ -1,5 +1,6 @@
 import { BrowserWindow, Menu, app, ipcMain, session } from 'electron';
 import path from 'node:path';
+import { performance } from 'node:perf_hooks';
 import log from 'electron-log/main';
 import started from 'electron-squirrel-startup';
 import { updateElectronApp } from 'update-electron-app';
@@ -18,6 +19,13 @@ import connectionStackInstance from './sql';
 
 const isMac = isMacPlatform();
 const isDev = isDevApp();
+const startupStart = performance.now();
+
+function logStartupMilestone(name: string): void {
+  log.info(
+    `[startup][main] ${name}: +${Math.round(performance.now() - startupStart)}ms`
+  );
+}
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -27,12 +35,10 @@ if (started) {
 // log files are stored in the userData folder, and the file name is different in dev and prod
 log.transports.file.resolvePathFn = () => getLogPath();
 log.initialize();
-
-updateElectronApp({
-  logger: log,
-});
+logStartupMilestone('module-initialized');
 
 const createWindow = () => {
+  logStartupMilestone('create-window-start');
   const configuration = getConfiguration();
 
   // create handle that will manage the window size state
@@ -47,6 +53,7 @@ const createWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+  logStartupMilestone('main-window-created');
 
   Menu.setApplicationMenu(createMenu(mainWindow));
 
@@ -58,6 +65,49 @@ const createWindow = () => {
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
     );
   }
+  logStartupMilestone('main-window-load-triggered');
+
+  // Forward renderer console messages tagged "[startup]" to the main log file
+  // so we can measure renderer startup in production builds.
+  mainWindow.webContents.on('console-message', (_event, _level, message) => {
+    if (message.includes('[startup]')) {
+      log.info(message);
+    }
+  });
+
+  mainWindow.webContents.once('did-start-loading', () => {
+    logStartupMilestone('webcontents-did-start-loading');
+  });
+
+  mainWindow.webContents.once('dom-ready', () => {
+    logStartupMilestone('webcontents-dom-ready');
+  });
+
+  mainWindow.webContents.once('did-stop-loading', () => {
+    logStartupMilestone('webcontents-did-stop-loading');
+  });
+
+  mainWindow.webContents.once('did-finish-load', () => {
+    logStartupMilestone('main-window-did-finish-load');
+  });
+
+  mainWindow.once('ready-to-show', () => {
+    logStartupMilestone('main-window-ready-to-show');
+    mainWindow.show();
+
+    // Defer non-critical initialization to the next event-loop task after first window display.
+    setTimeout(() => {
+      if (isDev) {
+        void installReactDevToolsExtension();
+        logStartupMilestone('react-devtools-install-triggered');
+      } else {
+        updateElectronApp({
+          logger: log,
+        });
+        logStartupMilestone('auto-update-initialized');
+      }
+    }, 0);
+  });
 
   // Open the DevTools.
   if (isDev) {
@@ -68,9 +118,13 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  logStartupMilestone('app-ready');
+  createWindow();
+});
 
 app.whenReady().then(() => {
+  logStartupMilestone('app-when-ready');
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
@@ -83,11 +137,10 @@ app.whenReady().then(() => {
     });
   });
 
-  installReactDevToolsExtension();
-
   bindIpcMainConfiguration(ipcMain);
   bindIpcMainSqlFileStorage(ipcMain);
   connectionStackInstance.bindIpcMain(ipcMain);
+  logStartupMilestone('ipc-bound');
 
   ipcMain.handle('get-is-dev', () => {
     return isDev;

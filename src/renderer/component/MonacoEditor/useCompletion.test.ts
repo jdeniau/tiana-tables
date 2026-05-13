@@ -25,7 +25,7 @@ describe('sql keywords', () => {
     const model = monaco.editor.createModel(sql, 'sql');
 
     const result = provideCompletionItems(
-      monaco.languages,
+      monaco,
       tableList,
       new ForeignKeysHelper([]),
       new ColumnDetailHelper([])
@@ -76,7 +76,7 @@ describe('table list', () => {
       const model = monaco.editor.createModel(sql, 'sql');
 
       const result = provideCompletionItems(
-        monaco.languages,
+        monaco,
         tableList,
         new ForeignKeysHelper([]),
         new ColumnDetailHelper([])
@@ -155,7 +155,7 @@ describe('table list', () => {
       const model = monaco.editor.createModel(sql, 'sql');
 
       const result = provideCompletionItems(
-        monaco.languages,
+        monaco,
         tableList,
         helper,
         new ColumnDetailHelper([])
@@ -216,7 +216,7 @@ describe('column in SELECT or WHERE', () => {
     const model = monaco.editor.createModel(sql, 'sql');
 
     const result = provideCompletionItems(
-      monaco.languages,
+      monaco,
       [],
       new ForeignKeysHelper([]),
       new ColumnDetailHelper([

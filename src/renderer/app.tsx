@@ -1,26 +1,18 @@
-import React from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Navigate, RouterProvider, createHashRouter } from 'react-router-dom';
+import {
+  Navigate,
+  RouteObject,
+  RouterProvider,
+  createHashRouter,
+} from 'react-router-dom';
 import invariant from 'tiny-invariant';
 import Connect from './routes/connect';
 import Create from './routes/connect/create';
 import Edit from './routes/connect/edit.$connectionSlug';
-import ConnectionDetailPage, {
-  loader as connectionDetailPageLoader,
-} from './routes/connections.$connectionSlug';
-import DatabaseDetailPage, {
-  loader as databaseDetailPageLoader,
-} from './routes/connections.$connectionSlug.$databaseName';
-import TableNamePage, {
-  loader as tableNamePageLoader,
-} from './routes/connections.$connectionSlug.$databaseName.$tableName';
-import TableStructure, {
-  loader as tableStructureLoader,
-} from './routes/connections.$connectionSlug.$databaseName.$tableName.structure';
 import ConnectionErrorPage from './routes/errors/ConnectionsErrorPage';
 import RootErrorPage from './routes/errors/RootErrorPage';
 import Root from './routes/root';
-import SqlPage, { action as sqlPageAction } from './routes/sql.$connectionSlug';
 
 const appElement = document.getElementById('App');
 
@@ -28,6 +20,11 @@ invariant(appElement, 'App element not found');
 
 const root = createRoot(appElement);
 
+function logRendererStartupMilestone(name: string): void {
+  console.info(
+    `[startup][renderer] ${name}: +${Math.round(performance.now())}ms`
+  );
+}
 // A possibility is also to create history manually to call `history.push('/path')`
 // import { createMemoryHistory } from 'history';
 // export const history = createMemoryHistory();
@@ -60,42 +57,90 @@ const router = createHashRouter([
           },
         ],
       },
+      // The `connections/*` and `sql/*` subtrees stay lazy on purpose: they pull
+      // in TableGrid (~515 KB) and Monaco (~3 MB of editor + workers), which we
+      // do not want in the initial bundle. The startup path is `/` → `/connect`,
+      // so these chunks only load once the user opens a connection — and the
+      // MySQL handshake masks the chunk fetch.
+      //
+      // React Router 7 in framework mode would handle this automatically with
+      // smarter pre-fetching; revisit if/when we migrate from RR 6.
       {
         path: 'connections/:connectionSlug',
-        loader: connectionDetailPageLoader,
         shouldRevalidate: ({ currentParams, nextParams }) => {
           return (
             currentParams.connectionSlug !== nextParams.connectionSlug ||
             currentParams.databaseName !== nextParams.databaseName
           );
         },
-        element: <ConnectionDetailPage />,
+        lazy: async () => {
+          const routeModule = await import(
+            './routes/connections.$connectionSlug'
+          );
+
+          return {
+            loader: routeModule.loader,
+            Component: routeModule.default,
+          };
+        },
         children: [
           {
             path: ':databaseName',
-            loader: databaseDetailPageLoader,
-            element: <DatabaseDetailPage />,
             errorElement: <ConnectionErrorPage />,
+            lazy: async () => {
+              const routeModule = await import(
+                './routes/connections.$connectionSlug.$databaseName'
+              );
+
+              return {
+                loader: routeModule.loader,
+                Component: routeModule.default,
+              };
+            },
             children: [
               {
                 path: 'tables/:tableName',
                 children: [
                   {
                     index: true,
-                    loader: tableNamePageLoader,
-                    element: <TableNamePage />,
+                    lazy: async () => {
+                      const routeModule = await import(
+                        './routes/connections.$connectionSlug.$databaseName.$tableName'
+                      );
+
+                      return {
+                        loader: routeModule.loader,
+                        Component: routeModule.default,
+                      };
+                    },
                   },
                   {
                     path: 'structure',
-                    loader: tableStructureLoader,
-                    element: <TableStructure />,
+                    lazy: async () => {
+                      const routeModule = await import(
+                        './routes/connections.$connectionSlug.$databaseName.$tableName.structure'
+                      );
+
+                      return {
+                        loader: routeModule.loader,
+                        Component: routeModule.default,
+                      };
+                    },
                   },
                 ],
               },
               {
                 path: 'sql',
-                element: <SqlPage />,
-                action: sqlPageAction,
+                lazy: async () => {
+                  const routeModule = await import(
+                    './routes/sql.$connectionSlug'
+                  );
+
+                  return {
+                    action: routeModule.action,
+                    Component: routeModule.default,
+                  };
+                },
               },
             ],
           },
@@ -103,11 +148,25 @@ const router = createHashRouter([
       },
     ],
   },
-]);
+] as RouteObject[]);
 
 export function App() {
-  return <RouterProvider router={router} />;
+  useEffect(() => {
+    logRendererStartupMilestone('router-mounted');
+
+    requestAnimationFrame(() => {
+      logRendererStartupMilestone('first-animation-frame');
+    });
+  }, []);
+
+  return (
+    <Suspense fallback={null}>
+      <RouterProvider router={router} />
+    </Suspense>
+  );
 }
+
+logRendererStartupMilestone('app-entry');
 
 root.render(
   <React.StrictMode>

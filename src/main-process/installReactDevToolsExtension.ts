@@ -1,4 +1,3 @@
-import { BrowserWindow } from 'electron';
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
@@ -11,16 +10,11 @@ export function installReactDevToolsExtension() {
     return;
   }
 
-  installExtension(REACT_DEVELOPER_TOOLS)
+  return installExtension(REACT_DEVELOPER_TOOLS)
     .then((name) => {
       log.debug(`Added Extension:  ${name}`);
-
-      // once extension is loaded, reload the view after a short period (probably to be sure that the extension is loaded ?)
-      BrowserWindow.getAllWindows().forEach((win) => {
-        setTimeout(() => {
-          win.webContents.reload();
-        }, 1000);
-      });
     })
-    .catch((err) => console.error('Unable to install extension: ', err));
+    .catch((err) => {
+      console.error('Unable to install extension: ', err);
+    });
 }

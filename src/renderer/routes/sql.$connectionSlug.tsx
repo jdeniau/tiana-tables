@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { Button, Flex, Form } from 'antd';
 import { ActionFunctionArgs, useFetcher } from 'react-router-dom';
 import invariant from 'tiny-invariant';
@@ -6,8 +6,13 @@ import { useTranslation } from '../../i18n';
 import { SqlError } from '../../sql/errorSerializer';
 import { isSqlError } from '../../sql/isSqlError';
 import { QueryResult } from '../../sql/types';
-import { RawSqlEditor } from '../component/MonacoEditor/RawSqlEditor';
 import RawSqlResult from '../component/Query/RawSqlResult/RowDataPacketResult';
+
+const RawSqlEditor = lazy(() =>
+  import('../component/MonacoEditor/RawSqlEditor').then((module) => ({
+    default: module.RawSqlEditor,
+  }))
+);
 
 // const DEFAULT_VALUE = `SELECT *  FROM employees e WHERE e.gender = 'F' LIMIT 10;`;
 function useSqlFileStorage(): [string | null, (value: string) => void] {
@@ -85,13 +90,15 @@ export default function SqlPage() {
         }}
       >
         <Form.Item name="raw" valuePropName="defaultValue">
-          <RawSqlEditor
-            style={{ height: '35vh' }}
-            onSubmit={() => {
-              // trigger the form "onFinish" event
-              form.submit();
-            }}
-          />
+          <Suspense fallback={<div style={{ height: '35vh' }}></div>}>
+            <RawSqlEditor
+              style={{ height: '35vh' }}
+              onSubmit={() => {
+                // trigger the form "onFinish" event
+                form.submit();
+              }}
+            />
+          </Suspense>
         </Form.Item>
 
         <Button

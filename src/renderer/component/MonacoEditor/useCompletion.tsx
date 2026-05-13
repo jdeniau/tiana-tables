@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
-import {
+import type {
   CancellationToken,
   Position,
-  Range,
   editor,
   languages,
 } from 'monaco-editor/esm/vs/editor/editor.api';
@@ -32,8 +31,13 @@ const SQL_KEYWORDS = [
   'LIMIT',
 ];
 
+type MonacoApi = Pick<
+  typeof import('monaco-editor/esm/vs/editor/editor.api'),
+  'Range' | 'languages'
+>;
+
 function provideCompletionItems(
-  languages: typeof import('monaco-editor/esm/vs/editor/editor.api').languages,
+  monaco: MonacoApi,
   tableList: ShowTableStatus[],
   foreignKeys: ForeignKeysHelper,
   allColumns: ColumnDetailHelper
@@ -111,9 +115,9 @@ function provideCompletionItems(
           return {
             label: table.Name,
             detail: fk?.referencedTableName ?? undefined,
-            kind: languages.CompletionItemKind.Variable,
+            kind: monaco.languages.CompletionItemKind.Variable,
             insertText,
-            range: new Range(
+            range: new monaco.Range(
               range.startLineNumber,
               startColumn,
               position.lineNumber,
@@ -158,9 +162,9 @@ function provideCompletionItems(
         suggestions: columns.map((column) => ({
           label: column,
           insertText: column,
-          kind: languages.CompletionItemKind.Field,
+          kind: monaco.languages.CompletionItemKind.Field,
           detail: tablename,
-          range: new Range(
+          range: new monaco.Range(
             range.startLineNumber,
             startColumn,
             position.lineNumber,
@@ -170,7 +174,7 @@ function provideCompletionItems(
       };
     }
 
-    const defaultRange = new Range(
+    const defaultRange = new monaco.Range(
       position.lineNumber,
       position.column - 1,
       position.lineNumber,
@@ -180,7 +184,7 @@ function provideCompletionItems(
     return {
       suggestions: SQL_KEYWORDS.map((keyword) => ({
         label: keyword,
-        kind: languages.CompletionItemKind.Keyword,
+        kind: monaco.languages.CompletionItemKind.Keyword,
         insertText: keyword,
         range: defaultRange,
       })),
@@ -189,20 +193,26 @@ function provideCompletionItems(
 }
 
 export default function useCompletion(
-  monaco: typeof import('monaco-editor/esm/vs/editor/editor.api')
+  monaco:
+    | typeof import('monaco-editor/esm/vs/editor/editor.api')
+    | null
 ) {
   const tableList = useTableListContext();
   const foreignKeys = useForeignKeysContext();
   const allColumns = useAllColumnsContext();
 
   useEffect(() => {
+    if (!monaco) {
+      return;
+    }
+
     // interesting examples :
     // - foldable https://microsoft.github.io/monaco-editor/playground.html?source=v0.47.0#example-extending-language-services-folding-provider-example
     // - hover https://microsoft.github.io/monaco-editor/playground.html?source=v0.47.0#example-extending-language-services-hover-provider-example
     const completionItemProvider =
       monaco.languages.registerCompletionItemProvider('sql', {
         provideCompletionItems: provideCompletionItems(
-          monaco.languages,
+          monaco,
           tableList,
           foreignKeys,
           allColumns
@@ -221,7 +231,7 @@ export default function useCompletion(
     return () => {
       completionItemProvider.dispose();
     };
-  }, [allColumns, foreignKeys, monaco.Range, monaco.languages, tableList]);
+  }, [allColumns, foreignKeys, monaco, tableList]);
 }
 
 export const testables = {

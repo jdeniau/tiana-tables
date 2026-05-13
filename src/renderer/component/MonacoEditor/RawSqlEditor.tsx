@@ -1,6 +1,5 @@
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import './userWorker';
+import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { useTheme } from 'styled-components';
 import { convertTextmateThemeToMonaco } from './themes';
 import useCompletion from './useCompletion';
@@ -20,6 +19,10 @@ export function RawSqlEditor({
   style,
   monacoOptions,
 }: Props) {
+  const [monacoInstance, setMonacoInstance] =
+    useState<typeof import('monaco-editor/esm/vs/editor/editor.api') | null>(
+      null
+    );
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoEl = useRef<HTMLDivElement>(null);
@@ -29,14 +32,47 @@ export function RawSqlEditor({
   // Convert the TextMate theme to a Monaco Editor theme
   const monacoTheme = convertTextmateThemeToMonaco(textmateTheme);
 
-  monaco.editor.defineTheme('currentTheme', monacoTheme);
+  useCompletion(monacoInstance);
 
-  useCompletion(monaco);
+  useEffect(() => {
+    let isCanceled = false;
+
+    // `userWorker` configures Monaco workers through module side effects.
+    Promise.all([
+      import('monaco-editor/esm/vs/editor/editor.api'),
+      import('./userWorker'),
+    ]).then(([loadedMonaco]) => {
+      if (!isCanceled) {
+        setMonacoInstance(loadedMonaco);
+      }
+    }).catch((error) => {
+      console.error(
+        'Unable to load Monaco editor. Navigate away from this SQL tab and come back, or restart the app, then check bundled asset loading in developer tools.',
+        error
+      );
+    });
+
+    return () => {
+      isCanceled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!monacoInstance) {
+      return;
+    }
+
+    monacoInstance.editor.defineTheme('currentTheme', monacoTheme);
+  }, [monacoInstance, monacoTheme]);
 
   const memoizedMonacoOptions = useMemo(() => monacoOptions, [monacoOptions]);
 
   // initialize the editor
   useEffect(() => {
+    if (!monacoInstance) {
+      return;
+    }
+
     const currentMonacoElement = monacoEl.current;
 
     if (!currentMonacoElement) {
@@ -49,7 +85,7 @@ export function RawSqlEditor({
         return editor;
       }
 
-      const createdEditor = monaco.editor.create(currentMonacoElement, {
+      const createdEditor = monacoInstance.editor.create(currentMonacoElement, {
         value: defaultValue,
         language: 'sql',
         theme: 'currentTheme',
@@ -59,7 +95,7 @@ export function RawSqlEditor({
       });
 
       createdEditor.addCommand(
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter,
         () => {
           onSubmit();
         }
@@ -71,7 +107,14 @@ export function RawSqlEditor({
 
       return createdEditor;
     });
-  }, [defaultValue, editor, onChange, memoizedMonacoOptions, onSubmit]);
+  }, [
+    defaultValue,
+    editor,
+    onChange,
+    memoizedMonacoOptions,
+    monacoInstance,
+    onSubmit,
+  ]);
 
   useEffect(() => {
     // dispose the editor when the component is unmounted
