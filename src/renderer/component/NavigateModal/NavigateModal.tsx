@@ -1,5 +1,5 @@
 import { ReactElement, useCallback, useEffect, useRef, useState } from 'react';
-import { Flex, Input, InputRef, List, Modal } from 'antd';
+import { Flex, Input, InputRef, Modal } from 'antd';
 import Fuse from 'fuse.js';
 import { useNavigate } from 'react-router-dom';
 import { styled } from 'styled-components';
@@ -133,11 +133,8 @@ export default function NavigateModal({
           }}
         />
 
-        <List
-          style={{ overflow: 'auto' }}
-          bordered
-          dataSource={filteredTableStatusList}
-          renderItem={(item: NavigationItem, index: number) => (
+        <ItemList>
+          {filteredTableStatusList.map((item, index) => (
             <ItemListWithHover
               key={item.key}
               $active={index === activeIndex}
@@ -147,17 +144,36 @@ export default function NavigateModal({
             >
               <item.Icon /> {item.name}
             </ItemListWithHover>
-          )}
-        />
+          ))}
+        </ItemList>
       </Flex>
     </Modal>
   );
 }
 
-const ItemListWithHover = styled(List.Item)<{
+const ItemList = styled.ul`
+  border: 1px solid var(--ant-color-border-secondary, rgba(0, 0, 0, 0.15));
+  border-radius: 6px;
+  overflow: auto;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+`;
+
+const ItemListWithHover = styled.li<{
   $active: boolean;
 }>`
   cursor: pointer;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid
+    var(--ant-color-border-secondary, rgba(0, 0, 0, 0.15));
+
+  &:last-child {
+    border-bottom: none;
+  }
 
   &:hover {
     background-color: ${selection};
