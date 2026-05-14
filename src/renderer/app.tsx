@@ -74,9 +74,8 @@ const router = createHashRouter([
           );
         },
         lazy: async () => {
-          const routeModule = await import(
-            './routes/connections.$connectionSlug'
-          );
+          const routeModule =
+            await import('./routes/connections.$connectionSlug');
 
           return {
             loader: routeModule.loader,
@@ -88,9 +87,8 @@ const router = createHashRouter([
             path: ':databaseName',
             errorElement: <ConnectionErrorPage />,
             lazy: async () => {
-              const routeModule = await import(
-                './routes/connections.$connectionSlug.$databaseName'
-              );
+              const routeModule =
+                await import('./routes/connections.$connectionSlug.$databaseName');
 
               return {
                 loader: routeModule.loader,
@@ -104,9 +102,8 @@ const router = createHashRouter([
                   {
                     index: true,
                     lazy: async () => {
-                      const routeModule = await import(
-                        './routes/connections.$connectionSlug.$databaseName.$tableName'
-                      );
+                      const routeModule =
+                        await import('./routes/connections.$connectionSlug.$databaseName.$tableName');
 
                       return {
                         loader: routeModule.loader,
@@ -117,9 +114,8 @@ const router = createHashRouter([
                   {
                     path: 'structure',
                     lazy: async () => {
-                      const routeModule = await import(
-                        './routes/connections.$connectionSlug.$databaseName.$tableName.structure'
-                      );
+                      const routeModule =
+                        await import('./routes/connections.$connectionSlug.$databaseName.$tableName.structure');
 
                       return {
                         loader: routeModule.loader,
@@ -132,9 +128,8 @@ const router = createHashRouter([
               {
                 path: 'sql',
                 lazy: async () => {
-                  const routeModule = await import(
-                    './routes/sql.$connectionSlug'
-                  );
+                  const routeModule =
+                    await import('./routes/sql.$connectionSlug');
 
                   return {
                     action: routeModule.action,
