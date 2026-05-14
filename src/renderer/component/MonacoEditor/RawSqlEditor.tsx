@@ -1,6 +1,7 @@
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
-import type * as monaco from 'monaco-editor';
+import type monaco from 'monaco-editor';
 import { useTheme } from 'styled-components';
+import useEffectOnce from '../../hooks/useEffectOnce';
 import { convertTextmateThemeToMonaco } from './themes';
 import useCompletion from './useCompletion';
 
@@ -19,12 +20,17 @@ export function RawSqlEditor({
   style,
   monacoOptions,
 }: Props) {
-  const [monacoInstance, setMonacoInstance] = useState<
-    typeof import('monaco-editor') | null
-  >(null);
+  const [monacoInstance, setMonacoInstance] = useState<typeof monaco | null>(
+    null
+  );
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoEl = useRef<HTMLDivElement>(null);
+  // Refs to always hold the latest callbacks without triggering effect re-runs
+  const onSubmitRef = useRef(onSubmit);
+  onSubmitRef.current = onSubmit;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
   const theme = useTheme();
   const textmateTheme = theme;
 
@@ -33,15 +39,45 @@ export function RawSqlEditor({
 
   useCompletion(monacoInstance);
 
-  useEffect(() => {
+  const memoizedMonacoOptions = useMemo(() => monacoOptions, [monacoOptions]);
+
+  // Load Monaco and create the editor once — useEffectOnce prevents the
+  // React 18 StrictMode double-invocation that caused "Element already has
+  // context attribute" when editor.create() was called inside a setState updater.
+  useEffectOnce(() => {
     let isCanceled = false;
 
     // `userWorker` configures Monaco workers through module side effects.
     Promise.all([import('monaco-editor'), import('./userWorker')])
       .then(([loadedMonaco]) => {
-        if (!isCanceled) {
-          setMonacoInstance(loadedMonaco);
+        if (isCanceled || !monacoEl.current) {
+          return;
         }
+
+        loadedMonaco.editor.defineTheme('currentTheme', monacoTheme);
+
+        const createdEditor = loadedMonaco.editor.create(monacoEl.current, {
+          value: defaultValue,
+          language: 'sql',
+          theme: 'currentTheme',
+          minimap: { enabled: false },
+          automaticLayout: true,
+          ...memoizedMonacoOptions,
+        });
+
+        createdEditor.addCommand(
+          loadedMonaco.KeyMod.CtrlCmd | loadedMonaco.KeyCode.Enter,
+          () => {
+            onSubmitRef.current();
+          }
+        );
+
+        createdEditor.onDidChangeModelContent(() => {
+          onChangeRef.current?.(createdEditor.getValue());
+        });
+
+        setMonacoInstance(loadedMonaco);
+        setEditor(createdEditor);
       })
       .catch((error) => {
         console.error(
@@ -53,7 +89,7 @@ export function RawSqlEditor({
     return () => {
       isCanceled = true;
     };
-  }, []);
+  });
 
   useEffect(() => {
     if (!monacoInstance) {
@@ -62,57 +98,6 @@ export function RawSqlEditor({
 
     monacoInstance.editor.defineTheme('currentTheme', monacoTheme);
   }, [monacoInstance, monacoTheme]);
-
-  const memoizedMonacoOptions = useMemo(() => monacoOptions, [monacoOptions]);
-
-  // initialize the editor
-  useEffect(() => {
-    if (!monacoInstance) {
-      return;
-    }
-
-    const currentMonacoElement = monacoEl.current;
-
-    if (!currentMonacoElement) {
-      return;
-    }
-
-    setEditor((editor) => {
-      if (editor) {
-        // don't recreate the editor
-        return editor;
-      }
-
-      const createdEditor = monacoInstance.editor.create(currentMonacoElement, {
-        value: defaultValue,
-        language: 'sql',
-        theme: 'currentTheme',
-        minimap: { enabled: false },
-        automaticLayout: true,
-        ...memoizedMonacoOptions,
-      });
-
-      createdEditor.addCommand(
-        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter,
-        () => {
-          onSubmit();
-        }
-      );
-
-      createdEditor.onDidChangeModelContent(() => {
-        onChange?.(createdEditor.getValue());
-      });
-
-      return createdEditor;
-    });
-  }, [
-    defaultValue,
-    editor,
-    onChange,
-    memoizedMonacoOptions,
-    monacoInstance,
-    onSubmit,
-  ]);
 
   useEffect(() => {
     // dispose the editor when the component is unmounted
