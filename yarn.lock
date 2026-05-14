@@ -2706,12 +2706,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.16.11, @types/node@npm:^20.9.0":
+"@types/node@npm:^20.16.11":
   version: 20.16.11
   resolution: "@types/node@npm:20.16.11"
   dependencies:
     undici-types: "npm:~6.19.2"
   checksum: 10c0/bba43f447c3c80548513954dae174e18132e9149d572c09df4a282772960d33e229d05680fb5364997c03489c22fe377d1dbcd018a3d4ff1cfbcfcdaa594a9c3
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^24.9.0":
+  version: 24.12.4
+  resolution: "@types/node@npm:24.12.4"
+  dependencies:
+    undici-types: "npm:~7.16.0"
+  checksum: 10c0/d2c36b78b6050d8677769fa05a32243061675e81ddc2bb43955d91a671af3465506ef2731a24c0c9ab42b6b679bd5c1513de45bbe9ea278c2c07ee63b564b61b
   languageName: node
   linkType: hard
 
@@ -4702,15 +4711,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-devtools-installer@npm:^3.2.0":
-  version: 3.2.0
-  resolution: "electron-devtools-installer@npm:3.2.0"
+"electron-devtools-installer@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "electron-devtools-installer@npm:4.0.0"
   dependencies:
-    rimraf: "npm:^3.0.2"
-    semver: "npm:^7.2.1"
-    tslib: "npm:^2.1.0"
     unzip-crx-3: "npm:^0.2.0"
-  checksum: 10c0/50d56e174e3bbe568d3d4a56a56e8c87faf44aa54a49ecc93ab672905f30ca1bf4e6a1b5a0b297c6ffeec1e89848086a6ff47f0db8197edb16d1bda16d6440c2
+  checksum: 10c0/54ba5b7c5f51b9e9857d840fd8ab1958c80efe1c71ad1455f0c93fb3d87696261a429453d561074edcf5e2296b37e1bc65c98b61281ec704add8a563f454f4d0
   languageName: node
   linkType: hard
 
@@ -4827,16 +4833,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:^32.1.2":
-  version: 32.1.2
-  resolution: "electron@npm:32.1.2"
+"electron@npm:^41.5.2":
+  version: 41.5.2
+  resolution: "electron@npm:41.5.2"
   dependencies:
     "@electron/get": "npm:^2.0.0"
-    "@types/node": "npm:^20.9.0"
+    "@types/node": "npm:^24.9.0"
     extract-zip: "npm:^2.0.1"
   bin:
     electron: cli.js
-  checksum: 10c0/9e453e046e024b1454fb212e977d622feba3b6d24ff922a360c06177ec8bcbe58e729e105260285e79c0a203dfcb42d3d795844030bba8681016ab50b7d4bb87
+  checksum: 10c0/339db55c92157204a5ff2abb96c457dab3474d04523cf86a0bbbb729cf76f6f8ee57c8299a0f1571ace5584783e85af4a1ebf317c5c20c5f3d80395db13912a5
   languageName: node
   linkType: hard
 
@@ -11053,8 +11059,8 @@ __metadata:
     "@vitejs/plugin-react": "npm:^4.3.2"
     antd: "npm:^5.21.3"
     chromatic: "npm:^11.0.0"
-    electron: "npm:^32.1.2"
-    electron-devtools-installer: "npm:^3.2.0"
+    electron: "npm:^41.5.2"
+    electron-devtools-installer: "npm:^4.0.0"
     electron-log: "npm:^5.2.0"
     electron-squirrel-startup: "npm:^1.0.0"
     eslint: "npm:^8.57.1"
@@ -11341,7 +11347,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.0.1, tslib@npm:^2.1.0":
+"tslib@npm:^2.0.1":
   version: 2.7.0
   resolution: "tslib@npm:2.7.0"
   checksum: 10c0/469e1d5bf1af585742128827000711efa61010b699cb040ab1800bcd3ccdd37f63ec30642c9e07c4439c1db6e46345582614275daca3e0f4abae29b0083f04a6
@@ -11501,6 +11507,13 @@ __metadata:
   version: 6.19.8
   resolution: "undici-types@npm:6.19.8"
   checksum: 10c0/078afa5990fba110f6824823ace86073b4638f1d5112ee26e790155f481f2a868cc3e0615505b6f4282bdf74a3d8caad715fd809e870c2bb0704e3ea6082f344
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~7.16.0":
+  version: 7.16.0
+  resolution: "undici-types@npm:7.16.0"
+  checksum: 10c0/3033e2f2b5c9f1504bdc5934646cb54e37ecaca0f9249c983f7b1fc2e87c6d18399ebb05dc7fd5419e02b2e915f734d872a65da2e3eeed1813951c427d33cc9a
   languageName: node
   linkType: hard
 

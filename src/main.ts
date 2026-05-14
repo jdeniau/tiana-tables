@@ -69,9 +69,9 @@ const createWindow = () => {
 
   // Forward renderer console messages tagged "[startup]" to the main log file
   // so we can measure renderer startup in production builds.
-  mainWindow.webContents.on('console-message', (_event, _level, message) => {
-    if (message.includes('[startup]')) {
-      log.info(message);
+  mainWindow.webContents.on('console-message', (details) => {
+    if (details.message.includes('[startup]')) {
+      log.info(details.message);
     }
   });
 
