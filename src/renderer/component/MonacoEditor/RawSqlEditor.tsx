@@ -1,6 +1,7 @@
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { useTheme } from 'styled-components';
+import useEffectOnce from '../../hooks/useEffectOnce';
 import { convertTextmateThemeToMonaco } from './themes';
 import useCompletion from './useCompletion';
 
@@ -19,13 +20,17 @@ export function RawSqlEditor({
   style,
   monacoOptions,
 }: Props) {
-  const [monacoInstance, setMonacoInstance] =
-    useState<typeof import('monaco-editor/esm/vs/editor/editor.api') | null>(
-      null
-    );
+  const [monacoInstance, setMonacoInstance] = useState<
+    typeof import('monaco-editor/esm/vs/editor/editor.api') | null
+  >(null);
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoEl = useRef<HTMLDivElement>(null);
+  // Refs to always hold the latest callbacks without triggering effect re-runs
+  const onSubmitRef = useRef(onSubmit);
+  onSubmitRef.current = onSubmit;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
   const theme = useTheme();
   const textmateTheme = theme;
 
@@ -34,28 +39,60 @@ export function RawSqlEditor({
 
   useCompletion(monacoInstance);
 
-  useEffect(() => {
+  const memoizedMonacoOptions = useMemo(() => monacoOptions, [monacoOptions]);
+
+  // Load Monaco and create the editor once — useEffectOnce prevents the
+  // React 18 StrictMode double-invocation that caused "Element already has
+  // context attribute" when editor.create() was called inside a setState updater.
+  useEffectOnce(() => {
     let isCanceled = false;
 
     // `userWorker` configures Monaco workers through module side effects.
     Promise.all([
       import('monaco-editor/esm/vs/editor/editor.api'),
       import('./userWorker'),
-    ]).then(([loadedMonaco]) => {
-      if (!isCanceled) {
+    ])
+      .then(([loadedMonaco]) => {
+        if (isCanceled || !monacoEl.current) {
+          return;
+        }
+
+        loadedMonaco.editor.defineTheme('currentTheme', monacoTheme);
+
+        const createdEditor = loadedMonaco.editor.create(monacoEl.current, {
+          value: defaultValue,
+          language: 'sql',
+          theme: 'currentTheme',
+          minimap: { enabled: false },
+          automaticLayout: true,
+          ...memoizedMonacoOptions,
+        });
+
+        createdEditor.addCommand(
+          loadedMonaco.KeyMod.CtrlCmd | loadedMonaco.KeyCode.Enter,
+          () => {
+            onSubmitRef.current();
+          }
+        );
+
+        createdEditor.onDidChangeModelContent(() => {
+          onChangeRef.current?.(createdEditor.getValue());
+        });
+
         setMonacoInstance(loadedMonaco);
-      }
-    }).catch((error) => {
-      console.error(
-        'Unable to load Monaco editor. Navigate away from this SQL tab and come back, or restart the app, then check bundled asset loading in developer tools.',
-        error
-      );
-    });
+        setEditor(createdEditor);
+      })
+      .catch((error) => {
+        console.error(
+          'Unable to load Monaco editor. Navigate away from this SQL tab and come back, or restart the app, then check bundled asset loading in developer tools.',
+          error
+        );
+      });
 
     return () => {
       isCanceled = true;
     };
-  }, []);
+  });
 
   useEffect(() => {
     if (!monacoInstance) {
@@ -64,57 +101,6 @@ export function RawSqlEditor({
 
     monacoInstance.editor.defineTheme('currentTheme', monacoTheme);
   }, [monacoInstance, monacoTheme]);
-
-  const memoizedMonacoOptions = useMemo(() => monacoOptions, [monacoOptions]);
-
-  // initialize the editor
-  useEffect(() => {
-    if (!monacoInstance) {
-      return;
-    }
-
-    const currentMonacoElement = monacoEl.current;
-
-    if (!currentMonacoElement) {
-      return;
-    }
-
-    setEditor((editor) => {
-      if (editor) {
-        // don't recreate the editor
-        return editor;
-      }
-
-      const createdEditor = monacoInstance.editor.create(currentMonacoElement, {
-        value: defaultValue,
-        language: 'sql',
-        theme: 'currentTheme',
-        minimap: { enabled: false },
-        automaticLayout: true,
-        ...memoizedMonacoOptions,
-      });
-
-      createdEditor.addCommand(
-        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter,
-        () => {
-          onSubmit();
-        }
-      );
-
-      createdEditor.onDidChangeModelContent(() => {
-        onChange?.(createdEditor.getValue());
-      });
-
-      return createdEditor;
-    });
-  }, [
-    defaultValue,
-    editor,
-    onChange,
-    memoizedMonacoOptions,
-    monacoInstance,
-    onSubmit,
-  ]);
 
   useEffect(() => {
     // dispose the editor when the component is unmounted
