@@ -89,8 +89,8 @@ export default function SqlPage() {
           });
         }}
       >
-        <Form.Item name="raw" valuePropName="defaultValue">
-          <Suspense fallback={<div style={{ height: '35vh' }}></div>}>
+        <Suspense fallback={<div style={{ height: '35vh' }}></div>}>
+          <Form.Item name="raw" valuePropName="defaultValue">
             <RawSqlEditor
               style={{ height: '35vh' }}
               onSubmit={() => {
@@ -98,8 +98,8 @@ export default function SqlPage() {
                 form.submit();
               }}
             />
-          </Suspense>
-        </Form.Item>
+          </Form.Item>
+        </Suspense>
 
         <Button
           htmlType="submit"
