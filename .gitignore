@@ -92,6 +92,7 @@ typings/
 out/
 
 .vscode/
+.claude/
 
 # yarn berry
 .pnp.*
