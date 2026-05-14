@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-export function useTableHeight(): [number, React.RefObject<HTMLDivElement>] {
+export function useTableHeight(): [
+  number,
+  React.RefObject<HTMLDivElement | null>,
+] {
   const [yTableScroll, setYTableScroll] = useState<number>(0);
   const resizeRef = useRef<HTMLDivElement>(null);
 
