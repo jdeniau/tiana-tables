@@ -5,10 +5,12 @@ import * as monaco from 'monaco-editor';
 import { describe, expect, test, vi } from 'vitest';
 import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
+import { KEYWORDS_BY_ENGINE } from '../../../sql/keywords';
 import { ShowTableStatus } from '../../../sql/types';
 import { testables } from './useCompletion';
 
-const { provideCompletionItems, SQL_KEYWORDS } = testables;
+const { provideCompletionItems } = testables;
+const SQL_KEYWORDS = KEYWORDS_BY_ENGINE['mysql'];
 
 describe('sql keywords', () => {
   test.each([

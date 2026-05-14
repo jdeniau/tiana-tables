@@ -11,25 +11,12 @@ import { useForeignKeysContext } from '../../../contexts/ForeignKeysContext';
 import { useTableListContext } from '../../../contexts/TableListContext';
 import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
+import { KEYWORDS_BY_ENGINE, SqlEngine } from '../../../sql/keywords';
 import {
   extractTableAliases,
   generateTableAlias,
 } from '../../../sql/tableName';
 import { ShowTableStatus } from '../../../sql/types';
-
-const SQL_KEYWORDS = [
-  'SELECT',
-  'FROM',
-  'WHERE',
-  'AND',
-  'OR',
-  'JOIN',
-  'LEFT JOIN',
-  'RIGHT JOIN',
-  'INNER JOIN',
-  'ON',
-  'LIMIT',
-];
 
 type MonacoApi = Pick<typeof import('monaco-editor'), 'Range' | 'languages'>;
 
@@ -37,8 +24,10 @@ function provideCompletionItems(
   monaco: MonacoApi,
   tableList: ShowTableStatus[],
   foreignKeys: ForeignKeysHelper,
-  allColumns: ColumnDetailHelper
+  allColumns: ColumnDetailHelper,
+  engine: SqlEngine = 'mysql'
 ): languages.CompletionItemProvider['provideCompletionItems'] {
+  const SQL_KEYWORDS = KEYWORDS_BY_ENGINE[engine];
   return (
     model: editor.ITextModel,
     position: Position,
@@ -190,7 +179,8 @@ function provideCompletionItems(
 }
 
 export default function useCompletion(
-  monaco: typeof import('monaco-editor') | null
+  monaco: typeof import('monaco-editor') | null,
+  engine: SqlEngine = 'mysql'
 ) {
   const tableList = useTableListContext();
   const foreignKeys = useForeignKeysContext();
@@ -210,7 +200,8 @@ export default function useCompletion(
           monaco,
           tableList,
           foreignKeys,
-          allColumns
+          allColumns,
+          engine
         ),
         // This function can be used to resolve additional information for the item that is being auto completed.
         // resolveCompletionItem: async (item, token) => {
@@ -226,10 +217,9 @@ export default function useCompletion(
     return () => {
       completionItemProvider.dispose();
     };
-  }, [allColumns, foreignKeys, monaco, tableList]);
+  }, [allColumns, engine, foreignKeys, monaco, tableList]);
 }
 
 export const testables = {
   provideCompletionItems,
-  SQL_KEYWORDS,
 };

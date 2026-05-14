@@ -499,6 +499,14 @@ const MYSQL_RESERVED_KEYWORDS = [
   'ZEROFILL',
 ];
 
+export type SqlEngine = 'generic' | 'mysql';
+
+export const KEYWORDS_BY_ENGINE: Record<SqlEngine, readonly string[]> = {
+  generic: SQL_2023_RESERVED_KEYWORDS,
+  mysql: [...SQL_2023_RESERVED_KEYWORDS, ...MYSQL_RESERVED_KEYWORDS],
+};
+
+// kept for existing usages (alias generation, etc.)
 export const SQL_RESERVED_KEYWORDS = [
   ...SQL_2023_RESERVED_KEYWORDS,
   ...MYSQL_RESERVED_KEYWORDS,
