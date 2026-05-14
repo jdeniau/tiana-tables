@@ -104,7 +104,8 @@ export default function SqlPage() {
         <Button
           htmlType="submit"
           disabled={state === 'submitting'}
-          type="primary"
+          color="primary"
+          variant="solid"
         >
           {t('rawSql.submit')}
         </Button>

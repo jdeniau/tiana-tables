@@ -92,6 +92,7 @@ typings/
 out/
 
 .vscode/
+.claude/settings.local.json
 
 # yarn berry
 .pnp.*
