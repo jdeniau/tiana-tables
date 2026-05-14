@@ -4,7 +4,6 @@ import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDeco
 import { DatabaseListContextProvider } from '../../contexts/DatabaseListContext';
 import { TableListContextProvider } from '../../contexts/TableListContext';
 import NavigateModal from './NavigateModal';
-// eslint-disable-next-line import/no-unresolved
 
 const meta: Meta<typeof NavigateModal> = {
   component: NavigateModal,

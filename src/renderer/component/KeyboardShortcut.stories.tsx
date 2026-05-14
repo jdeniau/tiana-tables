@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { KeyboardShortcut } from './KeyboardShortcut';
-// eslint-disable-next-line import/no-unresolved
 
 const meta: Meta<typeof KeyboardShortcut> = {
   component: KeyboardShortcut,

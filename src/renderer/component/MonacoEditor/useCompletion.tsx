@@ -1,10 +1,5 @@
 import { useEffect } from 'react';
-import type {
-  CancellationToken,
-  Position,
-  editor,
-  languages,
-} from 'monaco-editor/esm/vs/editor/editor.api';
+import type monaco from 'monaco-editor';
 import invariant from 'tiny-invariant';
 import { useAllColumnsContext } from '../../../contexts/AllColumnsContext';
 import { useForeignKeysContext } from '../../../contexts/ForeignKeysContext';
@@ -31,24 +26,21 @@ const SQL_KEYWORDS = [
   'LIMIT',
 ];
 
-type MonacoApi = Pick<
-  typeof import('monaco-editor/esm/vs/editor/editor.api'),
-  'Range' | 'languages'
->;
+type MonacoApi = Pick<typeof monaco, 'Range' | 'languages'>;
 
 function provideCompletionItems(
   monaco: MonacoApi,
   tableList: ShowTableStatus[],
   foreignKeys: ForeignKeysHelper,
   allColumns: ColumnDetailHelper
-): languages.CompletionItemProvider['provideCompletionItems'] {
+): monaco.languages.CompletionItemProvider['provideCompletionItems'] {
   return (
-    model: editor.ITextModel,
-    position: Position,
+    model: monaco.editor.ITextModel,
+    position: monaco.Position,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _context: languages.CompletionContext,
+    _context: monaco.languages.CompletionContext,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _token: CancellationToken
+    _token: monaco.CancellationToken
   ) => {
     // console.log(model, position);
 
@@ -192,17 +184,13 @@ function provideCompletionItems(
   };
 }
 
-export default function useCompletion(
-  monaco:
-    | typeof import('monaco-editor/esm/vs/editor/editor.api')
-    | null
-) {
+export default function useCompletion(monacoInstance: typeof monaco | null) {
   const tableList = useTableListContext();
   const foreignKeys = useForeignKeysContext();
   const allColumns = useAllColumnsContext();
 
   useEffect(() => {
-    if (!monaco) {
+    if (!monacoInstance) {
       return;
     }
 
@@ -210,9 +198,9 @@ export default function useCompletion(
     // - foldable https://microsoft.github.io/monaco-editor/playground.html?source=v0.47.0#example-extending-language-services-folding-provider-example
     // - hover https://microsoft.github.io/monaco-editor/playground.html?source=v0.47.0#example-extending-language-services-hover-provider-example
     const completionItemProvider =
-      monaco.languages.registerCompletionItemProvider('sql', {
+      monacoInstance.languages.registerCompletionItemProvider('sql', {
         provideCompletionItems: provideCompletionItems(
-          monaco,
+          monacoInstance,
           tableList,
           foreignKeys,
           allColumns
@@ -231,7 +219,7 @@ export default function useCompletion(
     return () => {
       completionItemProvider.dispose();
     };
-  }, [allColumns, foreignKeys, monaco, tableList]);
+  }, [allColumns, foreignKeys, monacoInstance, tableList]);
 }
 
 export const testables = {

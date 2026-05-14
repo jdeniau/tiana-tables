@@ -1,34 +1,58 @@
 import * as monaco from 'monaco-editor';
-/* eslint-disable import/no-unresolved */
-// @ts-expect-error this is workink and taken from monaco-editor documentation
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-// @ts-expect-error this is workink and taken from monaco-editor documentation
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
-// @ts-expect-error this is workink and taken from monaco-editor documentation
-import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
-// @ts-expect-error this is workink and taken from monaco-editor documentation
-import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-// @ts-expect-error this is workink and taken from monaco-editor documentation
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
-/* eslint-enable import/no-unresolved */
+import invariant from 'tiny-invariant';
 
 self.MonacoEnvironment = {
   getWorker(_: unknown, label: string) {
-    if (label === 'json') {
-      return new jsonWorker();
+    const getWorkerModule = (moduleUrl: string, label: string) => {
+      invariant(
+        self.MonacoEnvironment,
+        'MonacoEnvironment should be defined on self'
+      );
+
+      const scriptURL = self.MonacoEnvironment.getWorkerUrl?.(moduleUrl, label);
+
+      invariant(scriptURL, 'Module URL should be defined');
+
+      return new Worker(scriptURL, {
+        name: label,
+        type: 'module',
+      });
+    };
+
+    switch (label) {
+      case 'json':
+        return getWorkerModule(
+          '/monaco-editor/esm/vs/language/json/json.worker?worker',
+          label
+        );
+      case 'css':
+      case 'scss':
+      case 'less':
+        return getWorkerModule(
+          '/monaco-editor/esm/vs/language/css/css.worker?worker',
+          label
+        );
+      case 'html':
+      case 'handlebars':
+      case 'razor':
+        return getWorkerModule(
+          '/monaco-editor/esm/vs/language/html/html.worker?worker',
+          label
+        );
+      case 'typescript':
+      case 'javascript':
+        return getWorkerModule(
+          '/monaco-editor/esm/vs/language/typescript/ts.worker?worker',
+          label
+        );
+      default:
+        return getWorkerModule(
+          '/monaco-editor/esm/vs/editor/editor.worker?worker',
+          label
+        );
     }
-    if (label === 'css' || label === 'scss' || label === 'less') {
-      return new cssWorker();
-    }
-    if (label === 'html' || label === 'handlebars' || label === 'razor') {
-      return new htmlWorker();
-    }
-    if (label === 'typescript' || label === 'javascript') {
-      return new tsWorker();
-    }
-    return new editorWorker();
   },
 };
 
 // This line is mandatory, otherwise syntax color will not work
-monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
+monaco.typescript.typescriptDefaults.setEagerModelSync(true);

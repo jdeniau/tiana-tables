@@ -1,5 +1,5 @@
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
-import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import type monaco from 'monaco-editor';
 import { useTheme } from 'styled-components';
 import useEffectOnce from '../../hooks/useEffectOnce';
 import { convertTextmateThemeToMonaco } from './themes';
@@ -20,9 +20,9 @@ export function RawSqlEditor({
   style,
   monacoOptions,
 }: Props) {
-  const [monacoInstance, setMonacoInstance] = useState<
-    typeof import('monaco-editor/esm/vs/editor/editor.api') | null
-  >(null);
+  const [monacoInstance, setMonacoInstance] = useState<typeof monaco | null>(
+    null
+  );
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoEl = useRef<HTMLDivElement>(null);
@@ -48,10 +48,7 @@ export function RawSqlEditor({
     let isCanceled = false;
 
     // `userWorker` configures Monaco workers through module side effects.
-    Promise.all([
-      import('monaco-editor/esm/vs/editor/editor.api'),
-      import('./userWorker'),
-    ])
+    Promise.all([import('monaco-editor'), import('./userWorker')])
       .then(([loadedMonaco]) => {
         if (isCanceled || !monacoEl.current) {
           return;
