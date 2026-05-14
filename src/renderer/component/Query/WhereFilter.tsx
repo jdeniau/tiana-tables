@@ -37,7 +37,7 @@ function WhereFilter({ defaultValue }: Props): ReactElement {
           }}
         />
 
-        <Button htmlType="submit" type="primary">
+        <Button htmlType="submit" color="primary" variant="solid">
           {t('filter')}
         </Button>
       </Space.Compact>

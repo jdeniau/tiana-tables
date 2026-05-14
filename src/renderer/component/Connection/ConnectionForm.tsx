@@ -98,7 +98,7 @@ function ConnectionForm({ connection }: Props) {
         >
           {t('cancel')}
         </Button>
-        <Button type="primary" htmlType="submit">
+        <Button color="primary" variant="solid" htmlType="submit">
           {getSubmitButtonLabel(t, connection)}
         </Button>
       </Form.Item>

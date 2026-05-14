@@ -40,7 +40,8 @@
     ]
   },
   "dependencies": {
-    "antd": "^5.29.3",
+    "@ant-design/icons": "^6.0.0",
+    "antd": "^6.4.2",
     "electron-log": "^5.4.3",
     "electron-squirrel-startup": "^1.0.1",
     "fuse.js": "^7.3.0",
@@ -56,6 +57,7 @@
     "update-electron-app": "^3.2.0"
   },
   "devDependencies": {
+    "@ant-design/cli": "^6.4.2",
     "@chromatic-com/storybook": "^2.0.2",
     "@electron-forge/cli": "^7.11.1",
     "@electron-forge/maker-deb": "^7.11.1",

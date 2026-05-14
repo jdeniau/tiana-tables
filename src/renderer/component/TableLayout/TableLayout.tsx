@@ -85,7 +85,8 @@ export function TableLayout({
           <Flex justify="center" align="center">
             <Button
               onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}
-              type="primary"
+              color="primary"
+              variant="solid"
             >
               {t('table.rows.loadMore')}
             </Button>

@@ -41,7 +41,7 @@ export default function RootErrorPage() {
               <h1>{t('errorPage.title')}</h1>
               <Alert
                 showIcon
-                message={t('errorPage.sorry')}
+                title={t('errorPage.sorry')}
                 // @ts-expect-error error might have one of those
                 description={error.statusText || error.message}
                 type="error"

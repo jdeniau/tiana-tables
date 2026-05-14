@@ -1,9 +1,8 @@
 import { MouseEvent, Ref, forwardRef } from 'react';
-import { Button } from 'antd';
-import { BaseButtonProps } from 'antd/es/button/button';
+import { Button, type ButtonProps } from 'antd';
 import { LinkProps, useHref, useLinkClickHandler } from 'react-router-dom';
 
-type Props = LinkProps & BaseButtonProps;
+type Props = LinkProps & Omit<ButtonProps, 'href' | 'onClick'>;
 
 /**
  * A bridge between antd Button and react-router-dom Link.
