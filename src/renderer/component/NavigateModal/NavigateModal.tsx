@@ -50,13 +50,6 @@ export default function NavigateModal({
     [navigate, setIsNavigateModalOpen]
   );
 
-  // focus input when the modal shows up
-  useEffect(() => {
-    if (isNavigateModalOpen) {
-      searchRef.current?.focus();
-    }
-  }, [isNavigateModalOpen]);
-
   // handle keyboard navigation
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -107,6 +100,11 @@ export default function NavigateModal({
       open={isNavigateModalOpen}
       onCancel={() => {
         setIsNavigateModalOpen(false);
+      }}
+      afterOpenChange={(open) => {
+        if (open) {
+          searchRef.current?.focus();
+        }
       }}
       footer={null}
       width={800}
