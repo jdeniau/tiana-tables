@@ -1,5 +1,5 @@
 /**
- * @vitest-environment jsdom
+ * @vitest-environment happy-dom
  */
 import * as monaco from 'monaco-editor';
 import { describe, expect, test, vi } from 'vitest';

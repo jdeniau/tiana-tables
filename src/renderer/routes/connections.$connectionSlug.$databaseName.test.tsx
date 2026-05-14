@@ -1,5 +1,5 @@
 /**
- * @vitest-environment jsdom
+ * @vitest-environment happy-dom
  */
 import { redirect } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
