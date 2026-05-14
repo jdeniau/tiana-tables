@@ -1,0 +1,23 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "yarn test --run",
+            "timeout": 120,
+            "statusMessage": "Running tests..."
+          },
+          {
+            "type": "command",
+            "command": "yarn lint",
+            "timeout": 60,
+            "statusMessage": "Running lint..."
+          }
+        ]
+      }
+    ]
+  }
+}
