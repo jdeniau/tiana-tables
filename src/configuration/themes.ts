@@ -35,7 +35,7 @@ export function isDarkTheme(theme: Theme): boolean {
   return DARK_THEME_LIST_NAME.includes(theme.name);
 }
 
-export interface TmThemeSetting {
+interface TmThemeSetting {
   readonly scope?: string | string[];
   readonly settings: Record<string, string | undefined>;
 }

@@ -40,6 +40,7 @@ yarn install          # Install dependencies (requires Node.js + corepack enable
 yarn start            # Run the Electron app in development mode
 yarn test             # Run Vitest test suite
 yarn test <file>      # Run a single test file
+yarn knip             # Run knip to find unused dependencies, exports and files
 yarn lint             # Type-check + ESLint
 yarn lint:types       # TypeScript type check only
 yarn lint:eslint      # ESLint only

@@ -1,5 +1,5 @@
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
-import { QueryReturnType, ShowDatabaseRow } from './types';
+import { QueryReturnType } from './types';
 
 function isObjectAResultSetHeader(obj: object): obj is ResultSetHeader {
   // test all keys that are present in ResultSetHeader (except deprecated "changedRows")
@@ -24,29 +24,29 @@ export function isResultSetHeader(
   return isObjectAResultSetHeader(obj);
 }
 
-export function isResultSetHeaderArray(
-  obj: QueryReturnType
-): obj is ResultSetHeader[] {
-  if (!Array.isArray(obj)) {
-    return false;
-  }
+// export function isResultSetHeaderArray(
+//   obj: QueryReturnType
+// ): obj is ResultSetHeader[] {
+//   if (!Array.isArray(obj)) {
+//     return false;
+//   }
 
-  const firstItem = obj[0];
+//   const firstItem = obj[0];
 
-  return isObjectAResultSetHeader(firstItem);
-}
+//   return isObjectAResultSetHeader(firstItem);
+// }
 
-export function isRowDataPacketArrayOfArray(
-  obj: QueryReturnType
-): obj is RowDataPacket[] {
-  if (!Array.isArray(obj)) {
-    return false;
-  }
+// export function isRowDataPacketArrayOfArray(
+//   obj: QueryReturnType
+// ): obj is RowDataPacket[] {
+//   if (!Array.isArray(obj)) {
+//     return false;
+//   }
 
-  const firstItem = obj[0];
+//   const firstItem = obj[0];
 
-  return Array.isArray(firstItem);
-}
+//   return Array.isArray(firstItem);
+// }
 
 export function isRowDataPacketArray(
   obj: QueryReturnType
@@ -71,6 +71,6 @@ export function isRowDataPacketArray(
 
 // TODO handle ProcedureCallPacket ?
 
-export function isShowDatabaseRow(obj: object): obj is ShowDatabaseRow {
-  return 'Database' in obj;
-}
+// export function isShowDatabaseRow(obj: object): obj is ShowDatabaseRow {
+//   return 'Database' in obj;
+// }
