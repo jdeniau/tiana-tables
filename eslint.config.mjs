@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import importPlugin from 'eslint-plugin-import-x';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import storybook from 'eslint-plugin-storybook';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -12,7 +13,6 @@ export default tseslint.config(
       'vite.*.config.*',
       'vitest.config.*',
       'out/',
-      'stories/',
       '.vite/',
     ],
   },
@@ -24,6 +24,7 @@ export default tseslint.config(
   react.configs.flat.recommended,
   react.configs.flat['jsx-runtime'],
   reactHooks.configs.flat['recommended-latest'],
+  storybook.configs['flat/recommended'],
   {
     languageOptions: {
       globals: {
