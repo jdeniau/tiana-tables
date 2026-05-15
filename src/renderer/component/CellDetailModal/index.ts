@@ -1,2 +1,2 @@
 export { default } from './CellDetailModal';
-export type { CellDetail, SaveCell, SaveCellParams } from './types';
+export type { CellDetail, SaveCellParams } from './types';

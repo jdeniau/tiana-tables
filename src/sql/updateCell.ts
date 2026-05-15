@@ -11,7 +11,7 @@ import type { SqlBoundValue } from './types';
  * The value of a primary key part. `NULL` is excluded on purpose: MySQL forces
  * `NOT NULL` on every column of a `PRIMARY KEY`, so a key part never holds one.
  */
-export type PrimaryKeyValue = Exclude<SqlBoundValue, null>;
+type PrimaryKeyValue = Exclude<SqlBoundValue, null>;
 
 /** One primary key column of a row, with the value the row was loaded with. */
 export interface PrimaryKeyPart {

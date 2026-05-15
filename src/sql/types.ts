@@ -34,7 +34,7 @@ export type ConnectionObjectWithoutSlug = Omit<ConnectionObject, 'slug'>;
 /**
  * Represent the return type of "SHOW DATABASES;" query.
  */
-export interface ShowDatabaseRow extends RowDataPacket {
+interface ShowDatabaseRow extends RowDataPacket {
   Database: string;
 }
 export type ShowDatabasesResult = ShowDatabaseRow[];
@@ -89,6 +89,12 @@ export type SqlBoundValue = string | number | Date | null;
  */
 export type SqlBoundValues = Record<string, SqlBoundValue>;
 
+/**
+ * A `KEY_COLUMN_USAGE` row narrowed to the foreign keys: the two `REFERENCED_`
+ * columns are `NULL` for every other kind of key.
+ *
+ * @public
+ */
 export interface ForeignKeyRow extends KeyColumnUsageRow {
   REFERENCED_TABLE_NAME: string;
   REFERENCED_COLUMN_NAME: string;

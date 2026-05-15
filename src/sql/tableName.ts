@@ -73,7 +73,7 @@ export function unquote(name: string): string {
 }
 
 /** `db1.t1` and `` `t1` `` both refer to the table `t1` */
-export function unqualify(tableNamePath: string): TableName {
+function unqualify(tableNamePath: string): TableName {
   return unquote(tableNamePath.split('.').at(-1) ?? tableNamePath);
 }
 

@@ -8,12 +8,12 @@ import { unquote } from '../../../sql/tableName';
 
 export type SqlSemanticKind = 'table' | 'alias';
 
-export interface SqlSemanticToken {
+interface SqlSemanticToken {
   readonly kind: SqlSemanticKind;
   readonly range: IRange;
 }
 
-export interface UnknownColumn {
+interface UnknownColumn {
   readonly range: IRange;
   readonly table: string;
   readonly column: string;

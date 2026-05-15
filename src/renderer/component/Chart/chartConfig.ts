@@ -44,7 +44,7 @@ const NUMERIC_TYPES: ReadonlySet<number> = new Set([
   Types.LONGLONG, // BIGINT
 ]);
 
-export function isNumericField(field: FieldPacket): boolean {
+function isNumericField(field: FieldPacket): boolean {
   return field.type !== undefined && NUMERIC_TYPES.has(field.type);
 }
 

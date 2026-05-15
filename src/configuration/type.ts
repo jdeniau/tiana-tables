@@ -16,7 +16,7 @@ export type Configuration = {
  * (`'32.5%'`). The unit is stored on purpose — see `parsePanelSize`.
  * Missing or unreadable entries fall back to `DEFAULT_PANEL_SIZES`.
  */
-export type PanelSizes = Partial<Record<PANEL, string>>;
+type PanelSizes = Partial<Record<PANEL, string>>;
 
 type TableConfig = {
   currentFilter?: string;
