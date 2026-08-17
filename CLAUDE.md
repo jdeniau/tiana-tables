@@ -53,23 +53,23 @@ Tiana Tables is an **Electron desktop app** for browsing and querying MySQL/Mari
 
 - **Main process** (`src/main.ts`) — app lifecycle, window management, config, IPC handlers. Imports from `src/configuration/`, `src/sql/`, and `src/main-process/`.
 - **Preload script** (`src/preload.ts`, `src/preload/`) — the secure bridge between renderer and main. Exposes typed APIs to the renderer via `contextBridge`.
-- **Renderer process** (`src/renderer/`) — React 18 + React Router 6 SPA rendered in Chromium.
+- **Renderer process** (`src/renderer/`) — React 19 + React Router 6 SPA rendered in Chromium.
 
 ### IPC Channel Pattern
 
 Communication between the renderer and main process goes through typed IPC channels:
 
 1. `src/preload/*Channel.ts` — defines a `XXXX_CHANNEL` enum (e.g., `SQL_CHANNEL`, `CONFIGURATION_CHANNEL`). These files **must stay separate** — they are imported by both preload and main, and you cannot import preload files into the main process.
-2. `src/preload/xxx.ts` — exposes channel methods to the renderer (e.g., `window.sql.executeQuery()`).
-3. `src/main-process/xxx.ts` — binds IPC handlers for those channels.
+2. `src/preload/xxx.ts` — exposes channel methods to the renderer (e.g., `window.sql.executeQuery()`) via `bindChannel.ts`.
+3. Each domain module exposes a `bindIpcMain`-style function that registers the handlers; they are all called from `src/main.ts`: `bindIpcMainConfiguration` (`src/configuration/index.ts`), `bindIpcMainSqlFileStorage` (`src/main-process/sqlFileStorage.ts`) and `connectionStackInstance.bindIpcMain` (`src/sql/index.ts`).
 
 ### Renderer
 
 `src/renderer/routes/` uses React Router v6 file-based routing with dynamic segments: `$connectionSlug`, `$databaseName`, `$tableName` (e.g., `connections.$connectionSlug.$databaseName.$tableName.tsx`).
 
-State is managed via React Context (no Redux/Zustand). Contexts live in `src/contexts/` and cover: connection, database, table list, column metadata, foreign keys, theme, and configuration.
+State is managed via React Context (no Redux/Zustand). Contexts live in `src/contexts/`: `ConnectionContext`, `DatabaseContext`, `DatabaseListContext`, `TableListContext`, `AllColumnsContext`, `ForeignKeysContext`, `ThemeContext`, `ConfigurationContext`.
 
-`src/renderer/component/` contains all UI components. Storybook stories are colocated as `Component.stories.tsx`.
+`src/renderer/component/` contains all UI components. Storybook stories are colocated as `Component.stories.tsx`. Shared hooks live in `src/renderer/hooks/`, theming in `src/renderer/theme/`.
 
 ### Configuration & Encryption
 
@@ -81,15 +81,22 @@ Translation files are in `locales/` (`en.ts`, `fr.ts`). English (`en.ts`) is the
 
 ## Key Libraries
 
-| Library                   | Purpose                         |
-| ------------------------- | ------------------------------- |
-| Electron 41               | Desktop shell                   |
-| React 18 + React Router 6 | UI framework and routing        |
-| Ant Design 5              | UI component library            |
-| Monaco Editor             | SQL editor (VS Code's editor)   |
-| mysql2/promise            | MySQL/MariaDB driver            |
-| styled-components 6       | CSS-in-JS                       |
-| i18next + react-i18next   | EN/FR internationalization      |
-| Vite 8 + electron-forge   | Build tooling                   |
-| Vitest 4                  | Testing (happy-dom environment) |
-| Storybook 8               | Component development           |
+| Library                   | Purpose                                       |
+| ------------------------- | --------------------------------------------- |
+| Electron 41               | Desktop shell                                 |
+| React 19 + React Router 6 | UI framework and routing                      |
+| Ant Design 6              | UI component library                          |
+| Monaco Editor             | SQL editor (VS Code's editor)                 |
+| mysql2/promise            | MySQL/MariaDB driver (main process)           |
+| styled-components 6       | CSS-in-JS                                     |
+| i18next + react-i18next   | EN/FR internationalization                    |
+| Vite 8 + electron-forge   | Build tooling                                 |
+| Vitest 4                  | Testing (node env; happy-dom opt-in per file) |
+| Storybook 8               | Component development                         |
+| TypeScript 6              | Type checking                                 |
+
+### Gotchas
+
+- **Tests default to the node environment.** Add `/** @vitest-environment happy-dom */` at the top of a test file that needs the DOM (see `src/renderer/routes/connections.$connectionSlug.$databaseName.test.tsx`).
+- **In the renderer, import `Types` from `mysql` (v2), not `mysql2`** — `mysql2` is a CommonJS package and fails when imported in the renderer (see `src/renderer/component/Cell.tsx`).
+- **React Router stays on v6.** A migration to React Router 7 (PR #132) was partially reverted (PR #142); `react-router.config.ts.bak` at the root is a leftover of that attempt.
