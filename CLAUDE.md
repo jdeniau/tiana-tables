@@ -81,22 +81,24 @@ Translation files are in `locales/` (`en.ts`, `fr.ts`). English (`en.ts`) is the
 
 ## Key Libraries
 
-| Library                   | Purpose                                       |
-| ------------------------- | --------------------------------------------- |
-| Electron 41               | Desktop shell                                 |
-| React 19 + React Router 6 | UI framework and routing                      |
-| Ant Design 6              | UI component library                          |
-| Monaco Editor             | SQL editor (VS Code's editor)                 |
-| mysql2/promise            | MySQL/MariaDB driver (main process)           |
-| styled-components 6       | CSS-in-JS                                     |
-| i18next + react-i18next   | EN/FR internationalization                    |
-| Vite 8 + electron-forge   | Build tooling                                 |
-| Vitest 4                  | Testing (node env; happy-dom opt-in per file) |
-| Storybook 8               | Component development                         |
-| TypeScript 6              | Type checking                                 |
+| Library                    | Purpose                                                      |
+| -------------------------- | ------------------------------------------------------------ |
+| Electron 41                | Desktop shell                                                |
+| React 19 + React Router 6  | UI framework and routing                                     |
+| Ant Design 6               | UI component library (except the data grid)                  |
+| TanStack Table 9 + Virtual | Data grid (`TableGrid`): headless table + row virtualization |
+| Monaco Editor              | SQL editor (VS Code's editor)                                |
+| mysql2/promise             | MySQL/MariaDB driver (main process)                          |
+| styled-components 6        | CSS-in-JS                                                    |
+| i18next + react-i18next    | EN/FR internationalization                                   |
+| Vite 8 + electron-forge    | Build tooling                                                |
+| Vitest 4                   | Testing (node env; happy-dom opt-in per file)                |
+| Storybook 8                | Component development                                        |
+| TypeScript 6               | Type checking                                                |
 
 ### Gotchas
 
 - **Tests default to the node environment.** Add `/** @vitest-environment happy-dom */` at the top of a test file that needs the DOM (see `src/renderer/routes/connections.$connectionSlug.$databaseName.test.tsx`).
 - **In the renderer, import `Types` from `mysql` (v2), not `mysql2`** — `mysql2` is a CommonJS package and fails when imported in the renderer (see `src/renderer/component/Cell.tsx`).
 - **React Router stays on v6.** A migration to React Router 7 (PR #132) was partially reverted (PR #142); `react-router.config.ts.bak` at the root is a leftover of that attempt.
+- **`TableGrid` uses TanStack Table v9 — its API differs from v8 tutorials.** Features are imported explicitly and passed to `useTable({ features, ... })`, cells render via `<table.FlexRender />`. Work from the official `examples/react/` in the TanStack repo, not from blog posts. The scroll element is stored in a state (not a ref) because the virtualizer reads it in a layout effect that runs before the parent ref attaches.
