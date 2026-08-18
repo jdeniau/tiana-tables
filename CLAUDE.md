@@ -81,22 +81,25 @@ Translation files are in `locales/` (`en.ts`, `fr.ts`). English (`en.ts`) is the
 
 ## Key Libraries
 
-| Library                   | Purpose                                       |
-| ------------------------- | --------------------------------------------- |
-| Electron 41               | Desktop shell                                 |
-| React 19 + React Router 6 | UI framework and routing                      |
-| Ant Design 6              | UI component library                          |
-| Monaco Editor             | SQL editor (VS Code's editor)                 |
-| mysql2/promise            | MySQL/MariaDB driver (main process)           |
-| styled-components 6       | CSS-in-JS                                     |
-| i18next + react-i18next   | EN/FR internationalization                    |
-| Vite 8 + electron-forge   | Build tooling                                 |
-| Vitest 4                  | Testing (node env; happy-dom opt-in per file) |
-| Storybook 8               | Component development                         |
-| TypeScript 6              | Type checking                                 |
+| Library                    | Purpose                                                      |
+| -------------------------- | ------------------------------------------------------------ |
+| Electron 41                | Desktop shell                                                |
+| React 19 + React Router 6  | UI framework and routing                                     |
+| Ant Design 6               | UI component library (except the data grid)                  |
+| TanStack Table 9 + Virtual | Data grid (`TableGrid`): headless table + row virtualization |
+| Monaco Editor              | SQL editor (VS Code's editor)                                |
+| mysql2/promise             | MySQL/MariaDB driver (main process)                          |
+| styled-components 6        | CSS-in-JS                                                    |
+| i18next + react-i18next    | EN/FR internationalization                                   |
+| Vite 8 + electron-forge    | Build tooling                                                |
+| Vitest 4                   | Testing (node env; happy-dom opt-in per file)                |
+| Storybook 8                | Component development                                        |
+| TypeScript 6               | Type checking                                                |
 
 ### Gotchas
 
 - **Tests default to the node environment.** Add `/** @vitest-environment happy-dom */` at the top of a test file that needs the DOM (see `src/renderer/routes/connections.$connectionSlug.$databaseName.test.tsx`).
 - **In the renderer, import `Types` from `mysql` (v2), not `mysql2`** — `mysql2` is a CommonJS package and fails when imported in the renderer (see `src/renderer/component/Cell.tsx`).
 - **React Router stays on v6.** A migration to React Router 7 (PR #132) was partially reverted (PR #142); `react-router.config.ts.bak` at the root is a leftover of that attempt.
+- **`TableGrid` uses TanStack Table v9 — its API differs from v8 tutorials.** Features are imported explicitly and passed to `useTable({ features, ... })`, headers render via `<table.FlexRender />`. Work from the official `examples/react/` in the TanStack repo, not from blog posts. The scroll element is stored in a state (not a ref) because the virtualizer reads it in a layout effect that runs before the parent ref attaches.
+- **In the virtualized body of `TableGrid`, React components per cell are fine — per-cell antd components are not, and per-cell styled-components must stay scarce.** Scrolling mounts hundreds of cells per tick. An A/B ladder benchmark (2026-08-18, 1 000×40 story, dev mode, long tasks per 1 600-cell page jump) measured: plain DOM ≈ a React component (~0 %) < + one styled-components span per cell (~+15 %) < + antd `Flex` (~+120 %, long tasks on every scroll tick). The grid renders `GridCell` → `Cell.tsx` (the per-type renderer, kept because cell types will multiply) → one typed styled span, ~1.5× plain and no long task per tick. `Cell.tsx` has no layout wrapper on purpose: the `<td>` (`.tg-cell`) provides the flex context — don't reintroduce a wrapper. The inline cell editor can safely be a rich component on the single edited cell. Benchmark hygiene rules live in `.ai/lessons.md`.

@@ -1,6 +1,5 @@
 import { ReactNode, memo } from 'react';
-import { Flex } from 'antd';
-import { Types } from 'mysql'; // immporting from mysql2 will import the commonjs package and will fail
+import { Types } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
 import { styled } from 'styled-components';
 import {
   constantLanguageNullForeground,
@@ -139,10 +138,10 @@ const TableCellFactoryContainer = memo(
     ...rest
   }: TableCellFactoryProps & { link?: ReactNode }) {
     return (
-      <Flex>
+      <>
         <TableCellFactory {...rest} />
         {link}
-      </Flex>
+      </>
     );
   },
   (prevProps, nextProps) => {
