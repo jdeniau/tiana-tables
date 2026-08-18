@@ -12,6 +12,12 @@ Rules learned from past mistakes and audits. Review this file at the start of ea
 
 - **Vitest runs in the node environment by default in this repo** (`vitest.config.ts` sets no `environment`). Any test touching the DOM must declare `/** @vitest-environment happy-dom */` at the top of the file, or it will fail with `document is not defined`.
 
+## Performance
+
+- **Attribute performance costs by A/B isolation before naming a culprit.** A TableGrid optimization (2026-08-18) blamed the per-cell `ForeignKeyLink` (context reads + linear FK scan); the user challenged it twice, and ladder benchmarks proved them right: a React component per cell is free (~0%), per-cell styled-components cost ~+15%, and antd `Flex` ~+120% — the framework component was the culprit, not the user's code. Measure each layer separately (swap it for a plain element, compare) before removing it.
+- **`memo` protects against re-renders, not mounts.** In a virtualized grid, vertical scrolling _mounts_ new rows continuously — memoization does nothing there; the mount cost of each component layer is what matters.
+- **Benchmark hygiene in the Browser pane.** (1) Check `document.hidden`: rAF timings are frame-throttled (~1 Hz) on hidden pages — measure with `PerformanceObserver({ entryTypes: ['longtask'] })` and dispatch `new Event('scroll')` manually. (2) Hard-reload before measuring: repeated HMR updates inflate the page (~4× slower mounts observed). (3) Machine load (test runs, Vite rebuilds) skews absolute numbers ~2-3×: interleave A/B modes on the same page state and compare ratios, never absolutes across runs.
+
 ## Renderer / dependencies
 
 - **Never import from `mysql2` in renderer code.** `mysql2` is CommonJS and breaks in the renderer bundle. Import type-only symbols from `mysql2/promise` with `import type`, and runtime values like `Types` from the legacy `mysql` package (see `src/renderer/component/Cell.tsx`).

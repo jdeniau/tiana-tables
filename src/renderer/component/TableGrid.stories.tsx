@@ -170,6 +170,16 @@ export const ManyRowsAndColumns: Story = {
   },
 };
 
+// mirrors a reported real-world sluggish case on vertical scroll
+export const RealWorldCase: Story = {
+  args: {
+    fields: makeFields(40),
+    result: makeRows(1_000, 40),
+    primaryKeys: ['id'],
+    title: () => 'items (1 000 rows × 40 columns)',
+  },
+};
+
 export const Empty: Story = {
   args: {
     fields: makeFields(8),

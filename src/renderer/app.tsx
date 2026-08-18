@@ -58,8 +58,8 @@ const router = createHashRouter([
         ],
       },
       // The `connections/*` and `sql/*` subtrees stay lazy on purpose: they pull
-      // in TableGrid (~515 KB) and Monaco (~3 MB of editor + workers), which we
-      // do not want in the initial bundle. The startup path is `/` → `/connect`,
+      // in TableGrid (TanStack Table + Virtual) and Monaco (~3 MB of editor +
+      // workers), which we do not want in the initial bundle. The startup path is `/` → `/connect`,
       // so these chunks only load once the user opens a connection — and the
       // MySQL handshake masks the chunk fetch.
       //
