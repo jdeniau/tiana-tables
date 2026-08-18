@@ -2,6 +2,10 @@
 
 Rules learned from past mistakes and audits. Review this file at the start of each session. Add a new entry after any correction from the user.
 
+## Git / PRs
+
+- **No "Generated with Claude" watermark.** The user does not want the `🤖 Generated with Claude Code` footer (or any similar attribution) in PR descriptions, nor `Co-Authored-By: Claude` trailers in commit messages. Omit them even though the default tooling instructions ask for them.
+
 ## Documentation
 
 - **Don't trust CLAUDE.md version claims — verify `package.json` first.** An audit (2026-08-17) found CLAUDE.md claiming React 18 and Ant Design 5 while the project was on React 19 and antd 6. Check actual dependency versions before writing version-specific code.
