@@ -2,47 +2,44 @@ import { describe, expect, test } from 'vitest';
 import { THEME_LIST } from '../../configuration/themes';
 import {
   background,
-  constantLanguageForeground,
-  constantLanguageNullForeground,
-  constantNumericForeground,
+  backgroundAlt,
+  classForeground,
+  commentForeground,
+  constantForeground,
   foreground,
+  functionForeground,
+  keywordForeground,
+  mutedForeground,
   selection,
   stringForeground,
-  supportTypeForeground,
+  supportForeground,
+  variableForeground,
 } from '.';
 
-describe.each(Object.values(THEME_LIST))('style helpers', (theme) => {
-  test('foreground', () => {
-    expect(foreground({ theme })).toMatchSnapshot(theme.name);
+const accessors = {
+  background,
+  backgroundAlt,
+  selection,
+  commentForeground,
+  mutedForeground,
+  foreground,
+  variableForeground,
+  constantForeground,
+  classForeground,
+  stringForeground,
+  supportForeground,
+  functionForeground,
+  keywordForeground,
+};
+
+describe.each(Object.values(THEME_LIST))('style helpers: $name', (theme) => {
+  test.each(Object.entries(accessors))('%s', (_name, accessor) => {
+    expect(accessor({ theme })).toMatchSnapshot(theme.name);
   });
 
-  test('background', () => {
-    expect(background({ theme })).toMatchSnapshot(theme.name);
-  });
-
-  test('selection', () => {
-    expect(selection({ theme })).toMatchSnapshot(theme.name);
-  });
-
-  test('stringForeground', () => {
-    expect(stringForeground({ theme })).toMatchSnapshot(theme.name);
-  });
-
-  test('supportTypeForeground', () => {
-    expect(supportTypeForeground({ theme })).toMatchSnapshot(theme.name);
-  });
-
-  test('constantLanguageForeground', () => {
-    expect(constantLanguageForeground({ theme })).toMatchSnapshot(theme.name);
-  });
-
-  test('constantNumericForeground', () => {
-    expect(constantNumericForeground({ theme })).toMatchSnapshot(theme.name);
-  });
-
-  test('constantLanguageNullForeground', () => {
-    expect(constantLanguageNullForeground({ theme })).toMatchSnapshot(
-      theme.name
-    );
+  test('every accessor returns a hex color', () => {
+    Object.values(accessors).forEach((accessor) => {
+      expect(accessor({ theme })).toMatch(/^#[0-9a-fA-F]{6}$/);
+    });
   });
 });

@@ -37,5 +37,7 @@ export default {
   'table.filters.title': 'Filters',
   'table.rows.loadMore': 'Load more…',
   'tableList.navigate': 'Navigate',
+  'theme.group.dark': 'Dark',
+  'theme.group.light': 'Light',
   'theme.switch.label': 'Theme:',
 };

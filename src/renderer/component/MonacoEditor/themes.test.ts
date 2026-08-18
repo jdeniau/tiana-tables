@@ -1,14 +1,14 @@
 import { describe, expect, test } from 'vitest';
 import { THEME_LIST } from '../../../configuration/themes';
-import { convertTextmateThemeToMonaco } from './themes';
+import { buildMonacoTheme } from './themes';
 
-describe('convertTextmateThemeToMonaco', () => {
+describe('buildMonacoTheme', () => {
   test.each(Object.keys(THEME_LIST))(
-    'should convert %s theme to Monaco theme',
+    'should build a Monaco theme from the %s palette',
     (themeName) => {
       const theme = THEME_LIST[themeName];
-      const monacoTheme = convertTextmateThemeToMonaco(theme);
-      expect(monacoTheme).toMatchSnapshot();
+
+      expect(buildMonacoTheme(theme)).toMatchSnapshot();
     }
   );
 });

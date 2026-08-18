@@ -20,9 +20,9 @@ import {
 } from '../configuration/themes';
 import {
   background,
-  constantLanguageForeground,
+  constantForeground,
   foreground,
-  supportTypeForeground,
+  supportForeground,
 } from '../renderer/theme';
 import { useConfiguration } from './ConfigurationContext';
 
@@ -87,17 +87,17 @@ export function ThemeContextProvider({
       },
       components: {
         Button: {
-          colorPrimary: constantLanguageForeground({ theme }),
-          colorLink: supportTypeForeground({ theme }),
+          colorPrimary: constantForeground({ theme }),
+          colorLink: supportForeground({ theme }),
           algorithm: true,
         },
         Menu: {
           itemHeight: 32,
-          itemColor: supportTypeForeground({ theme }),
+          itemColor: supportForeground({ theme }),
           padding: 8, // reduce default padding from 16 to 8
 
           // swap colors for selected item
-          itemSelectedBg: supportTypeForeground({ theme }),
+          itemSelectedBg: supportForeground({ theme }),
           itemSelectedColor: background({ theme }),
         },
       },

@@ -1,12 +1,7 @@
 import { ReactNode, memo } from 'react';
 import { Types } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
 import { styled } from 'styled-components';
-import {
-  constantLanguageNullForeground,
-  constantNumericForeground,
-  foreground,
-  stringForeground,
-} from '../theme';
+import { constantForeground, foreground, stringForeground } from '../theme';
 import { formatDate, formatDateTime } from '../utils/dateFormatter';
 
 interface TableCellFactoryProps {
@@ -24,7 +19,7 @@ const BaseCell = styled.div`
 `;
 
 const NullSpan = styled(BaseCell)`
-  color: ${constantLanguageNullForeground};
+  color: ${constantForeground};
 `;
 
 function NullCell() {
@@ -51,7 +46,7 @@ function StringCell({ value }: { value: string }) {
 }
 
 const NumberSpan = styled(BaseCell)`
-  color: ${constantNumericForeground};
+  color: ${constantForeground};
 `;
 function NumberCell({ value }: { value: number }) {
   return <NumberSpan>{value}</NumberSpan>;

@@ -39,6 +39,8 @@ const fr: Translation = {
   'table.filters.title': 'Filtres',
   'table.rows.loadMore': 'Charger plus…',
   'tableList.navigate': 'Naviguer',
+  'theme.group.dark': 'Sombres',
+  'theme.group.light': 'Clairs',
   'theme.switch.label': 'Thème :',
 };
 
