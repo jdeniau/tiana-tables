@@ -41,8 +41,13 @@ export function buildMonacoTheme(theme: AppTheme): editor.IStandaloneThemeData {
       // themes, their more specific rules would win over the generic ones
       // above, so the SQL variants have to be restated here.
       { token: 'string.sql', foreground: token(palette.base0B) },
-      { token: 'operator.sql', foreground: token(palette.base05) },
       { token: 'predefined.sql', foreground: token(palette.base0D) },
+      // Monaco's SQL grammar classifies AND, OR, NOT, IN, LIKE, IS, NULL,
+      // JOIN, INNER, LEFT, UNION… as `operators`, not as `keywords`, and
+      // checks that list first. They are keywords to the reader, so they get
+      // the keyword color — symbolic operators (=, *, <) ride along.
+      { token: 'operator.sql', foreground: token(palette.base0E) },
+      { token: 'identifier.sql', foreground: token(palette.base05) },
     ],
     colors: {
       'editor.background': palette.base00,
