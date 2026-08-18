@@ -96,6 +96,21 @@ Translation files are in `locales/` (`en.ts`, `fr.ts`). English (`en.ts`) is the
 | Storybook 8                | Component development                                        |
 | TypeScript 6               | Type checking                                                |
 
+### SQL statements
+
+**A query sent to the server MUST always be a single statement.** `multipleStatements`
+stays off in the mysql2 connection, and the editor is expected to send one
+statement at a time.
+
+When the editor holds several statements, they are to be split and handled
+independently, and the one **under the caret** is the one that gets sent —
+and the one that completion, highlighting and validation work on.
+
+`dt-sql-parser` exposes `splitSQLByStatement`, but beware: it returns `null` as
+soon as the input has any syntax error (`SELECT FROM t1 a` included), so it
+cannot be used as a "is the tail unfinished?" check. Splitting on the `;` tokens
+of `getAllTokens` is error-tolerant, since lexing never fails.
+
 ### Gotchas
 
 - **Tests default to the node environment.** Add `/** @vitest-environment happy-dom */` at the top of a test file that needs the DOM (see `src/renderer/routes/connections.$connectionSlug.$databaseName.test.tsx`).
