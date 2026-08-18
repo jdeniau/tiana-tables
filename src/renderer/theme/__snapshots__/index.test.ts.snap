@@ -1,97 +1,651 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`style helpers > background > Active4D 1`] = `"#FFFFFF"`;
+exports[`style helpers: 'Active4D' > background > Active4D 1`] = `"#ffffff"`;
 
-exports[`style helpers > background > Base16 Eva 1`] = `"#2a3b4d"`;
+exports[`style helpers: 'Active4D' > backgroundAlt > Active4D 1`] = `"#f0f0f0"`;
 
-exports[`style helpers > background > Base16 Unikitty Light 1`] = `"#ffffff"`;
+exports[`style helpers: 'Active4D' > classForeground > Active4D 1`] = `"#21439c"`;
 
-exports[`style helpers > background > Dracula 1`] = `"#282a36"`;
+exports[`style helpers: 'Active4D' > commentForeground > Active4D 1`] = `"#af82d4"`;
 
-exports[`style helpers > background > Night Owl 1`] = `"#002B36"`;
+exports[`style helpers: 'Active4D' > constantForeground > Active4D 1`] = `"#a8017e"`;
 
-exports[`style helpers > background > Visual Studio 1`] = `"#FFFFFF"`;
+exports[`style helpers: 'Active4D' > foreground > Active4D 1`] = `"#3b3b3b"`;
 
-exports[`style helpers > constantLanguageForeground > Active4D 1`] = `"#A535AE"`;
+exports[`style helpers: 'Active4D' > functionForeground > Active4D 1`] = `"#21439c"`;
 
-exports[`style helpers > constantLanguageForeground > Base16 Eva 1`] = `"#ff9966"`;
+exports[`style helpers: 'Active4D' > keywordForeground > Active4D 1`] = `"#006699"`;
 
-exports[`style helpers > constantLanguageForeground > Base16 Unikitty Light 1`] = `"#d65407"`;
+exports[`style helpers: 'Active4D' > mutedForeground > Active4D 1`] = `"#7a7a7a"`;
 
-exports[`style helpers > constantLanguageForeground > Dracula 1`] = `"#bd93f9"`;
+exports[`style helpers: 'Active4D' > selection > Active4D 1`] = `"#bad6fd"`;
 
-exports[`style helpers > constantLanguageForeground > Night Owl 1`] = `"#82AAFF"`;
+exports[`style helpers: 'Active4D' > stringForeground > Active4D 1`] = `"#666666"`;
 
-exports[`style helpers > constantLanguageForeground > Visual Studio 1`] = `"#000000"`;
+exports[`style helpers: 'Active4D' > supportForeground > Active4D 1`] = `"#a535ae"`;
 
-exports[`style helpers > constantLanguageNullForeground > Active4D 1`] = `"#A535AE"`;
+exports[`style helpers: 'Active4D' > variableForeground > Active4D 1`] = `"#0053ff"`;
 
-exports[`style helpers > constantLanguageNullForeground > Base16 Eva 1`] = `"#ff9966"`;
+exports[`style helpers: 'Catppuccin Latte' > background > Catppuccin Latte 1`] = `"#eff1f5"`;
 
-exports[`style helpers > constantLanguageNullForeground > Base16 Unikitty Light 1`] = `"#d65407"`;
+exports[`style helpers: 'Catppuccin Latte' > backgroundAlt > Catppuccin Latte 1`] = `"#e6e9ef"`;
 
-exports[`style helpers > constantLanguageNullForeground > Dracula 1`] = `"#bd93f9"`;
+exports[`style helpers: 'Catppuccin Latte' > classForeground > Catppuccin Latte 1`] = `"#df8e1d"`;
 
-exports[`style helpers > constantLanguageNullForeground > Night Owl 1`] = `"#82AAFF"`;
+exports[`style helpers: 'Catppuccin Latte' > commentForeground > Catppuccin Latte 1`] = `"#bcc0cc"`;
 
-exports[`style helpers > constantLanguageNullForeground > Visual Studio 1`] = `"#000000"`;
+exports[`style helpers: 'Catppuccin Latte' > constantForeground > Catppuccin Latte 1`] = `"#fe640b"`;
 
-exports[`style helpers > constantNumericForeground > Active4D 1`] = `"#A8017E"`;
+exports[`style helpers: 'Catppuccin Latte' > foreground > Catppuccin Latte 1`] = `"#4c4f69"`;
 
-exports[`style helpers > constantNumericForeground > Base16 Eva 1`] = `"#ff9966"`;
+exports[`style helpers: 'Catppuccin Latte' > functionForeground > Catppuccin Latte 1`] = `"#1e66f5"`;
 
-exports[`style helpers > constantNumericForeground > Base16 Unikitty Light 1`] = `"#d65407"`;
+exports[`style helpers: 'Catppuccin Latte' > keywordForeground > Catppuccin Latte 1`] = `"#8839ef"`;
 
-exports[`style helpers > constantNumericForeground > Dracula 1`] = `"#bd93f9"`;
+exports[`style helpers: 'Catppuccin Latte' > mutedForeground > Catppuccin Latte 1`] = `"#acb0be"`;
 
-exports[`style helpers > constantNumericForeground > Night Owl 1`] = `"#F78C6C"`;
+exports[`style helpers: 'Catppuccin Latte' > selection > Catppuccin Latte 1`] = `"#ccd0da"`;
 
-exports[`style helpers > constantNumericForeground > Visual Studio 1`] = `"#A31515"`;
+exports[`style helpers: 'Catppuccin Latte' > stringForeground > Catppuccin Latte 1`] = `"#40a02b"`;
 
-exports[`style helpers > foreground > Active4D 1`] = `"#3B3B3B"`;
+exports[`style helpers: 'Catppuccin Latte' > supportForeground > Catppuccin Latte 1`] = `"#179299"`;
 
-exports[`style helpers > foreground > Base16 Eva 1`] = `"#9fa2a6"`;
+exports[`style helpers: 'Catppuccin Latte' > variableForeground > Catppuccin Latte 1`] = `"#d20f39"`;
 
-exports[`style helpers > foreground > Base16 Unikitty Light 1`] = `"#6c696e"`;
+exports[`style helpers: 'Catppuccin Mocha' > background > Catppuccin Mocha 1`] = `"#1e1e2e"`;
 
-exports[`style helpers > foreground > Dracula 1`] = `"#f8f8f2"`;
+exports[`style helpers: 'Catppuccin Mocha' > backgroundAlt > Catppuccin Mocha 1`] = `"#181825"`;
 
-exports[`style helpers > foreground > Night Owl 1`] = `"#839496"`;
+exports[`style helpers: 'Catppuccin Mocha' > classForeground > Catppuccin Mocha 1`] = `"#f9e2af"`;
 
-exports[`style helpers > foreground > Visual Studio 1`] = `"#000000"`;
+exports[`style helpers: 'Catppuccin Mocha' > commentForeground > Catppuccin Mocha 1`] = `"#45475a"`;
 
-exports[`style helpers > selection > Active4D 1`] = `"#BAD6FD"`;
+exports[`style helpers: 'Catppuccin Mocha' > constantForeground > Catppuccin Mocha 1`] = `"#fab387"`;
 
-exports[`style helpers > selection > Base16 Eva 1`] = `"#4b6988"`;
+exports[`style helpers: 'Catppuccin Mocha' > foreground > Catppuccin Mocha 1`] = `"#cdd6f4"`;
 
-exports[`style helpers > selection > Base16 Unikitty Light 1`] = `"#c4c3c5"`;
+exports[`style helpers: 'Catppuccin Mocha' > functionForeground > Catppuccin Mocha 1`] = `"#89b4fa"`;
 
-exports[`style helpers > selection > Dracula 1`] = `"#44475a"`;
+exports[`style helpers: 'Catppuccin Mocha' > keywordForeground > Catppuccin Mocha 1`] = `"#cba6f7"`;
 
-exports[`style helpers > selection > Night Owl 1`] = `"#073642"`;
+exports[`style helpers: 'Catppuccin Mocha' > mutedForeground > Catppuccin Mocha 1`] = `"#585b70"`;
 
-exports[`style helpers > selection > Visual Studio 1`] = `"#9DA7C3"`;
+exports[`style helpers: 'Catppuccin Mocha' > selection > Catppuccin Mocha 1`] = `"#313244"`;
 
-exports[`style helpers > stringForeground > Active4D 1`] = `"#666666"`;
+exports[`style helpers: 'Catppuccin Mocha' > stringForeground > Catppuccin Mocha 1`] = `"#a6e3a1"`;
 
-exports[`style helpers > stringForeground > Base16 Eva 1`] = `"#66ff66"`;
+exports[`style helpers: 'Catppuccin Mocha' > supportForeground > Catppuccin Mocha 1`] = `"#94e2d5"`;
 
-exports[`style helpers > stringForeground > Base16 Unikitty Light 1`] = `"#17ad98"`;
+exports[`style helpers: 'Catppuccin Mocha' > variableForeground > Catppuccin Mocha 1`] = `"#f38ba8"`;
 
-exports[`style helpers > stringForeground > Dracula 1`] = `"#f1fa8c"`;
+exports[`style helpers: 'Dracula' > background > Dracula 1`] = `"#282a36"`;
 
-exports[`style helpers > stringForeground > Night Owl 1`] = `"#addb67"`;
+exports[`style helpers: 'Dracula' > backgroundAlt > Dracula 1`] = `"#21222c"`;
 
-exports[`style helpers > stringForeground > Visual Studio 1`] = `"#A31515"`;
+exports[`style helpers: 'Dracula' > classForeground > Dracula 1`] = `"#8be9fd"`;
 
-exports[`style helpers > supportTypeForeground > Active4D 1`] = `"#A535AE"`;
+exports[`style helpers: 'Dracula' > commentForeground > Dracula 1`] = `"#6272a4"`;
 
-exports[`style helpers > supportTypeForeground > Base16 Eva 1`] = `"#4b8f77"`;
+exports[`style helpers: 'Dracula' > constantForeground > Dracula 1`] = `"#bd93f9"`;
 
-exports[`style helpers > supportTypeForeground > Base16 Unikitty Light 1`] = `"#149bda"`;
+exports[`style helpers: 'Dracula' > foreground > Dracula 1`] = `"#f8f8f2"`;
 
-exports[`style helpers > supportTypeForeground > Dracula 1`] = `"#66d9ef"`;
+exports[`style helpers: 'Dracula' > functionForeground > Dracula 1`] = `"#50fa7b"`;
 
-exports[`style helpers > supportTypeForeground > Night Owl 1`] = `"#addb67"`;
+exports[`style helpers: 'Dracula' > keywordForeground > Dracula 1`] = `"#ff79c6"`;
 
-exports[`style helpers > supportTypeForeground > Visual Studio 1`] = `"#000000"`;
+exports[`style helpers: 'Dracula' > mutedForeground > Dracula 1`] = `"#9ea8c7"`;
+
+exports[`style helpers: 'Dracula' > selection > Dracula 1`] = `"#44475a"`;
+
+exports[`style helpers: 'Dracula' > stringForeground > Dracula 1`] = `"#f1fa8c"`;
+
+exports[`style helpers: 'Dracula' > supportForeground > Dracula 1`] = `"#8be9fd"`;
+
+exports[`style helpers: 'Dracula' > variableForeground > Dracula 1`] = `"#ff5555"`;
+
+exports[`style helpers: 'Eva' > background > Eva 1`] = `"#2a3b4d"`;
+
+exports[`style helpers: 'Eva' > backgroundAlt > Eva 1`] = `"#3d566f"`;
+
+exports[`style helpers: 'Eva' > classForeground > Eva 1`] = `"#ffff66"`;
+
+exports[`style helpers: 'Eva' > commentForeground > Eva 1`] = `"#55799c"`;
+
+exports[`style helpers: 'Eva' > constantForeground > Eva 1`] = `"#ff9966"`;
+
+exports[`style helpers: 'Eva' > foreground > Eva 1`] = `"#9fa2a6"`;
+
+exports[`style helpers: 'Eva' > functionForeground > Eva 1`] = `"#15f4ee"`;
+
+exports[`style helpers: 'Eva' > keywordForeground > Eva 1`] = `"#9c6cd3"`;
+
+exports[`style helpers: 'Eva' > mutedForeground > Eva 1`] = `"#7e90a3"`;
+
+exports[`style helpers: 'Eva' > selection > Eva 1`] = `"#4b6988"`;
+
+exports[`style helpers: 'Eva' > stringForeground > Eva 1`] = `"#66ff66"`;
+
+exports[`style helpers: 'Eva' > supportForeground > Eva 1`] = `"#4b8f77"`;
+
+exports[`style helpers: 'Eva' > variableForeground > Eva 1`] = `"#c4676c"`;
+
+exports[`style helpers: 'GitHub Dark' > background > GitHub Dark 1`] = `"#0d1117"`;
+
+exports[`style helpers: 'GitHub Dark' > backgroundAlt > GitHub Dark 1`] = `"#161b22"`;
+
+exports[`style helpers: 'GitHub Dark' > classForeground > GitHub Dark 1`] = `"#bb8009"`;
+
+exports[`style helpers: 'GitHub Dark' > commentForeground > GitHub Dark 1`] = `"#6e7681"`;
+
+exports[`style helpers: 'GitHub Dark' > constantForeground > GitHub Dark 1`] = `"#79c0ff"`;
+
+exports[`style helpers: 'GitHub Dark' > foreground > GitHub Dark 1`] = `"#c9d1d9"`;
+
+exports[`style helpers: 'GitHub Dark' > functionForeground > GitHub Dark 1`] = `"#d2a8ff"`;
+
+exports[`style helpers: 'GitHub Dark' > keywordForeground > GitHub Dark 1`] = `"#ff7b72"`;
+
+exports[`style helpers: 'GitHub Dark' > mutedForeground > GitHub Dark 1`] = `"#8b949e"`;
+
+exports[`style helpers: 'GitHub Dark' > selection > GitHub Dark 1`] = `"#484f58"`;
+
+exports[`style helpers: 'GitHub Dark' > stringForeground > GitHub Dark 1`] = `"#a5d6ff"`;
+
+exports[`style helpers: 'GitHub Dark' > supportForeground > GitHub Dark 1`] = `"#7ee787"`;
+
+exports[`style helpers: 'GitHub Dark' > variableForeground > GitHub Dark 1`] = `"#ffa657"`;
+
+exports[`style helpers: 'GitHub Light' > background > GitHub Light 1`] = `"#ffffff"`;
+
+exports[`style helpers: 'GitHub Light' > backgroundAlt > GitHub Light 1`] = `"#f6f8fa"`;
+
+exports[`style helpers: 'GitHub Light' > classForeground > GitHub Light 1`] = `"#bf8700"`;
+
+exports[`style helpers: 'GitHub Light' > commentForeground > GitHub Light 1`] = `"#8c959f"`;
+
+exports[`style helpers: 'GitHub Light' > constantForeground > GitHub Light 1`] = `"#0550ae"`;
+
+exports[`style helpers: 'GitHub Light' > foreground > GitHub Light 1`] = `"#424a53"`;
+
+exports[`style helpers: 'GitHub Light' > functionForeground > GitHub Light 1`] = `"#8250df"`;
+
+exports[`style helpers: 'GitHub Light' > keywordForeground > GitHub Light 1`] = `"#cf222e"`;
+
+exports[`style helpers: 'GitHub Light' > mutedForeground > GitHub Light 1`] = `"#6e7781"`;
+
+exports[`style helpers: 'GitHub Light' > selection > GitHub Light 1`] = `"#afb8c1"`;
+
+exports[`style helpers: 'GitHub Light' > stringForeground > GitHub Light 1`] = `"#0a3069"`;
+
+exports[`style helpers: 'GitHub Light' > supportForeground > GitHub Light 1`] = `"#116329"`;
+
+exports[`style helpers: 'GitHub Light' > variableForeground > GitHub Light 1`] = `"#953800"`;
+
+exports[`style helpers: 'Gruvbox Dark' > background > Gruvbox Dark 1`] = `"#282828"`;
+
+exports[`style helpers: 'Gruvbox Dark' > backgroundAlt > Gruvbox Dark 1`] = `"#3c3836"`;
+
+exports[`style helpers: 'Gruvbox Dark' > classForeground > Gruvbox Dark 1`] = `"#fabd2f"`;
+
+exports[`style helpers: 'Gruvbox Dark' > commentForeground > Gruvbox Dark 1`] = `"#665c54"`;
+
+exports[`style helpers: 'Gruvbox Dark' > constantForeground > Gruvbox Dark 1`] = `"#fe8019"`;
+
+exports[`style helpers: 'Gruvbox Dark' > foreground > Gruvbox Dark 1`] = `"#d5c4a1"`;
+
+exports[`style helpers: 'Gruvbox Dark' > functionForeground > Gruvbox Dark 1`] = `"#83a598"`;
+
+exports[`style helpers: 'Gruvbox Dark' > keywordForeground > Gruvbox Dark 1`] = `"#d3869b"`;
+
+exports[`style helpers: 'Gruvbox Dark' > mutedForeground > Gruvbox Dark 1`] = `"#bdae93"`;
+
+exports[`style helpers: 'Gruvbox Dark' > selection > Gruvbox Dark 1`] = `"#504945"`;
+
+exports[`style helpers: 'Gruvbox Dark' > stringForeground > Gruvbox Dark 1`] = `"#b8bb26"`;
+
+exports[`style helpers: 'Gruvbox Dark' > supportForeground > Gruvbox Dark 1`] = `"#8ec07c"`;
+
+exports[`style helpers: 'Gruvbox Dark' > variableForeground > Gruvbox Dark 1`] = `"#fb4934"`;
+
+exports[`style helpers: 'Gruvbox Light' > background > Gruvbox Light 1`] = `"#fbf1c7"`;
+
+exports[`style helpers: 'Gruvbox Light' > backgroundAlt > Gruvbox Light 1`] = `"#ebdbb2"`;
+
+exports[`style helpers: 'Gruvbox Light' > classForeground > Gruvbox Light 1`] = `"#b57614"`;
+
+exports[`style helpers: 'Gruvbox Light' > commentForeground > Gruvbox Light 1`] = `"#bdae93"`;
+
+exports[`style helpers: 'Gruvbox Light' > constantForeground > Gruvbox Light 1`] = `"#af3a03"`;
+
+exports[`style helpers: 'Gruvbox Light' > foreground > Gruvbox Light 1`] = `"#504945"`;
+
+exports[`style helpers: 'Gruvbox Light' > functionForeground > Gruvbox Light 1`] = `"#076678"`;
+
+exports[`style helpers: 'Gruvbox Light' > keywordForeground > Gruvbox Light 1`] = `"#8f3f71"`;
+
+exports[`style helpers: 'Gruvbox Light' > mutedForeground > Gruvbox Light 1`] = `"#665c54"`;
+
+exports[`style helpers: 'Gruvbox Light' > selection > Gruvbox Light 1`] = `"#d5c4a1"`;
+
+exports[`style helpers: 'Gruvbox Light' > stringForeground > Gruvbox Light 1`] = `"#79740e"`;
+
+exports[`style helpers: 'Gruvbox Light' > supportForeground > Gruvbox Light 1`] = `"#427b58"`;
+
+exports[`style helpers: 'Gruvbox Light' > variableForeground > Gruvbox Light 1`] = `"#9d0006"`;
+
+exports[`style helpers: 'Monokai' > background > Monokai 1`] = `"#272822"`;
+
+exports[`style helpers: 'Monokai' > backgroundAlt > Monokai 1`] = `"#383830"`;
+
+exports[`style helpers: 'Monokai' > classForeground > Monokai 1`] = `"#f4bf75"`;
+
+exports[`style helpers: 'Monokai' > commentForeground > Monokai 1`] = `"#75715e"`;
+
+exports[`style helpers: 'Monokai' > constantForeground > Monokai 1`] = `"#fd971f"`;
+
+exports[`style helpers: 'Monokai' > foreground > Monokai 1`] = `"#f8f8f2"`;
+
+exports[`style helpers: 'Monokai' > functionForeground > Monokai 1`] = `"#66d9ef"`;
+
+exports[`style helpers: 'Monokai' > keywordForeground > Monokai 1`] = `"#ae81ff"`;
+
+exports[`style helpers: 'Monokai' > mutedForeground > Monokai 1`] = `"#a59f85"`;
+
+exports[`style helpers: 'Monokai' > selection > Monokai 1`] = `"#49483e"`;
+
+exports[`style helpers: 'Monokai' > stringForeground > Monokai 1`] = `"#a6e22e"`;
+
+exports[`style helpers: 'Monokai' > supportForeground > Monokai 1`] = `"#a1efe4"`;
+
+exports[`style helpers: 'Monokai' > variableForeground > Monokai 1`] = `"#f92672"`;
+
+exports[`style helpers: 'Night Owl' > background > Night Owl 1`] = `"#011627"`;
+
+exports[`style helpers: 'Night Owl' > backgroundAlt > Night Owl 1`] = `"#0b2942"`;
+
+exports[`style helpers: 'Night Owl' > classForeground > Night Owl 1`] = `"#ffcb8b"`;
+
+exports[`style helpers: 'Night Owl' > commentForeground > Night Owl 1`] = `"#637777"`;
+
+exports[`style helpers: 'Night Owl' > constantForeground > Night Owl 1`] = `"#f78c6c"`;
+
+exports[`style helpers: 'Night Owl' > foreground > Night Owl 1`] = `"#d6deeb"`;
+
+exports[`style helpers: 'Night Owl' > functionForeground > Night Owl 1`] = `"#82aaff"`;
+
+exports[`style helpers: 'Night Owl' > keywordForeground > Night Owl 1`] = `"#c792ea"`;
+
+exports[`style helpers: 'Night Owl' > mutedForeground > Night Owl 1`] = `"#4b6479"`;
+
+exports[`style helpers: 'Night Owl' > selection > Night Owl 1`] = `"#1d3b53"`;
+
+exports[`style helpers: 'Night Owl' > stringForeground > Night Owl 1`] = `"#ecc48d"`;
+
+exports[`style helpers: 'Night Owl' > supportForeground > Night Owl 1`] = `"#7fdbca"`;
+
+exports[`style helpers: 'Night Owl' > variableForeground > Night Owl 1`] = `"#addb67"`;
+
+exports[`style helpers: 'Nord' > background > Nord 1`] = `"#2e3440"`;
+
+exports[`style helpers: 'Nord' > backgroundAlt > Nord 1`] = `"#3b4252"`;
+
+exports[`style helpers: 'Nord' > classForeground > Nord 1`] = `"#ebcb8b"`;
+
+exports[`style helpers: 'Nord' > commentForeground > Nord 1`] = `"#4c566a"`;
+
+exports[`style helpers: 'Nord' > constantForeground > Nord 1`] = `"#d08770"`;
+
+exports[`style helpers: 'Nord' > foreground > Nord 1`] = `"#e5e9f0"`;
+
+exports[`style helpers: 'Nord' > functionForeground > Nord 1`] = `"#81a1c1"`;
+
+exports[`style helpers: 'Nord' > keywordForeground > Nord 1`] = `"#b48ead"`;
+
+exports[`style helpers: 'Nord' > mutedForeground > Nord 1`] = `"#d8dee9"`;
+
+exports[`style helpers: 'Nord' > selection > Nord 1`] = `"#434c5e"`;
+
+exports[`style helpers: 'Nord' > stringForeground > Nord 1`] = `"#a3be8c"`;
+
+exports[`style helpers: 'Nord' > supportForeground > Nord 1`] = `"#88c0d0"`;
+
+exports[`style helpers: 'Nord' > variableForeground > Nord 1`] = `"#bf616a"`;
+
+exports[`style helpers: 'One Light' > background > One Light 1`] = `"#fafafa"`;
+
+exports[`style helpers: 'One Light' > backgroundAlt > One Light 1`] = `"#f0f0f1"`;
+
+exports[`style helpers: 'One Light' > classForeground > One Light 1`] = `"#c18401"`;
+
+exports[`style helpers: 'One Light' > commentForeground > One Light 1`] = `"#a0a1a7"`;
+
+exports[`style helpers: 'One Light' > constantForeground > One Light 1`] = `"#d75f00"`;
+
+exports[`style helpers: 'One Light' > foreground > One Light 1`] = `"#383a42"`;
+
+exports[`style helpers: 'One Light' > functionForeground > One Light 1`] = `"#4078f2"`;
+
+exports[`style helpers: 'One Light' > keywordForeground > One Light 1`] = `"#a626a4"`;
+
+exports[`style helpers: 'One Light' > mutedForeground > One Light 1`] = `"#696c77"`;
+
+exports[`style helpers: 'One Light' > selection > One Light 1`] = `"#e5e5e6"`;
+
+exports[`style helpers: 'One Light' > stringForeground > One Light 1`] = `"#50a14f"`;
+
+exports[`style helpers: 'One Light' > supportForeground > One Light 1`] = `"#0184bc"`;
+
+exports[`style helpers: 'One Light' > variableForeground > One Light 1`] = `"#ca1243"`;
+
+exports[`style helpers: 'OneDark' > background > OneDark 1`] = `"#282c34"`;
+
+exports[`style helpers: 'OneDark' > backgroundAlt > OneDark 1`] = `"#353b45"`;
+
+exports[`style helpers: 'OneDark' > classForeground > OneDark 1`] = `"#e5c07b"`;
+
+exports[`style helpers: 'OneDark' > commentForeground > OneDark 1`] = `"#545862"`;
+
+exports[`style helpers: 'OneDark' > constantForeground > OneDark 1`] = `"#d19a66"`;
+
+exports[`style helpers: 'OneDark' > foreground > OneDark 1`] = `"#abb2bf"`;
+
+exports[`style helpers: 'OneDark' > functionForeground > OneDark 1`] = `"#61afef"`;
+
+exports[`style helpers: 'OneDark' > keywordForeground > OneDark 1`] = `"#c678dd"`;
+
+exports[`style helpers: 'OneDark' > mutedForeground > OneDark 1`] = `"#565c64"`;
+
+exports[`style helpers: 'OneDark' > selection > OneDark 1`] = `"#3e4451"`;
+
+exports[`style helpers: 'OneDark' > stringForeground > OneDark 1`] = `"#98c379"`;
+
+exports[`style helpers: 'OneDark' > supportForeground > OneDark 1`] = `"#56b6c2"`;
+
+exports[`style helpers: 'OneDark' > variableForeground > OneDark 1`] = `"#e06c75"`;
+
+exports[`style helpers: 'Outrun Dark' > background > Outrun Dark 1`] = `"#00002a"`;
+
+exports[`style helpers: 'Outrun Dark' > backgroundAlt > Outrun Dark 1`] = `"#20204a"`;
+
+exports[`style helpers: 'Outrun Dark' > classForeground > Outrun Dark 1`] = `"#f3e877"`;
+
+exports[`style helpers: 'Outrun Dark' > commentForeground > Outrun Dark 1`] = `"#50507a"`;
+
+exports[`style helpers: 'Outrun Dark' > constantForeground > Outrun Dark 1`] = `"#fc8d28"`;
+
+exports[`style helpers: 'Outrun Dark' > foreground > Outrun Dark 1`] = `"#d0d0fa"`;
+
+exports[`style helpers: 'Outrun Dark' > functionForeground > Outrun Dark 1`] = `"#66b0ff"`;
+
+exports[`style helpers: 'Outrun Dark' > keywordForeground > Outrun Dark 1`] = `"#f10596"`;
+
+exports[`style helpers: 'Outrun Dark' > mutedForeground > Outrun Dark 1`] = `"#b0b0da"`;
+
+exports[`style helpers: 'Outrun Dark' > selection > Outrun Dark 1`] = `"#30305a"`;
+
+exports[`style helpers: 'Outrun Dark' > stringForeground > Outrun Dark 1`] = `"#59f176"`;
+
+exports[`style helpers: 'Outrun Dark' > supportForeground > Outrun Dark 1`] = `"#0ef0f0"`;
+
+exports[`style helpers: 'Outrun Dark' > variableForeground > Outrun Dark 1`] = `"#ff4242"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > background > Rosé Pine Dawn 1`] = `"#faf4ed"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > backgroundAlt > Rosé Pine Dawn 1`] = `"#fffaf3"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > classForeground > Rosé Pine Dawn 1`] = `"#d7827e"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > commentForeground > Rosé Pine Dawn 1`] = `"#9893a5"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > constantForeground > Rosé Pine Dawn 1`] = `"#ea9d34"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > foreground > Rosé Pine Dawn 1`] = `"#575279"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > functionForeground > Rosé Pine Dawn 1`] = `"#907aa9"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > keywordForeground > Rosé Pine Dawn 1`] = `"#ea9d34"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > mutedForeground > Rosé Pine Dawn 1`] = `"#797593"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > selection > Rosé Pine Dawn 1`] = `"#f2e9de"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > stringForeground > Rosé Pine Dawn 1`] = `"#286983"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > supportForeground > Rosé Pine Dawn 1`] = `"#56949f"`;
+
+exports[`style helpers: 'Rosé Pine Dawn' > variableForeground > Rosé Pine Dawn 1`] = `"#b4637a"`;
+
+exports[`style helpers: 'Rosé Pine' > background > Rosé Pine 1`] = `"#191724"`;
+
+exports[`style helpers: 'Rosé Pine' > backgroundAlt > Rosé Pine 1`] = `"#1f1d2e"`;
+
+exports[`style helpers: 'Rosé Pine' > classForeground > Rosé Pine 1`] = `"#ebbcba"`;
+
+exports[`style helpers: 'Rosé Pine' > commentForeground > Rosé Pine 1`] = `"#6e6a86"`;
+
+exports[`style helpers: 'Rosé Pine' > constantForeground > Rosé Pine 1`] = `"#f6c177"`;
+
+exports[`style helpers: 'Rosé Pine' > foreground > Rosé Pine 1`] = `"#e0def4"`;
+
+exports[`style helpers: 'Rosé Pine' > functionForeground > Rosé Pine 1`] = `"#c4a7e7"`;
+
+exports[`style helpers: 'Rosé Pine' > keywordForeground > Rosé Pine 1`] = `"#f6c177"`;
+
+exports[`style helpers: 'Rosé Pine' > mutedForeground > Rosé Pine 1`] = `"#908caa"`;
+
+exports[`style helpers: 'Rosé Pine' > selection > Rosé Pine 1`] = `"#26233a"`;
+
+exports[`style helpers: 'Rosé Pine' > stringForeground > Rosé Pine 1`] = `"#31748f"`;
+
+exports[`style helpers: 'Rosé Pine' > supportForeground > Rosé Pine 1`] = `"#9ccfd8"`;
+
+exports[`style helpers: 'Rosé Pine' > variableForeground > Rosé Pine 1`] = `"#eb6f92"`;
+
+exports[`style helpers: 'Solarized Dark' > background > Solarized Dark 1`] = `"#002b36"`;
+
+exports[`style helpers: 'Solarized Dark' > backgroundAlt > Solarized Dark 1`] = `"#073642"`;
+
+exports[`style helpers: 'Solarized Dark' > classForeground > Solarized Dark 1`] = `"#b58900"`;
+
+exports[`style helpers: 'Solarized Dark' > commentForeground > Solarized Dark 1`] = `"#657b83"`;
+
+exports[`style helpers: 'Solarized Dark' > constantForeground > Solarized Dark 1`] = `"#cb4b16"`;
+
+exports[`style helpers: 'Solarized Dark' > foreground > Solarized Dark 1`] = `"#93a1a1"`;
+
+exports[`style helpers: 'Solarized Dark' > functionForeground > Solarized Dark 1`] = `"#268bd2"`;
+
+exports[`style helpers: 'Solarized Dark' > keywordForeground > Solarized Dark 1`] = `"#6c71c4"`;
+
+exports[`style helpers: 'Solarized Dark' > mutedForeground > Solarized Dark 1`] = `"#839496"`;
+
+exports[`style helpers: 'Solarized Dark' > selection > Solarized Dark 1`] = `"#586e75"`;
+
+exports[`style helpers: 'Solarized Dark' > stringForeground > Solarized Dark 1`] = `"#859900"`;
+
+exports[`style helpers: 'Solarized Dark' > supportForeground > Solarized Dark 1`] = `"#2aa198"`;
+
+exports[`style helpers: 'Solarized Dark' > variableForeground > Solarized Dark 1`] = `"#dc322f"`;
+
+exports[`style helpers: 'Solarized Light' > background > Solarized Light 1`] = `"#fdf6e3"`;
+
+exports[`style helpers: 'Solarized Light' > backgroundAlt > Solarized Light 1`] = `"#eee8d5"`;
+
+exports[`style helpers: 'Solarized Light' > classForeground > Solarized Light 1`] = `"#b58900"`;
+
+exports[`style helpers: 'Solarized Light' > commentForeground > Solarized Light 1`] = `"#839496"`;
+
+exports[`style helpers: 'Solarized Light' > constantForeground > Solarized Light 1`] = `"#cb4b16"`;
+
+exports[`style helpers: 'Solarized Light' > foreground > Solarized Light 1`] = `"#586e75"`;
+
+exports[`style helpers: 'Solarized Light' > functionForeground > Solarized Light 1`] = `"#268bd2"`;
+
+exports[`style helpers: 'Solarized Light' > keywordForeground > Solarized Light 1`] = `"#6c71c4"`;
+
+exports[`style helpers: 'Solarized Light' > mutedForeground > Solarized Light 1`] = `"#657b83"`;
+
+exports[`style helpers: 'Solarized Light' > selection > Solarized Light 1`] = `"#93a1a1"`;
+
+exports[`style helpers: 'Solarized Light' > stringForeground > Solarized Light 1`] = `"#859900"`;
+
+exports[`style helpers: 'Solarized Light' > supportForeground > Solarized Light 1`] = `"#2aa198"`;
+
+exports[`style helpers: 'Solarized Light' > variableForeground > Solarized Light 1`] = `"#dc322f"`;
+
+exports[`style helpers: 'Synth Midnight' > background > Synth Midnight 1`] = `"#050608"`;
+
+exports[`style helpers: 'Synth Midnight' > backgroundAlt > Synth Midnight 1`] = `"#1a1b1c"`;
+
+exports[`style helpers: 'Synth Midnight' > classForeground > Synth Midnight 1`] = `"#c9d364"`;
+
+exports[`style helpers: 'Synth Midnight' > commentForeground > Synth Midnight 1`] = `"#474849"`;
+
+exports[`style helpers: 'Synth Midnight' > constantForeground > Synth Midnight 1`] = `"#ea770d"`;
+
+exports[`style helpers: 'Synth Midnight' > foreground > Synth Midnight 1`] = `"#c1c3c4"`;
+
+exports[`style helpers: 'Synth Midnight' > functionForeground > Synth Midnight 1`] = `"#03aeff"`;
+
+exports[`style helpers: 'Synth Midnight' > keywordForeground > Synth Midnight 1`] = `"#ea5ce2"`;
+
+exports[`style helpers: 'Synth Midnight' > mutedForeground > Synth Midnight 1`] = `"#a3a5a6"`;
+
+exports[`style helpers: 'Synth Midnight' > selection > Synth Midnight 1`] = `"#28292a"`;
+
+exports[`style helpers: 'Synth Midnight' > stringForeground > Synth Midnight 1`] = `"#06ea61"`;
+
+exports[`style helpers: 'Synth Midnight' > supportForeground > Synth Midnight 1`] = `"#42fff9"`;
+
+exports[`style helpers: 'Synth Midnight' > variableForeground > Synth Midnight 1`] = `"#b53b50"`;
+
+exports[`style helpers: 'SynthWave \\'84' > background > SynthWave '84 1`] = `"#262335"`;
+
+exports[`style helpers: 'SynthWave \\'84' > backgroundAlt > SynthWave '84 1`] = `"#241b2f"`;
+
+exports[`style helpers: 'SynthWave \\'84' > classForeground > SynthWave '84 1`] = `"#fe4450"`;
+
+exports[`style helpers: 'SynthWave \\'84' > commentForeground > SynthWave '84 1`] = `"#848bbd"`;
+
+exports[`style helpers: 'SynthWave \\'84' > constantForeground > SynthWave '84 1`] = `"#f97e72"`;
+
+exports[`style helpers: 'SynthWave \\'84' > foreground > SynthWave '84 1`] = `"#ffffff"`;
+
+exports[`style helpers: 'SynthWave \\'84' > functionForeground > SynthWave '84 1`] = `"#36f9f6"`;
+
+exports[`style helpers: 'SynthWave \\'84' > keywordForeground > SynthWave '84 1`] = `"#fede5d"`;
+
+exports[`style helpers: 'SynthWave \\'84' > mutedForeground > SynthWave '84 1`] = `"#b6b1b1"`;
+
+exports[`style helpers: 'SynthWave \\'84' > selection > SynthWave '84 1`] = `"#463465"`;
+
+exports[`style helpers: 'SynthWave \\'84' > stringForeground > SynthWave '84 1`] = `"#ff8b39"`;
+
+exports[`style helpers: 'SynthWave \\'84' > supportForeground > SynthWave '84 1`] = `"#72f1b8"`;
+
+exports[`style helpers: 'SynthWave \\'84' > variableForeground > SynthWave '84 1`] = `"#ff7edb"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > background > Tokyo Night Dark 1`] = `"#1a1b26"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > backgroundAlt > Tokyo Night Dark 1`] = `"#16161e"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > classForeground > Tokyo Night Dark 1`] = `"#0db9d7"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > commentForeground > Tokyo Night Dark 1`] = `"#444b6a"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > constantForeground > Tokyo Night Dark 1`] = `"#a9b1d6"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > foreground > Tokyo Night Dark 1`] = `"#a9b1d6"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > functionForeground > Tokyo Night Dark 1`] = `"#2ac3de"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > keywordForeground > Tokyo Night Dark 1`] = `"#bb9af7"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > mutedForeground > Tokyo Night Dark 1`] = `"#787c99"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > selection > Tokyo Night Dark 1`] = `"#2f3549"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > stringForeground > Tokyo Night Dark 1`] = `"#9ece6a"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > supportForeground > Tokyo Night Dark 1`] = `"#b4f9f8"`;
+
+exports[`style helpers: 'Tokyo Night Dark' > variableForeground > Tokyo Night Dark 1`] = `"#c0caf5"`;
+
+exports[`style helpers: 'Tokyo Night Light' > background > Tokyo Night Light 1`] = `"#d5d6db"`;
+
+exports[`style helpers: 'Tokyo Night Light' > backgroundAlt > Tokyo Night Light 1`] = `"#cbccd1"`;
+
+exports[`style helpers: 'Tokyo Night Light' > classForeground > Tokyo Night Light 1`] = `"#166775"`;
+
+exports[`style helpers: 'Tokyo Night Light' > commentForeground > Tokyo Night Light 1`] = `"#9699a3"`;
+
+exports[`style helpers: 'Tokyo Night Light' > constantForeground > Tokyo Night Light 1`] = `"#965027"`;
+
+exports[`style helpers: 'Tokyo Night Light' > foreground > Tokyo Night Light 1`] = `"#343b59"`;
+
+exports[`style helpers: 'Tokyo Night Light' > functionForeground > Tokyo Night Light 1`] = `"#34548a"`;
+
+exports[`style helpers: 'Tokyo Night Light' > keywordForeground > Tokyo Night Light 1`] = `"#5a4a78"`;
+
+exports[`style helpers: 'Tokyo Night Light' > mutedForeground > Tokyo Night Light 1`] = `"#4c505e"`;
+
+exports[`style helpers: 'Tokyo Night Light' > selection > Tokyo Night Light 1`] = `"#dfe0e5"`;
+
+exports[`style helpers: 'Tokyo Night Light' > stringForeground > Tokyo Night Light 1`] = `"#485e30"`;
+
+exports[`style helpers: 'Tokyo Night Light' > supportForeground > Tokyo Night Light 1`] = `"#3e6968"`;
+
+exports[`style helpers: 'Tokyo Night Light' > variableForeground > Tokyo Night Light 1`] = `"#343b58"`;
+
+exports[`style helpers: 'Unikitty Light' > background > Unikitty Light 1`] = `"#ffffff"`;
+
+exports[`style helpers: 'Unikitty Light' > backgroundAlt > Unikitty Light 1`] = `"#e1e1e2"`;
+
+exports[`style helpers: 'Unikitty Light' > classForeground > Unikitty Light 1`] = `"#dc8a0e"`;
+
+exports[`style helpers: 'Unikitty Light' > commentForeground > Unikitty Light 1`] = `"#a7a5a8"`;
+
+exports[`style helpers: 'Unikitty Light' > constantForeground > Unikitty Light 1`] = `"#d65407"`;
+
+exports[`style helpers: 'Unikitty Light' > foreground > Unikitty Light 1`] = `"#6c696e"`;
+
+exports[`style helpers: 'Unikitty Light' > functionForeground > Unikitty Light 1`] = `"#775dff"`;
+
+exports[`style helpers: 'Unikitty Light' > keywordForeground > Unikitty Light 1`] = `"#aa17e6"`;
+
+exports[`style helpers: 'Unikitty Light' > mutedForeground > Unikitty Light 1`] = `"#89878b"`;
+
+exports[`style helpers: 'Unikitty Light' > selection > Unikitty Light 1`] = `"#c4c3c5"`;
+
+exports[`style helpers: 'Unikitty Light' > stringForeground > Unikitty Light 1`] = `"#17ad98"`;
+
+exports[`style helpers: 'Unikitty Light' > supportForeground > Unikitty Light 1`] = `"#149bda"`;
+
+exports[`style helpers: 'Unikitty Light' > variableForeground > Unikitty Light 1`] = `"#d8137f"`;
+
+exports[`style helpers: 'Visual Studio' > background > Visual Studio 1`] = `"#ffffff"`;
+
+exports[`style helpers: 'Visual Studio' > backgroundAlt > Visual Studio 1`] = `"#f3f3f3"`;
+
+exports[`style helpers: 'Visual Studio' > classForeground > Visual Studio 1`] = `"#2b91af"`;
+
+exports[`style helpers: 'Visual Studio' > commentForeground > Visual Studio 1`] = `"#008000"`;
+
+exports[`style helpers: 'Visual Studio' > constantForeground > Visual Studio 1`] = `"#098658"`;
+
+exports[`style helpers: 'Visual Studio' > foreground > Visual Studio 1`] = `"#000000"`;
+
+exports[`style helpers: 'Visual Studio' > functionForeground > Visual Studio 1`] = `"#795e26"`;
+
+exports[`style helpers: 'Visual Studio' > keywordForeground > Visual Studio 1`] = `"#0000ff"`;
+
+exports[`style helpers: 'Visual Studio' > mutedForeground > Visual Studio 1`] = `"#6d6d6d"`;
+
+exports[`style helpers: 'Visual Studio' > selection > Visual Studio 1`] = `"#add6ff"`;
+
+exports[`style helpers: 'Visual Studio' > stringForeground > Visual Studio 1`] = `"#a31515"`;
+
+exports[`style helpers: 'Visual Studio' > supportForeground > Visual Studio 1`] = `"#0451a5"`;
+
+exports[`style helpers: 'Visual Studio' > variableForeground > Visual Studio 1`] = `"#001080"`;

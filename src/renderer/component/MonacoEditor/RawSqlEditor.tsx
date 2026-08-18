@@ -2,7 +2,7 @@ import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import type monaco from 'monaco-editor';
 import { useTheme } from 'styled-components';
 import useEffectOnce from '../../hooks/useEffectOnce';
-import { convertTextmateThemeToMonaco } from './themes';
+import { buildMonacoTheme } from './themes';
 import useCompletion from './useCompletion';
 
 type Props = {
@@ -32,10 +32,8 @@ export function RawSqlEditor({
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const theme = useTheme();
-  const textmateTheme = theme;
 
-  // Convert the TextMate theme to a Monaco Editor theme
-  const monacoTheme = convertTextmateThemeToMonaco(textmateTheme);
+  const monacoTheme = buildMonacoTheme(theme);
 
   useCompletion(monacoInstance);
 

@@ -4,7 +4,7 @@ import { styled } from 'styled-components';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
-import { foreground, supportTypeForeground } from '../theme';
+import { foreground, supportForeground } from '../theme';
 
 type Props = {
   tableName: string;
@@ -13,7 +13,7 @@ type Props = {
 };
 
 const StyledLink = styled(Link)`
-  color: ${supportTypeForeground};
+  color: ${supportForeground};
   text-decoration: none;
 
   &:hover {

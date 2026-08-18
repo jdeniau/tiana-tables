@@ -1,81 +1,63 @@
-import {
-  TmTheme,
-  TmThemeScopedSetting,
-  isScopedSetting,
-  isUnscopedSetting,
-} from '../../configuration/themes';
+import { AppTheme } from '../../configuration/themes';
 
-function getColor(
-  currentTheme: TmTheme,
-  scopeToFind: string | Array<string>,
-  settingToFind: string
-): string | undefined {
-  const scopeToFindArray = Array.isArray(scopeToFind)
-    ? scopeToFind
-    : [scopeToFind];
+/**
+ * Theme accessors for styled-components.
+ *
+ * Each one reads a single base16 slot — see `Base16Palette` for the role of
+ * every slot. They are named after those roles, not after colors, so that a
+ * light theme stays coherent.
+ */
 
-  let item;
+type StyledProps = { theme: AppTheme };
 
-  for (const innerScopeToFind of scopeToFindArray) {
-    item = currentTheme.settings
-      .filter(isScopedSetting)
-      .find(({ scope }: TmThemeScopedSetting) => {
-        if (Array.isArray(scope)) {
-          return scope.includes(innerScopeToFind);
-        }
-        return scope === innerScopeToFind;
-      });
-  }
+/** Default Background (base00) */
+export const background = ({ theme }: StyledProps): string =>
+  theme.palette.base00;
 
-  if (!item) {
-    throw new Error(
-      `color not found for scope "${scopeToFindArray.join(', ')}"`
-    );
-  }
+/** Lighter Background: status bars, table headers (base01) */
+export const backgroundAlt = ({ theme }: StyledProps): string =>
+  theme.palette.base01;
 
-  return item.settings[settingToFind];
-}
+/** Selection Background (base02) */
+export const selection = ({ theme }: StyledProps): string =>
+  theme.palette.base02;
 
-function getSetting(currentTheme: TmTheme, key: string): string | undefined {
-  const settings = currentTheme.settings.filter(isUnscopedSetting);
+/** Comments, invisibles, line highlighting (base03) */
+export const commentForeground = ({ theme }: StyledProps): string =>
+  theme.palette.base03;
 
-  if (!settings) {
-    throw new Error(`color not found settings`);
-  }
+/** Dark Foreground: muted UI text such as status bars (base04) */
+export const mutedForeground = ({ theme }: StyledProps): string =>
+  theme.palette.base04;
 
-  return settings[0].settings[key];
-}
+/** Default Foreground, caret, delimiters, operators (base05) */
+export const foreground = ({ theme }: StyledProps): string =>
+  theme.palette.base05;
 
-type StyledProps = { theme: TmTheme };
+/** Variables, diff deleted — errors and destructive actions (base08) */
+export const variableForeground = ({ theme }: StyledProps): string =>
+  theme.palette.base08;
 
-export const foreground = (props: StyledProps): string | undefined =>
-  getSetting(props.theme, 'foreground');
+/** Integers, booleans, constants — numeric cells and NULL (base09) */
+export const constantForeground = ({ theme }: StyledProps): string =>
+  theme.palette.base09;
 
-export const background = (props: StyledProps): string | undefined =>
-  getSetting(props.theme, 'background');
+/** Classes, markup bold (base0A) */
+export const classForeground = ({ theme }: StyledProps): string =>
+  theme.palette.base0A;
 
-export const selection = (props: StyledProps): string | undefined =>
-  getSetting(props.theme, 'selection');
+/** Strings, diff inserted — text cells (base0B) */
+export const stringForeground = ({ theme }: StyledProps): string =>
+  theme.palette.base0B;
 
-export const stringForeground = (props: StyledProps): string | undefined =>
-  getColor(props.theme, 'string', 'foreground');
+/** Support, regular expressions, escape characters — links (base0C) */
+export const supportForeground = ({ theme }: StyledProps): string =>
+  theme.palette.base0C;
 
-export const supportTypeForeground = (props: StyledProps): string | undefined =>
-  getColor(props.theme, 'support.type', 'foreground');
+/** Functions, methods, headings (base0D) */
+export const functionForeground = ({ theme }: StyledProps): string =>
+  theme.palette.base0D;
 
-export const constantLanguageForeground = (
-  props: StyledProps
-): string | undefined =>
-  getColor(props.theme, 'constant.language', 'foreground');
-
-export const constantNumericForeground = (
-  props: StyledProps
-): string | undefined =>
-  getColor(props.theme, 'constant.numeric', 'foreground');
-
-export const constantLanguageNullForeground = (props: StyledProps) =>
-  getColor(
-    props.theme,
-    ['constant.language.null', 'constant.language'],
-    'foreground'
-  );
+/** Keywords, storage, selectors (base0E) */
+export const keywordForeground = ({ theme }: StyledProps): string =>
+  theme.palette.base0E;
