@@ -11,7 +11,10 @@ import {
 } from './configuration';
 import { getLogPath } from './configuration/filePaths';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
-import { installReactDevToolsExtension } from './main-process/installReactDevToolsExtension';
+import {
+  installReactDevToolsExtension,
+  warnIfDevToolsHookIsMissing,
+} from './main-process/installReactDevToolsExtension';
 import { createMenu } from './main-process/menu';
 import { bindIpcMainSqlFileStorage } from './main-process/sqlFileStorage';
 import WindowStateKeeper from './main-process/windowState';
@@ -67,6 +70,8 @@ const createWindow = () => {
   }
   logStartupMilestone('main-window-load-triggered');
 
+  warnIfDevToolsHookIsMissing(mainWindow.webContents);
+
   // Forward renderer console messages tagged "[startup]" to the main log file
   // so we can measure renderer startup in production builds.
   mainWindow.webContents.on('console-message', (details) => {
@@ -97,10 +102,7 @@ const createWindow = () => {
 
     // Defer non-critical initialization to the next event-loop task after first window display.
     setTimeout(() => {
-      if (isDev) {
-        void installReactDevToolsExtension();
-        logStartupMilestone('react-devtools-install-triggered');
-      } else {
+      if (!isDev) {
         updateElectronApp({
           logger: log,
         });
@@ -118,12 +120,7 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', () => {
-  logStartupMilestone('app-ready');
-  createWindow();
-});
-
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   logStartupMilestone('app-when-ready');
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -150,10 +147,12 @@ app.whenReady().then(() => {
     return isMac;
   });
 
-  // createWindow();
-  // app.on('activate', function () {
-  //   if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  // });
+  // React DevTools must be loaded before the renderer starts: the hook it
+  // installs has to be on the page before React initializes.
+  await installReactDevToolsExtension();
+  logStartupMilestone('react-devtools-installed');
+
+  createWindow();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
