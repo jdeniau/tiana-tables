@@ -145,7 +145,7 @@ const router = createHashRouter([
   },
 ] as RouteObject[]);
 
-export function App() {
+function App() {
   useEffect(() => {
     logRendererStartupMilestone('router-mounted');
 

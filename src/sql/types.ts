@@ -34,7 +34,7 @@ export type ConnectionObjectWithoutSlug = Omit<ConnectionObject, 'slug'>;
 /**
  * Represent the return type of "SHOW DATABASES;" query.
  */
-export interface ShowDatabaseRow extends RowDataPacket {
+interface ShowDatabaseRow extends RowDataPacket {
   Database: string;
 }
 export type ShowDatabasesResult = ShowDatabaseRow[];
@@ -65,10 +65,10 @@ export interface ColumnDetail extends RowDataPacket {
 
 export type ColumnDetailResult = ColumnDetail[];
 
-export interface ForeignKeyRow extends KeyColumnUsageRow {
-  REFERENCED_TABLE_NAME: string;
-  REFERENCED_COLUMN_NAME: string;
-}
+// interface ForeignKeyRow extends KeyColumnUsageRow {
+//   REFERENCED_TABLE_NAME: string;
+//   REFERENCED_COLUMN_NAME: string;
+// }
 
 export interface ShowKeyRow extends RowDataPacket {
   Column_name: string;

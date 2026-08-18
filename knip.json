@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "src/main.ts",
+    "src/preload.ts",
+    "forge.config.ts",
+    ".storybook/vite.config.ts",
+    "vite.main.config.ts",
+    "vite.preload.config.ts",
+    "vite.renderer.config.ts"
+  ],
+  "project": ["**/*.{ts,tsx,js,mjs}"],
+  "ignoreDependencies": [
+    "@ant-design/cli",
+    "@electron-forge/maker-dmg",
+    "@electron-forge/publisher-github"
+  ]
+}
