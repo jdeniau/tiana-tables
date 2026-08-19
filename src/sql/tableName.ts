@@ -1,6 +1,7 @@
-import { EntityContext, EntityContextType, MySQL } from 'dt-sql-parser';
+import { EntityContextType } from 'dt-sql-parser';
 import { AttrName } from 'dt-sql-parser/dist/parser/common/entityCollector';
 import { SQL_RESERVED_KEYWORDS } from './keywords';
+import { collectEntities } from './mysqlParser';
 
 export function generateTableAlias(
   tableName: string,
@@ -66,61 +67,14 @@ export function generateTableAlias(
 type Alias = string;
 type TableName = string;
 
-// the parser holds no state between calls, so a single instance is enough
-const parser = new MySQL();
-
-/** `db1.t1` and `` `t1` `` both refer to the table `t1` */
-function unqualify(tableNamePath: string): TableName {
-  const lastSegment = tableNamePath.split('.').at(-1) ?? tableNamePath;
-
-  return lastSegment.replace(/^[`"[]|[`"\]]$/g, '');
+/** `` `t1` `` and `"t1"` both name the table `t1` */
+export function unquote(name: string): string {
+  return name.replace(/^[`"[]|[`"\]]$/g, '');
 }
 
-/** an incomplete clause is a few tokens long, no need to trim further */
-const MAX_TRIM_ATTEMPTS = 8;
-
-/**
- * Collect the entities of a query, tolerating an unfinished tail.
- *
- * Entity collection is all or nothing: as soon as the statement has a syntax
- * error, ANTLR cannot pick an alternative for the enclosing rule and drops the
- * whole subtree, so `getAllEntities` returns nothing — not even the tables
- * written before the error. That is exactly what the editor sends while the
- * user is still typing (`… JOIN `, `… WHERE x = `, `… ORDER BY `), so retry on
- * shorter prefixes, dropping the trailing token each time.
- *
- * Lexing, on the other hand, never fails, which is what gives us the token
- * boundaries to cut on.
- */
-function collectEntities(sql: string): EntityContext[] {
-  let candidate = sql;
-
-  for (let attempt = 0; attempt <= MAX_TRIM_ATTEMPTS; attempt++) {
-    const entities = parser.getAllEntities(candidate);
-
-    if (entities?.length) {
-      return entities;
-    }
-
-    const lastToken = parser
-      .getAllTokens(candidate)
-      .filter((token) => token.text?.trim())
-      .at(-1);
-
-    const shorter = lastToken ? candidate.slice(0, lastToken.start) : '';
-
-    if (shorter.length >= candidate.length) {
-      break;
-    }
-
-    candidate = shorter;
-
-    if (!candidate.trim()) {
-      break;
-    }
-  }
-
-  return [];
+/** `db1.t1` and `` `t1` `` both refer to the table `t1` */
+export function unqualify(tableNamePath: string): TableName {
+  return unquote(tableNamePath.split('.').at(-1) ?? tableNamePath);
 }
 
 /**

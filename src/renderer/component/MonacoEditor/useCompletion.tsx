@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { EntityContextType, MySQL } from 'dt-sql-parser';
+import { useEffect, useRef } from 'react';
+import { EntityContextType } from 'dt-sql-parser';
 import { MarkerSeverity, Position, editor, languages } from 'monaco-editor';
 import { LanguageIdEnum, setupLanguageFeatures } from 'monaco-sql-languages';
 // registers the `mysql` language and its tokenizer
@@ -9,11 +9,14 @@ import { useForeignKeysContext } from '../../../contexts/ForeignKeysContext';
 import { useTableListContext } from '../../../contexts/TableListContext';
 import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
+import { mysqlParser } from '../../../sql/mysqlParser';
 import {
   extractTableAliases,
   generateTableAlias,
 } from '../../../sql/tableName';
 import { ShowTableStatus } from '../../../sql/types';
+import { QuerySchema, analyzeQuery } from './queryAnalysis';
+import useQuerySchema from './useQuerySchema';
 
 /*
  * `monaco-sql-languages` gives us the MySQL tokenizer, but its completion and
@@ -28,8 +31,6 @@ setupLanguageFeatures(LanguageIdEnum.MYSQL, {
   diagnostics: false,
 });
 
-const parser = new MySQL();
-
 type CompletionRange = languages.CompletionItem['range'];
 
 export function buildCompletionProvider(
@@ -40,7 +41,7 @@ export function buildCompletionProvider(
   return {
     triggerCharacters: [' ', '.'],
     provideCompletionItems(model, position) {
-      const suggestions = parser.getSuggestionAtCaretPosition(
+      const suggestions = mysqlParser.getSuggestionAtCaretPosition(
         model.getValue(),
         { lineNumber: position.lineNumber, column: position.column }
       );
@@ -198,12 +199,14 @@ function columnCompletions(
 
 const MARKER_OWNER = 'mysql-syntax';
 
-function validateModel(model: editor.ITextModel): void {
+function validateModel(model: editor.ITextModel, schema: QuerySchema): void {
   if (model.isDisposed() || model.getLanguageId() !== LanguageIdEnum.MYSQL) {
     return;
   }
 
-  const markers = parser.validate(model.getValue()).map(
+  const sql = model.getValue();
+
+  const syntaxErrors = mysqlParser.validate(sql).map(
     (error): editor.IMarkerData => ({
       severity: MarkerSeverity.Error,
       message: error.message,
@@ -214,16 +217,32 @@ function validateModel(model: editor.ITextModel): void {
     })
   );
 
-  editor.setModelMarkers(model, MARKER_OWNER, markers);
+  // a warning rather than an error: the query is valid SQL, and only the
+  // qualified references we could resolve are checked, never a bare column
+  const unknownColumns = analyzeQuery(sql, schema).unknownColumns.map(
+    ({ range, table, column }): editor.IMarkerData => ({
+      severity: MarkerSeverity.Warning,
+      message: `Unknown column \`${column}\` on table \`${table}\``,
+      ...range,
+    })
+  );
+
+  editor.setModelMarkers(model, MARKER_OWNER, [
+    ...syntaxErrors,
+    ...unknownColumns,
+  ]);
 }
 
 /** underline syntax errors, re-checked shortly after the user stops typing */
-function watchModel(model: editor.ITextModel): { dispose: () => void } {
+function watchModel(
+  model: editor.ITextModel,
+  validate: (model: editor.ITextModel) => void
+): { dispose: () => void } {
   let timeout: ReturnType<typeof setTimeout> | undefined;
 
   const schedule = () => {
     clearTimeout(timeout);
-    timeout = setTimeout(() => validateModel(model), 300);
+    timeout = setTimeout(() => validate(model), 300);
   };
 
   schedule();
@@ -241,6 +260,7 @@ export default function useCompletion(): void {
   const tableList = useTableListContext();
   const foreignKeys = useForeignKeysContext();
   const allColumns = useAllColumnsContext();
+  const schema = useQuerySchema();
 
   useEffect(() => {
     const provider = languages.registerCompletionItemProvider(
@@ -251,12 +271,19 @@ export default function useCompletion(): void {
     return () => provider.dispose();
   }, [allColumns, foreignKeys, tableList]);
 
+  // read through a ref: the schema changes identity on every render of its
+  // provider, and rebuilding the watchers would reset their debounce each time
+  const schemaRef = useRef(schema);
+  schemaRef.current = schema;
+
   useEffect(() => {
     const watchers = new Map<string, { dispose: () => void }>();
+    const validate = (model: editor.ITextModel) =>
+      validateModel(model, schemaRef.current);
 
     const watch = (model: editor.ITextModel) => {
       if (model.getLanguageId() === LanguageIdEnum.MYSQL) {
-        watchers.set(model.uri.toString(), watchModel(model));
+        watchers.set(model.uri.toString(), watchModel(model, validate));
       }
     };
 

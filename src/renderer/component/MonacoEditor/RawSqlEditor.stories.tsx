@@ -12,8 +12,28 @@ const meta: Meta<typeof RawSqlEditor> = {
   decorators: [
     (Story) => (
       <ForeignKeysContextProvider keyColumnUsageRows={[]}>
-        <TableListContextProvider tableList={[]}>
-          <AllColumnsContextProvider allColumns={[]}>
+        <TableListContextProvider
+          tableList={[
+            // @ts-expect-error don't want all data, only the name
+            { Name: 'employe' },
+            // @ts-expect-error don't want all data, only the name
+            { Name: 'title' },
+          ]}
+        >
+          <AllColumnsContextProvider
+            allColumns={[
+              // @ts-expect-error don't want all data, only table and column
+              { Table: 'employe', Column: 'id', DataType: 'int' },
+              // @ts-expect-error don't want all data, only table and column
+              { Table: 'employe', Column: 'gender', DataType: 'varchar' },
+              // @ts-expect-error don't want all data, only table and column
+              { Table: 'employe', Column: 'title_id', DataType: 'int' },
+              // @ts-expect-error don't want all data, only table and column
+              { Table: 'title', Column: 'id', DataType: 'int' },
+              // @ts-expect-error don't want all data, only table and column
+              { Table: 'title', Column: 'title', DataType: 'varchar' },
+            ]}
+          >
             <Story />
           </AllColumnsContextProvider>
         </TableListContextProvider>
