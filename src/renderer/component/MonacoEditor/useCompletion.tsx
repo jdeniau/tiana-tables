@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
-import type monaco from 'monaco-editor';
-import invariant from 'tiny-invariant';
+import { EntityContextType, MySQL } from 'dt-sql-parser';
+import { MarkerSeverity, Position, editor, languages } from 'monaco-editor';
+import { LanguageIdEnum, setupLanguageFeatures } from 'monaco-sql-languages';
+// registers the `mysql` language and its tokenizer
+import 'monaco-sql-languages/esm/languages/mysql/mysql.contribution';
 import { useAllColumnsContext } from '../../../contexts/AllColumnsContext';
 import { useForeignKeysContext } from '../../../contexts/ForeignKeysContext';
 import { useTableListContext } from '../../../contexts/TableListContext';
@@ -12,217 +15,263 @@ import {
 } from '../../../sql/tableName';
 import { ShowTableStatus } from '../../../sql/types';
 
-const SQL_KEYWORDS = [
-  'SELECT',
-  'FROM',
-  'WHERE',
-  'AND',
-  'OR',
-  'JOIN',
-  'LEFT JOIN',
-  'RIGHT JOIN',
-  'INNER JOIN',
-  'ON',
-  'LIMIT',
-];
+/*
+ * `monaco-sql-languages` gives us the MySQL tokenizer, but its completion and
+ * diagnostics run in a worker it creates through Monaco's pre-0.45 API: the
+ * worker never receives its `createData`, never answers, and the suggest
+ * widget spins on "Loading" forever. Those two features are turned off here
+ * and rebuilt on `dt-sql-parser` — which we already depend on, and which is
+ * fast enough on the main thread for editor-sized queries.
+ */
+setupLanguageFeatures(LanguageIdEnum.MYSQL, {
+  completionItems: false,
+  diagnostics: false,
+});
 
-type MonacoApi = Pick<typeof monaco, 'Range' | 'languages'>;
+const parser = new MySQL();
 
-function provideCompletionItems(
-  monaco: MonacoApi,
+type CompletionRange = languages.CompletionItem['range'];
+
+export function buildCompletionProvider(
   tableList: ShowTableStatus[],
   foreignKeys: ForeignKeysHelper,
   allColumns: ColumnDetailHelper
-): monaco.languages.CompletionItemProvider['provideCompletionItems'] {
-  return (
-    model: monaco.editor.ITextModel,
-    position: monaco.Position,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _context: monaco.languages.CompletionContext,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _token: monaco.CancellationToken
-  ) => {
-    // console.log(model, position);
-
-    const sql = model.getValue();
-
-    const tableAliases = extractTableAliases(sql);
-
-    // const hasFromBefore = textUntilPosition.match(/FROM\s*$/i);
-    const isAfterFromOrJoin = model.findMatches(
-      '(from|join)\\s+(?<database>\\w*\\.)?(?<tablename>\\w+)?$', // searchString
-      {
-        startLineNumber: 1,
-        startColumn: 1,
-        endLineNumber: position.lineNumber,
-        endColumn: position.column,
-      }, // searchOnlyEditableRange
-      true, // isRegex
-      false, // matchCase
-      null, // wordSeparators
-      true, // captureMatches
-      1 // limitResultCount
-    )?.[0];
-
-    if (isAfterFromOrJoin) {
-      const { matches, range } = isAfterFromOrJoin;
-
-      const textUntilPosition = model.getValueInRange({
-        startLineNumber: 1,
-        startColumn: 1,
-        endLineNumber: position.lineNumber,
-        endColumn: position.column,
-      });
-
-      invariant(matches, 'matches should be defined');
-
-      const fullLength = matches[0]?.length ?? 0;
-      const tableLength = matches[3]?.length ?? 0;
-      const startColumn = range.startColumn + fullLength - tableLength;
-
-      const usedAliases: string[] = Object.keys(
-        extractTableAliases(textUntilPosition)
-      );
-      // adapter here, but we could modiy `getLinkBetweenTables` directly
-      // the new type may be Record<Alias extends string, TableName extends string>
-      const usedTables: Array<{
-        tableName: string;
-        alias: string | undefined;
-      }> = Object.entries(extractTableAliases(textUntilPosition)).map(
-        ([alias, tablename]) => ({ tableName: tablename, alias })
+): languages.CompletionItemProvider {
+  return {
+    triggerCharacters: [' ', '.'],
+    provideCompletionItems(model, position) {
+      const suggestions = parser.getSuggestionAtCaretPosition(
+        model.getValue(),
+        { lineNumber: position.lineNumber, column: position.column }
       );
 
-      return {
-        suggestions: tableList.map((table) => {
-          const alias = generateTableAlias(table.Name, usedAliases);
+      if (!suggestions) {
+        return { suggestions: [] };
+      }
 
-          const fk = foreignKeys.getLinkBetweenTables(table.Name, usedTables);
-
-          const joinString = fk
-            ? `ON ${alias}.${fk.referencedColumnName} = ${fk.alias || fk.referencedTableName}.${fk.columnName} `
-            : '';
-
-          const insertText = `${table.Name} ${alias} ${joinString}`;
-
-          return {
-            label: table.Name,
-            detail: fk?.referencedTableName ?? undefined,
-            kind: monaco.languages.CompletionItemKind.Variable,
-            insertText,
-            range: new monaco.Range(
-              range.startLineNumber,
-              startColumn,
-              position.lineNumber,
-              position.column
-            ),
-          };
-        }),
-      };
-    }
-
-    const isAfterDot = model.findMatches(
-      '(?<alias>\\w*)\\.(?<columnStart>\\w+)?$', // searchString
-      {
+      const word = model.getWordUntilPosition(position);
+      const range: CompletionRange = {
         startLineNumber: position.lineNumber,
-        startColumn: 1,
         endLineNumber: position.lineNumber,
-        endColumn: position.column,
-      }, // searchOnlyEditableRange
-      true, // isRegex
-      false, // matchCase
-      null, // wordSeparators
-      true, // captureMatches
-      1 // limitResultCount
-    )?.[0];
-
-    if (isAfterDot) {
-      const { matches, range } = isAfterDot;
-
-      invariant(matches, 'matches should be defined');
-
-      const tableOrAlias = matches[1];
-
-      const tablename = tableAliases[tableOrAlias];
-
-      const columns = allColumns
-        .getColumnsForTable(tablename)
-        .map((c) => c.Column);
-
-      const startColumn = range.startColumn + tableOrAlias.length + 1;
-
-      return {
-        suggestions: columns.map((column) => ({
-          label: column,
-          insertText: column,
-          kind: monaco.languages.CompletionItemKind.Field,
-          detail: tablename,
-          range: new monaco.Range(
-            range.startLineNumber,
-            startColumn,
-            position.lineNumber,
-            position.column
-          ),
-        })),
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
       };
-    }
 
-    const defaultRange = new monaco.Range(
-      position.lineNumber,
-      position.column - 1,
-      position.lineNumber,
-      position.column
-    );
+      // the whole query, not only what precedes the caret: completing the
+      // select list of `SELECT e.| FROM employee e` needs the `FROM` clause
+      const tableAliases = extractTableAliases(model.getValue());
+      const qualifier = qualifierBefore(model, position, word.startColumn);
+      const qualifiedTable = qualifier ? tableAliases[qualifier] : undefined;
 
-    return {
-      suggestions: SQL_KEYWORDS.map((keyword) => ({
-        label: keyword,
-        kind: monaco.languages.CompletionItemKind.Keyword,
-        insertText: keyword,
-        range: defaultRange,
-      })),
-    };
+      // after `alias.`, that table's columns are the only sensible suggestion,
+      // and an unknown qualifier deserves silence rather than every column of
+      // the query. The grammar is of no help here: it reports a column context
+      // only while the name is still empty, then calls `alias.na` a function.
+      if (qualifier) {
+        return {
+          suggestions: qualifiedTable
+            ? columnCompletions(allColumns, [qualifiedTable], range)
+            : [],
+        };
+      }
+
+      const items: languages.CompletionItem[] = [];
+
+      for (const { syntaxContextType } of suggestions.syntax) {
+        if (syntaxContextType === EntityContextType.TABLE) {
+          items.push(
+            ...tableCompletions(tableList, foreignKeys, tableAliases, range)
+          );
+        }
+
+        if (syntaxContextType === EntityContextType.COLUMN) {
+          items.push(
+            ...columnCompletions(
+              allColumns,
+              [...new Set(Object.values(tableAliases))],
+              range
+            )
+          );
+        }
+      }
+
+      // the grammar itself tells us which keywords are valid right here
+      items.push(
+        ...suggestions.keywords.map(
+          (keyword): languages.CompletionItem => ({
+            label: keyword,
+            kind: languages.CompletionItemKind.Keyword,
+            detail: 'keyword',
+            insertText: keyword,
+            range,
+            // schema names first, keywords after
+            sortText: `2${keyword}`,
+          })
+        )
+      );
+
+      return { suggestions: items };
+    },
   };
 }
 
-export default function useCompletion(monacoInstance: typeof monaco | null) {
+/** `FROM ` / `JOIN `: propose every table, aliased and joined when possible */
+function tableCompletions(
+  tableList: ShowTableStatus[],
+  foreignKeys: ForeignKeysHelper,
+  tableAliases: Record<string, string>,
+  range: CompletionRange
+): languages.CompletionItem[] {
+  const usedAliases = Object.keys(tableAliases);
+  const usedTables = Object.entries(tableAliases).map(([alias, tableName]) => ({
+    tableName,
+    alias,
+  }));
+
+  return tableList.map((table): languages.CompletionItem => {
+    const alias = generateTableAlias(table.Name, usedAliases);
+    const foreignKey = foreignKeys.getLinkBetweenTables(table.Name, usedTables);
+
+    const joinString = foreignKey
+      ? `ON ${alias}.${foreignKey.referencedColumnName} = ${
+          foreignKey.alias || foreignKey.referencedTableName
+        }.${foreignKey.columnName} `
+      : '';
+
+    return {
+      label: table.Name,
+      detail: foreignKey?.referencedTableName ?? undefined,
+      kind: languages.CompletionItemKind.Variable,
+      insertText: `${table.Name} ${alias} ${joinString}`,
+      range,
+      sortText: `1${table.Name}`,
+    };
+  });
+}
+
+/** the name a `qualifier.` refers to, when the caret follows one */
+function qualifierBefore(
+  model: editor.ITextModel,
+  position: Position,
+  wordStartColumn: number
+): string | undefined {
+  if (wordStartColumn < 3) {
+    return undefined;
+  }
+
+  const previousCharacter = model.getValueInRange({
+    startLineNumber: position.lineNumber,
+    endLineNumber: position.lineNumber,
+    startColumn: wordStartColumn - 1,
+    endColumn: wordStartColumn,
+  });
+
+  if (previousCharacter !== '.') {
+    return undefined;
+  }
+
+  return (
+    model.getWordUntilPosition(
+      new Position(position.lineNumber, wordStartColumn - 1)
+    ).word || undefined
+  );
+}
+
+function columnCompletions(
+  allColumns: ColumnDetailHelper,
+  tableNames: ReadonlyArray<string>,
+  range: CompletionRange
+): languages.CompletionItem[] {
+  return tableNames.flatMap((tableName) =>
+    allColumns.getColumnsForTable(tableName).map(
+      (column): languages.CompletionItem => ({
+        label: column.Column,
+        insertText: column.Column,
+        kind: languages.CompletionItemKind.Field,
+        detail: tableName,
+        range,
+        sortText: `1${column.Column}`,
+      })
+    )
+  );
+}
+
+const MARKER_OWNER = 'mysql-syntax';
+
+function validateModel(model: editor.ITextModel): void {
+  if (model.isDisposed() || model.getLanguageId() !== LanguageIdEnum.MYSQL) {
+    return;
+  }
+
+  const markers = parser.validate(model.getValue()).map(
+    (error): editor.IMarkerData => ({
+      severity: MarkerSeverity.Error,
+      message: error.message,
+      startLineNumber: error.startLine,
+      startColumn: error.startColumn,
+      endLineNumber: error.endLine,
+      endColumn: error.endColumn,
+    })
+  );
+
+  editor.setModelMarkers(model, MARKER_OWNER, markers);
+}
+
+/** underline syntax errors, re-checked shortly after the user stops typing */
+function watchModel(model: editor.ITextModel): { dispose: () => void } {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+
+  const schedule = () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => validateModel(model), 300);
+  };
+
+  schedule();
+  const listener = model.onDidChangeContent(schedule);
+
+  return {
+    dispose: () => {
+      clearTimeout(timeout);
+      listener.dispose();
+    },
+  };
+}
+
+export default function useCompletion(): void {
   const tableList = useTableListContext();
   const foreignKeys = useForeignKeysContext();
   const allColumns = useAllColumnsContext();
 
   useEffect(() => {
-    if (!monacoInstance) {
-      return;
-    }
+    const provider = languages.registerCompletionItemProvider(
+      LanguageIdEnum.MYSQL,
+      buildCompletionProvider(tableList, foreignKeys, allColumns)
+    );
 
-    // interesting examples :
-    // - foldable https://microsoft.github.io/monaco-editor/playground.html?source=v0.47.0#example-extending-language-services-folding-provider-example
-    // - hover https://microsoft.github.io/monaco-editor/playground.html?source=v0.47.0#example-extending-language-services-hover-provider-example
-    const completionItemProvider =
-      monacoInstance.languages.registerCompletionItemProvider('sql', {
-        provideCompletionItems: provideCompletionItems(
-          monacoInstance,
-          tableList,
-          foreignKeys,
-          allColumns
-        ),
-        // This function can be used to resolve additional information for the item that is being auto completed.
-        // resolveCompletionItem: async (item, token) => {
-        //   console.log('resolveCompletionItem', item, token);
-        //
-        //   const table = item.label;
-        //   item.insertText += ` ON a.id = b.a_id`;
-        //
-        //   return item;
-        // },
-      });
+    return () => provider.dispose();
+  }, [allColumns, foreignKeys, tableList]);
+
+  useEffect(() => {
+    const watchers = new Map<string, { dispose: () => void }>();
+
+    const watch = (model: editor.ITextModel) => {
+      if (model.getLanguageId() === LanguageIdEnum.MYSQL) {
+        watchers.set(model.uri.toString(), watchModel(model));
+      }
+    };
+
+    editor.getModels().forEach(watch);
+    const onCreate = editor.onDidCreateModel(watch);
+    const onDispose = editor.onWillDisposeModel((model) => {
+      const key = model.uri.toString();
+      watchers.get(key)?.dispose();
+      watchers.delete(key);
+    });
 
     return () => {
-      completionItemProvider.dispose();
+      onCreate.dispose();
+      onDispose.dispose();
+      watchers.forEach((watcher) => watcher.dispose());
     };
-  }, [allColumns, foreignKeys, monacoInstance, tableList]);
+  }, []);
 }
-
-export const testables = {
-  provideCompletionItems,
-  SQL_KEYWORDS,
-};

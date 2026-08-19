@@ -1,256 +1,202 @@
 /**
  * @vitest-environment happy-dom
  */
-import * as monaco from 'monaco-editor';
-import { describe, expect, test, vi } from 'vitest';
+import { Position, editor, languages } from 'monaco-editor';
+import { LanguageIdEnum } from 'monaco-sql-languages';
+import { describe, expect, it } from 'vitest';
 import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
 import { ShowTableStatus } from '../../../sql/types';
-import { testables } from './useCompletion';
+import { buildCompletionProvider } from './useCompletion';
 
-const { provideCompletionItems, SQL_KEYWORDS } = testables;
+const TABLE_LIST = [
+  { Name: 'employee' },
+  { Name: 'title' },
+  { Name: 'planning' },
+] as ShowTableStatus[];
 
-describe('sql keywords', () => {
-  test.each([
-    { sql: '' },
-    { sql: 'SELECT * ' },
-    { sql: 'SELECT * FROM table_name ' },
-    { sql: 'SELECT * FROM table_name ', column: 1 },
-    { sql: 'SELECT * FROM table_name WHERE foo = "foo" ' },
-  ])('should return suggestions for SQL keywords', ({ sql, column }) => {
-    const definedColumn = column ?? sql.length + 1;
-    const tableList: ShowTableStatus[] = [];
-    const position = new monaco.Position(1, definedColumn);
+const FOREIGN_KEYS = new ForeignKeysHelper([
+  {
+    TABLE_NAME: 'employee',
+    COLUMN_NAME: 'title_id',
+    REFERENCED_TABLE_NAME: 'title',
+    REFERENCED_COLUMN_NAME: 'id',
+    CONSTRAINT_NAME: 'employee_title_id_fkey',
+  },
+  {
+    TABLE_NAME: 'planning',
+    COLUMN_NAME: 'employee_id',
+    REFERENCED_TABLE_NAME: 'employee',
+    REFERENCED_COLUMN_NAME: 'id',
+    CONSTRAINT_NAME: 'planning_employee_id_fkey',
+  },
+] as ConstructorParameters<typeof ForeignKeysHelper>[0]);
 
-    const model = monaco.editor.createModel(sql, 'sql');
+const ALL_COLUMNS = new ColumnDetailHelper([
+  { Table: 'employee', Column: 'id', DataType: 'int' },
+  { Table: 'employee', Column: 'name', DataType: 'varchar' },
+  { Table: 'title', Column: 'id', DataType: 'int' },
+  { Table: 'title', Column: 'label', DataType: 'varchar' },
+] as ConstructorParameters<typeof ColumnDetailHelper>[0]);
 
-    const result = provideCompletionItems(
-      monaco,
-      tableList,
-      new ForeignKeysHelper([]),
-      new ColumnDetailHelper([])
-    )(
+/** `|` marks the caret, which reads better than a column number */
+function completionsAt(sqlWithCaret: string): languages.CompletionItem[] {
+  const caret = sqlWithCaret.indexOf('|');
+
+  if (caret === -1) {
+    throw new Error('the query under test must mark the caret with a `|`');
+  }
+
+  const sql = sqlWithCaret.replace('|', '');
+  const before = sqlWithCaret.slice(0, caret);
+  const lastLineBreak = before.lastIndexOf('\n');
+  const position = new Position(
+    before.split('\n').length,
+    caret - lastLineBreak
+  );
+
+  const model = editor.createModel(sql, LanguageIdEnum.MYSQL);
+
+  try {
+    const result = buildCompletionProvider(
+      TABLE_LIST,
+      FOREIGN_KEYS,
+      ALL_COLUMNS
+    ).provideCompletionItems(
       model,
       position,
-      { triggerKind: monaco.languages.CompletionTriggerKind.Invoke },
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() }
+      { triggerKind: languages.CompletionTriggerKind.Invoke },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {} as any
     );
 
-    expect(result).toEqual({
-      suggestions: SQL_KEYWORDS.map((keyword) => ({
-        label: keyword,
-        kind: monaco.languages.CompletionItemKind.Keyword,
-        insertText: keyword,
-        range: new monaco.Range(1, definedColumn - 1, 1, definedColumn),
-      })),
+    return 'suggestions' in (result ?? {})
+      ? (result as languages.CompletionList).suggestions
+      : [];
+  } finally {
+    model.dispose();
+  }
+}
+
+function labelsOfKind(
+  sqlWithCaret: string,
+  kind: languages.CompletionItemKind
+): string[] {
+  return completionsAt(sqlWithCaret)
+    .filter((item) => item.kind === kind)
+    .map((item) => String(item.label));
+}
+
+const tables = (sql: string) =>
+  labelsOfKind(sql, languages.CompletionItemKind.Variable);
+const columns = (sql: string) =>
+  labelsOfKind(sql, languages.CompletionItemKind.Field);
+const keywords = (sql: string) =>
+  labelsOfKind(sql, languages.CompletionItemKind.Keyword);
+
+describe('tables', () => {
+  it.each([
+    'SELECT * FROM |',
+    'SELECT * FROM employee e JOIN |',
+    'SELECT * FROM employee e LEFT JOIN |',
+  ])('proposes every table after FROM or JOIN: %s', (sql) => {
+    expect(tables(sql)).toEqual(['employee', 'title', 'planning']);
+  });
+
+  it('proposes an alias that does not collide with the ones in use', () => {
+    const suggestions = completionsAt('SELECT * FROM title t JOIN |');
+
+    expect(suggestions.find((item) => item.label === 'title')?.insertText).toBe(
+      'title ti '
+    );
+  });
+
+  it('joins on the foreign key when there is one', () => {
+    const suggestions = completionsAt('SELECT * FROM employee e JOIN |');
+
+    expect(suggestions.find((item) => item.label === 'title')?.insertText).toBe(
+      'title t ON t.id = e.title_id '
+    );
+    expect(
+      suggestions.find((item) => item.label === 'planning')?.insertText
+    ).toBe('planning p ON p.employee_id = e.id ');
+  });
+
+  it('falls back on the table name when the query declares no alias', () => {
+    const suggestions = completionsAt('SELECT * FROM employee JOIN |');
+
+    expect(suggestions.find((item) => item.label === 'title')?.insertText).toBe(
+      'title t ON t.id = employee.title_id '
+    );
+  });
+
+  it('proposes no table where a table cannot go', () => {
+    expect(tables('SELECT | FROM employee e')).toEqual([]);
+  });
+});
+
+describe('columns', () => {
+  it('proposes only the columns of the aliased table', () => {
+    expect(columns('SELECT e.| FROM employee e JOIN title t')).toEqual([
+      'id',
+      'name',
+    ]);
+  });
+
+  it('proposes only the columns of the qualifying table', () => {
+    expect(columns('SELECT employee.| FROM employee')).toEqual(['id', 'name']);
+  });
+
+  it('keeps the qualifier when a partial column name is typed', () => {
+    // the whole table is proposed, Monaco narrows it down to what is typed
+    expect(columns('SELECT t.la| FROM employee e JOIN title t')).toEqual([
+      'id',
+      'label',
+    ]);
+  });
+
+  it('proposes the columns of every table of the query when unqualified', () => {
+    expect(columns('SELECT | FROM employee e JOIN title t')).toEqual([
+      'id',
+      'name',
+      'id',
+      'label',
+    ]);
+  });
+
+  it('proposes nothing for an unknown qualifier', () => {
+    expect(columns('SELECT x.| FROM employee e')).toEqual([]);
+  });
+
+  it('replaces the word under the caret rather than inserting next to it', () => {
+    const [suggestion] = completionsAt('SELECT e.na| FROM employee e').filter(
+      (item) => item.kind === languages.CompletionItemKind.Field
+    );
+
+    // `na` spans columns 10 and 11, the suggestion must overwrite it
+    expect(suggestion.range).toMatchObject({
+      startColumn: 10,
+      endColumn: 12,
     });
   });
 });
 
-describe('table list', () => {
-  test.each([
-    // { sql: 'SELECT * FROM', addSpace: true },
-    // { sql: 'SELECT * FROM table_name LEFT JOIN', addSpace: true },
-    { sql: 'SELECT * FROM ' },
-    { sql: 'SELECT * FROM database.' },
-    { sql: 'SELECT * FROM WHERE foo = bar ', column: 15 }, // after FROM
-    { sql: 'SELECT * FROM table_name WHERE foo = bar ', column: 15 }, // after FROM
-    { sql: 'SELECT * FROM table_name JOIN ' },
-    { sql: 'SELECT * FROM table_name LEFT JOIN ' },
-    { sql: 'SELECT * FROM ta', startColumn: 15 }, // partial table name
-  ])(
-    'should return tablelist if we are after FROM or JOIN',
-    ({ sql, column, startColumn }) => {
-      const definedColumn = startColumn ?? column ?? sql.length + 1;
-      const tableList: ShowTableStatus[] = [
-        // @ts-expect-error don't want all data, only the name
-        { Name: 'table1' },
-        // @ts-expect-error don't want all data, only the name
-        { Name: 'table2' },
-        // @ts-expect-error don't want all data, only the name
-        { Name: 'another_table' },
-      ];
+describe('keywords', () => {
+  it('comes from the grammar, not from a hardcoded list', () => {
+    // a keyword only the parser knows to be valid right there
+    expect(keywords('SELECT * FROM employee |')).toContain('JOIN');
+    expect(keywords('SELECT * |')).toContain('FROM');
+  });
 
-      const position = new monaco.Position(1, definedColumn);
-
-      const model = monaco.editor.createModel(sql, 'sql');
-
-      const result = provideCompletionItems(
-        monaco,
-        tableList,
-        new ForeignKeysHelper([]),
-        new ColumnDetailHelper([])
-      )(
-        model,
-        position,
-        { triggerKind: monaco.languages.CompletionTriggerKind.Invoke },
-        { isCancellationRequested: false, onCancellationRequested: vi.fn() }
-      );
-
-      const spacePrefix = ''; // addSpace ? ' ' : '';
-
-      expect(result).toEqual({
-        suggestions: [
-          {
-            label: 'table1',
-            kind: monaco.languages.CompletionItemKind.Variable,
-            insertText: `${spacePrefix}table1 t `,
-            detail: undefined,
-            range: new monaco.Range(1, definedColumn, 1, definedColumn),
-          },
-          {
-            label: 'table2',
-            kind: monaco.languages.CompletionItemKind.Variable,
-            insertText: `${spacePrefix}table2 t `,
-            detail: undefined,
-            range: new monaco.Range(1, definedColumn, 1, definedColumn),
-          },
-          {
-            label: 'another_table',
-            kind: monaco.languages.CompletionItemKind.Variable,
-            insertText: `${spacePrefix}another_table at_2 `,
-            detail: undefined,
-            range: new monaco.Range(1, definedColumn, 1, definedColumn),
-          },
-        ],
-      });
-    }
-  );
-
-  test.each([
-    { sql: 'SELECT * FROM employee e JOIN ', table: 'employee', alias: 'e' },
-    { sql: 'SELECT * FROM employee JOIN ', table: 'employee' },
-  ])(
-    'should return tablelist with aliases if we are after FROM or JOIN',
-    ({ sql, table, alias }) => {
-      const definedColumn = sql.length + 1;
-      const tableList: ShowTableStatus[] = [
-        // @ts-expect-error don't want all data, only the name
-        { Name: 'title' },
-        // @ts-expect-error don't want all data, only the name
-        { Name: 'planning' },
-      ];
-
-      const helper = new ForeignKeysHelper([
-        // @ts-expect-error issue with contstructor name
-        {
-          TABLE_NAME: 'employee',
-          COLUMN_NAME: 'title_id',
-          REFERENCED_TABLE_NAME: 'title',
-          REFERENCED_COLUMN_NAME: 'id',
-          CONSTRAINT_NAME: 'employee_title_id_fkey',
-        },
-        // @ts-expect-error issue with contstructor name
-        {
-          TABLE_NAME: 'planning',
-          COLUMN_NAME: 'employee_id',
-          REFERENCED_TABLE_NAME: 'employee',
-          REFERENCED_COLUMN_NAME: 'id',
-          CONSTRAINT_NAME: 'employee_employee_id_fkey',
-        },
-      ]);
-
-      const position = new monaco.Position(1, definedColumn);
-
-      const model = monaco.editor.createModel(sql, 'sql');
-
-      const result = provideCompletionItems(
-        monaco,
-        tableList,
-        helper,
-        new ColumnDetailHelper([])
-      )(
-        model,
-        position,
-        { triggerKind: monaco.languages.CompletionTriggerKind.Invoke },
-        { isCancellationRequested: false, onCancellationRequested: vi.fn() }
-      );
-
-      expect(result).toEqual({
-        suggestions: [
-          {
-            label: 'title',
-            detail: table,
-            kind: monaco.languages.CompletionItemKind.Variable,
-            insertText: `title t ON t.id = ${alias || table}.title_id `,
-            range: new monaco.Range(1, definedColumn, 1, definedColumn),
-          },
-          {
-            label: 'planning',
-            detail: table,
-            kind: monaco.languages.CompletionItemKind.Variable,
-            insertText: `planning p ON p.employee_id = ${alias || table}.id `,
-            range: new monaco.Range(1, definedColumn, 1, definedColumn),
-          },
-        ],
-      });
-    }
-  );
-});
-
-describe('column in SELECT or WHERE', () => {
-  test.each([
-    { sql: 'SELECT employee. FROM  employee LIMIT 10', column: 17 },
-    {
-      sql: 'SELECT e. FROM employee e JOIN title as t LIMIT 10',
-      column: 10,
-    },
-    {
-      sql: 'SELECT e.* FROM employee e JOIN title as t WHERE e. LIMIT 10',
-      column: 52,
-    },
-    // partial column name already typed
-    {
-      sql: 'SELECT employee.n FROM  employee LIMIT 10',
-      column: 18,
-      startColumn: 17,
-    },
-    {
-      sql: 'SELECT e.n FROM employee e JOIN title as t LIMIT 10',
-      column: 11,
-      startColumn: 10,
-    },
-  ])('after alias', ({ sql, column, startColumn }) => {
-    const position = new monaco.Position(1, column);
-
-    const model = monaco.editor.createModel(sql, 'sql');
-
-    const result = provideCompletionItems(
-      monaco,
-      [],
-      new ForeignKeysHelper([]),
-      new ColumnDetailHelper([
-        // @ts-expect-error RawDataPacket issue
-        { Table: 'employee', Column: 'id', DataType: 'number' },
-        // @ts-expect-error RawDataPacket issue
-        { Table: 'employee', Column: 'name', DataType: 'varchar' },
-        // @ts-expect-error RawDataPacket issue
-        { Table: 'title', Column: 'position', DataType: 'varchar' },
-      ])
-    )(
-      model,
-      position,
-      { triggerKind: monaco.languages.CompletionTriggerKind.Invoke },
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() }
+  it('sorts schema names before keywords', () => {
+    const suggestions = completionsAt('SELECT * FROM |');
+    const table = suggestions.find((item) => item.label === 'employee');
+    const keyword = suggestions.find(
+      (item) => item.kind === languages.CompletionItemKind.Keyword
     );
 
-    expect(result).toEqual({
-      suggestions: [
-        {
-          label: 'id',
-          detail: 'employee',
-          insertText: 'id',
-          kind: monaco.languages.CompletionItemKind.Field,
-          range: new monaco.Range(1, column, 1, startColumn ?? column),
-        },
-        {
-          label: 'name',
-          detail: 'employee',
-          insertText: 'name',
-          kind: monaco.languages.CompletionItemKind.Field,
-          range: new monaco.Range(1, column, 1, startColumn ?? column),
-        },
-      ],
-    });
+    expect(table?.sortText).toBeDefined();
+    expect(keyword?.sortText).toBeDefined();
+    expect(String(table?.sortText) < String(keyword?.sortText)).toBe(true);
   });
 });

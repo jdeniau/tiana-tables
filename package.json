@@ -50,6 +50,7 @@
     "fuse.js": "^7.3.0",
     "i18next": "^23.16.8",
     "monaco-editor": "^0.55.1",
+    "monaco-sql-languages": "^1.2.0",
     "mysql": "^2.18.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
