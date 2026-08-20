@@ -1,4 +1,7 @@
+import { EntityContextType } from 'dt-sql-parser';
+import { AttrName } from 'dt-sql-parser/dist/parser/common/entityCollector';
 import { SQL_RESERVED_KEYWORDS } from './keywords';
+import { collectEntities } from './mysqlParser';
 
 export function generateTableAlias(
   tableName: string,
@@ -61,51 +64,38 @@ export function generateTableAlias(
   return newAlias;
 }
 
-// TODO maybe import a list of reserved keywords ? https://en.wikipedia.org/wiki/List_of_SQL_reserved_words
-const FORBIDDEN_ALIASES = [
-  'JOIN',
-  'INNER',
-  'LEFT',
-  'RIGHT',
-  'FULL',
-  'LIMIT',
-  'OFFSET',
-  'ON',
-];
-const FORBIDDEN_ALIASES_JOINED = FORBIDDEN_ALIASES.join('|');
-
-const TABLE_NAME_REGEX = new RegExp(
-  `(from|join)\\s+(?<database>\\w*\\.)?(?<tablename>\\w+)?\\s*(as\\s+)?(?!${FORBIDDEN_ALIASES_JOINED})(?<alias>\\w+)?`,
-  'gi'
-);
-
 type Alias = string;
 type TableName = string;
+
+/** `` `t1` `` and `"t1"` both name the table `t1` */
+export function unquote(name: string): string {
+  return name.replace(/^[`"[]|[`"\]]$/g, '');
+}
+
+/** `db1.t1` and `` `t1` `` both refer to the table `t1` */
+export function unqualify(tableNamePath: string): TableName {
+  return unquote(tableNamePath.split('.').at(-1) ?? tableNamePath);
+}
+
 /**
- * Extract all table names from the given query.
- * This function does not check that the table exist,
- * but do only extract the table names from the SQL syntax
+ * Extract all table names from the given query, indexed by their alias (or by
+ * their own name when they have none).
+ *
+ * This function does not check that the tables exist, it only reads the SQL.
+ * Incomplete queries are expected: the parser reports syntax errors instead of
+ * throwing, and still returns the entities it managed to resolve.
  */
 export function extractTableAliases(sql: string): Record<Alias, TableName> {
-  const matches = sql.matchAll(TABLE_NAME_REGEX);
-
-  const arrayMatches = [...matches];
-
-  // console.log(arrayMatches);
+  const tables = collectEntities(sql).filter(
+    (entity) => entity.entityContextType === EntityContextType.TABLE
+  );
 
   return Object.fromEntries(
-    arrayMatches
-      .filter((match) => {
-        const alias = match.groups?.alias;
+    tables.map((table) => {
+      const tableName = unqualify(table.text);
+      const alias = table[AttrName.alias]?.text;
 
-        return (
-          typeof alias === 'undefined' ||
-          (typeof alias === 'string' && !FORBIDDEN_ALIASES.includes(alias))
-        );
-      })
-      .map((match) => [
-        match.groups?.alias ?? match.groups?.tablename,
-        match.groups?.tablename,
-      ])
+      return [alias ?? tableName, tableName];
+    })
   );
 }

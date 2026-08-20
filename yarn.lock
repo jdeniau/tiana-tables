@@ -4384,6 +4384,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"antlr4-c3@npm:3.3.7":
+  version: 3.3.7
+  resolution: "antlr4-c3@npm:3.3.7"
+  dependencies:
+    antlr4ng: "npm:2.0.11"
+  checksum: 10c0/f2ab548e3de2ab40a4dc7982f8ea8261f5166eba0eef45662ffe34befe922ff6ec038311ff203805b5044f6a95b0d975e19292655a9bd1435dc003fd44669409
+  languageName: node
+  linkType: hard
+
+"antlr4ng@npm:2.0.11":
+  version: 2.0.11
+  resolution: "antlr4ng@npm:2.0.11"
+  peerDependencies:
+    antlr4ng-cli: 1.0.7
+  checksum: 10c0/48dc65e39af6f4e8ebe491bd184de910fcb850bc02b43a5d96df0b34370c534a5bee970ca7f8a9f95678cc32f9e74ff123d1ea82f56918435592078d0b8f2115
+  languageName: node
+  linkType: hard
+
 "appdmg@npm:^0.6.4":
   version: 0.6.6
   resolution: "appdmg@npm:0.6.6"
@@ -5534,6 +5552,16 @@ __metadata:
     macos-alias: "npm:~0.2.5"
     tn1150: "npm:^0.1.0"
   checksum: 10c0/40293e925e27fa6df7f043320a2e277c5901368c49a7e420ecfc510dd843a6878b92875b126b841b53a70be7a6ab67338582b7f7ffd4ace3e581cf15aea0a1e2
+  languageName: node
+  linkType: hard
+
+"dt-sql-parser@npm:4.5.0, dt-sql-parser@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "dt-sql-parser@npm:4.5.0"
+  dependencies:
+    antlr4-c3: "npm:3.3.7"
+    antlr4ng: "npm:2.0.11"
+  checksum: 10c0/ef917ad4e7115fec2432ee6ddd589d3bc8cf026d86a58ed3072e383e8177315321a996844562505c695f60eec338d1c42db1ede82e21ef58ed6e8508b3bb2a42
   languageName: node
   linkType: hard
 
@@ -8788,6 +8816,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"monaco-sql-languages@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "monaco-sql-languages@npm:1.2.0"
+  dependencies:
+    dt-sql-parser: "npm:4.5.0"
+  peerDependencies:
+    monaco-editor: ">=0.37.1"
+  checksum: 10c0/eaed54bddc8e0f511a56226421d13fcada488972b6d39aaa9f89488cd99e346c55bdd4804816e4539886853db7c642e502b397c5e7a925bbc5bc4f184b13a779
+  languageName: node
+  linkType: hard
+
 "ms@npm:2.0.0":
   version: 2.0.0
   resolution: "ms@npm:2.0.0"
@@ -11115,6 +11154,7 @@ __metadata:
     "@vitejs/plugin-react": "npm:^6.0.1"
     antd: "npm:^6.4.2"
     chromatic: "npm:^11.29.0"
+    dt-sql-parser: "npm:^4.5.0"
     electron: "npm:^41.5.2"
     electron-devtools-installer: "npm:^4.0.0"
     electron-log: "npm:^5.4.3"
@@ -11132,6 +11172,7 @@ __metadata:
     i18next: "npm:^23.16.8"
     lint-staged: "npm:^15.5.2"
     monaco-editor: "npm:^0.55.1"
+    monaco-sql-languages: "npm:^1.2.0"
     mysql: "npm:^2.18.1"
     mysql2: "npm:^3.22.3"
     prettier: "npm:^3.8.3"

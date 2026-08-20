@@ -82,11 +82,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Active4D palett
     },
     {
       "foreground": "006699",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "3b3b3b",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "21439c",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "a535ae",
+      "token": "alias.sql",
     },
   ],
 }
@@ -174,11 +183,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Catppuccin Latt
     },
     {
       "foreground": "8839ef",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "4c4f69",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "df8e1d",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "179299",
+      "token": "alias.sql",
     },
   ],
 }
@@ -266,11 +284,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Catppuccin Moch
     },
     {
       "foreground": "cba6f7",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "cdd6f4",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "f9e2af",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "94e2d5",
+      "token": "alias.sql",
     },
   ],
 }
@@ -358,11 +385,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Dracula palette
     },
     {
       "foreground": "ff79c6",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "f8f8f2",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "8be9fd",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "8be9fd",
+      "token": "alias.sql",
     },
   ],
 }
@@ -450,11 +486,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Eva palette 1`]
     },
     {
       "foreground": "9c6cd3",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "9fa2a6",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "ffff66",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "4b8f77",
+      "token": "alias.sql",
     },
   ],
 }
@@ -542,11 +587,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the GitHub Dark pal
     },
     {
       "foreground": "ff7b72",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "c9d1d9",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "bb8009",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "7ee787",
+      "token": "alias.sql",
     },
   ],
 }
@@ -634,11 +688,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the GitHub Light pa
     },
     {
       "foreground": "cf222e",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "424a53",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "bf8700",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "116329",
+      "token": "alias.sql",
     },
   ],
 }
@@ -726,11 +789,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Gruvbox Dark pa
     },
     {
       "foreground": "d3869b",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "d5c4a1",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "fabd2f",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "8ec07c",
+      "token": "alias.sql",
     },
   ],
 }
@@ -818,11 +890,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Gruvbox Light p
     },
     {
       "foreground": "8f3f71",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "504945",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "b57614",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "427b58",
+      "token": "alias.sql",
     },
   ],
 }
@@ -910,11 +991,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Monokai palette
     },
     {
       "foreground": "ae81ff",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "f8f8f2",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "f4bf75",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "a1efe4",
+      "token": "alias.sql",
     },
   ],
 }
@@ -1002,11 +1092,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Night Owl palet
     },
     {
       "foreground": "c792ea",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "d6deeb",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "ffcb8b",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "7fdbca",
+      "token": "alias.sql",
     },
   ],
 }
@@ -1094,11 +1193,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Nord palette 1`
     },
     {
       "foreground": "b48ead",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "e5e9f0",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "ebcb8b",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "88c0d0",
+      "token": "alias.sql",
     },
   ],
 }
@@ -1186,11 +1294,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the One Light palet
     },
     {
       "foreground": "a626a4",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "383a42",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "c18401",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "0184bc",
+      "token": "alias.sql",
     },
   ],
 }
@@ -1278,11 +1395,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the OneDark palette
     },
     {
       "foreground": "c678dd",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "abb2bf",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "e5c07b",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "56b6c2",
+      "token": "alias.sql",
     },
   ],
 }
@@ -1370,11 +1496,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Outrun Dark pal
     },
     {
       "foreground": "f10596",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "d0d0fa",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "f3e877",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "0ef0f0",
+      "token": "alias.sql",
     },
   ],
 }
@@ -1462,11 +1597,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Rosé Pine Dawn
     },
     {
       "foreground": "ea9d34",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "575279",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "d7827e",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "56949f",
+      "token": "alias.sql",
     },
   ],
 }
@@ -1554,11 +1698,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Rosé Pine pale
     },
     {
       "foreground": "f6c177",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "e0def4",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "ebbcba",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "9ccfd8",
+      "token": "alias.sql",
     },
   ],
 }
@@ -1646,11 +1799,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Solarized Dark 
     },
     {
       "foreground": "6c71c4",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "93a1a1",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "b58900",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "2aa198",
+      "token": "alias.sql",
     },
   ],
 }
@@ -1738,11 +1900,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Solarized Light
     },
     {
       "foreground": "6c71c4",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "586e75",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "b58900",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "2aa198",
+      "token": "alias.sql",
     },
   ],
 }
@@ -1830,11 +2001,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Synth Midnight 
     },
     {
       "foreground": "ea5ce2",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "c1c3c4",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "c9d364",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "42fff9",
+      "token": "alias.sql",
     },
   ],
 }
@@ -1922,11 +2102,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the SynthWave '84 p
     },
     {
       "foreground": "fede5d",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "ffffff",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "fe4450",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "72f1b8",
+      "token": "alias.sql",
     },
   ],
 }
@@ -2014,11 +2203,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Tokyo Night Dar
     },
     {
       "foreground": "bb9af7",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "a9b1d6",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "0db9d7",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "b4f9f8",
+      "token": "alias.sql",
     },
   ],
 }
@@ -2106,11 +2304,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Tokyo Night Lig
     },
     {
       "foreground": "5a4a78",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "343b59",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "166775",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "3e6968",
+      "token": "alias.sql",
     },
   ],
 }
@@ -2198,11 +2405,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Unikitty Light 
     },
     {
       "foreground": "aa17e6",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "6c696e",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "dc8a0e",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "149bda",
+      "token": "alias.sql",
     },
   ],
 }
@@ -2290,11 +2506,20 @@ exports[`buildMonacoTheme > should build a Monaco theme from the Visual Studio p
     },
     {
       "foreground": "0000ff",
-      "token": "operator.sql",
+      "token": "operator.keyword.sql",
     },
     {
       "foreground": "000000",
       "token": "identifier.sql",
+    },
+    {
+      "foreground": "2b91af",
+      "token": "table.sql",
+    },
+    {
+      "fontStyle": "italic",
+      "foreground": "0451a5",
+      "token": "alias.sql",
     },
   ],
 }

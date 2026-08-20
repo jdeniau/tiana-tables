@@ -128,7 +128,9 @@ app.whenReady().then(async () => {
         ...details.responseHeaders,
         'Content-Security-Policy': [
           // TODO maybe disable unsafe-inline for style-src on build ?
-          "default-src 'self'; style-src 'self' 'unsafe-inline'",
+          // `img-src ... data:` is required by Monaco, which draws squiggly
+          // error underlines with an inlined SVG background image.
+          "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:",
         ],
       },
     });

@@ -96,6 +96,53 @@ Translation files are in `locales/` (`en.ts`, `fr.ts`). English (`en.ts`) is the
 | Storybook 8                | Component development                                        |
 | TypeScript 6               | Type checking                                                |
 
+### SQL statements
+
+**A query sent to the server MUST always be a single statement.** `multipleStatements`
+stays off in the mysql2 connection, and the editor is expected to send one
+statement at a time.
+
+When the editor holds several statements, they are to be split and handled
+independently, and the one **under the caret** is the one that gets sent —
+and the one that completion, highlighting and validation work on.
+
+`dt-sql-parser` exposes `splitSQLByStatement`, but beware: it returns `null` as
+soon as the input has any syntax error (`SELECT FROM t1 a` included), so it
+cannot be used as a "is the tail unfinished?" check. Splitting on the `;` tokens
+of `getAllTokens` is error-tolerant, since lexing never fails.
+
+### SQL editor
+
+The editor is Monaco, with two SQL packages plugged into it:
+`monaco-sql-languages` for the `mysql` language and its Monarch tokenizer
+(lexical), and `dt-sql-parser` for the real grammar (ANTLR). The completion and
+diagnostics of `monaco-sql-languages` are **disabled** — they run in a worker
+built on Monaco's pre-0.45 API and never answer — and rebuilt on
+`dt-sql-parser` in `useCompletion.tsx`.
+
+- `src/sql/mysqlParser.ts` — the single `MySQL` parser instance, plus
+  `collectEntities`, which tolerates the unfinished tail of a query being typed.
+- `MonacoEditor/queryAnalysis.ts` — one read of a query against the schema,
+  producing what to color (table names, aliases) and what to warn about
+  (unknown columns). No runtime monaco import, so it stays testable in node.
+- `MonacoEditor/useQuerySchema.ts` — the schema, indexed once from the contexts.
+- `MonacoEditor/useSemanticTokens.ts` — colors `table.sql` and `alias.sql`.
+- `MonacoEditor/useCompletion.tsx` — completion and model markers.
+
+**The schema we hold is the current database only**: `getAllColumns` and the
+table list are both filtered on `TABLE_SCHEMA = <current database>`. Two
+decisions follow, and both are deliberate:
+
+- a table qualified by **another** database is never colored — `other_db.users`
+  cannot be told apart from a typo, and guessing would color mistakes as valid;
+- unknown columns are reported as **warnings**, only on qualified references
+  (`alias.column`) whose table we resolved. Bare columns are never checked: they
+  may come from a subquery, a CTE or an expression alias, and a wrong warning on
+  valid SQL is worse than no warning.
+
+Deep details — token names, semantic token wiring, position conventions, parser
+quirks — live in the `sql-editor` skill.
+
 ### Gotchas
 
 - **Tests default to the node environment.** Add `/** @vitest-environment happy-dom */` at the top of a test file that needs the DOM (see `src/renderer/routes/connections.$connectionSlug.$databaseName.test.tsx`).

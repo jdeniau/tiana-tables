@@ -85,4 +85,27 @@ describe('extractTableAliases', () => {
   ])('table aliases', (sql, expected) => {
     expect(extractTableAliases(sql)).toEqual(expected);
   });
+
+  // The editor parses on every keystroke, so the query is usually unfinished.
+  // A syntax error makes the parser drop the whole statement, tables included,
+  // hence the trimming in `collectEntities`.
+  test.each([
+    ['SELECT * FROM t1 a JOIN ', { a: 't1' }],
+    ['SELECT * FROM t1 a JOIN t2 b ON ', { a: 't1', b: 't2' }],
+    ['SELECT * FROM t1 a WHERE ', { a: 't1' }],
+    ['SELECT * FROM t1 a WHERE x = ', { a: 't1' }],
+    ['SELECT * FROM t1 a ORDER BY ', { a: 't1' }],
+    ['SELECT * FROM t1 a GROUP ', { a: 't1' }],
+    ['SELECT * FROM t1 a LIMIT ', { a: 't1' }],
+    ['SELECT FROM t1 a', { a: 't1' }],
+    ['SELECT 1', {}],
+    ['', {}],
+    // Known limitation: the first statement parses on its own, which stops the
+    // trimming before the unfinished one is reached. Statements are meant to be
+    // split and handled independently, keeping only the one under the caret —
+    // see the "SQL statements" rule in CLAUDE.md.
+    ['SELECT * FROM t1 a; SELECT * FROM t2 b JOIN ', { a: 't1' }],
+  ])('table aliases in unfinished query %j', (sql, expected) => {
+    expect(extractTableAliases(sql)).toEqual(expected);
+  });
 });

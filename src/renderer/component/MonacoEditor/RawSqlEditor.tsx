@@ -1,9 +1,11 @@
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import type monaco from 'monaco-editor';
+import { LanguageIdEnum } from 'monaco-sql-languages';
 import { useTheme } from 'styled-components';
 import useEffectOnce from '../../hooks/useEffectOnce';
 import { buildMonacoTheme } from './themes';
 import useCompletion from './useCompletion';
+import useSemanticTokens from './useSemanticTokens';
 
 type Props = {
   defaultValue?: string;
@@ -35,7 +37,8 @@ export function RawSqlEditor({
 
   const monacoTheme = buildMonacoTheme(theme);
 
-  useCompletion(monacoInstance);
+  useCompletion();
+  useSemanticTokens();
 
   const memoizedMonacoOptions = useMemo(() => monacoOptions, [monacoOptions]);
 
@@ -56,9 +59,12 @@ export function RawSqlEditor({
 
         const createdEditor = loadedMonaco.editor.create(monacoEl.current, {
           value: defaultValue,
-          language: 'sql',
+          language: LanguageIdEnum.MYSQL,
           theme: 'currentTheme',
           minimap: { enabled: false },
+          // standalone themes cannot opt in, `StandaloneTheme` hardcodes
+          // `semanticHighlighting = false`
+          'semanticHighlighting.enabled': true,
           automaticLayout: true,
           ...memoizedMonacoOptions,
         });

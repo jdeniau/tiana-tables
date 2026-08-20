@@ -42,12 +42,22 @@ export function buildMonacoTheme(theme: AppTheme): editor.IStandaloneThemeData {
       // above, so the SQL variants have to be restated here.
       { token: 'string.sql', foreground: token(palette.base0B) },
       { token: 'predefined.sql', foreground: token(palette.base0D) },
-      // Monaco's SQL grammar classifies AND, OR, NOT, IN, LIKE, IS, NULL,
-      // JOIN, INNER, LEFT, UNION… as `operators`, not as `keywords`, and
-      // checks that list first. They are keywords to the reader, so they get
-      // the keyword color — symbolic operators (=, *, <) ride along.
-      { token: 'operator.sql', foreground: token(palette.base0E) },
+      // `monaco-sql-languages` classifies AND, OR, NOT, IN, LIKE, IS, JOIN,
+      // UNION… as `operator.keyword`, not as `keyword`, and checks that list
+      // first. They are keywords to the reader, so they get the keyword color.
+      // Symbolic operators (=, *, <) are `operator.symbol` and keep the
+      // default foreground through the generic `operator` rule above.
+      { token: 'operator.keyword.sql', foreground: token(palette.base0E) },
       { token: 'identifier.sql', foreground: token(palette.base05) },
+
+      // Semantic tokens (see `useSemanticTokens`): the lexer cannot tell a
+      // table name or an alias from any other identifier, the parser can.
+      { token: 'table.sql', foreground: token(palette.base0A) },
+      {
+        token: 'alias.sql',
+        foreground: token(palette.base0C),
+        fontStyle: 'italic',
+      },
     ],
     colors: {
       'editor.background': palette.base00,
