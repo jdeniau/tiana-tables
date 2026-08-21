@@ -24,7 +24,7 @@ const MAX_TITLE_LENGTH = 300;
 function setTitleIfTruncated(event: MouseEvent<HTMLElement>): void {
   const element = event.currentTarget;
 
-  if (element.scrollWidth < element.clientWidth) {
+  if (element.scrollWidth <= element.clientWidth) {
     element.removeAttribute('title');
   }
 }
