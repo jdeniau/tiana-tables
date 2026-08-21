@@ -75,6 +75,15 @@ export const WithLongStringType: Story = {
   },
 };
 
+export const WithTooLongStringType: Story = {
+  args: {
+    type: Types.VARCHAR,
+    value:
+      'This is a too long string (more than 300 char), without title.' +
+      'x'.repeat(300),
+  },
+};
+
 export const WithNumberType: Story = {
   args: {
     type: Types.FLOAT,
