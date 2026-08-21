@@ -15,6 +15,7 @@ import { styled } from 'styled-components';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import { background, foreground } from '../theme';
 import Cell from './Cell';
+import CellDetailModal, { CellDetail } from './CellDetailModal';
 import ForeignKeyLink from './ForeignKeyLink';
 
 const features = tableFeatures({
@@ -63,6 +64,9 @@ function TableGrid<Row extends RowDataPacket>({
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(
     null
   );
+
+  // the value shown by the detail modal, `null` when it is closed
+  const [cellDetail, setCellDetail] = useState<CellDetail | null>(null);
 
   const foreignKeys = useForeignKeysContext();
 
@@ -182,6 +186,7 @@ function TableGrid<Row extends RowDataPacket>({
             columnsMeta={columnsMeta}
             rowsAsArray={rowsAsArray}
             scrollElement={scrollElement}
+            onShowCellDetail={setCellDetail}
           />
         </StyledTable>
 
@@ -191,11 +196,18 @@ function TableGrid<Row extends RowDataPacket>({
           </EmptyWrapper>
         )}
       </ScrollContainer>
+
+      <CellDetailModal
+        detail={cellDetail}
+        onClose={() => {
+          setCellDetail(null);
+        }}
+      />
     </Wrapper>
   );
 }
 
-interface ColumnMeta {
+export interface ColumnMeta {
   id: string;
   fieldIndex: number;
   name: string;
@@ -214,6 +226,7 @@ interface TableBodyProps<Row extends RowDataPacket> {
   columnsMeta: Array<ColumnMeta>;
   rowsAsArray: boolean;
   scrollElement: HTMLDivElement | null;
+  onShowCellDetail: (detail: CellDetail) => void;
 }
 
 // keep the virtualizer in the lowest component possible: it re-renders on
@@ -223,6 +236,7 @@ function TableBody<Row extends RowDataPacket>({
   columnsMeta,
   rowsAsArray,
   scrollElement,
+  onShowCellDetail,
 }: TableBodyProps<Row>): ReactElement {
   const { rows } = table.getRowModel();
 
@@ -245,6 +259,7 @@ function TableBody<Row extends RowDataPacket>({
             start={virtualRow.start}
             columnsMeta={columnsMeta}
             rowsAsArray={rowsAsArray}
+            onShowCellDetail={onShowCellDetail}
           />
         );
       })}
@@ -257,6 +272,7 @@ interface BodyRowProps<Row extends RowDataPacket> {
   start: number;
   columnsMeta: Array<ColumnMeta>;
   rowsAsArray: boolean;
+  onShowCellDetail: (detail: CellDetail) => void;
 }
 
 function BodyRowInner<Row extends RowDataPacket>({
@@ -264,6 +280,7 @@ function BodyRowInner<Row extends RowDataPacket>({
   start,
   columnsMeta,
   rowsAsArray,
+  onShowCellDetail,
 }: BodyRowProps<Row>): ReactElement {
   const original = row.original;
 
@@ -285,7 +302,16 @@ function BodyRowInner<Row extends RowDataPacket>({
               left: column.pinnedLeft ?? undefined,
             }}
           >
-            <GridCell column={column} value={value} />
+            <GridCell
+              column={column}
+              value={value}
+              // a closure per mounted cell: cheap next to what a cell already
+              // allocates, and it keeps the value at hand instead of resolving
+              // it back from the DOM
+              onDoubleClick={() => {
+                onShowCellDetail({ column, value });
+              }}
+            />
           </td>
         );
       })}
@@ -301,7 +327,8 @@ const BodyRow = memo(
     prevProps.row === nextProps.row &&
     prevProps.start === nextProps.start &&
     prevProps.columnsMeta === nextProps.columnsMeta &&
-    prevProps.rowsAsArray === nextProps.rowsAsArray
+    prevProps.rowsAsArray === nextProps.rowsAsArray &&
+    prevProps.onShowCellDetail === nextProps.onShowCellDetail
 ) as typeof BodyRowInner;
 
 // one React component per cell (measured free, 2026-08-18 benchmark): hosts
@@ -311,14 +338,17 @@ const BodyRow = memo(
 const GridCell = memo(function GridCell({
   column,
   value,
+  onDoubleClick,
 }: {
   column: ColumnMeta;
   value: unknown;
+  onDoubleClick: () => void;
 }): ReactElement {
   return (
     <Cell
       type={column.type}
       value={value}
+      onDoubleClick={onDoubleClick}
       link={
         column.hasForeignKey ? (
           <ForeignKeyLink
