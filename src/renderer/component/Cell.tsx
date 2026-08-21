@@ -6,6 +6,7 @@ import { formatDate, formatDateTime } from '../utils/dateFormatter';
 
 interface TableCellFactoryProps {
   type: number | undefined;
+  onDoubleClick?: () => void;
   value: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
@@ -36,6 +37,7 @@ function setTitleIfTruncated(event: MouseEvent<HTMLElement>): void {
  */
 type CellShellType = {
   className?: string;
+  onDoubleClick?: () => void;
 } & (
   | {
       children: ReactNode;
@@ -47,14 +49,24 @@ type CellShellType = {
     }
 );
 
-function CellShell({ className, children, hasTitle }: CellShellType) {
+function CellShell({
+  className,
+  children,
+  hasTitle,
+  onDoubleClick,
+}: CellShellType) {
   const title =
     hasTitle && String(children).length < MAX_TITLE_LENGTH
       ? String(children)
       : undefined;
 
   return (
-    <div className={className} onMouseEnter={setTitleIfTruncated} title={title}>
+    <div
+      className={className}
+      onMouseEnter={setTitleIfTruncated}
+      title={title}
+      onDoubleClick={onDoubleClick}
+    >
       {children}
     </div>
   );
@@ -69,55 +81,77 @@ const BaseCell = styled(CellShell)`
   word-break: keep-all;
 `;
 
+interface CellProps<T> {
+  value: T;
+  onDoubleClick?: () => void;
+}
+
 const NullSpan = styled(BaseCell)`
   color: ${constantForeground};
 `;
 
-function NullCell() {
-  return <NullSpan>(NULL)</NullSpan>;
+function NullCell({ onDoubleClick }: Omit<CellProps<never>, 'value'>) {
+  return <NullSpan onDoubleClick={onDoubleClick}>(NULL)</NullSpan>;
 }
 
 const ForegroundSpan = styled(BaseCell)`
   color: ${foreground};
 `;
 
-function DateCell({ value }: { value: Date }) {
-  return <ForegroundSpan>{formatDate(value)}</ForegroundSpan>;
+function DateCell({ value, ...rest }: CellProps<Date>) {
+  return <ForegroundSpan {...rest}>{formatDate(value)}</ForegroundSpan>;
 }
 
-function DatetimeCell({ value }: { value: Date }) {
-  return <ForegroundSpan>{formatDateTime(value)}</ForegroundSpan>;
+function DatetimeCell({ value, ...rest }: CellProps<Date>) {
+  return <ForegroundSpan {...rest}>{formatDateTime(value)}</ForegroundSpan>;
 }
 
 const StringSpan = styled(BaseCell)`
   color: ${stringForeground};
 `;
-function StringCell({ value }: { value: string }) {
-  return <StringSpan hasTitle>{value}</StringSpan>;
+function StringCell({ value, ...rest }: CellProps<string>) {
+  return (
+    <StringSpan hasTitle {...rest}>
+      {value}
+    </StringSpan>
+  );
 }
 
 const NumberSpan = styled(BaseCell)`
   color: ${constantForeground};
 `;
-function NumberCell({ value }: { value: number }) {
-  return <NumberSpan hasTitle>{value}</NumberSpan>;
+function NumberCell({ value, ...rest }: CellProps<number>) {
+  return (
+    <NumberSpan hasTitle {...rest}>
+      {value}
+    </NumberSpan>
+  );
 }
 
-function BlobCell({ value }: { value: string }) {
-  return <ForegroundSpan hasTitle>{value}</ForegroundSpan>;
+function BlobCell({ value, ...rest }: CellProps<string>) {
+  return (
+    <ForegroundSpan hasTitle {...rest}>
+      {value}
+    </ForegroundSpan>
+  );
 }
 
-function JsonCell({ value }: { value: string }) {
-  return <ForegroundSpan>{value}</ForegroundSpan>;
+function JsonCell({ value, ...rest }: CellProps<string>) {
+  return <ForegroundSpan {...rest}>{value}</ForegroundSpan>;
 }
 
-function EnumCell({ value }: { value: string }) {
-  return <ForegroundSpan hasTitle>{value}</ForegroundSpan>;
+function EnumCell({ value, ...rest }: CellProps<string>) {
+  return (
+    <ForegroundSpan hasTitle {...rest}>
+      {value}
+    </ForegroundSpan>
+  );
 }
 
 const TableCellFactory = memo(function TableCellFactory({
   type,
   value,
+  ...rest
 }: TableCellFactoryProps) {
   if (value === null || typeof value === 'undefined') {
     return <NullCell />;
@@ -130,10 +164,10 @@ const TableCellFactory = memo(function TableCellFactory({
     case Types.TIMESTAMP: // aka TIMESTAMP
     case Types.TIMESTAMP2: // aka TIMESTAMP with fractional seconds
     case Types.NEWDATE: // aka ?
-      return <DatetimeCell value={value} />;
+      return <DatetimeCell value={value} {...rest} />;
 
     case Types.DATE: // aka DATE
-      return <DateCell value={value} />;
+      return <DateCell value={value} {...rest} />;
 
     // Numbers
     case Types.TINY: // aka TINYINT, 1 byte
@@ -145,27 +179,27 @@ const TableCellFactory = memo(function TableCellFactory({
     case Types.DECIMAL: // aka DECIMAL (http://dev.mysql.com/doc/refman/5.0/en/precision-math-decimal-changes.html)
     case Types.NEWDECIMAL: // aka DECIMAL
     case Types.LONGLONG: // aka BIGINT, 8 bytes
-      return <NumberCell value={value} />;
+      return <NumberCell value={value} {...rest} />;
 
     // Strings
     case Types.VARCHAR: // aka VARCHAR (?)
     case Types.VAR_STRING: // aka VARCHAR, VARBINARY
     case Types.STRING: // aka CHAR, BINARY
-      return <StringCell value={value} />;
+      return <StringCell value={value} {...rest} />;
 
     // Blobs
     case Types.TINY_BLOB: // aka TINYBLOB, TINYTEXT
     case Types.MEDIUM_BLOB: // aka MEDIUMBLOB, MEDIUMTEXT
     case Types.LONG_BLOB: // aka LONGBLOG, LONGTEXT
     case Types.BLOB: // aka BLOB, TEXT
-      return <BlobCell value={value} />;
+      return <BlobCell value={value} {...rest} />;
 
     case Types.JSON: // aka JSON
-      return <JsonCell value={value} />;
+      return <JsonCell value={value} {...rest} />;
 
     case Types.ENUM: // aka ENUM
     case Types.SET: // aka SET
-      return <EnumCell value={value} />;
+      return <EnumCell value={value} {...rest} />;
 
     case Types.NULL: // NULL (used for prepared statements, I think)
     case Types.TIME: // aka TIME
