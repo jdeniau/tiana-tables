@@ -3,26 +3,29 @@ name: github-pr-review
 description: >
   Use when reviewing a GitHub pull request or posting a code review on any
   repository — the review contract (only what must change, severity circles
-  🔴/🟠/🟢, the `Cloclo 🤖` signature, empty global body), the
-  verify-before-asserting discipline, posting one single review through the
-  GitHub reviews API, the shell traps that silently corrupt a review body,
-  delegating a review to a subagent, and the cross-repo review sweep. Load it
-  before writing a single line of review, and whenever the user says "review
-  this PR", "review this branch", "code review", "post a review", "fais un tour
-  sur #1234", mentions a review sweep, the severity emoji, or asks whether a PR
-  is RAS.
+  🔴/🟠/🟢, the `Cloclo 🤖` signature, and when the global body stays empty),
+  the verify-before-asserting discipline, posting one single review through the
+  GitHub reviews API, the shell traps that silently corrupt a review body, and
+  the cross-repo review sweep. Load it before writing a single line of review,
+  and whenever the user says "review this PR", "review this branch", "code
+  review", "post a review", "fais un tour sur #1234", mentions a review sweep,
+  the severity emoji, or asks whether a PR is RAS.
 ---
 
 # Reviewing a pull request
 
 How review comments are to be written and posted on GitHub: what to look for,
-how deep to dig, how to word a finding, how to publish it, and how the
-cross-repo sweep works.
+how deep to dig, how to word a finding, and how to publish it.
 
 This encodes a **negotiated user policy**, not facts about a codebase. Almost
 none of it can be re-derived by grepping — treat it as verbatim rather than as
 suggestions to reinterpret. It applies to **every repository** reviewed, not
 just the one this skill happens to live in.
+
+Reviewing a batch of PRs across repositories — the eligibility filter, the
+already-reviewed detection, delegation and the recurring loop — lives in
+[references/sweep.md](references/sweep.md). Read it when the task is a sweep
+rather than a single PR.
 
 ## When to use it — and when not to
 
@@ -37,19 +40,13 @@ sweep. Do **not** use it for:
 | A security-focused pass on pending changes              | the `/security-review` command        |
 | Proving a perf or correctness claim before asserting it | run it for real — see §4              |
 
-## 0. The three values to confirm before the first post
+## 0. Before the first post
 
-Everything else in this skill is generic. These are not:
-
-| Value           | Default                        | Why it matters                                             |
-| --------------- | ------------------------------ | ---------------------------------------------------------- |
-| Signature       | `Cloclo 🤖`                    | marks a comment as machine-written (see §2)                |
-| Posting account | whoever `gh auth status` shows | used to detect "my own past reviews" and to rank the sweep |
-| Sweep scope     | asked for at sweep time        | the org and the list of repositories to scan (§8)          |
-
-Confirm the account with `gh auth status` before scanning or posting. If `gh`
-is not authenticated, nothing can be read or published: say so plainly instead
-of quietly producing an empty result.
+Comments are signed **`Cloclo 🤖`** (see §2), and they are published by
+whichever GitHub account `gh` is authenticated as. Confirm it with
+`gh auth status` before reading or posting: if `gh` is not authenticated,
+nothing can be scanned or published, and saying so plainly beats quietly
+producing an empty result.
 
 ## 1. The review contract
 
@@ -61,33 +58,50 @@ already good, do not list the checks performed, do not congratulate the PR.
 That belongs to the chat summary written for the user, never to the published
 review. Go straight to what needs correcting.
 
-Format:
+Findings are **short, precise inline comments** anchored on the exact lines
+where the change applies, opened by a severity circle and the signature, with
+a `suggestion` block whenever the fix is a clean one-liner — a reviewer can
+then apply it in one click:
 
-- **Short, precise inline comments** anchored on the exact lines where the
-  change applies. Include a `suggestion` block when the fix is a clean
-  one-liner — a reviewer can then apply it in one click.
-- At most **one** extra global comment, and only when it carries something the
-  inline comments structurally cannot.
+````markdown
+🟠 Cloclo 🤖 : `getUserById` peut répondre `undefined` — le `?` de sa signature
+le dit — donc `user.email` jette dès qu'un id périmé sort du cache.
 
-**The global body rule** (the one that drifts the most, so it is spelled out):
+```suggestion
+const email = user?.email ?? FALLBACK_EMAIL;
+```
+````
 
-- **When there ARE inline findings → the global body MUST be empty (`""`).**
-  No recap. A global body that validates the PR, paraphrases what the code does
-  well, or lists resolved points adds nothing on the PR itself — only the
-  inline comments carry value there. Keep the positives, the "here is what I
-  verified" and the "this is now fixed" for the chat summary. This holds for
-  re-reviews too: if a previously flagged point is now fixed, either say
-  nothing (the resolved inline thread speaks for itself) or reply tersely in
-  that thread — never a global "your point X is fixed and the rest is fine".
-- **When there is NOTHING to change** → the whole review is one single global
-  one-liner, signed, with no inline comment at all:
+### The global body
 
-  ```
-  Cloclo 🤖 : La PR semble correspondre à la description.
-  ```
+**With inline findings, the global body stays empty (`""`)** — unless it
+carries something no line can hold. That exception is real, and it is narrow:
 
-  Nothing else. The signature is required even in this "nothing to change" case
-  — see §10 for why an unsigned review is worse than useless.
+| Belongs in the global body                                                                                                     | Does not                                             |
+| ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| A remark that spans several files and cannot be anchored anywhere in particular                                                | A recap of the inline comments                       |
+| A question or a doubt about the PR's overall approach, scope or sequencing                                                     | A verdict on the PR ("looks good", "well done")      |
+| Context the reviewer needs for the inline comments to make sense                                                               | A paraphrase of what the code does well              |
+| A risk that only exists at the scale of the whole change (migration order, deploy sequencing, a breaking change for consumers) | A list of what was verified, or of what is now fixed |
+
+The test to apply: **could this be said on a line?** If yes, say it there. If
+it only repeats what the lines already say, it is a recap — drop it. The
+positives, the "here is what I checked" and the "this is now resolved" go to
+the chat summary for the user, which is where they are useful.
+
+This holds for re-reviews too: when a previously flagged point is fixed, either
+say nothing (the resolved inline thread speaks for itself) or reply tersely in
+that thread — never a global "your point X is fixed and the rest is fine".
+
+**With nothing to change**, the whole review is one global one-liner, signed,
+with no inline comment at all:
+
+```
+Cloclo 🤖 : La PR semble correspondre à la description.
+```
+
+Nothing else. The signature is required even in this case — an unsigned review
+is invisible to the sweep's own detection, and its PR then re-flags forever.
 
 **Angles that matter:** bugs introduced by the way the code is written ·
 improvements to the feature actually being implemented · adherence to the
@@ -123,8 +137,7 @@ signature — e.g. `🟠 Cloclo 🤖 : ...`.
 Do **not** substitute other emoji (⚠️ 💡 ❓ ✅). Models drift toward those
 across sessions; the three circles are what the user reads at a glance to sort
 a review, and a review whose severities are unreadable has to be read twice.
-A global comment, when used, is signed too (e.g. a `## Review (Cloclo 🤖)`
-heading).
+A global body, when it earns its place, is signed too.
 
 **Why a signature at all:** the GitHub token authenticates the user's own
 account, so there is no separate "Claude" identity on GitHub. The `Cloclo 🤖`
@@ -139,7 +152,10 @@ licence to **under-find**. Recurring review loops drift toward one-line
 surfaces real bugs. "Nothing to report" is only credible **after** a real
 sweep.
 
-Before concluding, cover:
+The list below is what that sweep looks like on a React/TypeScript codebase,
+where most of these reviews happen. The categories transpose; the examples do
+not — on a PR in another stack, ask what plays the same role there rather than
+hunting for a `useMemo` that does not exist.
 
 - **Data flow through ALL sinks**, not one suspicious spot — e.g. a callback
   wired without discriminating on the event it receives, or a shared storage
@@ -199,10 +215,28 @@ or design concern, an answer to a question.
 
 ## 5. Posting mechanics (GitHub reviews API)
 
-Post everything as **one single review**:
-`POST repos/{owner}/{repo}/pulls/{n}/reviews` with `event: COMMENT` and a
-`comments` array. Build the JSON in the scratchpad and post it with
-`gh api --input file.json`.
+Post everything as **one single review** on
+`repos/{owner}/{repo}/pulls/{n}/reviews`, with `event: COMMENT` and a
+`comments` array. Build the JSON in the scratchpad and post it in one call:
+
+```json
+{
+  "event": "COMMENT",
+  "body": "",
+  "comments": [
+    {
+      "path": "src/user/mailer.ts",
+      "line": 42,
+      "side": "RIGHT",
+      "body": "🟠 Cloclo 🤖 : `getUserById` peut répondre `undefined` …"
+    }
+  ]
+}
+```
+
+```bash
+gh api -X POST repos/<owner>/<repo>/pulls/<n>/reviews --input review.json
+```
 
 - Anchor inline comments on lines that appear in the diff (added / removed /
   context inside a hunk), `side: RIGHT`.
@@ -239,8 +273,8 @@ keeps the thread actionable even during a sweep where the PR has no new commit.
 **The user's own PRs.** Review them and post on them **exactly like anyone
 else's** — including PRs opened from the same GitHub account that posts the
 reviews. Do not skip them, do not preface with "(reviewing my own PR)". They go
-**last** in the sweep order, but they get a normally posted review. GitHub
-allows `event: COMMENT` reviews on your own account's PRs; only APPROVE and
+last in the sweep order, but they get a normally posted review. GitHub allows
+`event: COMMENT` reviews on your own account's PRs; only APPROVE and
 REQUEST_CHANGES are blocked.
 
 ## 6. Shell traps when posting
@@ -295,100 +329,13 @@ or test watcher.
 - Never leave the user's main working directory on a branch other than the one
   it started on.
 
-## 8. Cross-repo review sweep
+## 8. Reviewing many PRs at once
 
-For a "review every PR waiting on me" sweep, ask for the org and the repo list
-once, then keep it for the session.
-
-**Eligibility filter:** open · not draft · `updatedAt` within the scan window ·
-no existing signed review. The default window is ~21 days; a frequent recurring
-run only needs ~24 h. An existing bot review is detected by the signature
-string appearing in any review body, issue comment or inline comment of the PR.
-
-**The scan.** Iterate the repo list with the REST endpoint —
-`gh api "repos/<org>/<repo>/pulls?state=open&per_page=100" --paginate` — rather
-than a GraphQL-backed `gh pr list`: REST bills against a separate rate limit
-and survives GraphQL exhaustion. Keep `draft == false` and
-`updated_at >= now - window`. Put `</dev/null` on every `gh` call (§6).
-
-**The verdict.** For each candidate compute `last` = the **max committer date**
-of its commits (`pulls/{n}/commits`), and `mine` = the most recent of my
-reviews + inline comments whose body matches the signature. Then:
-
-| Condition       | Verdict          |
-| --------------- | ---------------- |
-| `mine` is empty | **NEEDS_REVIEW** |
-| `last > mine`   | **RE-REVIEW**    |
-| otherwise       | skip             |
-
-Act on **NEEDS_REVIEW** first, then **RE-REVIEW**, then the posting account's
-own PRs (last, never skipped, posted normally).
-
-**Identity — the human and the bot share one account.** A PR authored by the
-account that posts the reviews is **not** "the bot's own PR": review it and
-post on it like any other developer's. Withholding a posted review because it
-is "the same identity / I'd be talking to myself" is faulty reasoning. Bot
-detection keeps working on those PRs precisely because the human's own comments
-do not carry the signature.
-
-**A signed review you do not recognize from the current session is NOT evidence
-of a rogue or duplicated job.** The same account can be driven interactively
-between runs, producing reviews absent from this session's history. Treat an
-unrecognized in-account signed review as normal; raise a duplication concern
-only with real evidence (two identical back-to-back ticks, or the user says so).
-
-**RE-REVIEW is driven by committer date → expect benign churn.** Because `last`
-is the latest committer date, a **rebase or a merge of the main branch** (fresh
-committer dates, identical authored content) re-flags a PR with nothing new to
-review. Before re-reviewing, diff the head against your last reviewed SHA:
-`gh api repos/{o}/{r}/compare/<reviewed>...<head>` — `ahead/behind 1/1` with a
-replayed commit is a rebase; `behind: 0` with only the main branch's commits is
-a benign merge. Do not redo a deep review, and do not post "rebase, nothing to
-report" notes on benign churn — check and move on.
-
-## 9. Delegating a review to a subagent
-
-A subagent knows only what its prompt tells it — it does not see this skill or
-the user's conventions. When delegating a review the subagent will **post**,
-copy the whole posting contract into **every** prompt: the severity circle
-mapping (🔴/🟠/🟢), the inline `Cloclo 🤖 :` prefix, the global-body rule, the
-prose language, and the one-shot reviews API call. An omission in the prompt
-becomes an omission in the published review, which is expensive to repair after
-the fact — a dropped severity mapping has already produced a review with no
-severities at all.
-
-**Cheap models are unreliable on the "already reviewed" exclusion.** They list
-open / non-draft / recent PRs reliably, but not the exclusion step. Let a cheap
-agent gather the candidate list, then run the signature check **yourself**
-(`gh api .../reviews`, `.../issues/{n}/comments`, `.../pulls/{n}/comments`,
-grepped case-insensitively). A wrong exclusion means either skipping PRs that
-need a review, or double-reviewing one.
-
-## 10. Running the sweep on a loop
-
-A recurring sweep is a scheduled tick that scans the repos, classifies each open
-PR (NEEDS_REVIEW / RE-REVIEW / skip), answers questions addressed to the bot,
-and posts a review on every actionable PR per §1–§9. If nothing is actionable,
-it reports per repo and waits.
-
-- **Stagger the schedule.** Use offset minutes (`7,27,47 * * * *`), never `:00`
-  or `:30`, so a fleet of jobs does not hit the API in lockstep.
-- **Run each tick in one foreground call**, sequentially, with a generous
-  timeout — a backgrounded tick that outlives its turn will interleave with the
-  next one.
-- **Guard against overlap.** Two ticks running at once share scratchpad files
-  and produce inflated counters. The deduplicated verdict set stays correct
-  (duplicate lines only repeat known verdicts, they never invent a PR), so the
-  _result_ is never wrong — the collision is noise. If counters look inflated,
-  kill the orphan by **explicit PID**; never `pkill -f <script>`, which also
-  kills the Bash tool's own shell.
-- **An empty-bodied review is invisible to the detection.** Only bodies
-  containing the signature register, so an unsigned or empty review never counts
-  and its PR re-flags on every single tick, forever. Sign every review,
-  including the "nothing to change" one-liner.
-- **Session-scoped schedulers die with the session.** If the loop is driven by
-  an in-session scheduler, recreate it after a restart; if it must survive
-  reboots, drive it from the OS scheduler with a lock file to prevent overlap.
+A sweep across repositories — which PRs are eligible, how an existing signed
+review is detected, why a rebase re-flags a PR that has nothing new, what to
+copy into a subagent's prompt, and how to run the whole thing on a schedule —
+is its own procedure: read [references/sweep.md](references/sweep.md) when that
+is the task. Everything above still governs each individual review it posts.
 
 ## Maintenance
 
@@ -396,10 +343,13 @@ This skill encodes **a negotiated user policy** — how they want reviews done �
 not facts about a codebase, so most of it cannot be re-verified by reading code.
 The parts that go stale:
 
-- The sweep scope (§8) drifts as repositories are added and archived —
-  reconcile it with the real org before relying on it.
 - The severity circles, the signature and the global-body rule are hard user
   preferences, confirmed repeatedly. Do not soften them without a new
   instruction.
-- The shell traps (§6) are specific to the shell your Bash tool runs; re-check
-  them when the environment changes.
+- The shell traps (§6) are specific to the shell your Bash tool runs. The
+  absence of `--arg` on `gh api` was last confirmed on gh 2.89.
+- The **write** side of the API — `in_reply_to`, `PUT …/reviews/{id}`,
+  `event: COMMENT` on your own account's PRs — comes from practice elsewhere
+  and has not been exercised from this machine. The read endpoints it builds on
+  have. If one of them answers with an error rather than the documented
+  behaviour, fix it here rather than working around it in the moment.
