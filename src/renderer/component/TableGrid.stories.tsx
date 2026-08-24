@@ -82,8 +82,8 @@ function makeRows(rowCount: number, columnCount: number): RowDataPacket[] {
           );
           break;
         case 'payload':
-          row.payload =
-            random() > 0.8 ? null : JSON.stringify({ index: rowIndex });
+          // an object, like mysql2 hands JSON columns over
+          row.payload = random() > 0.8 ? null : { index: rowIndex };
           break;
         default:
           row[field.name] = WORDS.slice(0, 1 + Math.floor(random() * 7)).join(

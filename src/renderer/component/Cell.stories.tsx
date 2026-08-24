@@ -112,10 +112,22 @@ export const WithBlobType: Story = {
   },
 };
 
+// What a real JSON column looks like: mysql2 parses it before it reaches the
+// renderer, so the value is an object, never its serialized form.
 export const WithJSONType: Story = {
   args: {
     type: Types.JSON,
-    value: JSON.stringify({ backgroundColor: 'red' }),
+    value: { backgroundColor: 'red', tags: ['a', 'b'], nested: { count: 2 } },
+  },
+};
+
+// The only string that reaches a JSON cell is a JSON scalar: mysql2 parses
+// `CAST('"foo"' AS JSON)` into `foo`, which is rendered without its quotes.
+// (JSON stored in a TEXT column is announced as a blob and goes to `BlobCell`.)
+export const WithJSONScalar: Story = {
+  args: {
+    type: Types.JSON,
+    value: 'a scalar string, not an object',
   },
 };
 
