@@ -29,11 +29,23 @@ interface Sql {
     connectionSlug: string | undefined,
     databaseName?: string | undefined
   ): void;
-  getKeyColumnUsage(tableName?: string): QueryResult<KeyColumnUsageRow[]>;
-  getAllColumns(): QueryResult<ColumnDetailResult>;
+  /**
+   * Every database-scoped query takes its database name explicitly: the
+   * `connectionNameChanged` event and the loaders that query are not ordered
+   * with one another, so the main process cannot be trusted to already know
+   * which database the caller means.
+   */
+  getKeyColumnUsage(
+    databaseName: string,
+    tableName?: string
+  ): QueryResult<KeyColumnUsageRow[]>;
+  getAllColumns(databaseName: string): QueryResult<ColumnDetailResult>;
   showDatabases(): QueryResult<ShowDatabasesResult>;
-  getPrimaryKeys(tableName: string): QueryResult<ShowKeyRow[]>;
-  showTableStatus(): QueryResult<ShowTableStatusResult>;
+  getPrimaryKeys(
+    databaseName: string,
+    tableName: string
+  ): QueryResult<ShowKeyRow[]>;
+  showTableStatus(databaseName: string): QueryResult<ShowTableStatusResult>;
 }
 
 async function doInvokeQuery(sqlChannel: SQL_CHANNEL, ...params: unknown[]) {
@@ -53,17 +65,19 @@ export const sql: Sql = {
   updateCell: async (request) =>
     doInvokeQuery(SQL_CHANNEL.UPDATE_CELL, request),
 
-  getKeyColumnUsage: async (tableName) =>
-    doInvokeQuery(SQL_CHANNEL.GET_KEY_COLUMN_USAGE, tableName),
+  getKeyColumnUsage: async (databaseName, tableName) =>
+    doInvokeQuery(SQL_CHANNEL.GET_KEY_COLUMN_USAGE, databaseName, tableName),
 
-  getAllColumns: async () => doInvokeQuery(SQL_CHANNEL.GET_ALL_COLUMNS),
+  getAllColumns: async (databaseName) =>
+    doInvokeQuery(SQL_CHANNEL.GET_ALL_COLUMNS, databaseName),
 
-  getPrimaryKeys: async (tableName) =>
-    doInvokeQuery(SQL_CHANNEL.GET_PRIMARY_KEYS, tableName),
+  getPrimaryKeys: async (databaseName, tableName) =>
+    doInvokeQuery(SQL_CHANNEL.GET_PRIMARY_KEYS, databaseName, tableName),
 
   showDatabases: async () => doInvokeQuery(SQL_CHANNEL.SHOW_DATABASES),
 
-  showTableStatus: async () => doInvokeQuery(SQL_CHANNEL.SHOW_TABLE_STATUS),
+  showTableStatus: async (databaseName) =>
+    doInvokeQuery(SQL_CHANNEL.SHOW_TABLE_STATUS, databaseName),
 
   closeAllConnections: bindChannel(SQL_CHANNEL.CLOSE_ALL),
 

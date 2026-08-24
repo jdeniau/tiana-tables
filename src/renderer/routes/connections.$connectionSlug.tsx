@@ -44,6 +44,7 @@ export async function loader({ params, request }: RouteParams) {
 
   invariant(connectionSlug, 'Connection slug is required');
 
+  // The database is not known yet: it is read from the configuration below.
   window.sql.connectionNameChanged(connectionSlug, undefined);
 
   const [databaseList] = await window.sql.showDatabases();
@@ -74,6 +75,11 @@ export async function loader({ params, request }: RouteParams) {
     );
   }
 
+  // Announce the database we resolved. The child `$databaseName` loader
+  // announces it too, but both loaders run in parallel, so this one cannot
+  // leave the main process on the `undefined` it set above.
+  window.sql.connectionNameChanged(connectionSlug, activeDatabase);
+
   // redirect to the current database if we are not on a "database" page
   const expectedUrl = `/connections/${connectionSlug}/${activeDatabase}${
     openedTable ? `/tables/${openedTable}` : ''
@@ -87,10 +93,11 @@ export async function loader({ params, request }: RouteParams) {
     return redirect(expectedUrl);
   }
 
-  const [tableStatusList] = await window.sql.showTableStatus();
+  const [tableStatusList] = await window.sql.showTableStatus(activeDatabase);
 
-  const [keyColumnUsageRows] = await window.sql.getKeyColumnUsage();
-  const [allColumns] = await window.sql.getAllColumns();
+  const [keyColumnUsageRows] =
+    await window.sql.getKeyColumnUsage(activeDatabase);
+  const [allColumns] = await window.sql.getAllColumns(activeDatabase);
 
   return {
     databaseList,
