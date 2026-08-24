@@ -9,6 +9,7 @@ import {
   getConfigurationPath,
 } from './filePaths';
 import { DEFAULT_LOCALE } from './locale';
+import { PANEL } from './panels';
 import { DEFAULT_THEME } from './themes';
 import {
   Configuration,
@@ -248,6 +249,19 @@ export function setTableFilter(
   writeConfiguration(config);
 }
 
+export function setPanelSize(panel: PANEL, size: string): Configuration {
+  const config = getConfiguration();
+
+  config.panelSizes = {
+    ...config.panelSizes,
+    [panel]: size,
+  };
+
+  writeConfiguration(config);
+
+  return config;
+}
+
 export function saveWindowState(windowState: WindowState): void {
   const config = getConfiguration();
 
@@ -314,6 +328,7 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE]: setActiveDatabase,
   [CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE]: setActiveTable,
   [CONFIGURATION_CHANNEL.SET_TABLE_FILTER]: setTableFilter,
+  [CONFIGURATION_CHANNEL.SET_PANEL_SIZE]: setPanelSize,
 } as const;
 
 export function bindIpcMain(ipcMain: Electron.IpcMain): void {

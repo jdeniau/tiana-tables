@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { PANEL } from '../configuration/panels';
 import { Configuration } from '../configuration/type';
 import { changeLanguage } from '../i18n';
 import { ConnectionObjectWithoutSlug } from '../sql/types';
@@ -16,6 +17,7 @@ type ConfigurationContextType = {
     database: string,
     tableName: string
   ) => void;
+  setPanelSize: (panel: PANEL, size: string) => void;
   changeLanguage: (language: string) => void;
 };
 
@@ -52,13 +54,23 @@ export function ConfigurationContextProvider({ children }: Props) {
 
   function willChangeConfiguration<P extends unknown[]>(
     functionThatUpdateConfigurations: (...params: P) => Promise<Configuration>
-  ): (...params: P) => Promise<Configuration> {
+  ): (...params: P) => Promise<void> {
     return async (...params: P) => {
       const configuration = await functionThatUpdateConfigurations(...params);
 
-      setConfiguration(configuration);
+      // A channel that answers with nothing must not blank the whole app: the
+      // provider renders `null` without a configuration, so every consumer
+      // would unmount. It happens when the main process still runs an older
+      // build of a handler — it is not hot-reloaded, unlike the renderer.
+      if (!configuration) {
+        console.error(
+          'A configuration channel answered without a configuration. Keeping the one we have — restart the app if a handler has just changed.'
+        );
 
-      return configuration;
+        return;
+      }
+
+      setConfiguration(configuration);
     };
   }
 
@@ -72,6 +84,7 @@ export function ConfigurationContextProvider({ children }: Props) {
       ),
       setActiveDatabase: window.config.setActiveDatabase,
       setActiveTable: window.config.setActiveTable,
+      setPanelSize: willChangeConfiguration(window.config.setPanelSize),
       editConnection: willChangeConfiguration(window.config.editConnection),
       changeLanguage: willChangeConfiguration((lang: string) => {
         changeLanguage(lang);

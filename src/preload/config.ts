@@ -1,3 +1,4 @@
+import { PANEL } from '../configuration/panels';
 import type { Configuration } from '../configuration/type';
 import type { ConnectionObjectWithoutSlug } from '../sql/types';
 import { bindChannel } from './bindChannel';
@@ -29,6 +30,8 @@ interface Config {
     filter: string
   ): Promise<void>;
 
+  setPanelSize(panel: PANEL, size: string): Promise<Configuration>;
+
   editConnection(
     connectionSlug: string,
     connection: ConnectionObjectWithoutSlug
@@ -43,5 +46,6 @@ export const config: Config = {
   setActiveDatabase: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE),
   setActiveTable: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE),
   setTableFilter: bindChannel(CONFIGURATION_CHANNEL.SET_TABLE_FILTER),
+  setPanelSize: bindChannel(CONFIGURATION_CHANNEL.SET_PANEL_SIZE),
   editConnection: bindChannel(CONFIGURATION_CHANNEL.EDIT_CONNECTION),
 };

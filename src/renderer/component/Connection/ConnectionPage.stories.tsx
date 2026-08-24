@@ -62,6 +62,9 @@ const meta: Meta<typeof ConnectionPage> = {
           setActiveTable: (connectionName, database, tableName) => {
             action('setActiveTable')(connectionName, database, tableName);
           },
+          setPanelSize: (panel, size) => {
+            action('setPanelSize')(panel, size);
+          },
           editConnection: (name, connection) => {
             action('editConnection')(name, connection);
           },

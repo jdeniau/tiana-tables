@@ -7,4 +7,5 @@ export enum CONFIGURATION_CHANNEL {
   SET_ACTIVE_DATABASE = 'config:connection:setActiveDatabase',
   SET_ACTIVE_TABLE = 'config:connection:setActiveTable',
   SET_TABLE_FILTER = 'config:connection:setTableFilter',
+  SET_PANEL_SIZE = 'config:panel:setSize',
 }

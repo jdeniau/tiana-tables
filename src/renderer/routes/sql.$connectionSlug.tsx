@@ -1,12 +1,14 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Button, Flex, Form } from 'antd';
+import { Button, Flex, Form, Splitter } from 'antd';
 import { ActionFunctionArgs, useFetcher } from 'react-router-dom';
 import invariant from 'tiny-invariant';
+import { PANEL } from '../../configuration/panels';
 import { useTranslation } from '../../i18n';
 import { SqlError } from '../../sql/errorSerializer';
 import { isSqlError } from '../../sql/isSqlError';
 import { QueryResult } from '../../sql/types';
 import RawSqlResult from '../component/Query/RawSqlResult/RowDataPacketResult';
+import { usePanelSize } from '../hooks/usePanelSize';
 
 const RawSqlEditor = lazy(() =>
   import('../component/MonacoEditor/RawSqlEditor').then((module) => ({
@@ -70,6 +72,7 @@ export default function SqlPage() {
   const [form] = Form.useForm();
   const fetcher = useFetcher<SqlActionReturnTypes>();
   const [sqlQuery, saveSqlQuery] = useSqlFileStorage();
+  const { panelProps, onResizeEnd } = usePanelSize(PANEL.SQL_EDITOR);
 
   const { state } = fetcher;
 
@@ -78,40 +81,64 @@ export default function SqlPage() {
   }
 
   return (
-    <Flex vertical gap="small" style={{ height: '100%' }}>
-      <Form
-        form={form}
-        initialValues={{ raw: sqlQuery }}
-        onFinish={(values) => {
-          saveSqlQuery(values.raw);
-          fetcher.submit(values, {
-            method: 'post',
-          });
-        }}
-      >
-        <Suspense fallback={<div style={{ height: '35vh' }}></div>}>
-          <Form.Item name="raw" valuePropName="defaultValue">
-            <RawSqlEditor
-              style={{ height: '35vh' }}
-              onSubmit={() => {
-                // trigger the form "onFinish" event
-                form.submit();
-              }}
-            />
-          </Form.Item>
-        </Suspense>
-
-        <Button
-          htmlType="submit"
-          disabled={state === 'submitting'}
-          color="primary"
-          variant="solid"
+    <Splitter
+      orientation="vertical"
+      onResizeEnd={onResizeEnd}
+      style={{ height: '100%' }}
+    >
+      <Splitter.Panel {...panelProps}>
+        <Form
+          form={form}
+          initialValues={{ raw: sqlQuery }}
+          style={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5em',
+          }}
+          onFinish={(values) => {
+            saveSqlQuery(values.raw);
+            fetcher.submit(values, {
+              method: 'post',
+            });
+          }}
         >
-          {t('rawSql.submit')}
-        </Button>
-      </Form>
+          <Suspense fallback={<div style={{ flex: 1 }}></div>}>
+            {/* `noStyle` renders the control alone: without it antd wraps the
+                editor in a few divs that would not pass the height down */}
+            <Form.Item name="raw" valuePropName="defaultValue" noStyle>
+              <RawSqlEditor
+                style={{ flex: 1, minHeight: 0 }}
+                onSubmit={() => {
+                  // trigger the form "onFinish" event
+                  form.submit();
+                }}
+              />
+            </Form.Item>
+          </Suspense>
 
-      <RawSqlResult fetcher={fetcher} rowsAsArray />
-    </Flex>
+          <Flex>
+            <Button
+              htmlType="submit"
+              disabled={state === 'submitting'}
+              color="primary"
+              variant="solid"
+            >
+              {t('rawSql.submit')}
+            </Button>
+          </Flex>
+        </Form>
+      </Splitter.Panel>
+
+      <Splitter.Panel>
+        <Flex
+          vertical
+          gap="small"
+          style={{ height: '100%', minHeight: 0, overflow: 'auto' }}
+        >
+          <RawSqlResult fetcher={fetcher} rowsAsArray />
+        </Flex>
+      </Splitter.Panel>
+    </Splitter>
   );
 }
