@@ -22,7 +22,7 @@ import {
   ShowDatabasesResult,
   ShowKeyRow,
   ShowTableStatusResult,
-  SqlBoundValue,
+  SqlBoundValues,
 } from './types';
 import {
   CellReadRow,
@@ -103,15 +103,14 @@ class ConnectionStack {
       FROM
         INFORMATION_SCHEMA.KEY_COLUMN_USAGE
       WHERE
-        TABLE_SCHEMA = ?
-        ${tableName ? 'AND TABLE_NAME = ?' : ''}
+        TABLE_SCHEMA = :databaseName
+        ${tableName ? 'AND TABLE_NAME = :tableName' : ''}
     `;
 
-    return this.executeQueryAndRetry<KeyColumnUsageRow[]>(
-      query,
-      false,
-      tableName ? [databaseName, tableName] : [databaseName]
-    );
+    return this.executeQueryAndRetry<KeyColumnUsageRow[]>(query, false, {
+      databaseName,
+      ...(tableName ? { tableName } : {}),
+    });
   }
 
   async getAllColumns(
@@ -131,12 +130,12 @@ class ConnectionStack {
       FROM
         INFORMATION_SCHEMA.COLUMNS
       WHERE
-        TABLE_SCHEMA = ?
+        TABLE_SCHEMA = :databaseName
     `;
 
-    return this.executeQueryAndRetry<ColumnDetailResult>(query, false, [
+    return this.executeQueryAndRetry<ColumnDetailResult>(query, false, {
       databaseName,
-    ]);
+    });
   }
 
   async getPrimaryKeys(
@@ -243,14 +242,14 @@ class ConnectionStack {
   }
 
   /**
-   * `values` fills the `?` placeholders of the query. Only queries built here
+   * `values` fills the named placeholders of the query. Only queries built here
    * use them — the editor sends plain SQL — and they are what keeps a value
    * typed by the user out of the SQL text itself.
    */
   async executeQueryAndRetry<T extends QueryReturnType = QueryReturnType>(
     query: string,
     rowsAsArray = false,
-    values?: Array<SqlBoundValue>
+    values?: SqlBoundValues
   ): QueryResultOrError<T> {
     invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
@@ -287,7 +286,7 @@ class ConnectionStack {
     connectionSlug: string,
     query: string,
     rowsAsArray: boolean,
-    values?: Array<SqlBoundValue>
+    values?: SqlBoundValues
   ): QueryResultOrError<T> {
     const connection = await this.#getConnection(connectionSlug);
 
@@ -295,7 +294,16 @@ class ConnectionStack {
 
     try {
       return {
-        result: await connection.query({ sql: query, rowsAsArray, values }),
+        result: await connection.query({
+          sql: query,
+          rowsAsArray,
+          values,
+          // Asked for per query, and never for the raw SQL of the editor: the
+          // rewriter reads `:name` anywhere outside a string literal — the `:`
+          // of a `-- TODO: something` comment included — and then refuses a
+          // query it has no parameter for.
+          namedPlaceholders: values !== undefined,
+        }),
         error: undefined,
       };
     } catch (error) {

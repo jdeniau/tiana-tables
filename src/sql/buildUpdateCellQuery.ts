@@ -1,10 +1,10 @@
 import invariant from 'tiny-invariant';
-import type { SqlBoundValue } from './types';
+import type { SqlBoundValues } from './types';
 import type { UpdateCellRequest } from './updateCell';
 
 export interface BuiltQuery {
   sql: string;
-  values: Array<SqlBoundValue>;
+  values: SqlBoundValues;
 }
 
 /**
@@ -30,6 +30,18 @@ function qualifiedTable({
 }
 
 /**
+ * The parameter that carries one part of a primary key.
+ *
+ * Numbered rather than named after the column: a column name is not
+ * necessarily a valid parameter name — the rewriter only reads
+ * `[a-zA-Z][a-zA-Z0-9_]*` after the colon — and could collide with the
+ * `newValue` and `originalValue` of the write.
+ */
+function primaryKeyParameter(index: number): string {
+  return `primaryKey${index}`;
+}
+
+/**
  * The `WHERE` that targets exactly one row.
  *
  * Plain `=`, and not the null-safe `<=>` used by the guard below: MySQL forces
@@ -40,7 +52,7 @@ function qualifiedTable({
  */
 function primaryKeyClause(primaryKey: UpdateCellRequest['primaryKey']): {
   sql: string;
-  values: Array<SqlBoundValue>;
+  values: SqlBoundValues;
 } {
   invariant(
     primaryKey.length > 0,
@@ -49,9 +61,14 @@ function primaryKeyClause(primaryKey: UpdateCellRequest['primaryKey']): {
 
   return {
     sql: primaryKey
-      .map((part) => `${escapeIdentifier(part.column)} = ?`)
+      .map(
+        (part, index) =>
+          `${escapeIdentifier(part.column)} = :${primaryKeyParameter(index)}`
+      )
       .join(' AND '),
-    values: primaryKey.map((part) => part.value),
+    values: Object.fromEntries(
+      primaryKey.map((part, index) => [primaryKeyParameter(index), part.value])
+    ),
   };
 }
 
@@ -61,8 +78,11 @@ function primaryKeyClause(primaryKey: UpdateCellRequest['primaryKey']): {
  * a JSON column against a text literal would depend on key order and spacing,
  * and would report a conflict on every edit of a re-serialized object.
  */
-function valueExpression(isJsonColumn: boolean | undefined): string {
-  return isJsonColumn ? 'CAST(? AS JSON)' : '?';
+function valueExpression(
+  parameter: string,
+  isJsonColumn: boolean | undefined
+): string {
+  return isJsonColumn ? `CAST(:${parameter} AS JSON)` : `:${parameter}`;
 }
 
 /**
@@ -85,22 +105,25 @@ export function buildUpdateCellQuery(request: UpdateCellRequest): BuiltQuery {
 
   const guard = force
     ? null
-    : `${escapedColumn} <=> ${valueExpression(isJsonColumn)}`;
+    : `${escapedColumn} <=> ${valueExpression('originalValue', isJsonColumn)}`;
 
   const sql = [
     `UPDATE ${qualifiedTable(request)}`,
-    `SET ${escapedColumn} = ${valueExpression(isJsonColumn)}`,
+    `SET ${escapedColumn} = ${valueExpression('newValue', isJsonColumn)}`,
     `WHERE ${primaryKeyPart.sql}${guard ? ` AND ${guard}` : ''}`,
     'LIMIT 1',
   ].join(' ');
 
+  // A forced write has no guard, hence no `originalValue` to bind. The object
+  // holds exactly what the statement names: an unused parameter would be
+  // ignored in silence, and so would a misspelled one.
   return {
     sql,
-    values: [
+    values: {
       newValue,
       ...primaryKeyPart.values,
-      ...(guard ? [originalValue] : []),
-    ],
+      ...(guard ? { originalValue } : {}),
+    },
   };
 }
 
@@ -121,7 +144,7 @@ export function buildReadCellQuery(request: UpdateCellRequest): BuiltQuery {
 
   const sql = [
     `SELECT ${escapedColumn} AS \`value\`,`,
-    `(${escapedColumn} <=> ${valueExpression(request.isJsonColumn)}) AS \`guardMatches\``,
+    `(${escapedColumn} <=> ${valueExpression('originalValue', request.isJsonColumn)}) AS \`guardMatches\``,
     `FROM ${qualifiedTable(request)}`,
     `WHERE ${primaryKeyPart.sql}`,
     'LIMIT 1',
@@ -129,6 +152,6 @@ export function buildReadCellQuery(request: UpdateCellRequest): BuiltQuery {
 
   return {
     sql,
-    values: [request.originalValue, ...primaryKeyPart.values],
+    values: { originalValue: request.originalValue, ...primaryKeyPart.values },
   };
 }
