@@ -1,25 +1,11 @@
 import invariant from 'tiny-invariant';
+import { escapeIdentifier } from './escapeIdentifier';
 import type { SqlBoundValues } from './types';
 import type { UpdateCellRequest } from './updateCell';
 
 export interface BuiltQuery {
   sql: string;
   values: SqlBoundValues;
-}
-
-/**
- * Quote an identifier the way MySQL does: a backtick inside a name is doubled.
- *
- * Identifiers cannot be bound to a placeholder, so they are the one part of
- * these queries that is interpolated — hence the escaping. Written here rather
- * than taken from `mysql2.escapeId` on purpose: this module is imported by the
- * main process at startup, and mysql2 stays lazily loaded until a connection
- * is actually opened.
- */
-export function escapeIdentifier(identifier: string): string {
-  invariant(identifier.length > 0, 'An empty identifier cannot be escaped');
-
-  return `\`${identifier.replaceAll('`', '``')}\``;
 }
 
 function qualifiedTable({

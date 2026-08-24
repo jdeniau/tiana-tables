@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   buildReadCellQuery,
   buildUpdateCellQuery,
-  escapeIdentifier,
 } from './buildUpdateCellQuery';
 import type { UpdateCellRequest } from './updateCell';
 
@@ -62,20 +61,6 @@ describe.each([
 
     expect(named.length).toBeGreaterThan(0);
     expect([...named].sort()).toEqual(Object.keys(values).sort());
-  });
-});
-
-describe('escapeIdentifier', () => {
-  it('wraps an identifier in backticks', () => {
-    expect(escapeIdentifier('orders')).toBe('`orders`');
-  });
-
-  it('doubles a backtick held by the identifier', () => {
-    expect(escapeIdentifier('we`ird')).toBe('`we``ird`');
-  });
-
-  it('refuses an empty identifier', () => {
-    expect(() => escapeIdentifier('')).toThrow();
   });
 });
 

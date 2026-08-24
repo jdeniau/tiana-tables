@@ -6,13 +6,13 @@ import { SQL_CHANNEL } from '../preload/sqlChannel';
 import {
   buildReadCellQuery,
   buildUpdateCellQuery,
-  escapeIdentifier,
 } from './buildUpdateCellQuery';
 import {
   QueryResultOrError,
   ResultOrError,
   encodeError,
 } from './errorSerializer';
+import { escapeIdentifier } from './escapeIdentifier';
 import {
   ColumnDetail,
   ColumnDetailResult,
@@ -299,9 +299,8 @@ class ConnectionStack {
           rowsAsArray,
           values,
           // Asked for per query, and never for the raw SQL of the editor: the
-          // rewriter reads `:name` anywhere outside a string literal — the `:`
-          // of a `-- TODO: something` comment included — and then refuses a
-          // query it has no parameter for.
+          // rewriter does not know backticks, so a `:` inside a quoted
+          // identifier would be read as a parameter and corrupt the statement.
           namedPlaceholders: values !== undefined,
         }),
         error: undefined,
