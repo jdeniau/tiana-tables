@@ -153,8 +153,8 @@ const TableCellFactory = memo(function TableCellFactory({
   value,
   ...rest
 }: TableCellFactoryProps) {
-  if (value === null || typeof value === 'undefined') {
-    return <NullCell />;
+  if (value === null || value === undefined) {
+    return <NullCell {...rest} />;
   }
 
   switch (type) {

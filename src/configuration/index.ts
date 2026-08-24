@@ -260,7 +260,7 @@ function hasAppState(
   connection: EncryptedConnectionObject
 ): connection is EncryptedConnectionObject &
   Required<Pick<EncryptedConnectionObject, 'appState'>> {
-  return typeof connection.appState !== 'undefined';
+  return connection.appState !== undefined;
 }
 
 function ensureConnectionAppStateExist(

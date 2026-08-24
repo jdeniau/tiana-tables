@@ -60,10 +60,25 @@ export interface KeyColumnUsageRow extends RowDataPacket {
 export interface ColumnDetail extends RowDataPacket {
   Table: string;
   Column: string;
+  /** the bare type, e.g. `varchar`, `enum`, `text` */
   DataType: string;
+  /** `YES` or `NO`, spelled the way INFORMATION_SCHEMA does */
+  IsNullable: string;
+  /** the whole declaration, e.g. `varchar(255)` or `enum('a','b')` */
+  ColumnType: string;
+  ColumnDefault: string | null;
+  /** holds `VIRTUAL GENERATED` / `STORED GENERATED`, `auto_increment`, … */
+  Extra: string;
 }
 
 export type ColumnDetailResult = ColumnDetail[];
+
+/**
+ * A value bound to a placeholder of an UPDATE. Values travel over IPC, so they
+ * are limited to what structured clone carries: `Date` survives, and every
+ * edited value is sent as a string (see `buildUpdateCellQuery`).
+ */
+export type SqlBoundValue = string | number | Date | null;
 
 export interface ForeignKeyRow extends KeyColumnUsageRow {
   REFERENCED_TABLE_NAME: string;

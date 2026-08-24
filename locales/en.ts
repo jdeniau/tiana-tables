@@ -3,6 +3,27 @@ export default {
   edit: 'Edit',
   save: 'Save',
   filter: 'Filter',
+  'cell.detail.conflict.changed.description':
+    'This cell was written by someone else since the row was loaded. Reload to start over from the current value, or overwrite it.',
+  'cell.detail.conflict.changed.title': 'The value changed in the database',
+  'cell.detail.conflict.deleted.description':
+    'The row was deleted since it was loaded, so nothing was written.',
+  'cell.detail.conflict.deleted.title': 'The row no longer exists',
+  'cell.detail.conflict.overwrite': 'Overwrite',
+  'cell.detail.conflict.reload': 'Reload',
+  // ICU select on the `ValidationError` enum
+  'cell.detail.error':
+    '{error, select, invalidJson {This is not valid JSON.} other {This value cannot be saved.}}',
+  'cell.detail.nullPlaceholder': '(NULL)',
+  // ICU select on the `NotEditableReason` enum
+  'cell.detail.readOnly':
+    '{reason, select,' +
+    ' binary {Read-only: a binary column cannot be edited as text.}' +
+    ' generated {Read-only: this column is computed by the server.}' +
+    ' noPrimaryKey {Read-only: no primary key identifies this row.}' +
+    ' unknownColumn {Read-only: this column belongs to no table of this database.}' +
+    ' other {Read-only.}}',
+  'cell.detail.setNull': 'Set to NULL',
   'connect.new': 'New…',
   'connection.create.button': 'Create connection…',
   'connection.form.action.connect': 'Connect',

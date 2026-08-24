@@ -1,9 +1,17 @@
 import log from 'electron-log';
-import type { Connection } from 'mysql2/promise';
+import type { Connection, ResultSetHeader } from 'mysql2/promise';
 import invariant from 'tiny-invariant';
 import { getConfiguration } from '../configuration';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
-import { QueryResultOrError, encodeError } from './errorSerializer';
+import {
+  buildReadCellQuery,
+  buildUpdateCellQuery,
+} from './buildUpdateCellQuery';
+import {
+  QueryResultOrError,
+  ResultOrError,
+  encodeError,
+} from './errorSerializer';
 import {
   ColumnDetail,
   ColumnDetailResult,
@@ -13,7 +21,13 @@ import {
   ShowDatabasesResult,
   ShowKeyRow,
   ShowTableStatusResult,
+  SqlBoundValue,
 } from './types';
+import {
+  CellReadRow,
+  UpdateCellOutcome,
+  UpdateCellRequest,
+} from './updateCell';
 
 class ConnectionStack {
   #connections: Map<string, Connection> = new Map();
@@ -28,6 +42,7 @@ class ConnectionStack {
     [SQL_CHANNEL.GET_KEY_COLUMN_USAGE]: this.getKeyColumnUsage,
     [SQL_CHANNEL.GET_PRIMARY_KEYS]: this.getPrimaryKeys,
     [SQL_CHANNEL.GET_ALL_COLUMNS]: this.getAllColumns,
+    [SQL_CHANNEL.UPDATE_CELL]: this.updateCell,
     [SQL_CHANNEL.SHOW_DATABASES]: this.showDatabases,
     [SQL_CHANNEL.SHOW_TABLE_STATUS]: this.showTableStatus,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
@@ -90,7 +105,11 @@ class ConnectionStack {
       SELECT
         TABLE_NAME AS \`Table\`,
         COLUMN_NAME AS \`Column\`,
-        DATA_TYPE AS \`DataType\`
+        DATA_TYPE AS \`DataType\`,
+        IS_NULLABLE AS \`IsNullable\`,
+        COLUMN_TYPE AS \`ColumnType\`,
+        COLUMN_DEFAULT AS \`ColumnDefault\`,
+        EXTRA AS \`Extra\`
       FROM
         INFORMATION_SCHEMA.COLUMNS
       WHERE
@@ -110,6 +129,80 @@ class ConnectionStack {
     return this.executeQueryAndRetry<ShowKeyRow[]>(query);
   }
 
+  /**
+   * Write one cell, and report whether the row still held what the grid showed.
+   *
+   * The write is guarded on the value the row was loaded with, so a cell
+   * changed by someone else in the meantime is not silently overwritten. What
+   * happened is then read back from the server: the value to display, and —
+   * when the write matched nothing — the reason why.
+   *
+   * The read is not in a transaction with the write on purpose: it only feeds
+   * the message shown to the user, and a value that is one write stale there
+   * costs nothing, whereas holding a transaction open on the shared connection
+   * would.
+   */
+  async updateCell(
+    request: UpdateCellRequest
+  ): ResultOrError<UpdateCellOutcome> {
+    const update = buildUpdateCellQuery(request);
+
+    const updateResult = await this.executeQueryAndRetry<ResultSetHeader>(
+      update.sql,
+      false,
+      update.values
+    );
+
+    if (updateResult.error) {
+      return { result: undefined, error: updateResult.error };
+    }
+
+    const read = buildReadCellQuery(request);
+
+    const readResult = await this.executeQueryAndRetry<CellReadRow[]>(
+      read.sql,
+      false,
+      read.values
+    );
+
+    if (readResult.error) {
+      return { result: undefined, error: readResult.error };
+    }
+
+    const [[row]] = readResult.result;
+
+    if (!row) {
+      return {
+        result: { status: 'conflict', reason: 'deleted' },
+        error: undefined,
+      };
+    }
+
+    const [header] = updateResult.result;
+
+    // MySQL counts *changed* rows in `affectedRows`, so writing the value a
+    // cell already held reports 0 — indistinguishable, on its own, from a
+    // guard that did not match. `guardMatches` tells the two apart: the server
+    // computed it with the very same `<=>` comparison as the guard, which a
+    // comparison redone in JavaScript could not promise. A forced write has no
+    // guard to speak of, so the row being there is all there is to check.
+    if (request.force || header.affectedRows > 0 || row.guardMatches === 1) {
+      return {
+        result: { status: 'updated', value: row.value },
+        error: undefined,
+      };
+    }
+
+    return {
+      result: {
+        status: 'conflict',
+        reason: 'changed',
+        currentValue: row.value,
+      },
+      error: undefined,
+    };
+  }
+
   async showDatabases(): QueryResultOrError<ShowDatabasesResult> {
     return this.executeQueryAndRetry<ShowDatabasesResult>('SHOW DATABASES');
   }
@@ -122,16 +215,23 @@ class ConnectionStack {
     );
   }
 
+  /**
+   * `values` fills the `?` placeholders of the query. Only queries built here
+   * use them — the editor sends plain SQL — and they are what keeps a value
+   * typed by the user out of the SQL text itself.
+   */
   async executeQueryAndRetry<T extends QueryReturnType = QueryReturnType>(
     query: string,
-    rowsAsArray = false
+    rowsAsArray = false,
+    values?: Array<SqlBoundValue>
   ): QueryResultOrError<T> {
     invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
     const queryResult = await this.#executeQuery<T>(
       this.#currentConnectionSlug,
       query,
-      rowsAsArray
+      rowsAsArray,
+      values
     );
 
     if (queryResult.error) {
@@ -147,7 +247,8 @@ class ConnectionStack {
         return this.#executeQuery<T>(
           this.#currentConnectionSlug,
           query,
-          rowsAsArray
+          rowsAsArray,
+          values
         );
       }
     }
@@ -158,7 +259,8 @@ class ConnectionStack {
   async #executeQuery<T extends QueryReturnType = QueryReturnType>(
     connectionSlug: string,
     query: string,
-    rowsAsArray: boolean
+    rowsAsArray: boolean,
+    values?: Array<SqlBoundValue>
   ): QueryResultOrError<T> {
     const connection = await this.#getConnection(connectionSlug);
 
@@ -166,7 +268,7 @@ class ConnectionStack {
 
     try {
       return {
-        result: await connection.query({ sql: query, rowsAsArray }),
+        result: await connection.query({ sql: query, rowsAsArray, values }),
         error: undefined,
       };
     } catch (error) {

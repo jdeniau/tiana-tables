@@ -1,4 +1,5 @@
 import i18n, { changeLanguage, t } from 'i18next';
+import ICU from 'i18next-icu';
 import { initReactI18next, useTranslation } from 'react-i18next';
 import en from '../locales/en';
 import fr from '../locales/fr';
@@ -22,6 +23,11 @@ const resources = {
 
 // eslint-disable-next-line import-x/no-named-as-default-member
 i18n
+  // ICU MessageFormat, so that a message with several variants stays ONE key
+  // with a `select` inside it — instead of one key per variant picked by
+  // building its name at the call site, which no extractor can follow and no
+  // type can check
+  .use(ICU)
   .use(initReactI18next) // passes i18n down to react-i18next
   .init({
     // the translations

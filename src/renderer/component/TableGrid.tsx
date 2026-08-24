@@ -1,4 +1,11 @@
-import { ReactElement, ReactNode, memo, useMemo, useState } from 'react';
+import {
+  ReactElement,
+  ReactNode,
+  memo,
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 import {
   columnOrderingFeature,
   columnPinningFeature,
@@ -12,10 +19,17 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Empty } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { styled } from 'styled-components';
+import invariant from 'tiny-invariant';
+import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
+import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
+import { isJsonColumn } from '../../sql/columnEditing';
+import type { ColumnDetail } from '../../sql/types';
+import type { PrimaryKeyPart } from '../../sql/updateCell';
 import { background, foreground } from '../theme';
 import Cell from './Cell';
-import CellDetailModal, { CellDetail } from './CellDetailModal';
+import CellDetailModal, { CellDetail, SaveCellParams } from './CellDetailModal';
+import { toBoundValue } from './CellEditor/editableValue';
 import ForeignKeyLink from './ForeignKeyLink';
 
 const features = tableFeatures({
@@ -38,6 +52,37 @@ interface TableGridProps<R extends RowDataPacket> {
   fields: null | FieldPacket[];
   primaryKeys?: Array<string>;
   title?: () => ReactNode;
+  /**
+   * Called once a cell has been written, with the value the server now holds.
+   * The owner of `result` patches the row with it — without this the grid keeps
+   * showing what was loaded, and cells are read-only.
+   */
+  onValueUpdated?: (
+    rowIndex: number,
+    columnName: string,
+    value: unknown
+  ) => void;
+}
+
+/**
+ * What identifies the row of a cell, or `null` when no primary key does.
+ *
+ * The values go back as they were read, with no conversion: a `PRIMARY KEY`
+ * column is `NOT NULL` and holds a scalar the driver answers with as a number,
+ * a string or a `Date` — all three of which mysql2 binds back. A `BINARY` key
+ * would be the exception, arriving as bytes, but such a table does not reach
+ * this point: the grid renders that column through `StringCell`, which hands
+ * the bytes straight to React. Nothing to guard against here.
+ */
+function buildRowKey(
+  row: RowDataPacket,
+  primaryKeys: Array<string> | undefined
+): Array<PrimaryKeyPart> | null {
+  if (!primaryKeys || primaryKeys.length === 0) {
+    return null;
+  }
+
+  return primaryKeys.map((column) => ({ column, value: row[column] }));
 }
 
 /**
@@ -57,6 +102,7 @@ function TableGrid<Row extends RowDataPacket>({
   primaryKeys,
   title,
   rowsAsArray = false,
+  onValueUpdated,
 }: TableGridProps<Row>): ReactElement {
   // store the scroll element in a state (not a ref): the virtualizer reads it
   // in a layout effect that runs before the parent ref is attached, so a ref
@@ -69,6 +115,36 @@ function TableGrid<Row extends RowDataPacket>({
   const [cellDetail, setCellDetail] = useState<CellDetail | null>(null);
 
   const foreignKeys = useForeignKeysContext();
+  const allColumns = useAllColumnsContext();
+  const { database } = useDatabaseContext();
+
+  const saveCell = useCallback(
+    async ({ detail, newValue, originalValue, force }: SaveCellParams) => {
+      const { rowKey, column } = detail;
+
+      invariant(database, 'A database must be selected to write a cell');
+      invariant(rowKey, 'A cell of an unidentified row cannot be written');
+      invariant(column.tableName, 'A cell of no table cannot be written');
+
+      const outcome = await window.sql.updateCell({
+        database,
+        table: column.tableName,
+        column: column.name,
+        primaryKey: rowKey,
+        newValue,
+        originalValue: toBoundValue(originalValue),
+        isJsonColumn: column.detail ? isJsonColumn(column.detail) : false,
+        force,
+      });
+
+      if (outcome.status === 'updated') {
+        onValueUpdated?.(detail.rowIndex, column.name, outcome.value);
+      }
+
+      return outcome;
+    },
+    [database, onValueUpdated]
+  );
 
   const columns = useMemo(() => {
     const columnHelper = createColumnHelper<typeof features, Row>();
@@ -137,10 +213,15 @@ function TableGrid<Row extends RowDataPacket>({
           pinnedLeft: isPinned === 'start' ? column.getStart('start') : null,
           isLastPinned: isPinned === 'start' && column.getIsLastColumn('start'),
           hasForeignKey: foreignKey !== null,
+          // the schema of the column, resolved here rather than in the modal so
+          // that no context lookup happens per mounted cell
+          detail: field
+            ? allColumns.getColumn(field.table ?? '', field.name)
+            : undefined,
         };
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- table is stable, columns/columnPinning drive its column state
-    [table, columns, columnPinning, fields, foreignKeys]
+    [table, columns, columnPinning, fields, foreignKeys, allColumns]
   );
 
   return (
@@ -185,6 +266,7 @@ function TableGrid<Row extends RowDataPacket>({
             table={table}
             columnsMeta={columnsMeta}
             rowsAsArray={rowsAsArray}
+            primaryKeys={primaryKeys}
             scrollElement={scrollElement}
             onShowCellDetail={setCellDetail}
           />
@@ -199,6 +281,7 @@ function TableGrid<Row extends RowDataPacket>({
 
       <CellDetailModal
         detail={cellDetail}
+        onSave={saveCell}
         onClose={() => {
           setCellDetail(null);
         }}
@@ -219,12 +302,20 @@ export interface ColumnMeta {
   // resolved once per column so that non-FK cells (the vast majority) don't
   // mount a ForeignKeyLink that would render null
   hasForeignKey: boolean;
+  /**
+   * What INFORMATION_SCHEMA says about the column: nullability, the whole type
+   * declaration, whether the server computes it. Undefined for a column that
+   * belongs to no table of the current database — a computed column of a raw
+   * query, or a table of another schema.
+   */
+  detail: ColumnDetail | undefined;
 }
 
 interface TableBodyProps<Row extends RowDataPacket> {
   table: ReactTable<typeof features, Row>;
   columnsMeta: Array<ColumnMeta>;
   rowsAsArray: boolean;
+  primaryKeys: Array<string> | undefined;
   scrollElement: HTMLDivElement | null;
   onShowCellDetail: (detail: CellDetail) => void;
 }
@@ -235,6 +326,7 @@ function TableBody<Row extends RowDataPacket>({
   table,
   columnsMeta,
   rowsAsArray,
+  primaryKeys,
   scrollElement,
   onShowCellDetail,
 }: TableBodyProps<Row>): ReactElement {
@@ -259,6 +351,7 @@ function TableBody<Row extends RowDataPacket>({
             start={virtualRow.start}
             columnsMeta={columnsMeta}
             rowsAsArray={rowsAsArray}
+            primaryKeys={primaryKeys}
             onShowCellDetail={onShowCellDetail}
           />
         );
@@ -272,6 +365,7 @@ interface BodyRowProps<Row extends RowDataPacket> {
   start: number;
   columnsMeta: Array<ColumnMeta>;
   rowsAsArray: boolean;
+  primaryKeys: Array<string> | undefined;
   onShowCellDetail: (detail: CellDetail) => void;
 }
 
@@ -280,6 +374,7 @@ function BodyRowInner<Row extends RowDataPacket>({
   start,
   columnsMeta,
   rowsAsArray,
+  primaryKeys,
   onShowCellDetail,
 }: BodyRowProps<Row>): ReactElement {
   const original = row.original;
@@ -307,9 +402,19 @@ function BodyRowInner<Row extends RowDataPacket>({
               value={value}
               // a closure per mounted cell: cheap next to what a cell already
               // allocates, and it keeps the value at hand instead of resolving
-              // it back from the DOM
+              // it back from the DOM. The row key is built inside it, so that
+              // mounting a cell costs nothing more than before.
               onDoubleClick={() => {
-                onShowCellDetail({ column, value });
+                onShowCellDetail({
+                  column,
+                  value,
+                  // a raw query result is a list of values, with no column to
+                  // read a key from
+                  rowKey: rowsAsArray
+                    ? null
+                    : buildRowKey(original, primaryKeys),
+                  rowIndex: row.index,
+                });
               }}
             />
           </td>
@@ -328,6 +433,7 @@ const BodyRow = memo(
     prevProps.start === nextProps.start &&
     prevProps.columnsMeta === nextProps.columnsMeta &&
     prevProps.rowsAsArray === nextProps.rowsAsArray &&
+    prevProps.primaryKeys === nextProps.primaryKeys &&
     prevProps.onShowCellDetail === nextProps.onShowCellDetail
 ) as typeof BodyRowInner;
 
