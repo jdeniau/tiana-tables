@@ -14,10 +14,10 @@ function WhereFilter({ defaultValue }: Props): ReactElement {
   const ref = useRef<HTMLFormElement>(null);
 
   return (
-    <Form ref={ref}>
+    <Form ref={ref} style={{ flex: 1, minHeight: 0, display: 'flex' }}>
       <input type="hidden" name="where" value={where} />
 
-      <Space.Compact style={{ width: '100%', marginBottom: '0.5em' }}>
+      <Space.Compact style={{ width: '100%', alignItems: 'stretch' }}>
         <RawSqlEditor
           defaultValue={where}
           onChange={setWhere}
@@ -25,7 +25,9 @@ function WhereFilter({ defaultValue }: Props): ReactElement {
             // If this line is not set, then the width will be 100% of the window size,
             // And then push the button outside of the viewport
             minWidth: '0',
+            // the height follows the resizable pane the filter lives in
             minHeight: '2lh',
+            height: '100%',
             flex: 1,
           }}
           monacoOptions={{
