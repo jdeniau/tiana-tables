@@ -9,6 +9,7 @@ import type {
   ShowKeyRow,
   ShowTableStatusResult,
 } from '../sql/types';
+import type { UpdateCellOutcome, UpdateCellRequest } from '../sql/updateCell';
 import { bindChannel, bindEvent } from './bindChannel';
 import { SQL_CHANNEL } from './sqlChannel';
 
@@ -17,6 +18,12 @@ interface Sql {
     query: string,
     rowsAsArray?: boolean
   ): QueryResult<T>;
+  /**
+   * Write one cell, guarded on the value it was loaded with. The main process
+   * builds the statement, so no value typed by the user ever reaches the SQL
+   * text: they travel as bound parameters.
+   */
+  updateCell(request: UpdateCellRequest): Promise<UpdateCellOutcome>;
   closeAllConnections(): Promise<void>;
   connectionNameChanged(
     connectionSlug: string | undefined,
@@ -42,6 +49,9 @@ async function doInvokeQuery(sqlChannel: SQL_CHANNEL, ...params: unknown[]) {
 export const sql: Sql = {
   executeQuery: async (query, rowsAsArray) =>
     doInvokeQuery(SQL_CHANNEL.EXECUTE_QUERY, query, rowsAsArray),
+
+  updateCell: async (request) =>
+    doInvokeQuery(SQL_CHANNEL.UPDATE_CELL, request),
 
   getKeyColumnUsage: async (tableName) =>
     doInvokeQuery(SQL_CHANNEL.GET_KEY_COLUMN_USAGE, tableName),

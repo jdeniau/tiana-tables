@@ -12,7 +12,7 @@ export default function cellValueToText(
   value: unknown,
   type: number | undefined
 ): string {
-  if (value === null || typeof value === 'undefined') {
+  if (value === null || value === undefined) {
     return '';
   }
 

@@ -1,11 +1,17 @@
 import { isSqlError } from './isSqlError';
 import { QueryResult, QueryReturnType } from './types';
 
+/**
+ * The envelope every handler answers with: an error crossing IPC loses
+ * everything but its message, so it travels encoded next to the result rather
+ * than being thrown (see `encodeError`).
+ */
+export type ResultOrError<T> = Promise<
+  { result: T; error: undefined } | { result: undefined; error: Error }
+>;
+
 export type QueryResultOrError<T extends QueryReturnType = QueryReturnType> =
-  Promise<
-    | { result: Awaited<QueryResult<T>>; error: undefined }
-    | { result: undefined; error: Error }
-  >;
+  ResultOrError<Awaited<QueryResult<T>>>;
 
 export interface SqlError extends Error {
   code: string;

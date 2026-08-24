@@ -54,6 +54,27 @@ export function TableLayout({
     fetchTableData(currentOffset);
   }, [fetchTableData, currentOffset]);
 
+  // a written cell is patched in place rather than re-fetched: the value comes
+  // from the server (see `updateCell`), so the row is as fresh as a reload
+  // would make it — without losing the rows already loaded, nor the scroll
+  const handleValueUpdated = useCallback(
+    (rowIndex: number, columnName: string, value: unknown) => {
+      setResult((previous) => {
+        const row = previous?.[rowIndex];
+
+        if (!previous || !row) {
+          return previous;
+        }
+
+        const next = [...previous];
+        next[rowIndex] = { ...row, [columnName]: value };
+
+        return next;
+      });
+    },
+    []
+  );
+
   return (
     <Flex vertical gap="small" style={{ height: '100%' }}>
       <div>
@@ -69,6 +90,7 @@ export function TableLayout({
             fields={fields}
             result={result}
             primaryKeys={primaryKeys}
+            onValueUpdated={handleValueUpdated}
             title={() => (
               <>
                 {tableName}

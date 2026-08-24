@@ -1,5 +1,6 @@
 export enum SQL_CHANNEL {
   EXECUTE_QUERY = 'sql:executeQuery',
+  UPDATE_CELL = 'sql:updateCell',
   GET_KEY_COLUMN_USAGE = 'sql:getKeyColumnUsage',
   GET_ALL_COLUMNS = 'sql:getAllColumns',
   GET_PRIMARY_KEYS = 'sql:getPrimaryKeys',

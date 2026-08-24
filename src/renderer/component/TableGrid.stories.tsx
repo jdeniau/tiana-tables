@@ -3,10 +3,11 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Types } from 'mysql';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
+import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
-import { KeyColumnUsageRow } from '../../sql/types';
+import { ColumnDetail, KeyColumnUsageRow } from '../../sql/types';
 import TableGrid from './TableGrid';
 
 // deterministic pseudo-random generator so stories are stable across renders
@@ -95,6 +96,30 @@ function makeRows(rowCount: number, columnCount: number): RowDataPacket[] {
   });
 }
 
+// the schema the grid reads to know what a cell may become: without it every
+// cell is read-only, which is exactly what the raw-SQL case looks like
+const ALL_COLUMNS = [
+  ['id', 'int', 'int', 'NO', 'auto_increment'],
+  ['name', 'varchar', 'varchar(255)', 'NO', ''],
+  ['linkedId', 'int', 'int', 'YES', ''],
+  ['price', 'decimal', 'decimal(10,2)', 'YES', ''],
+  ['createdAt', 'datetime', 'datetime', 'NO', ''],
+  ['payload', 'json', 'json', 'YES', ''],
+  ['description', 'varchar', 'varchar(255)', 'YES', ''],
+  ['quantity', 'int', 'int', 'YES', ''],
+].map(
+  ([Column, DataType, ColumnType, IsNullable, Extra]) =>
+    ({
+      Table: 'items',
+      Column,
+      DataType,
+      ColumnType,
+      IsNullable,
+      ColumnDefault: null,
+      Extra,
+    }) as ColumnDetail
+);
+
 const meta: Meta<typeof TableGrid> = {
   component: TableGrid,
   decorators: [
@@ -132,15 +157,17 @@ const meta: Meta<typeof TableGrid> = {
               } as KeyColumnUsageRow,
             ]}
           >
-            <div
-              style={{
-                height: '90vh',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <Story />
-            </div>
+            <AllColumnsContextProvider allColumns={ALL_COLUMNS}>
+              <div
+                style={{
+                  height: '90vh',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <Story />
+              </div>
+            </AllColumnsContextProvider>
           </ForeignKeysContextProvider>
         </DatabaseContext.Provider>
       </ConnectionContext.Provider>
