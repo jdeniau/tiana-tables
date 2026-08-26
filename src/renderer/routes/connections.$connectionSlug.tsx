@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Button, Flex, Layout } from 'antd';
+import { Button, Flex, Splitter } from 'antd';
 import {
   LoaderFunctionArgs,
   Outlet,
@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
+import { PANEL } from '../../configuration/panels';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseListContextProvider } from '../../contexts/DatabaseListContext';
@@ -19,18 +20,23 @@ import { useTranslation } from '../../i18n';
 import DatabaseSelector from '../component/DatabaseSelector';
 import { KeyboardShortcut } from '../component/KeyboardShortcut';
 import TableList from '../component/TableList';
+import { usePanelSize } from '../hooks/usePanelSize';
 import { background, foreground } from '../theme';
 import NavigateModalContextProvider, {
   useNavigateModalContext,
 } from '../useNavigationListener';
 
-const Sider = styled(Layout.Sider)`
+const Sider = styled.div`
+  height: 100%;
   border-right: 1px solid ${foreground};
-  background: ${background} !important;
+  background: ${background};
   overflow: auto;
 `;
 
-const Content = styled(Layout.Content)`
+const Content = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   overflow: auto;
 `;
 
@@ -112,6 +118,7 @@ export default function ConnectionDetailPage() {
     useLoaderData() as Exclude<Awaited<ReturnType<typeof loader>>, Response>;
   const { addConnectionToList } = useConnectionContext();
   const { connectionSlug } = useParams();
+  const { panelProps, onResizeEnd } = usePanelSize(PANEL.TABLE_LIST);
 
   useEffect(() => {
     if (connectionSlug) {
@@ -125,18 +132,25 @@ export default function ConnectionDetailPage() {
         <ForeignKeysContextProvider keyColumnUsageRows={keyColumnUsageRows}>
           <AllColumnsContextProvider allColumns={allColumns}>
             <NavigateModalContextProvider>
-              <Layout>
-                <Sider width={200}>
-                  <Flex vertical gap="small">
-                    <DatabaseSelector databaseList={databaseList} />
-                    <OpenNavigateModalButton />
-                    <TableList tableStatusList={tableStatusList} />
-                  </Flex>
-                </Sider>
-                <Content>
-                  <Outlet />
-                </Content>
-              </Layout>
+              <Splitter
+                onResizeEnd={onResizeEnd}
+                style={{ flex: 'auto', minHeight: 0 }}
+              >
+                <Splitter.Panel {...panelProps}>
+                  <Sider>
+                    <Flex vertical gap="small">
+                      <DatabaseSelector databaseList={databaseList} />
+                      <OpenNavigateModalButton />
+                      <TableList tableStatusList={tableStatusList} />
+                    </Flex>
+                  </Sider>
+                </Splitter.Panel>
+                <Splitter.Panel>
+                  <Content>
+                    <Outlet />
+                  </Content>
+                </Splitter.Panel>
+              </Splitter>
             </NavigateModalContextProvider>
           </AllColumnsContextProvider>
         </ForeignKeysContextProvider>

@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFile } from 'node:fs';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_LOCALE } from './locale';
+import { PANEL } from './panels';
 import { DEFAULT_THEME } from './themes';
 import { Configuration } from './type';
 import {
@@ -11,6 +12,7 @@ import {
   getConfiguration,
   setActiveDatabase,
   setActiveTable,
+  setPanelSize,
   setTableFilter,
   testables,
 } from '.';
@@ -735,5 +737,47 @@ describe('edit', () => {
     );
 
     expect(mockReadFileSync).toHaveBeenCalledOnce();
+  });
+});
+
+describe('set panel size', () => {
+  test('stores the size of a panel', async () => {
+    mockExistsSync.mockReturnValue(false);
+
+    await setPanelSize(PANEL.TABLE_LIST, '32.5%');
+
+    expect(mockWriteFile).toHaveBeenCalledWith(
+      'userData/config/config.json',
+      JSON.stringify(
+        {
+          version: 1,
+          theme: DEFAULT_THEME.name,
+          locale: DEFAULT_LOCALE,
+          connections: {},
+          panelSizes: {
+            [PANEL.TABLE_LIST]: '32.5%',
+          },
+        },
+        null,
+        2
+      ),
+      'utf-8',
+      expect.any(Function)
+    );
+  });
+
+  test('keeps the size of the other panels, and answers with the new config', async () => {
+    mockExistsSync.mockReturnValue(false);
+
+    await setPanelSize(PANEL.TABLE_LIST, '32.5%');
+    const config = await setPanelSize(PANEL.SQL_EDITOR, '40%');
+
+    const expected = {
+      [PANEL.TABLE_LIST]: '32.5%',
+      [PANEL.SQL_EDITOR]: '40%',
+    };
+
+    expect(config.panelSizes).toEqual(expected);
+    expect(getConfiguration().panelSizes).toEqual(expected);
   });
 });
