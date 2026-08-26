@@ -5,6 +5,7 @@ import { styled } from 'styled-components';
 import { PANEL } from '../../../configuration/panels';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
+import { escapeIdentifier } from '../../../sql/escapeIdentifier';
 import { usePanelSize } from '../../hooks/usePanelSize';
 import ButtonLink from '../ButtonLink';
 import WhereFilter from '../Query/WhereFilter';
@@ -40,7 +41,11 @@ export function TableLayout({
 
   const fetchTableData = useCallback(
     (offset: number) => {
-      const query = `SELECT * FROM ${database}.${tableName} ${
+      // the identifiers are escaped, the filter is not: `where` is SQL the
+      // user wrote, and is sent as written
+      const query = `SELECT * FROM ${escapeIdentifier(
+        database
+      )}.${escapeIdentifier(tableName)} ${
         where ? ` WHERE ${where}` : ''
       } LIMIT ${DEFAULT_LIMIT} OFFSET ${offset};`;
 

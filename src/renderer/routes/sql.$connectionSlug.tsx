@@ -5,6 +5,7 @@ import invariant from 'tiny-invariant';
 import { PANEL } from '../../configuration/panels';
 import { useTranslation } from '../../i18n';
 import { SqlError } from '../../sql/errorSerializer';
+import { escapeIdentifier } from '../../sql/escapeIdentifier';
 import { isSqlError } from '../../sql/isSqlError';
 import { QueryResult } from '../../sql/types';
 import RawSqlResult from '../component/Query/RawSqlResult/RowDataPacketResult';
@@ -53,7 +54,7 @@ export async function action({
   invariant(typeof query === 'string', 'Query as string is required');
 
   try {
-    await window.sql.executeQuery(`USE ${databaseName};`);
+    await window.sql.executeQuery(`USE ${escapeIdentifier(databaseName)};`);
     const result = await window.sql.executeQuery(query, true);
 
     return { result };

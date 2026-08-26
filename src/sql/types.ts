@@ -80,6 +80,15 @@ export type ColumnDetailResult = ColumnDetail[];
  */
 export type SqlBoundValue = string | number | Date | null;
 
+/**
+ * The parameters of a query, by name.
+ *
+ * Every query built in the main process names its placeholders (`:tableName`)
+ * instead of counting `?`, so a value is bound by what it is rather than by
+ * where it sits in a list.
+ */
+export type SqlBoundValues = Record<string, SqlBoundValue>;
+
 export interface ForeignKeyRow extends KeyColumnUsageRow {
   REFERENCED_TABLE_NAME: string;
   REFERENCED_COLUMN_NAME: string;

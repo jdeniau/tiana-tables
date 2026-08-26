@@ -172,6 +172,31 @@ describe('loader', () => {
     });
   });
 
+  // On this path the loader does not redirect, so it queries the database
+  // itself. It must name the database it resolved: the `$databaseName` loader
+  // that announces it runs in parallel, and used to be the only thing keeping
+  // the main process from querying `undefined`.
+  test('queries the resolved database by name, and announces it', async () => {
+    const params = { connectionSlug: 'connectionSlug' };
+
+    setConfiguration('connectionSlug', 'databaseName2');
+
+    await loader({
+      params,
+      request: new Request(
+        'http://localhost/connections/connectionSlug/databaseName2'
+      ),
+    });
+
+    expect(window.sql.showTableStatus).toHaveBeenCalledWith('databaseName2');
+    expect(window.sql.getKeyColumnUsage).toHaveBeenCalledWith('databaseName2');
+    expect(window.sql.getAllColumns).toHaveBeenCalledWith('databaseName2');
+    expect(window.sql.connectionNameChanged).toHaveBeenLastCalledWith(
+      'connectionSlug',
+      'databaseName2'
+    );
+  });
+
   test('handle connection name that are url-encoded', async () => {
     const params = { connectionSlug: 'connection + name' };
 
