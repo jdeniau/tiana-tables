@@ -17,6 +17,22 @@ describe('escapeIdentifier', () => {
   });
 
   it('refuses an empty identifier', () => {
+    // `mysql.escapeId('')` answers with two bare backticks — invalid SQL, and
+    // silent about it. One of the two reasons this function is not delegated.
     expect(() => escapeIdentifier('')).toThrow();
+  });
+
+  it('keeps a dotted name as one identifier', () => {
+    // the other reason: `mysql.escapeId` reads a `.` as a qualifier separator
+    // unless told otherwise, and would answer `\`a\`.\`b\``. Callers here pass
+    // a single name and assemble `db`.`table` themselves.
+    //
+    // Not a theoretical case, checked against MySQL 8.4 and MariaDB 11.4
+    // (2026-08-27): `CREATE DATABASE \`my.db\``, `CREATE TABLE \`a.b\`` and a
+    // `\`c.d\`` column are all accepted — a quoted identifier takes the whole
+    // BMP, and only the *file name* on disk encodes the dot (`my@002edb`). Our
+    // form, `SELECT * FROM \`my.db\`.\`a.b\``, reads the row on both servers;
+    // the qualifier-splitting form is ERROR 1064 on both.
+    expect(escapeIdentifier('a.b')).toBe('`a.b`');
   });
 });

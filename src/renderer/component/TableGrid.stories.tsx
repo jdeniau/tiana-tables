@@ -223,3 +223,27 @@ export const WithoutPrimaryKey: Story = {
     title: () => 'items (no primary key, no pinned column)',
   },
 };
+
+// `onFilterChange` is what turns the secondary click on: right-click a cell to
+// get the filter menu. Try a number, a string, a date and a NULL `payload` —
+// each offers a different literal, and NULL offers none but `IS (NOT) NULL`.
+export const WithFilterContextMenu: Story = {
+  decorators: [
+    (Story) => {
+      // the real clipboard is read through the main process, which Storybook
+      // has none of
+      window.clipboard = { readText: async () => 'lorem-2' };
+
+      return <Story />;
+    },
+  ],
+  args: {
+    fields: makeFields(8),
+    result: makeRows(100, 8),
+    primaryKeys: ['id'],
+    title: () => 'items (right-click a cell)',
+    onFilterChange: (where) => {
+      action('onFilterChange')(where);
+    },
+  },
+};

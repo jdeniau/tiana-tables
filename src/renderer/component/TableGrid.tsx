@@ -28,6 +28,7 @@ import type { ColumnDetail } from '../../sql/types';
 import type { PrimaryKeyPart } from '../../sql/updateCell';
 import { background, foreground } from '../theme';
 import Cell from './Cell';
+import CellContextMenu, { CellFilterTarget } from './CellContextMenu';
 import CellDetailModal, { CellDetail, SaveCellParams } from './CellDetailModal';
 import { toBoundValue } from './CellEditor/editableValue';
 import ForeignKeyLink from './ForeignKeyLink';
@@ -62,6 +63,12 @@ interface TableGridProps<R extends RowDataPacket> {
     columnName: string,
     value: unknown
   ) => void;
+  /**
+   * Called with the `WHERE` clause a secondary click built, which replaces the
+   * current filter. Providing it is what gives the grid its context menu: a raw
+   * query result has no filter to feed.
+   */
+  onFilterChange?: (where: string) => void;
 }
 
 /**
@@ -103,6 +110,7 @@ function TableGrid<Row extends RowDataPacket>({
   title,
   rowsAsArray = false,
   onValueUpdated,
+  onFilterChange,
 }: TableGridProps<Row>): ReactElement {
   // store the scroll element in a state (not a ref): the virtualizer reads it
   // in a layout effect that runs before the parent ref is attached, so a ref
@@ -113,6 +121,14 @@ function TableGrid<Row extends RowDataPacket>({
 
   // the value shown by the detail modal, `null` when it is closed
   const [cellDetail, setCellDetail] = useState<CellDetail | null>(null);
+
+  // the cell the context menu is open on, `null` when it is closed
+  const [filterTarget, setFilterTarget] = useState<CellFilterTarget | null>(
+    null
+  );
+
+  // a stable reference either way, so that the `memo` of `BodyRow` still holds
+  const onCellContextMenu = onFilterChange ? setFilterTarget : undefined;
 
   const foreignKeys = useForeignKeysContext();
   const allColumns = useAllColumnsContext();
@@ -269,6 +285,7 @@ function TableGrid<Row extends RowDataPacket>({
             primaryKeys={primaryKeys}
             scrollElement={scrollElement}
             onShowCellDetail={setCellDetail}
+            onCellContextMenu={onCellContextMenu}
           />
         </StyledTable>
 
@@ -286,6 +303,16 @@ function TableGrid<Row extends RowDataPacket>({
           setCellDetail(null);
         }}
       />
+
+      {onFilterChange && (
+        <CellContextMenu
+          target={filterTarget}
+          onFilterChange={onFilterChange}
+          onClose={() => {
+            setFilterTarget(null);
+          }}
+        />
+      )}
     </Wrapper>
   );
 }
@@ -318,6 +345,7 @@ interface TableBodyProps<Row extends RowDataPacket> {
   primaryKeys: Array<string> | undefined;
   scrollElement: HTMLDivElement | null;
   onShowCellDetail: (detail: CellDetail) => void;
+  onCellContextMenu: ((target: CellFilterTarget) => void) | undefined;
 }
 
 // keep the virtualizer in the lowest component possible: it re-renders on
@@ -329,6 +357,7 @@ function TableBody<Row extends RowDataPacket>({
   primaryKeys,
   scrollElement,
   onShowCellDetail,
+  onCellContextMenu,
 }: TableBodyProps<Row>): ReactElement {
   const { rows } = table.getRowModel();
 
@@ -353,6 +382,7 @@ function TableBody<Row extends RowDataPacket>({
             rowsAsArray={rowsAsArray}
             primaryKeys={primaryKeys}
             onShowCellDetail={onShowCellDetail}
+            onCellContextMenu={onCellContextMenu}
           />
         );
       })}
@@ -367,6 +397,7 @@ interface BodyRowProps<Row extends RowDataPacket> {
   rowsAsArray: boolean;
   primaryKeys: Array<string> | undefined;
   onShowCellDetail: (detail: CellDetail) => void;
+  onCellContextMenu: ((target: CellFilterTarget) => void) | undefined;
 }
 
 function BodyRowInner<Row extends RowDataPacket>({
@@ -376,6 +407,7 @@ function BodyRowInner<Row extends RowDataPacket>({
   rowsAsArray,
   primaryKeys,
   onShowCellDetail,
+  onCellContextMenu,
 }: BodyRowProps<Row>): ReactElement {
   const original = row.original;
 
@@ -396,27 +428,30 @@ function BodyRowInner<Row extends RowDataPacket>({
               width: column.width,
               left: column.pinnedLeft ?? undefined,
             }}
-          >
-            <GridCell
-              column={column}
-              value={value}
-              // a closure per mounted cell: cheap next to what a cell already
-              // allocates, and it keeps the value at hand instead of resolving
-              // it back from the DOM. The row key is built inside it, so that
-              // mounting a cell costs nothing more than before.
-              onDoubleClick={() => {
-                onShowCellDetail({
+            onDoubleClick={() => {
+              onShowCellDetail({
+                column,
+                value,
+                // a raw query result is a list of values, with no column to read a key from
+                // TODO later: handle raw query with possible primary key columns (e.g. `SELECT id, name FROM table`) and use them to identify the row
+                rowKey: rowsAsArray ? null : buildRowKey(original, primaryKeys),
+                rowIndex: row.index,
+              });
+            }}
+            onContextMenu={
+              onCellContextMenu &&
+              ((event) => {
+                event.preventDefault();
+                onCellContextMenu({
                   column,
                   value,
-                  // a raw query result is a list of values, with no column to
-                  // read a key from
-                  rowKey: rowsAsArray
-                    ? null
-                    : buildRowKey(original, primaryKeys),
-                  rowIndex: row.index,
+                  x: event.clientX,
+                  y: event.clientY,
                 });
-              }}
-            />
+              })
+            }
+          >
+            <GridCell column={column} value={value} />
           </td>
         );
       })}
@@ -434,7 +469,8 @@ const BodyRow = memo(
     prevProps.columnsMeta === nextProps.columnsMeta &&
     prevProps.rowsAsArray === nextProps.rowsAsArray &&
     prevProps.primaryKeys === nextProps.primaryKeys &&
-    prevProps.onShowCellDetail === nextProps.onShowCellDetail
+    prevProps.onShowCellDetail === nextProps.onShowCellDetail &&
+    prevProps.onCellContextMenu === nextProps.onCellContextMenu
 ) as typeof BodyRowInner;
 
 // one React component per cell (measured free, 2026-08-18 benchmark): hosts
@@ -444,17 +480,14 @@ const BodyRow = memo(
 const GridCell = memo(function GridCell({
   column,
   value,
-  onDoubleClick,
 }: {
   column: ColumnMeta;
   value: unknown;
-  onDoubleClick: () => void;
 }): ReactElement {
   return (
     <Cell
       type={column.type}
       value={value}
-      onDoubleClick={onDoubleClick}
       link={
         column.hasForeignKey ? (
           <ForeignKeyLink
