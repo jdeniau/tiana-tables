@@ -36,6 +36,14 @@ const BINARY_DATA_TYPES: ReadonlySet<string> = new Set([
   DataType.Geometry,
 ]);
 
+/**
+ * Whether the column holds bytes rather than text — which makes its values
+ * uneditable as text, and unusable as the literal of a filter.
+ */
+export function isBinaryColumn(column: ColumnDetail): boolean {
+  return BINARY_DATA_TYPES.has(readDataType(column.DataType));
+}
+
 /** `Extra` reads `VIRTUAL GENERATED` or `STORED GENERATED` on such a column. */
 export function isGenerated(column: ColumnDetail): boolean {
   return /GENERATED/i.test(column.Extra ?? '');
@@ -65,7 +73,7 @@ export function getCellEditability(
     return { editable: false, reason: NotEditableReason.Generated };
   }
 
-  if (BINARY_DATA_TYPES.has(readDataType(column.DataType))) {
+  if (isBinaryColumn(column)) {
     return { editable: false, reason: NotEditableReason.Binary };
   }
 
