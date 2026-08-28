@@ -1,3 +1,4 @@
+import { dialog, safeStorage } from 'electron';
 import { existsSync, readFileSync, writeFile } from 'node:fs';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_LOCALE } from './locale';
@@ -44,10 +45,20 @@ function resetAllMocks(): void {
   resetConfiguration();
 }
 
+vi.mock('../i18n', () => ({
+  t: (key: string) => key,
+}));
+
 vi.mock('electron', () => ({
   safeStorage: {
     encryptString: vi.fn((s: string) => Buffer.from(`encrypted-${s}`)),
     decryptString: vi.fn((b: Buffer) => b.toString().substring(10)),
+    isEncryptionAvailable: vi.fn(() => true),
+    getSelectedStorageBackend: vi.fn(() => 'gnome_libsecret'),
+  },
+  dialog: {
+    showErrorBox: vi.fn(),
+    showMessageBox: vi.fn(() => Promise.resolve({ response: 0 })),
   },
   app: {
     getPath: vi.fn((s: string) => s),
@@ -779,5 +790,30 @@ describe('set panel size', () => {
 
     expect(config.panelSizes).toEqual(expected);
     expect(getConfiguration().panelSizes).toEqual(expected);
+  });
+});
+
+describe('encryption is unavailable', () => {
+  afterEach(() => {
+    vi.mocked(safeStorage.isEncryptionAvailable).mockReturnValue(true);
+  });
+
+  test('nothing is written and the user is told', async () => {
+    mockExistsSync.mockReturnValue(false);
+    vi.mocked(safeStorage.isEncryptionAvailable).mockReturnValue(false);
+
+    await addConnectionToConfig({
+      name: 'local',
+      host: 'localhost',
+      user: 'root',
+      port: 3306,
+      password: 'password',
+    });
+
+    expect(mockWriteFile).not.toHaveBeenCalled();
+    expect(dialog.showErrorBox).toHaveBeenCalledWith(
+      'config.encryption.unavailable.title',
+      'config.encryption.unavailable.message'
+    );
   });
 });
