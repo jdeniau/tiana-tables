@@ -24,6 +24,14 @@ export default {
     ' unknownColumn {Read-only: this column belongs to no table of this database.}' +
     ' other {Read-only.}}',
   'cell.detail.setNull': 'Set to NULL',
+  'config.encryption.insecureBackend.detail':
+    'Storage backend: {backend}. Install a keyring (gnome-keyring, KWallet) and restart the application to store your passwords encrypted.',
+  'config.encryption.insecureBackend.message':
+    'No system keyring was found, so your connection passwords are only obfuscated, not encrypted.',
+  'config.encryption.insecureBackend.title': 'Passwords are not encrypted',
+  'config.encryption.unavailable.message':
+    'Your system refused to encrypt the connection passwords, so the configuration was not saved. Unlock your keyring, then try again.',
+  'config.encryption.unavailable.title': 'Configuration not saved',
   'connect.new': 'New…',
   'connection.create.button': 'Create connection…',
   'connection.form.action.connect': 'Connect',

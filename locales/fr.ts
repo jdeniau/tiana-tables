@@ -27,6 +27,14 @@ const fr: Translation = {
     " unknownColumn {Lecture seule : cette colonne n'appartient à aucune table de cette base.}" +
     ' other {Lecture seule.}}',
   'cell.detail.setNull': 'Mettre à NULL',
+  'config.encryption.insecureBackend.detail':
+    'Backend de stockage : {backend}. Installez un trousseau (gnome-keyring, KWallet) et redémarrez l’application pour chiffrer vos mots de passe.',
+  'config.encryption.insecureBackend.message':
+    'Aucun trousseau système n’a été trouvé : vos mots de passe de connexion sont seulement obfusqués, pas chiffrés.',
+  'config.encryption.insecureBackend.title': 'Mots de passe non chiffrés',
+  'config.encryption.unavailable.message':
+    'Votre système a refusé de chiffrer les mots de passe de connexion, la configuration n’a donc pas été enregistrée. Déverrouillez votre trousseau puis réessayez.',
+  'config.encryption.unavailable.title': 'Configuration non enregistrée',
   'connect.new': 'Nouveau…',
   'connection.create.button': 'Créer une connexion…',
   'connection.form.action.connect': 'Connecter',

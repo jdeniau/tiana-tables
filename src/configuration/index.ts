@@ -1,9 +1,15 @@
-import { dialog, safeStorage } from 'electron';
+import { dialog } from 'electron';
 import { existsSync, readFileSync, writeFile } from 'node:fs';
 import log from 'electron-log';
+import { t } from '../i18n';
 import { WindowState } from '../main-process/windowState';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
 import { ConnectionObject, ConnectionObjectWithoutSlug } from '../sql/types';
+import {
+  EncryptionUnavailableError,
+  decryptPassword,
+  encryptPassword,
+} from './encryption';
 import {
   createConfigurationFolderIfNotExists,
   getConfigurationPath,
@@ -37,7 +43,7 @@ function encryptConnection(
 ): EncryptedConnectionObject {
   return {
     ...connection,
-    password: safeStorage.encryptString(connection.password).toString('base64'),
+    password: encryptPassword(connection.password),
   };
 }
 
@@ -46,9 +52,7 @@ function decryptConnection(
 ): ConnectionObject {
   return {
     ...connection,
-    password: safeStorage.decryptString(
-      Buffer.from(connection.password, 'base64')
-    ),
+    password: decryptPassword(connection.password),
   };
 }
 
@@ -87,15 +91,33 @@ function loadConfiguration(): Configuration {
 }
 
 function writeConfiguration(config: Configuration): void {
-  const encryptedConfig = {
-    ...config,
-    connections: Object.fromEntries(
-      Object.entries(config.connections).map(([slug, connection]) => [
-        slug,
-        encryptConnection(connection),
-      ])
-    ),
-  };
+  let encryptedConfig;
+
+  try {
+    encryptedConfig = {
+      ...config,
+      connections: Object.fromEntries(
+        Object.entries(config.connections).map(([slug, connection]) => [
+          slug,
+          encryptConnection(connection),
+        ])
+      ),
+    };
+  } catch (error) {
+    if (!(error instanceof EncryptionUnavailableError)) {
+      throw error;
+    }
+
+    // Writing the passwords unprotected would be worse than not writing at
+    // all: keep the previous file, and tell the user why nothing was saved.
+    log.error('Configuration not saved:', error);
+    dialog.showErrorBox(
+      t('config.encryption.unavailable.title'),
+      t('config.encryption.unavailable.message')
+    );
+
+    return;
+  }
 
   // create the folder of the `dataFilePath` if it does not exist
   createConfigurationFolderIfNotExists();

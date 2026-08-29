@@ -9,6 +9,7 @@ import {
   getConfiguration,
   saveWindowState,
 } from './configuration';
+import { logEncryptionStatus } from './configuration/encryption';
 import { getLogPath } from './configuration/filePaths';
 import { bindIpcMainClipboard } from './main-process/clipboard';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
@@ -136,6 +137,9 @@ app.whenReady().then(async () => {
       },
     });
   });
+
+  // After `ready`: safeStorage only knows its backend once the app is ready.
+  logEncryptionStatus();
 
   bindIpcMainConfiguration(ipcMain);
   bindIpcMainSqlFileStorage(ipcMain);
