@@ -74,4 +74,10 @@ export default {
   'theme.group.dark': 'Dark',
   'theme.group.light': 'Light',
   'theme.switch.label': 'Theme:',
+  'update.available':
+    '{source, select,' +
+    ' appimage {Version {version} is available — download the new AppImage from GitHub.}' +
+    ' linuxPackage {Version {version} is available — download the new package from GitHub.}' +
+    ' selfUpdating {Version {version} is available. The automatic update did not apply it: download it from GitHub.}' +
+    ' other {Version {version} is available on GitHub.}}',
 };

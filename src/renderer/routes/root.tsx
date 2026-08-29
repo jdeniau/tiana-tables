@@ -15,7 +15,9 @@ import ConnectionNav from '../component/Connection/Nav';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import LangSelector from '../component/LangSelector';
 import ThemeSelector from '../component/ThemeSelector';
+import VersionBadge from '../component/VersionBadge';
 import useEffectOnce from '../hooks/useEffectOnce';
+import useUpdateStatus from '../hooks/useUpdateStatus';
 import { background, foreground, selection } from '../theme';
 
 const Debug = lazy(() => import('../component/Debug'));
@@ -63,6 +65,7 @@ function ToggleRawSqlButton() {
 export default function Root() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const updateStatus = useUpdateStatus();
 
   // Use `useEffectOnce` here as we don't want to register twice the same event
   // Do not use elsewhere, it's a hacky hook
@@ -92,7 +95,10 @@ export default function Root() {
                 <h2>
                   <RootLink to="/">Tiana Tables</RootLink>
                 </h2>
-                <span>v{packageJson.version}</span>
+                <VersionBadge
+                  version={packageJson.version}
+                  updateStatus={updateStatus}
+                />
               </Flex>
 
               <ConnectionNav />
