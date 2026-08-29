@@ -15,18 +15,8 @@ export type UpdateStatus =
 
 const NO_UPDATE: UpdateStatus = { available: false };
 
-/**
- * Comparing versions by hand looks like ten lines and is not: the first
- * differing part has to stop the comparison, and a release has to outrank its
- * own prereleases — someone running 1.2.3-beta.1 must be told about 1.2.3.
- * `compare-versions` is dependency free and main-process only, so there is no
- * reason to own that logic.
- *
- * `validate` comes first because `compareVersions` throws on anything it
- * cannot read, and an unreadable tag must mean "no update", never a crash on
- * startup.
- */
 function isNewerVersion(candidate: string, current: string): boolean {
+  // compareVersions throws on what it cannot read
   if (!validate(candidate) || !validate(current)) {
     return false;
   }
@@ -46,11 +36,7 @@ function getLatestReleaseUrl(): string {
   return `https://api.github.com/repos/${repositoryPath}/releases/latest`;
 }
 
-/**
- * `net.fetch` rather than Node's: it goes through Chromium's network stack, so
- * it honours the system proxy. On a corporate machine that is the difference
- * between working and never working without anyone knowing why.
- */
+/** `net.fetch`, not Node's: it honours the system proxy. */
 async function fetchLatestRelease(): Promise<GithubRelease | null> {
   try {
     const response = await net.fetch(getLatestReleaseUrl(), {
@@ -61,8 +47,7 @@ async function fetchLatestRelease(): Promise<GithubRelease | null> {
     });
 
     if (!response.ok) {
-      // 403 is the anonymous rate limit — 60 requests per hour and per IP,
-      // which a corporate NAT can exhaust on its own. Not worth an error.
+      // 403 is the anonymous rate limit: 60/h per IP, not an error
       log.info(`update check: GitHub answered ${response.status}`);
 
       return null;
@@ -77,8 +62,7 @@ async function fetchLatestRelease(): Promise<GithubRelease | null> {
 }
 
 async function computeUpdateStatus(): Promise<UpdateStatus> {
-  // in dev the version is whatever is in package.json, and a permanent dot in
-  // the header would be pure noise
+  // a permanent dot in dev would be noise
   if (!app.isPackaged) {
     return NO_UPDATE;
   }
@@ -98,10 +82,7 @@ async function computeUpdateStatus(): Promise<UpdateStatus> {
 
 let cachedStatus: Promise<UpdateStatus> | null = null;
 
-/**
- * One network call per session: a desktop app that is left open for days has
- * no reason to poll, and the answer only changes when the user restarts.
- */
+/** One call per session: the answer only changes on restart. */
 function checkForUpdate(): Promise<UpdateStatus> {
   cachedStatus ??= computeUpdateStatus();
 

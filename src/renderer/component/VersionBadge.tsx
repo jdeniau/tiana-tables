@@ -5,17 +5,11 @@ import type { InstallSourceKind } from '../../main-process/installSource';
 import type { UpdateStatus } from '../../main-process/updateCheck';
 import { classForeground } from '../theme';
 
-/**
- * Sources where a store installs the update on its own. Telling those users to
- * go and download a package would push them to bypass their package manager.
- */
+/** Sending these users to a download would bypass their package manager. */
 const STORE_MANAGED: ReadonlySet<InstallSourceKind> =
   new Set<InstallSourceKind>(['flatpak', 'snap']);
 
-/**
- * base0A — the "attention" slot of the palette, without the alarm of base08,
- * which is reserved for errors and destructive actions.
- */
+/** base0A: attention, without the alarm of base08. */
 const Dot = styled.span`
   display: inline-block;
   width: 0.5em;
@@ -31,11 +25,6 @@ type Props = {
   updateStatus: UpdateStatus;
 };
 
-/**
- * The version number in the header, with a discreet dot when a newer release
- * exists. Discreet enough that it needs no "dismiss" state: there is nothing
- * to dismiss, and so nothing to persist.
- */
 function VersionBadge({ version, updateStatus }: Props) {
   const { t } = useTranslation();
 

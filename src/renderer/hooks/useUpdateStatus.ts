@@ -3,10 +3,7 @@ import type { UpdateStatus } from '../../main-process/updateCheck';
 
 const NO_UPDATE: UpdateStatus = { available: false };
 
-/**
- * The main process answers once per session and caches the result, so this
- * hook can run on every mount without adding a single network call.
- */
+/** The main process caches its answer, so mounting this costs no network call. */
 export default function useUpdateStatus(): UpdateStatus {
   const [status, setStatus] = useState<UpdateStatus>(NO_UPDATE);
 
@@ -21,8 +18,7 @@ export default function useUpdateStatus(): UpdateStatus {
         }
       })
       .catch(() => {
-        // Not knowing whether an update exists is never worth showing: the
-        // main process already logs why.
+        // a failed check must never surface; the main process logs why
       });
 
     return () => {
