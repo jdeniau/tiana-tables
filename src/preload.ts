@@ -10,6 +10,7 @@ import { config } from './preload/config';
 import { navigationListener } from './preload/navigationListener';
 import { sql } from './preload/sql';
 import { sqlFileStorage } from './preload/sqlFileStorage';
+import { update } from './preload/update';
 
 console.info(
   `[startup][preload] preload-end: +${Math.round(performance.now())}ms`
@@ -19,6 +20,7 @@ contextBridge.exposeInMainWorld('config', config);
 contextBridge.exposeInMainWorld('sql', sql);
 contextBridge.exposeInMainWorld('sqlFileStorage', sqlFileStorage);
 contextBridge.exposeInMainWorld('navigationListener', navigationListener);
+contextBridge.exposeInMainWorld('update', update);
 
 ipcRenderer.invoke('get-is-dev').then((isDev) => {
   contextBridge.exposeInMainWorld('isDev', isDev);
@@ -37,5 +39,6 @@ declare global {
     sql: typeof sql;
     sqlFileStorage: typeof sqlFileStorage;
     navigationListener: typeof navigationListener;
+    update: typeof update;
   }
 }

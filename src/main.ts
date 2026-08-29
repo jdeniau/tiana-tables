@@ -17,6 +17,7 @@ import {
 } from './main-process/installReactDevToolsExtension';
 import { createMenu } from './main-process/menu';
 import { bindIpcMainSqlFileStorage } from './main-process/sqlFileStorage';
+import { bindIpcMainUpdate } from './main-process/updateCheck';
 import WindowStateKeeper from './main-process/windowState';
 import connectionStackInstance from './sql';
 
@@ -138,6 +139,7 @@ app.whenReady().then(async () => {
 
   bindIpcMainConfiguration(ipcMain);
   bindIpcMainSqlFileStorage(ipcMain);
+  bindIpcMainUpdate(ipcMain);
   connectionStackInstance.bindIpcMain(ipcMain);
   logStartupMilestone('ipc-bound');
 
