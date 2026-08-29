@@ -1,4 +1,5 @@
 import { app, net } from 'electron';
+import { compareVersions, validate } from 'compare-versions';
 import log from 'electron-log';
 import packageJson from '../../package.json';
 import { UPDATE_CHANNEL } from '../preload/updateChannel';
@@ -14,59 +15,23 @@ export type UpdateStatus =
 
 const NO_UPDATE: UpdateStatus = { available: false };
 
-export type ParsedVersion = {
-  parts: [number, number, number];
-  /** `beta.1` in `1.2.3-beta.1`, `null` for a plain release. */
-  prerelease: string | null;
-};
-
 /**
- * `major.minor.patch`, optionally prefixed by `v`, optionally followed by a
- * prerelease and by build metadata. Not a full semver parser — we only need to
- * read our own tags — but the anchors are kept on both ends on purpose: a
- * pattern left open at the end would swallow `1.2.3-beta` as a plain `1.2.3`,
- * and accept `1.2.3junk` as well. Anything unexpected returns `null`, and the
- * caller turns that into "no update" rather than into a guess.
+ * Comparing versions by hand looks like ten lines and is not: the first
+ * differing part has to stop the comparison, and a release has to outrank its
+ * own prereleases — someone running 1.2.3-beta.1 must be told about 1.2.3.
+ * `compare-versions` is dependency free and main-process only, so there is no
+ * reason to own that logic.
+ *
+ * `validate` comes first because `compareVersions` throws on anything it
+ * cannot read, and an unreadable tag must mean "no update", never a crash on
+ * startup.
  */
-export function parseVersion(version: string): ParsedVersion | null {
-  const match =
-    /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/.exec(
-      version.trim()
-    );
-
-  if (!match) {
-    return null;
-  }
-
-  return {
-    parts: [Number(match[1]), Number(match[2]), Number(match[3])],
-    prerelease: match[4] ?? null,
-  };
-}
-
-export function isNewerVersion(candidate: string, current: string): boolean {
-  const parsedCandidate = parseVersion(candidate);
-  const parsedCurrent = parseVersion(current);
-
-  if (!parsedCandidate || !parsedCurrent) {
+function isNewerVersion(candidate: string, current: string): boolean {
+  if (!validate(candidate) || !validate(current)) {
     return false;
   }
 
-  // the first differing part decides, and stops the comparison: 1.0.5 must not
-  // look newer than 1.2.0 because its patch number is higher
-  for (let index = 0; index < parsedCandidate.parts.length; index++) {
-    if (parsedCandidate.parts[index] !== parsedCurrent.parts[index]) {
-      return parsedCandidate.parts[index] > parsedCurrent.parts[index];
-    }
-  }
-
-  // Same numbers: a release supersedes its own prereleases, so someone running
-  // 1.2.3-beta.1 must be told about 1.2.3. Two prereleases of the same version
-  // are left uncompared — `/releases/latest` never returns one, so the case
-  // cannot happen, and ordering `beta.2` against `rc.1` would be a guess.
-  return (
-    parsedCandidate.prerelease === null && parsedCurrent.prerelease !== null
-  );
+  return compareVersions(candidate, current) > 0;
 }
 
 type GithubRelease = {
@@ -137,7 +102,7 @@ let cachedStatus: Promise<UpdateStatus> | null = null;
  * One network call per session: a desktop app that is left open for days has
  * no reason to poll, and the answer only changes when the user restarts.
  */
-export function checkForUpdate(): Promise<UpdateStatus> {
+function checkForUpdate(): Promise<UpdateStatus> {
   cachedStatus ??= computeUpdateStatus();
 
   return cachedStatus;
@@ -152,9 +117,3 @@ export function bindIpcMainUpdate(ipcMain: Electron.IpcMain): void {
     ipcMain.handle(channel, () => handler());
   }
 }
-
-export const testables = {
-  resetCache: () => {
-    cachedStatus = null;
-  },
-};

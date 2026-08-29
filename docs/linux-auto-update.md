@@ -412,13 +412,16 @@ mécanismes en sous-processus pour une info qu'un `readFile` donne.
   pourquoi ».
 - **`/releases/latest`** exclut déjà drafts et prereleases. Reste à retirer le
   `v` de `tag_name`.
-- **Comparateur maison plutôt que `semver`** : `semver` n'est présent qu'en
-  dépendance transitive, et l'ajouter en direct depuis un worktree à
-  `node_modules` symlinké est délicat. Comme `/releases/latest` exclut les
-  prereleases et que nos tags sont toujours `vX.Y.Z`, un comparateur de triplet
-  est exact — **à condition** de s'arrêter à la première partie différente
-  (`1.0.5` ne doit pas paraître plus récent que `1.2.0` ; bug écrit puis corrigé,
-  couvert par un test) et de renvoyer « pas de MAJ » sur tout format inattendu.
+- **`compare-versions` plutôt qu'un comparateur maison.** Un premier jet écrit à
+  la main lisait `1.0.5` comme plus récent que `1.2.0`, et ne savait pas ordonner
+  deux prereleases — deux bugs pour une trentaine de lignes. La lib est sans
+  dépendance, ~60 kB, et uniquement dans le main process : elle ne coûte rien et
+  supprime toute une classe d'erreurs. `validate()` est appelé **avant**
+  `compareVersions()`, qui lève sur ce qu'il ne sait pas lire : un tag illisible
+  doit valoir « pas de MAJ », jamais un crash au démarrage.
+  Les prereleases comptent : `/releases/latest` n'en renvoie jamais, mais la
+  version **installée** peut en être une, et quelqu'un sur `1.2.3-beta.1` doit
+  bien être prévenu de la sortie de `1.2.3`.
 - **Échec absolument silencieux** : pas de réseau, API indisponible, ou rate
   limit anonyme (60 req/h par IP — un NAT d'entreprise peut le toucher). `log.info`,
   pas `log.error`.
@@ -430,8 +433,10 @@ mécanismes en sous-processus pour une info qu'un `readFile` donne.
 
 - `src/main-process/installSource.ts` (+ test) — détection pure, testable sans
   toucher au vrai `process` : `detectInstallSource({platform, execPath, env})`.
-- `src/main-process/updateCheck.ts` (+ test) — `parseVersion`, `isNewerVersion`,
-  fetch, cache, `bindIpcMainUpdate`.
+- `src/main-process/updateCheck.ts` — `isNewerVersion`, fetch, cache,
+  `bindIpcMainUpdate`. Pas de test : `isNewerVersion` n'est qu'un garde
+  `validate()` autour de `compare-versions`, tester la lib n'est pas le rôle
+  de ce dépôt.
 - `src/preload/updateChannel.ts` — `UPDATE_CHANNEL.CHECK`.
 - reste à faire : `src/preload/update.ts`, exposition dans `src/preload.ts`,
   binding dans `src/main.ts`, hook renderer + pastille dans `root.tsx`, clés de

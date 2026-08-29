@@ -44,6 +44,7 @@
     "@tanstack/react-table": "^9.1.2",
     "@tanstack/react-virtual": "^3.14.9",
     "antd": "^6.4.2",
+    "compare-versions": "^6.1.1",
     "dt-sql-parser": "^4.5.0",
     "electron-log": "^5.4.3",
     "electron-squirrel-startup": "^1.0.1",

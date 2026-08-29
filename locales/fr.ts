@@ -69,6 +69,12 @@ const fr: Translation = {
   'theme.group.dark': 'Sombres',
   'theme.group.light': 'Clairs',
   'theme.switch.label': 'Thème :',
+  'update.available':
+    '{source, select,' +
+    ' appimage {La version {version} est disponible — télécharge le nouvel AppImage depuis GitHub.}' +
+    ' linuxPackage {La version {version} est disponible — télécharge le nouveau paquet depuis GitHub.}' +
+    " selfUpdating {La version {version} est disponible. La mise à jour automatique ne l'a pas appliquée : télécharge-la depuis GitHub.}" +
+    ' other {La version {version} est disponible sur GitHub.}}',
 };
 
 export default fr;
