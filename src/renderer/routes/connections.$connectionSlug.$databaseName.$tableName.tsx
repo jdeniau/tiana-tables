@@ -23,12 +23,15 @@ export async function loader({ params, request }: RouteParams) {
 
   const configuration = await window.config.getConfiguration();
 
-  const whereFilter =
+  const storedFilter =
     configuration.connections[connectionSlug]?.appState?.configByDatabase?.[
       databaseName
     ]?.tables[tableName]?.currentFilter || '';
 
-  const where = new URL(request.url).searchParams.get('where') || whereFilter;
+  // An empty `where` param is a filter the user just cleared, not an absent
+  // one: only fall back to the stored filter when the param is not there.
+  const whereParam = new URL(request.url).searchParams.get('where');
+  const where = whereParam ?? storedFilter;
 
   window.config.setTableFilter(connectionSlug, databaseName, tableName, where);
 
