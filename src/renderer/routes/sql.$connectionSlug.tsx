@@ -6,6 +6,7 @@ import { PANEL } from '../../configuration/panels';
 import { useTranslation } from '../../i18n';
 import { SqlError } from '../../sql/errorSerializer';
 import { escapeIdentifier } from '../../sql/escapeIdentifier';
+import { hasLimitClause } from '../../sql/hasLimitClause';
 import { isSqlError } from '../../sql/isSqlError';
 import { QueryResult } from '../../sql/types';
 import RawSqlResult from '../component/Query/RawSqlResult/RowDataPacketResult';
@@ -35,6 +36,12 @@ function useSqlFileStorage(): [string | null, (value: string) => void] {
 type SqlActionReturnTypes =
   | {
       result: Awaited<QueryResult>;
+      /**
+       * Whether the query the user ran carries a `LIMIT`. Read here, where the
+       * query text is, so the result panel can tell a complete result set from
+       * a truncated one without having to hold on to the SQL.
+       */
+      hasLimit: boolean;
     }
   | {
       error: SqlError;
@@ -57,7 +64,7 @@ export async function action({
     await window.sql.executeQuery(`USE ${escapeIdentifier(databaseName)};`);
     const result = await window.sql.executeQuery(query, true);
 
-    return { result };
+    return { result, hasLimit: hasLimitClause(query) };
   } catch (error) {
     if (isSqlError(error)) {
       return { error };

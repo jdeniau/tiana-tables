@@ -32,6 +32,21 @@ export default {
   'config.encryption.unavailable.message':
     'Your system refused to encrypt the connection passwords, so the configuration was not saved. Unlock your keyring, then try again.',
   'config.encryption.unavailable.title': 'Configuration not saved',
+  'chart.axis.x': 'X axis',
+  'chart.axis.y': 'Series',
+  'chart.kind.bar': 'Bars',
+  'chart.kind.line': 'Line',
+  'chart.tab.chart': 'Chart',
+  'chart.tab.data': 'Data',
+  'chart.truncated': 'Only the first {count, number} rows are plotted.',
+  // ICU select on the `ChartUnavailableReason` enum
+  'chart.unavailable':
+    '{reason, select,' +
+    ' notTabular {This result has no rows to plot.}' +
+    ' hasLimit {The query has a LIMIT: the result is partial, and a chart of it would be misleading. Remove the LIMIT to plot it.}' +
+    ' noRow {The query returned no row.}' +
+    ' noNumericColumn {Plotting needs a numeric column to chart against another column.}' +
+    ' other {This result cannot be plotted.}}',
   'connect.new': 'New…',
   'connection.create.button': 'Create connection…',
   'connection.form.action.connect': 'Connect',

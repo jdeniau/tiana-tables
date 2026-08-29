@@ -35,6 +35,22 @@ const fr: Translation = {
   'config.encryption.unavailable.message':
     'Votre système a refusé de chiffrer les mots de passe de connexion, la configuration n’a donc pas été enregistrée. Déverrouillez votre trousseau puis réessayez.',
   'config.encryption.unavailable.title': 'Configuration non enregistrée',
+  'chart.axis.x': 'Axe X',
+  'chart.axis.y': 'Séries',
+  'chart.kind.bar': 'Barres',
+  'chart.kind.line': 'Courbe',
+  'chart.tab.chart': 'Graphe',
+  'chart.tab.data': 'Données',
+  'chart.truncated':
+    'Seules les {count, number} premières lignes sont tracées.',
+  // ICU select on the `ChartUnavailableReason` enum
+  'chart.unavailable':
+    '{reason, select,' +
+    " notTabular {Ce résultat n'a pas de lignes à tracer.}" +
+    ' hasLimit {La requête a un LIMIT : le résultat est partiel, et un graphe en serait trompeur. Retirez le LIMIT pour le tracer.}' +
+    " noRow {La requête n'a retourné aucune ligne.}" +
+    " noNumericColumn {Il faut une colonne numérique à tracer en face d'une autre colonne.}" +
+    ' other {Ce résultat ne peut pas être tracé.}}',
   'connect.new': 'Nouveau…',
   'connection.create.button': 'Créer une connexion…',
   'connection.form.action.connect': 'Connecter',
