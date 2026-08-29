@@ -12,6 +12,7 @@ import {
   ResultOrError,
   encodeError,
 } from './errorSerializer';
+import { escapeIdentifier } from './escapeIdentifier';
 import {
   ColumnDetail,
   ColumnDetailResult,
@@ -21,7 +22,7 @@ import {
   ShowDatabasesResult,
   ShowKeyRow,
   ShowTableStatusResult,
-  SqlBoundValue,
+  SqlBoundValues,
 } from './types';
 import {
   CellReadRow,
@@ -34,6 +35,14 @@ class ConnectionStack {
 
   #currentConnectionSlug: string | undefined;
 
+  /**
+   * The database the renderer last announced, kept for the menu state only.
+   *
+   * It must never be used to build a query: the loaders that announce it and
+   * the loaders that query run in parallel, so a query built on it would race
+   * the announcement. Every database-scoped handler below takes the database
+   * name as a parameter instead.
+   */
   #databaseName: string | undefined;
 
   // List of IPC events and their handlers
@@ -79,9 +88,10 @@ class ConnectionStack {
   }
 
   async getKeyColumnUsage(
+    databaseName: string,
     tableName?: string
   ): QueryResultOrError<KeyColumnUsageRow[]> {
-    invariant(this.#databaseName, 'Database name is required');
+    invariant(databaseName, 'Database name is required');
 
     const query = `
       SELECT
@@ -93,14 +103,21 @@ class ConnectionStack {
       FROM
         INFORMATION_SCHEMA.KEY_COLUMN_USAGE
       WHERE
-        TABLE_SCHEMA = '${this.#databaseName}'
-        ${tableName ? `AND TABLE_NAME = '${tableName}'` : ''}
+        TABLE_SCHEMA = :databaseName
+        ${tableName ? 'AND TABLE_NAME = :tableName' : ''}
     `;
 
-    return this.executeQueryAndRetry<KeyColumnUsageRow[]>(query);
+    return this.executeQueryAndRetry<KeyColumnUsageRow[]>(query, false, {
+      databaseName,
+      ...(tableName ? { tableName } : {}),
+    });
   }
 
-  async getAllColumns(): QueryResultOrError<Array<ColumnDetail>> {
+  async getAllColumns(
+    databaseName: string
+  ): QueryResultOrError<Array<ColumnDetail>> {
+    invariant(databaseName, 'Database name is required');
+
     const query = `
       SELECT
         TABLE_NAME AS \`Table\`,
@@ -113,17 +130,24 @@ class ConnectionStack {
       FROM
         INFORMATION_SCHEMA.COLUMNS
       WHERE
-        TABLE_SCHEMA = '${this.#databaseName}'
+        TABLE_SCHEMA = :databaseName
     `;
 
-    return this.executeQueryAndRetry<ColumnDetailResult>(query);
+    return this.executeQueryAndRetry<ColumnDetailResult>(query, false, {
+      databaseName,
+    });
   }
 
-  async getPrimaryKeys(tableName: string): QueryResultOrError<ShowKeyRow[]> {
-    invariant(this.#databaseName, 'Database name is required');
+  async getPrimaryKeys(
+    databaseName: string,
+    tableName: string
+  ): QueryResultOrError<ShowKeyRow[]> {
+    invariant(databaseName, 'Database name is required');
 
     const query = `
-      SHOW KEYS FROM ${this.#databaseName}.${tableName} WHERE Key_name = 'PRIMARY';
+      SHOW KEYS FROM ${escapeIdentifier(databaseName)}.${escapeIdentifier(
+        tableName
+      )} WHERE Key_name = 'PRIMARY';
     `;
 
     return this.executeQueryAndRetry<ShowKeyRow[]>(query);
@@ -207,23 +231,25 @@ class ConnectionStack {
     return this.executeQueryAndRetry<ShowDatabasesResult>('SHOW DATABASES');
   }
 
-  async showTableStatus(): QueryResultOrError<ShowTableStatusResult> {
-    invariant(this.#databaseName, 'Database name is required');
+  async showTableStatus(
+    databaseName: string
+  ): QueryResultOrError<ShowTableStatusResult> {
+    invariant(databaseName, 'Database name is required');
 
     return this.executeQueryAndRetry<ShowTableStatusResult>(
-      `SHOW TABLE STATUS FROM ${this.#databaseName}`
+      `SHOW TABLE STATUS FROM ${escapeIdentifier(databaseName)}`
     );
   }
 
   /**
-   * `values` fills the `?` placeholders of the query. Only queries built here
+   * `values` fills the named placeholders of the query. Only queries built here
    * use them — the editor sends plain SQL — and they are what keeps a value
    * typed by the user out of the SQL text itself.
    */
   async executeQueryAndRetry<T extends QueryReturnType = QueryReturnType>(
     query: string,
     rowsAsArray = false,
-    values?: Array<SqlBoundValue>
+    values?: SqlBoundValues
   ): QueryResultOrError<T> {
     invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
@@ -260,7 +286,7 @@ class ConnectionStack {
     connectionSlug: string,
     query: string,
     rowsAsArray: boolean,
-    values?: Array<SqlBoundValue>
+    values?: SqlBoundValues
   ): QueryResultOrError<T> {
     const connection = await this.#getConnection(connectionSlug);
 
@@ -268,7 +294,15 @@ class ConnectionStack {
 
     try {
       return {
-        result: await connection.query({ sql: query, rowsAsArray, values }),
+        result: await connection.query({
+          sql: query,
+          rowsAsArray,
+          values,
+          // Asked for per query, and never for the raw SQL of the editor: the
+          // rewriter does not know backticks, so a `:` inside a quoted
+          // identifier would be read as a parameter and corrupt the statement.
+          namedPlaceholders: values !== undefined,
+        }),
         error: undefined,
       };
     } catch (error) {

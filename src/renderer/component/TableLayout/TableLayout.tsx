@@ -1,10 +1,12 @@
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Button, Flex, Splitter } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
+import { useNavigate } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { PANEL } from '../../../configuration/panels';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
+import { escapeIdentifier } from '../../../sql/escapeIdentifier';
 import { usePanelSize } from '../../hooks/usePanelSize';
 import ButtonLink from '../ButtonLink';
 import WhereFilter from '../Query/WhereFilter';
@@ -31,6 +33,7 @@ export function TableLayout({
   where,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { currentConnectionSlug } = useConnectionContext();
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.TABLE_FILTERS);
   const [result, setResult] = useState<null | RowDataPacket[]>(null);
@@ -40,7 +43,11 @@ export function TableLayout({
 
   const fetchTableData = useCallback(
     (offset: number) => {
-      const query = `SELECT * FROM ${database}.${tableName} ${
+      // the identifiers are escaped, the filter is not: `where` is SQL the
+      // user wrote, and is sent as written
+      const query = `SELECT * FROM ${escapeIdentifier(
+        database
+      )}.${escapeIdentifier(tableName)} ${
         where ? ` WHERE ${where}` : ''
       } LIMIT ${DEFAULT_LIMIT} OFFSET ${offset};`;
 
@@ -85,6 +92,16 @@ export function TableLayout({
     []
   );
 
+  // the filter built by the grid's context menu replaces the current one, and
+  // takes the same route as the filter form: the loader reads `?where`, saves it
+  // and remounts this layout, so the editor reopens on the clause
+  const handleFilterChange = useCallback(
+    (where: string) => {
+      navigate(`?where=${encodeURIComponent(where)}`);
+    },
+    [navigate]
+  );
+
   return (
     <Splitter
       orientation="vertical"
@@ -109,6 +126,7 @@ export function TableLayout({
                 result={result}
                 primaryKeys={primaryKeys}
                 onValueUpdated={handleValueUpdated}
+                onFilterChange={handleFilterChange}
                 title={() => (
                   <>
                     {tableName}

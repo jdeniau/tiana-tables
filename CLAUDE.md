@@ -61,7 +61,7 @@ Communication between the renderer and main process goes through typed IPC chann
 
 1. `src/preload/*Channel.ts` — defines a `XXXX_CHANNEL` enum (e.g., `SQL_CHANNEL`, `CONFIGURATION_CHANNEL`). These files **must stay separate** — they are imported by both preload and main, and you cannot import preload files into the main process.
 2. `src/preload/xxx.ts` — exposes channel methods to the renderer (e.g., `window.sql.executeQuery()`) via `bindChannel.ts`.
-3. Each domain module exposes a `bindIpcMain`-style function that registers the handlers; they are all called from `src/main.ts`: `bindIpcMainConfiguration` (`src/configuration/index.ts`), `bindIpcMainSqlFileStorage` (`src/main-process/sqlFileStorage.ts`) and `connectionStackInstance.bindIpcMain` (`src/sql/index.ts`).
+3. Each domain module exposes a `bindIpcMain`-style function that registers the handlers; they are all called from `src/main.ts`: `bindIpcMainConfiguration` (`src/configuration/index.ts`), `bindIpcMainSqlFileStorage` (`src/main-process/sqlFileStorage.ts`), `bindIpcMainClipboard` (`src/main-process/clipboard.ts`) and `connectionStackInstance.bindIpcMain` (`src/sql/index.ts`).
 
 ### Renderer
 

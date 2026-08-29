@@ -10,6 +10,7 @@ import {
   saveWindowState,
 } from './configuration';
 import { getLogPath } from './configuration/filePaths';
+import { bindIpcMainClipboard } from './main-process/clipboard';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
 import {
   installReactDevToolsExtension,
@@ -139,6 +140,7 @@ app.whenReady().then(async () => {
 
   bindIpcMainConfiguration(ipcMain);
   bindIpcMainSqlFileStorage(ipcMain);
+  bindIpcMainClipboard(ipcMain);
   bindIpcMainUpdate(ipcMain);
   connectionStackInstance.bindIpcMain(ipcMain);
   logStartupMilestone('ipc-bound');

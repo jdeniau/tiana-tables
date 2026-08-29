@@ -9,11 +9,12 @@ interface RouteParams extends LoaderFunctionArgs {
 
 // TODO : migrate this loader in the `table` root url. This way we can use the foreigns keys in the table result to make some links direcly on the table grid
 export async function loader({ params }: RouteParams) {
-  const { tableName } = params;
+  const { databaseName, tableName } = params;
 
+  invariant(databaseName, 'Database name is required');
   invariant(tableName, 'Table name is required');
 
-  const data = await window.sql.getKeyColumnUsage(tableName);
+  const data = await window.sql.getKeyColumnUsage(databaseName, tableName);
 
   return {
     data,
