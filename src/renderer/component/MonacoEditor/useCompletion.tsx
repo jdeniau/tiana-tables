@@ -16,6 +16,12 @@ import {
 } from '../../../sql/tableName';
 import { ShowTableStatus } from '../../../sql/types';
 import { QuerySchema, analyzeQuery } from './queryAnalysis';
+import {
+  fromPrefixedRange,
+  getQueryPrefix,
+  prefixedValue,
+  toPrefixedPosition,
+} from './queryPrefix';
 import useQuerySchema from './useQuerySchema';
 
 /*
@@ -41,9 +47,13 @@ export function buildCompletionProvider(
   return {
     triggerCharacters: [' ', '.'],
     provideCompletionItems(model, position) {
+      // the query the model is a fragment of: a bare `WHERE` body knows no
+      // table, and its columns can only be completed from the prefix
+      const prefix = getQueryPrefix(model);
+      const sql = prefixedValue(model);
       const suggestions = mysqlParser.getSuggestionAtCaretPosition(
-        model.getValue(),
-        { lineNumber: position.lineNumber, column: position.column }
+        sql,
+        toPrefixedPosition(prefix, position)
       );
 
       if (!suggestions) {
@@ -60,7 +70,7 @@ export function buildCompletionProvider(
 
       // the whole query, not only what precedes the caret: completing the
       // select list of `SELECT e.| FROM employee e` needs the `FROM` clause
-      const tableAliases = extractTableAliases(model.getValue());
+      const tableAliases = extractTableAliases(sql);
       const qualifier = qualifierBefore(model, position, word.startColumn);
       const qualifiedTable = qualifier ? tableAliases[qualifier] : undefined;
 
@@ -199,32 +209,57 @@ function columnCompletions(
 
 const MARKER_OWNER = 'mysql-syntax';
 
-function validateModel(model: editor.ITextModel, schema: QuerySchema): void {
+export function validateModel(
+  model: editor.ITextModel,
+  schema: QuerySchema
+): void {
   if (model.isDisposed() || model.getLanguageId() !== LanguageIdEnum.MYSQL) {
     return;
   }
 
-  const sql = model.getValue();
+  // an empty editor is not a mistake, and the prefix alone would be reported
+  // as an unfinished query
+  if (!model.getValue().trim()) {
+    editor.setModelMarkers(model, MARKER_OWNER, []);
 
-  const syntaxErrors = mysqlParser.validate(sql).map(
-    (error): editor.IMarkerData => ({
+    return;
+  }
+
+  const prefix = getQueryPrefix(model);
+  const sql = prefixedValue(model);
+
+  const syntaxErrors = mysqlParser
+    .validate(sql)
+    .map((error) => ({
       severity: MarkerSeverity.Error,
       message: error.message,
-      startLineNumber: error.startLine,
-      startColumn: error.startColumn,
-      endLineNumber: error.endLine,
-      endColumn: error.endColumn,
-    })
-  );
+      range: fromPrefixedRange(prefix, {
+        startLineNumber: error.startLine,
+        startColumn: error.startColumn,
+        endLineNumber: error.endLine,
+        endColumn: error.endColumn,
+      }),
+    }))
+    .flatMap(({ range, ...marker }): editor.IMarkerData[] =>
+      range ? [{ ...marker, ...range }] : []
+    );
 
   // a warning rather than an error: the query is valid SQL, and only the
   // qualified references we could resolve are checked, never a bare column
-  const unknownColumns = analyzeQuery(sql, schema).unknownColumns.map(
-    ({ range, table, column }): editor.IMarkerData => ({
-      severity: MarkerSeverity.Warning,
-      message: `Unknown column \`${column}\` on table \`${table}\``,
-      ...range,
-    })
+  const unknownColumns = analyzeQuery(sql, schema).unknownColumns.flatMap(
+    ({ range, table, column }): editor.IMarkerData[] => {
+      const modelRange = fromPrefixedRange(prefix, range);
+
+      return modelRange
+        ? [
+            {
+              severity: MarkerSeverity.Warning,
+              message: `Unknown column \`${column}\` on table \`${table}\``,
+              ...modelRange,
+            },
+          ]
+        : [];
+    }
   );
 
   editor.setModelMarkers(model, MARKER_OWNER, [

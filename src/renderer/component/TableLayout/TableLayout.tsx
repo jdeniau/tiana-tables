@@ -111,7 +111,7 @@ export function TableLayout({
       <Splitter.Panel {...panelProps}>
         <Pane vertical gap="small">
           <h3 style={{ margin: 0 }}>{t('table.filters.title')}</h3>
-          <WhereFilter defaultValue={where ?? ''} />
+          <WhereFilter defaultValue={where ?? ''} tableName={tableName} />
         </Pane>
       </Splitter.Panel>
 

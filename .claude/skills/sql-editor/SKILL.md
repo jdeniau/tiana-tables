@@ -95,6 +95,27 @@ The wire format is `[deltaLine, deltaChar, length, typeIndex, modifiers]` per
 token, **0-based**, sorted, each position relative to the previous one (the
 column absolute again on a new line).
 
+## The query prefix — an editor that holds a fragment
+
+The table filter (`WhereFilter`) is the same `RawSqlEditor`, but its content is
+only the body of a `WHERE` clause: `salary > 1000` on its own is a syntax error,
+names no table to complete columns from, and declares no alias to color. The
+editor therefore takes a `queryPrefix` — ``SELECT * FROM `city` WHERE`` — and
+completion, validation and highlighting all read `prefix + model.getValue()`.
+
+`queryPrefix.ts` holds the mapping, in a `WeakMap` keyed by model: the providers
+are registered once for the whole `mysql` language and only ever see a model.
+
+- the prefix **must stay on a single line**, so a position maps back by
+  subtracting its length on line 1 and untouched anywhere else
+  (`toPrefixedPosition` / `fromPrefixedRange`);
+- anything the parser reports **inside** the prefix is dropped: it is SQL the
+  user never wrote, and Monaco would otherwise paint it over the first
+  characters they did — a semantic token on `city` would land on their filter,
+  and an overlap voids the whole token result;
+- an **empty** editor is not validated at all: the prefix alone is an
+  unfinished statement, and a blank filter is not a mistake.
+
 ## Position conventions
 
 Four of them, and mixing two is a silent off-by-one:
