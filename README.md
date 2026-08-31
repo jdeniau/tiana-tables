@@ -1,36 +1,134 @@
-# Tiana Tables
+<h1 align="center">
+  <img src="images/icons/icon.png" alt="" width="120" /><br />
+  Tiana Tables
+</h1>
 
-SQL query tool that works on Linux, Windows and MacOS.
+<p align="center">
+  <strong>A MySQL / MariaDB desktop client for developers.</strong><br />
+  Browse, query and edit your data on Linux, macOS and Windows.
+</p>
 
-## Purpose
+<p align="center">
+  <a href="https://github.com/jdeniau/tiana-tables/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/jdeniau/tiana-tables?label=download" /></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/jdeniau/tiana-tables" /></a>
+  <img alt="Platforms" src="https://img.shields.io/badge/platform-linux%20%7C%20macOS%20%7C%20windows-lightgrey" />
+</p>
 
-Tiana tables is a MySQL / MariaDB database query application for developers.
+<p align="center">
+  <img src="docs/screenshots/hero.png" alt="Tiana Tables browsing a table" width="900" />
+</p>
 
-The main purpose of Tiana tables is to be:
+## Why
 
-- easy to use: access to data and modifications should be easy for all tasks that a developer has to make on a daily basis,
-- pretty (as far as a SQL tool can be considered pretty),
-- multi-platform for desktop, with what you can expect for a modern application (auto-update for example).
+Most SQL GUIs are built for database administration. Tiana Tables is built for
+the daily job, and it tries to be:
 
-What you won't find in Tiana tables (or at least for a long time):
+- **easy to use**: reaching your data, and changing it, should be easy for every
+  task a developer has to do on a daily basis;
+- **pretty**, as far as a SQL tool can be considered pretty;
+- **multi-platform**: a real desktop application on Linux, macOS and Windows,
+  with what you expect from a modern one.
 
-- database and user administration : you will probably want to use another tool more "admin"-friendly like sql workbench or similar (or you can still use plain SQL queries to do what you want).
+## SQL editor
 
-### DB support
+<img src="docs/screenshots/sql-editor.png" alt="SQL editor with completion" width="700" />
 
-For now, Tiana Tables supports MySQL and MariaDB.
-I might add PostgreSQL support one day, but as I do not use it, it's not a priority for me.
-If you like Tiana Table and want to implement PostgreSQL though, it should be pretty easy as all queries that are made should be SQL standard
-Other DB? I do not plan to support another DB system, but if it does share SQL standard, you might open an issue to discuss about it.
-I probably won't accept DB that are too far from SQL, because it will make the app less good with SQL and the maintenance will be harder.
+The editor is Monaco, the one from VS Code. It knows the MySQL grammar and your
+schema, so it can do more than color keywords:
 
-## Installation
+- **Completion on tables, columns and aliases.** After `alias.`, you get that
+  table's columns and nothing else — an unresolved qualifier suggests nothing
+  rather than every column in the query.
+- **Completing a table in `FROM` or `JOIN` writes the alias for you** — and the
+  `ON` clause too, when a foreign key links it to a table already in the query.
+- **Keyword suggestions come from the grammar**, so you only get the keywords
+  that are valid at the caret.
+- **Syntax errors are underlined** as you type.
+- **Table names and aliases get their own color.**
+- **Unknown columns are warnings** on qualified references (`u.emial`). Bare
+  columns are never flagged: they may come from a CTE, a subquery or an alias,
+  and a wrong warning on valid SQL is worse than no warning.
 
-You can download the latest release in the [Release page](https://github.com/jdeniau/tiana-tables/releases).
+The `WHERE` filter above a table is the same editor, and completes that table's
+columns.
+
+## Browsing
+
+The grid is virtualized, so a wide table scrolls without stuttering. Rows load
+100 at a time. Filter with a `WHERE` clause, which is remembered per table, or
+right-click a cell to filter on its value, on your clipboard, or on something
+you type. Foreign keys are links: click through to the referenced row.
+
+## Editing
+
+Double-click a cell to open it in the editor matching its column type — date
+picker, `ENUM` / `SET` dropdown, JSON editor, plain input.
+
+Writes are guarded by optimistic conflict detection: if the value changed, or
+the row was deleted, since you loaded it, you are asked whether to reload or
+overwrite instead of silently clobbering. Cells that cannot be written say why
+(no primary key, generated column, binary column).
+
+## Charts
+
+<img src="docs/screenshots/chart.png" alt="Bar chart of a SQL result" width="700" />
+
+Any raw SQL result with a numeric column can be flipped to a bar or line chart —
+you pick the X axis and the series. A result with a `LIMIT` is refused on
+purpose: a chart of a partial result is a lie.
+
+## Themes and languages
+
+<img src="docs/screenshots/themes.png" alt="Theme selector" width="700" />
+
+25 base16 themes, light and dark — Dracula, Nord, Solarized, Gruvbox,
+Catppuccin, Tokyo Night, Rosé Pine… The theme applies to the whole app, grid and
+SQL editor included.
+
+The interface is available in English and French.
+
+## Credentials
+
+Tiana Tables runs on your machine, against your databases. No account, no cloud
+sync, no telemetry.
+
+Connection passwords are encrypted through the OS keychain. If none is
+available, the app tells you your passwords are only obfuscated rather than
+pretending otherwise.
+
+## Install
+
+Download the latest build for your platform from the
+[releases page](https://github.com/jdeniau/tiana-tables/releases/latest).
+
+## Database support
+
+Tiana Tables supports MySQL and MariaDB.
+
+I might add PostgreSQL support one day, but as I do not use it, it is not a
+priority for me. If you like Tiana Tables and want to implement it, it should be
+fairly easy: every query the app sends is meant to be standard SQL.
+
+I do not plan to support other database systems. If one shares enough of the SQL
+standard, open an issue and we can discuss it — but I will probably turn down
+anything too far from SQL, as it would make the app worse at SQL and harder to
+maintain.
+
+Database and user administration is out of scope, and will stay so for a long
+time. Use an admin-oriented tool for that, or just write the SQL.
 
 ## Contributing
 
-See [CONTRIBUTING.md](.github/CONTRIBUTING.md)
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+
+```sh
+corepack enable
+yarn install
+yarn start        # run the app in development
+yarn test         # Vitest
+yarn lint         # TypeScript + ESLint
+yarn storybook    # component workshop, port 6006
+```
 
 ## Release a new version
 
@@ -43,3 +141,7 @@ git push origin main
 git push origin --tags
 gh release create v$(node -p "require('./package.json').version") --generate-notes
 ```
+
+## License
+
+[MIT](LICENSE) — Julien Deniau
