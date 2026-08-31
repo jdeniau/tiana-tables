@@ -29,6 +29,17 @@ interface ChartPanelProps {
 const ChartArea = styled.div`
   flex: 1;
   min-height: 320px;
+
+  /* nivo renders its <svg> at exactly this box's measured height, but an inline
+     element also reserves the line box's descender space under it — 6px at the
+     default font size. Those 6px overflow the panel, which then scrolls: the
+     scrollbar steals 15px of width, the svg (measured a frame earlier) overflows
+     horizontally, that scrollbar steals 15px of height, nivo re-measures smaller,
+     both scrollbars go away, and the whole thing starts over every frame. Making
+     the svg a block removes the phantom 6px, and with them the loop. */
+  svg {
+    display: block;
+  }
 `;
 
 const MARGIN = { top: 20, right: 140, bottom: 70, left: 70 };
