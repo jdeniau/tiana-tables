@@ -100,8 +100,10 @@ function buildRowKey(
  * work (FK detection, pinning offsets) is precomputed per column in
  * `columnsMeta`. Inside cells, React components are fine (GridCell/Cell,
  * measured free) but antd components are forbidden (antd Flex alone doubled
- * the mount cost) and per-cell styled-components must stay scarce (~+15%
- * each). See the CLAUDE.md gotcha for the benchmark details.
+ * the mount cost) and every *extra element* mounted per cell costs (~+15% for
+ * one more styled span). Chained `styled(...)` variants are free: they fold
+ * into the single element they style. See the CLAUDE.md gotcha for the
+ * benchmark details.
  */
 function TableGrid<Row extends RowDataPacket>({
   fields,
