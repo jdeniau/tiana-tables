@@ -111,8 +111,34 @@ function BlobCell({ value }: CellProps<string>) {
   return <ForegroundSpan hasTitle>{value}</ForegroundSpan>;
 }
 
-function JsonCell({ value }: CellProps<string>) {
-  return <ForegroundSpan>{value}</ForegroundSpan>;
+/**
+ * mysql2 parses JSON columns into plain values (`jsonStrings` is off), so a
+ * MySQL `JSON` column arrives here already parsed — an object or an array,
+ * which React refuses to render ("Objects are not valid as a React child").
+ * It is serialized back to a compact one-liner; the indented form belongs to
+ * the detail modal (see `cellValueToText`), and the grid body is too hot for
+ * anything more (see the performance note in TableGrid).
+ *
+ * A `string` here is a JSON *scalar*: `CAST('"foo"' AS JSON)` parses to
+ * `'foo'`, and re-serializing it would show the quotes. JSON stored in a text
+ * column never reaches this branch — it is announced as TEXT/BLOB and routed
+ * to `BlobCell`. Neither does anything on MariaDB, where `JSON` is only an
+ * alias for `LONGTEXT`: the server never sends `Types.JSON`, so this component
+ * is MySQL-only.
+ */
+function JsonCell({ value }: CellProps<unknown>) {
+  const text = typeof value === 'string' ? value : JSON.stringify(value);
+
+  // The cell clips at `max-width` and the tooltip at `MAX_TITLE_LENGTH`, so
+  // injecting a multi-kilobyte payload into the DOM buys nothing readable.
+  // Only the modal shows the whole value, hence the visible ellipsis here.
+  return (
+    <ForegroundSpan hasTitle>
+      {text.length > MAX_TITLE_LENGTH
+        ? `${text.slice(0, MAX_TITLE_LENGTH)}\u2026`
+        : text}
+    </ForegroundSpan>
+  );
 }
 
 function EnumCell({ value }: CellProps<string>) {
