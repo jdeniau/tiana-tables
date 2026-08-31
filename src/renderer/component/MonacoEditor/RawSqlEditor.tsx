@@ -3,6 +3,7 @@ import type monaco from 'monaco-editor';
 import { LanguageIdEnum } from 'monaco-sql-languages';
 import { useTheme } from 'styled-components';
 import useEffectOnce from '../../hooks/useEffectOnce';
+import { setQueryPrefix } from './queryPrefix';
 import { buildMonacoTheme } from './themes';
 import useCompletion from './useCompletion';
 import useSemanticTokens from './useSemanticTokens';
@@ -11,6 +12,13 @@ type Props = {
   defaultValue?: string;
   onChange?: (value: string) => void;
   onSubmit: () => void;
+  /**
+   * SQL the content is a fragment of, `SELECT * FROM `city` WHERE ` for a
+   * table filter. Completion, validation and highlighting read the whole
+   * query, so that a bare `WHERE` body is neither a syntax error nor a set of
+   * columns coming from nowhere. Must stay on a single line.
+   */
+  queryPrefix?: string;
   style?: CSSProperties;
   monacoOptions?: monaco.editor.IStandaloneEditorConstructionOptions;
 };
@@ -19,6 +27,7 @@ export function RawSqlEditor({
   defaultValue,
   onChange,
   onSubmit,
+  queryPrefix,
   style,
   monacoOptions,
 }: Props) {
@@ -33,6 +42,10 @@ export function RawSqlEditor({
   onSubmitRef.current = onSubmit;
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  // read through a ref in the creation effect, which runs once; the effect
+  // below is what keeps a changing prefix in sync
+  const queryPrefixRef = useRef(queryPrefix);
+  queryPrefixRef.current = queryPrefix;
   const theme = useTheme();
 
   const monacoTheme = buildMonacoTheme(theme);
@@ -69,6 +82,12 @@ export function RawSqlEditor({
           ...memoizedMonacoOptions,
         });
 
+        const model = createdEditor.getModel();
+
+        if (model) {
+          setQueryPrefix(model, queryPrefixRef.current);
+        }
+
         createdEditor.addCommand(
           loadedMonaco.KeyMod.CtrlCmd | loadedMonaco.KeyCode.Enter,
           () => {
@@ -102,6 +121,14 @@ export function RawSqlEditor({
 
     monacoInstance.editor.defineTheme('currentTheme', monacoTheme);
   }, [monacoInstance, monacoTheme]);
+
+  useEffect(() => {
+    const model = editor?.getModel();
+
+    if (model) {
+      setQueryPrefix(model, queryPrefix);
+    }
+  }, [editor, queryPrefix]);
 
   useEffect(() => {
     // dispose the editor when the component is unmounted

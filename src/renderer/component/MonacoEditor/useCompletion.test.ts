@@ -7,7 +7,9 @@ import { describe, expect, it } from 'vitest';
 import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
 import { ShowTableStatus } from '../../../sql/types';
-import { buildCompletionProvider } from './useCompletion';
+import { QuerySchema } from './queryAnalysis';
+import { setQueryPrefix } from './queryPrefix';
+import { buildCompletionProvider, validateModel } from './useCompletion';
 
 const TABLE_LIST = [
   { Name: 'employee' },
@@ -39,8 +41,14 @@ const ALL_COLUMNS = new ColumnDetailHelper([
   { Table: 'title', Column: 'label', DataType: 'varchar' },
 ] as ConstructorParameters<typeof ColumnDetailHelper>[0]);
 
+/** what the table filter of `employee` implies around what the user types */
+const WHERE_PREFIX = 'SELECT * FROM `employee` WHERE ';
+
 /** `|` marks the caret, which reads better than a column number */
-function completionsAt(sqlWithCaret: string): languages.CompletionItem[] {
+function completionsAt(
+  sqlWithCaret: string,
+  queryPrefix?: string
+): languages.CompletionItem[] {
   const caret = sqlWithCaret.indexOf('|');
 
   if (caret === -1) {
@@ -56,6 +64,7 @@ function completionsAt(sqlWithCaret: string): languages.CompletionItem[] {
   );
 
   const model = editor.createModel(sql, LanguageIdEnum.MYSQL);
+  setQueryPrefix(model, queryPrefix);
 
   try {
     const result = buildCompletionProvider(
@@ -80,9 +89,10 @@ function completionsAt(sqlWithCaret: string): languages.CompletionItem[] {
 
 function labelsOfKind(
   sqlWithCaret: string,
-  kind: languages.CompletionItemKind
+  kind: languages.CompletionItemKind,
+  queryPrefix?: string
 ): string[] {
-  return completionsAt(sqlWithCaret)
+  return completionsAt(sqlWithCaret, queryPrefix)
     .filter((item) => item.kind === kind)
     .map((item) => String(item.label));
 }
@@ -198,5 +208,70 @@ describe('keywords', () => {
     expect(table?.sortText).toBeDefined();
     expect(keyword?.sortText).toBeDefined();
     expect(String(table?.sortText) < String(keyword?.sortText)).toBe(true);
+  });
+});
+
+describe('a query prefix', () => {
+  const SCHEMA: QuerySchema = {
+    database: 'test_db',
+    tables: new Set(['employee', 'title', 'planning']),
+    columns: new Map([
+      ['employee', new Set(['id', 'name'])],
+      ['title', new Set(['id', 'label'])],
+    ]),
+  };
+
+  function markersOf(sql: string, queryPrefix?: string): editor.IMarker[] {
+    const model = editor.createModel(sql, LanguageIdEnum.MYSQL);
+    setQueryPrefix(model, queryPrefix);
+
+    try {
+      validateModel(model, SCHEMA);
+
+      return editor.getModelMarkers({ resource: model.uri });
+    } finally {
+      model.dispose();
+    }
+  }
+
+  it('makes a bare `WHERE` body a valid query', () => {
+    // on its own, the body of the clause is not a statement
+    expect(markersOf('name = "bob"')).not.toEqual([]);
+    expect(markersOf('name = "bob"', WHERE_PREFIX)).toEqual([]);
+  });
+
+  it('reports an error of the body at its position in the editor', () => {
+    const [marker, ...rest] = markersOf('name === "bob"', WHERE_PREFIX);
+
+    expect(rest).toEqual([]);
+    // the third `=`, counted from the editor content and not from the prefix
+    expect(marker?.startColumn).toBe(8);
+  });
+
+  it('says nothing of an empty filter', () => {
+    expect(markersOf('  ', WHERE_PREFIX)).toEqual([]);
+  });
+
+  it('warns on a column the prefixed table does not have', () => {
+    const [marker] = markersOf('employee.wrong = 1', WHERE_PREFIX);
+
+    expect(marker?.message).toBe('Unknown column `wrong` on table `employee`');
+    expect(marker?.startColumn).toBe('employee.'.length + 1);
+  });
+
+  it('completes the columns of the table the filter runs on', () => {
+    expect(
+      labelsOfKind('|', languages.CompletionItemKind.Field, WHERE_PREFIX)
+    ).toEqual(['id', 'name']);
+  });
+
+  it('completes a qualified column of that table', () => {
+    expect(
+      labelsOfKind(
+        'employee.|',
+        languages.CompletionItemKind.Field,
+        WHERE_PREFIX
+      )
+    ).toEqual(['id', 'name']);
   });
 });

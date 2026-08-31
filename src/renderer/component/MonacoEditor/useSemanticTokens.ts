@@ -2,6 +2,11 @@ import { useEffect } from 'react';
 import { languages } from 'monaco-editor';
 import { LanguageIdEnum } from 'monaco-sql-languages';
 import { QuerySchema, SqlSemanticKind, analyzeQuery } from './queryAnalysis';
+import {
+  fromPrefixedRange,
+  getQueryPrefix,
+  prefixedValue,
+} from './queryPrefix';
 import useQuerySchema from './useQuerySchema';
 
 /**
@@ -27,11 +32,22 @@ function buildProvider(
     getLegend: () => LEGEND,
 
     provideDocumentSemanticTokens(model) {
-      const tokens = analyzeQuery(model.getValue(), schema).semanticTokens.sort(
-        (a, b) =>
-          a.range.startLineNumber - b.range.startLineNumber ||
-          a.range.startColumn - b.range.startColumn
-      );
+      // the query the model is a fragment of, so that a `WHERE` body is read
+      // against the table its filter runs on. Whatever the prefix declares is
+      // then dropped: it is not in the model, and Monaco would place it on the
+      // user's first characters.
+      const prefix = getQueryPrefix(model);
+      const tokens = analyzeQuery(prefixedValue(model), schema)
+        .semanticTokens.flatMap((token) => {
+          const range = fromPrefixedRange(prefix, token.range);
+
+          return range ? [{ ...token, range }] : [];
+        })
+        .sort(
+          (a, b) =>
+            a.range.startLineNumber - b.range.startLineNumber ||
+            a.range.startColumn - b.range.startColumn
+        );
 
       const data = new Uint32Array(tokens.length * TOKEN_SIZE);
       let previousLine = 0;

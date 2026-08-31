@@ -106,3 +106,12 @@ JOIN
     ),
   ],
 };
+
+/** the table filter: the editor holds the body of a `WHERE` clause, no more */
+export const AsATableFilter: Story = {
+  args: {
+    defaultValue: `e.gender = 'F'`,
+    queryPrefix: 'SELECT * FROM `employe` e WHERE ',
+    monacoOptions: { lineNumbers: 'off' },
+  },
+};
