@@ -42,10 +42,6 @@ export function RawSqlEditor({
   onSubmitRef.current = onSubmit;
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  // read through a ref in the creation effect, which runs once; the effect
-  // below is what keeps a changing prefix in sync
-  const queryPrefixRef = useRef(queryPrefix);
-  queryPrefixRef.current = queryPrefix;
   const theme = useTheme();
 
   const monacoTheme = buildMonacoTheme(theme);
@@ -85,7 +81,9 @@ export function RawSqlEditor({
         const model = createdEditor.getModel();
 
         if (model) {
-          setQueryPrefix(model, queryPrefixRef.current);
+          // before Monaco asks for the first semantic tokens: the provider has
+          // no `onDidChange`, they are only recomputed on a content change
+          setQueryPrefix(model, queryPrefix);
         }
 
         createdEditor.addCommand(
