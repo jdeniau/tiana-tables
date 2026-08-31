@@ -51,4 +51,16 @@ describe('action', () => {
       true
     );
   });
+
+  // The result panel gates the chart tab on this: a partial result set would
+  // draw a chart that looks right and is not.
+  test('reports whether the query limited its result set', async () => {
+    await expect(runAction('shop', 'SELECT * FROM orders')).resolves.toEqual(
+      expect.objectContaining({ hasLimit: false })
+    );
+
+    await expect(
+      runAction('shop', 'SELECT * FROM orders LIMIT 10')
+    ).resolves.toEqual(expect.objectContaining({ hasLimit: true }));
+  });
 });
