@@ -75,8 +75,19 @@ export default {
   'navigation_modal.title': 'Navigate',
   'rawSql.result.affectedRows': 'Affected rows:',
   'rawSql.result.insertId': 'Insert ID:',
+  'rawSql.result.noStatement': 'The editor holds no query to run.',
+  'rawSql.result.statement': 'Query {number}: {sql}',
   'rawSql.result.title': 'Result',
-  'rawSql.submit': 'Submit',
+  'rawSql.run.description':
+    '{mode, select,' +
+    ' all {Every query of the editor, in order, stopping at the first error.}' +
+    ' other {Only the query the caret sits in is sent.}}',
+  'rawSql.run.label':
+    '{mode, select,' +
+    ' all {Run all queries}' +
+    ' other {Run the query under the caret}}',
+  'rawSql.run.more': 'Other ways to run',
+  'rawSql.submit': 'Run query',
   'sqlPanel.callerButton': 'SQL',
   'table.contextMenu.filter': 'Filter',
   'table.contextMenu.filter.cellValue': 'Cell value',

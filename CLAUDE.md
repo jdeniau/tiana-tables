@@ -102,14 +102,19 @@ Translation files are in `locales/` (`en.ts`, `fr.ts`). English (`en.ts`) is the
 stays off in the mysql2 connection, and the editor is expected to send one
 statement at a time.
 
-When the editor holds several statements, they are to be split and handled
-independently, and the one **under the caret** is the one that gets sent —
-and the one that completion, highlighting and validation work on.
+When the editor holds several statements, they are split and handled
+independently by `src/sql/splitStatements.ts`: the one **under the caret** is
+the one that gets sent, and the SQL page's submit button offers running them
+all, in order, stopping at the first error (`RunMode`, `src/sql/runMode.ts`).
+Which statement the caret sits in is decided in the action, from the whole
+content plus the caret offset the editor hands over (`RawSqlEditorHandle`).
 
 `dt-sql-parser` exposes `splitSQLByStatement`, but beware: it returns `null` as
 soon as the input has any syntax error (`SELECT FROM t1 a` included), so it
 cannot be used as a "is the tail unfinished?" check. Splitting on the `;` tokens
-of `getAllTokens` is error-tolerant, since lexing never fails.
+of `getAllTokens` is error-tolerant, since lexing never fails — and a token's
+`channel` tells code from whitespace and comments, so a `;` inside either is
+never a separator.
 
 ### SQL editor
 

@@ -1,15 +1,19 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
-import { Button, Flex, Form, Splitter } from 'antd';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { Flex, Form, Splitter } from 'antd';
 import { ActionFunctionArgs, useFetcher } from 'react-router-dom';
 import invariant from 'tiny-invariant';
 import { PANEL } from '../../configuration/panels';
-import { useTranslation } from '../../i18n';
-import { SqlError } from '../../sql/errorSerializer';
 import { escapeIdentifier } from '../../sql/escapeIdentifier';
 import { hasLimitClause } from '../../sql/hasLimitClause';
 import { isSqlError } from '../../sql/isSqlError';
-import { QueryResult } from '../../sql/types';
-import RawSqlResult from '../component/Query/RawSqlResult/RowDataPacketResult';
+import { RunMode, toRunMode } from '../../sql/runMode';
+import { splitStatements, statementAtOffset } from '../../sql/splitStatements';
+import type { RawSqlEditorHandle } from '../component/MonacoEditor/RawSqlEditor';
+import RawSqlResult, {
+  SqlActionReturnTypes,
+  StatementOutcome,
+} from '../component/Query/RawSqlResult/RowDataPacketResult';
+import { RunQueryButton } from '../component/Query/RunQueryButton';
 import { usePanelSize } from '../hooks/usePanelSize';
 
 const RawSqlEditor = lazy(() =>
@@ -33,19 +37,19 @@ function useSqlFileStorage(): [string | null, (value: string) => void] {
   return [sqlQuery, saveValue];
 }
 
-type SqlActionReturnTypes =
-  | {
-      result: Awaited<QueryResult>;
-      /**
-       * Whether the query the user ran carries a `LIMIT`. Read here, where the
-       * query text is, so the result panel can tell a complete result set from
-       * a truncated one without having to hold on to the SQL.
-       */
-      hasLimit: boolean;
+async function runStatement(sql: string): Promise<StatementOutcome> {
+  try {
+    const result = await window.sql.executeQuery(sql, true);
+
+    return { sql, result, hasLimit: hasLimitClause(sql) };
+  } catch (error) {
+    if (!isSqlError(error)) {
+      throw error;
     }
-  | {
-      error: SqlError;
-    };
+
+    return { sql, error };
+  }
+}
 
 export async function action({
   request,
@@ -56,33 +60,79 @@ export async function action({
   invariant(databaseName, 'Database name is required');
 
   const formData = await request.formData();
-  const query = formData.get('raw');
+  const content = formData.get('raw');
+  const mode = toRunMode(formData.get('mode'));
+  const caretOffset = Number(formData.get('caretOffset'));
 
-  invariant(typeof query === 'string', 'Query as string is required');
+  invariant(typeof content === 'string', 'Query as string is required');
+
+  const statements = splitStatements(content);
+  const caretStatement = statementAtOffset(statements, caretOffset);
+  const toRun =
+    mode === RunMode.All
+      ? statements
+      : caretStatement
+        ? [caretStatement]
+        : [];
+
+  if (toRun.length === 0) {
+    return { outcomes: [] };
+  }
+
+  const useDatabase = `USE ${escapeIdentifier(databaseName)};`;
 
   try {
-    await window.sql.executeQuery(`USE ${escapeIdentifier(databaseName)};`);
-    const result = await window.sql.executeQuery(query, true);
-
-    return { result, hasLimit: hasLimitClause(query) };
+    await window.sql.executeQuery(useDatabase);
   } catch (error) {
-    if (isSqlError(error)) {
-      return { error };
+    if (!isSqlError(error)) {
+      throw error;
     }
 
-    throw error;
+    return { outcomes: [{ sql: useDatabase, error }] };
   }
+
+  const outcomes: StatementOutcome[] = [];
+
+  for (const { sql } of toRun) {
+    const outcome = await runStatement(sql);
+
+    outcomes.push(outcome);
+
+    // stop at the first error: what comes after it was written expecting the
+    // statement that just failed to have run
+    if (outcome.error) {
+      break;
+    }
+  }
+
+  return { outcomes };
 }
 
 // TODO : create an element for the `yScroll` (actually need to be wrapped in a Flex height 100 and overflow, etc.)
 export default function SqlPage() {
-  const { t } = useTranslation();
   const [form] = Form.useForm();
   const fetcher = useFetcher<SqlActionReturnTypes>();
   const [sqlQuery, saveSqlQuery] = useSqlFileStorage();
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.SQL_EDITOR);
+  const editorRef = useRef<RawSqlEditorHandle>(null);
 
   const { state } = fetcher;
+
+  // Which statement to run is decided from the caret, which only the editor
+  // knows about, so the whole content and the caret travel to the action.
+  const run = (mode: RunMode): void => {
+    const content: string = form.getFieldValue('raw') ?? '';
+
+    saveSqlQuery(content);
+    fetcher.submit(
+      {
+        raw: content,
+        mode,
+        caretOffset: String(editorRef.current?.getCaretOffset() ?? 0),
+      },
+      { method: 'post' }
+    );
+  };
 
   if (sqlQuery === null) {
     return null;
@@ -104,36 +154,21 @@ export default function SqlPage() {
             flexDirection: 'column',
             gap: '0.5em',
           }}
-          onFinish={(values) => {
-            saveSqlQuery(values.raw);
-            fetcher.submit(values, {
-              method: 'post',
-            });
-          }}
         >
           <Suspense fallback={<div style={{ flex: 1 }}></div>}>
             {/* `noStyle` renders the control alone: without it antd wraps the
                 editor in a few divs that would not pass the height down */}
             <Form.Item name="raw" valuePropName="defaultValue" noStyle>
               <RawSqlEditor
+                ref={editorRef}
                 style={{ flex: 1, minHeight: 0 }}
-                onSubmit={() => {
-                  // trigger the form "onFinish" event
-                  form.submit();
-                }}
+                onSubmit={() => run(RunMode.Current)}
               />
             </Form.Item>
           </Suspense>
 
           <Flex>
-            <Button
-              htmlType="submit"
-              disabled={state === 'submitting'}
-              color="primary"
-              variant="solid"
-            >
-              {t('rawSql.submit')}
-            </Button>
+            <RunQueryButton disabled={state === 'submitting'} onRun={run} />
           </Flex>
         </Form>
       </Splitter.Panel>
