@@ -71,6 +71,11 @@ type Props = {
   defaultValue?: string;
   ref?: Ref<RawSqlEditorHandle>;
   onChange?: (value: string) => void;
+  /**
+   * How many statements the content holds, whenever that number changes —
+   * what tells the page whether there is a choice of statements to run.
+   */
+  onStatementCountChange?: (count: number) => void;
   onSubmit: () => void;
   /**
    * SQL the content is a fragment of, `SELECT * FROM `city` WHERE ` for a
@@ -86,6 +91,7 @@ type Props = {
 export function RawSqlEditor({
   defaultValue,
   onChange,
+  onStatementCountChange,
   onSubmit,
   queryPrefix,
   ref,
@@ -103,6 +109,8 @@ export function RawSqlEditor({
   onSubmitRef.current = onSubmit;
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onStatementCountChangeRef = useRef(onStatementCountChange);
+  onStatementCountChangeRef.current = onStatementCountChange;
   const theme = useTheme();
 
   const monacoTheme = buildMonacoTheme(theme);
@@ -181,6 +189,8 @@ export function RawSqlEditor({
 
         const decorations = createdEditor.createDecorationsCollection();
 
+        let reportedCount: number | null = null;
+
         // Show what Ctrl+Enter would run, but only once there is a choice to
         // make: on a single statement the decoration would just repaint the
         // whole editor.
@@ -188,6 +198,12 @@ export function RawSqlEditor({
           const model = createdEditor.getModel();
           const position = createdEditor.getPosition();
           const statements = model ? statementsOf(model.getValue()) : [];
+
+          if (statements.length !== reportedCount) {
+            reportedCount = statements.length;
+            onStatementCountChangeRef.current?.(reportedCount);
+          }
+
           const current =
             model && position && statements.length > 1
               ? statementAtOffset(statements, model.getOffsetAt(position))

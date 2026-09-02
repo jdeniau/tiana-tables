@@ -115,6 +115,7 @@ export default function SqlPage() {
   const [sqlQuery, saveSqlQuery] = useSqlFileStorage();
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.SQL_EDITOR);
   const editorRef = useRef<RawSqlEditorHandle>(null);
+  const [statementCount, setStatementCount] = useState(0);
 
   const { state } = fetcher;
 
@@ -162,13 +163,18 @@ export default function SqlPage() {
               <RawSqlEditor
                 ref={editorRef}
                 style={{ flex: 1, minHeight: 0 }}
+                onStatementCountChange={setStatementCount}
                 onSubmit={() => run(RunMode.Current)}
               />
             </Form.Item>
           </Suspense>
 
           <Flex>
-            <RunQueryButton disabled={state === 'submitting'} onRun={run} />
+            <RunQueryButton
+              disabled={state === 'submitting'}
+              statementCount={statementCount}
+              onRun={run}
+            />
           </Flex>
         </Form>
       </Splitter.Panel>
