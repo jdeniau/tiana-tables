@@ -16,7 +16,7 @@
  * the colors to be used in an editor. Prefer transcribing from the theme's
  * official implementation.
  */
-export interface Base16Palette {
+interface Base16Palette {
   /** Default Background */
   readonly base00: string;
   /** Lighter Background (used for status bars, line numbers and folding marks) */

@@ -19,7 +19,7 @@ export interface LineSeries {
   data: Array<{ x: string; y: number }>;
 }
 
-export type BarDatum = Record<string, string | number>;
+type BarDatum = Record<string, string | number>;
 
 export interface BarData {
   data: Array<BarDatum>;

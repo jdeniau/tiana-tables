@@ -11,6 +11,8 @@
  * something absent from it — MariaDB adds `inet4`, `inet6` and `uuid` — so a
  * value read from the database stays a `string`, compared against these
  * members rather than narrowed to them.
+ *
+ * @public
  */
 export enum DataType {
   // Numeric

@@ -25,7 +25,7 @@ import { AppTheme } from './palettes/types';
 import { unikittyLight } from './palettes/unikittyLight';
 import { visualStudio } from './palettes/visualStudio';
 
-export type { AppTheme, Base16Palette } from './palettes/types';
+export type { AppTheme } from './palettes/types';
 
 const THEME_LIST_AS_ARRAY: AppTheme[] = [
   // the default theme comes first
