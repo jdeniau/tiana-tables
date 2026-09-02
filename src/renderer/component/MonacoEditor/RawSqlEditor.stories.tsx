@@ -61,6 +61,18 @@ LIMIT 10;`,
   },
 };
 
+/** several statements: the one the caret sits in is the one Ctrl+Enter runs */
+export const SeveralStatements: Story = {
+  args: {
+    defaultValue: `SELECT * FROM employe WHERE gender = 'F';
+
+-- count them
+SELECT COUNT(*) FROM employe;
+
+UPDATE title SET title = 'Engineer' WHERE id = 1;`,
+  },
+};
+
 export const WithTablesAnsForeignKeys: Story = {
   args: {
     defaultValue: `SELECT *

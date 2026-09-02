@@ -79,8 +79,19 @@ const fr: Translation = {
   'navigation_modal.title': 'Naviguer',
   'rawSql.result.affectedRows': 'Lignes affectées :',
   'rawSql.result.insertId': 'ID inséré :',
+  'rawSql.result.noStatement': "L'éditeur ne contient aucune requête à exécuter.",
+  'rawSql.result.statement': 'Requête {number} : {sql}',
   'rawSql.result.title': 'Résultat :',
-  'rawSql.submit': 'Soumettre',
+  'rawSql.run.description':
+    '{mode, select,' +
+    " all {Toutes les requêtes de l'éditeur, dans l'ordre, en s'arrêtant à la première erreur.}" +
+    ' other {Seule la requête où se trouve le curseur est envoyée.}}',
+  'rawSql.run.label':
+    '{mode, select,' +
+    ' all {Exécuter toutes les requêtes}' +
+    ' other {Exécuter la requête sous le curseur}}',
+  'rawSql.run.more': "Autres façons d'exécuter",
+  'rawSql.submit': 'Exécuter la requête',
   'sqlPanel.callerButton': 'SQL',
   'table.contextMenu.filter': 'Filtre',
   'table.contextMenu.filter.cellValue': 'Valeur de la cellule',
