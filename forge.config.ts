@@ -35,6 +35,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     executableName: 'tiana-tables',
     icon: 'images/icons/icon',
+    quiet: false,
     osxSign: {
       identity: requireAppleEnvSignString(
         process.env.APPLE_SIGN_ID,
