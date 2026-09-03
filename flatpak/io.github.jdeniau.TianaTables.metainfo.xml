@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.jdeniau.TianaTables</id>
+
+  <name>Tiana Tables</name>
+  <summary>Browse and query MySQL and MariaDB databases</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <!-- Has to match the file the maker generates, which is named after the id. -->
+  <launchable type="desktop-id">io.github.jdeniau.TianaTables.desktop</launchable>
+
+  <description>
+    <p>
+      Tiana Tables is a desktop client for MySQL and MariaDB, aimed at
+      developers who read and edit data as much as they write queries.
+    </p>
+    <ul>
+      <li>Browse tables, filter rows and follow foreign keys between them</li>
+      <li>Edit cells in place, with the primary key guarding the update</li>
+      <li>Write SQL in an editor with completion and validation from a real grammar</li>
+      <li>Chart a query result without leaving the app</li>
+      <li>Keep several connections, each remembering the database and table you left</li>
+      <li>Light and dark base16 themes, in English and French</li>
+    </ul>
+    <p>
+      Connection passwords are encrypted with the system keyring.
+    </p>
+  </description>
+
+  <url type="homepage">https://github.com/jdeniau/tiana-tables</url>
+  <url type="bugtracker">https://github.com/jdeniau/tiana-tables/issues</url>
+  <url type="vcs-browser">https://github.com/jdeniau/tiana-tables</url>
+
+  <developer id="io.github.jdeniau">
+    <name>Julien Deniau</name>
+  </developer>
+
+  <content_rating type="oars-1.1" />
+
+  <branding>
+    <color type="primary" scheme_preference="light">#eff1f5</color>
+    <color type="primary" scheme_preference="dark">#1e1e2e</color>
+  </branding>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/jdeniau/tiana-tables/main/docs/screenshots/hero.png</image>
+      <caption>Browsing a table in the data grid</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/jdeniau/tiana-tables/main/docs/screenshots/sql-editor.png</image>
+      <caption>Writing a query, with completion read from the database schema</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/jdeniau/tiana-tables/main/docs/screenshots/chart.png</image>
+      <caption>Charting the result of a query</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/jdeniau/tiana-tables/main/docs/screenshots/themes.png</image>
+      <caption>The same table under a light and a dark base16 theme</caption>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="1.5.0" date="2026-09-02" />
+    <release version="1.4.0" date="2026-08-31" />
+    <release version="1.3.1" date="2026-08-29" />
+    <release version="1.3.0" date="2026-08-29" />
+    <release version="1.2.0" date="2026-08-28" />
+  </releases>
+</component>

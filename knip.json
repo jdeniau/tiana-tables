@@ -13,6 +13,7 @@
   "ignoreDependencies": [
     "@ant-design/cli",
     "@electron-forge/maker-dmg",
-    "@electron-forge/publisher-github"
+    "@electron-forge/publisher-github",
+    "@malept/electron-installer-flatpak"
   ]
 }
