@@ -189,10 +189,16 @@ export function ThemeContextProvider({
         Tabs: {
           horizontalItemPadding: '0 14px',
         },
-        // the bar between two regions is the rule between them
+        // The bar between two regions is the rule between them. antd paints
+        // the line with the item hover colour and the 20px handle with
+        // `colorFill`: the line takes the rule colour, the handle the text
+        // colour so it stays visible on it, and hover / drag brighten the line.
         Splitter: {
           splitBarSize: 1,
-          colorFill: colorRule,
+          controlItemBgHover: colorRule,
+          controlItemBgActive: colorText,
+          controlItemBgActiveHover: accent(props),
+          colorFill: colorText,
         },
         // the Data / Chart switch: a filled segment in the muted foreground,
         // the frame is drawn by its owner

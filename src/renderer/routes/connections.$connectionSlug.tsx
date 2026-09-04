@@ -21,14 +21,14 @@ import DatabaseSelector from '../component/DatabaseSelector';
 import { KeyboardShortcut } from '../component/KeyboardShortcut';
 import TableList from '../component/TableList';
 import { usePanelSize } from '../hooks/usePanelSize';
-import { background, foreground } from '../theme';
+import { background } from '../theme';
 import NavigateModalContextProvider, {
   useNavigateModalContext,
 } from '../useNavigationListener';
 
+// the rule on its right is the bar of the splitter, not a border of its own
 const Sider = styled.div`
   height: 100%;
-  border-right: 1px solid ${foreground};
   background: ${background};
   overflow: auto;
 `;
