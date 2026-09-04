@@ -1,24 +1,27 @@
 # README screenshots
 
-All four were captured from Storybook (`yarn storybook`) in headless Chromium,
-so they can be regenerated when the UI changes.
-
-| File             | Story                                   | Theme                              | Note                                                                 |
-| ---------------- | --------------------------------------- | ---------------------------------- | -------------------------------------------------------------------- |
-| `hero.png`       | `TableGrid / Default`                   | Dracula                            | 1180 px wide, cropped to the last whole row.                         |
-| `sql-editor.png` | `MonacoEditor / RawSqlEditor / Primary` | Dracula                            | Query retyped, then `Ctrl+Space` on `e.` to open the suggest widget. |
-| `chart.png`      | `Chart / ChartPanel / Default`          | Dracula                            | 980 px wide.                                                         |
-| `themes.png`     | `TableGrid / Default`                   | Solarized Light + Tokyo Night Dark | Two 560 px captures, montaged side by side.                          |
-
-Each file is then resized to exactly twice the width the README renders it at,
-and reduced to a 256-color palette without dithering — flat UI screenshots lose
-nothing to it, and it divides the total weight by four:
+All four are captured from Storybook (`yarn storybook`) in headless Chromium,
+so they can be regenerated when the UI changes:
 
 ```sh
-magick hero.png -filter Lanczos -resize 1800x +dither -colors 256 \
-  -strip -define png:compression-level=9 PNG8:hero.png
+yarn storybook          # in one terminal
+docs/screenshots/shots.sh   # in another, once Storybook answers on :6006
 ```
 
+| File             | Story                                   | Theme                              | Note                                                                                                           |
+| ---------------- | --------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `hero.png`       | `TableGrid / Default`                   | Dracula                            | 1200 css px at 1.5×, cropped to the header and 20 whole rows.                                                  |
+| `sql-editor.png` | `MonacoEditor / RawSqlEditor / Primary` | Dracula                            | Retyped up to `WHERE e.` through the devtools protocol, so the suggest widget is open (`sql-editor-shot.mjs`). |
+| `chart.png`      | `Chart / ChartPanel / Default`          | Dracula                            | 980 css px at 1400/980.                                                                                        |
+| `themes.png`     | `TableGrid / Default`                   | Solarized Light + Tokyo Night Dark | Two 560 css px captures at 1.25×, montaged side by side.                                                       |
+
+Each story is rendered at the device scale factor that gives exactly twice the
+width the README renders it at, so nothing is upscaled. The 16 px Storybook
+padding is cropped away, and the PNG is reduced to a 256-color palette without
+dithering — flat UI screenshots lose nothing to it, and it divides the total
+weight by four. Needs `chromium-browser` (or `CHROMIUM=…`), `magick`, `node`
+and Python with Pillow.
+
 `hero.png` is the grid component alone, without the surrounding window. A
-capture of the real app — nav bar, table list, filter bar — would be a better
+capture of the real app — title bar, table list, filters — would be a better
 lead image; it is the one shot Storybook cannot produce.
