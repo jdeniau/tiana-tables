@@ -74,6 +74,10 @@ Rules learned from past mistakes and audits. Review this file at the start of ea
 - **A library internal is explained by what it does to the screen, with the before/after values.** Same recap: "antd's dark algorithm re-tunes colorPrimary" and "antd derives 10 and 14 from 13" were not understood. Say instead: "antd recomputes the accent for dark themes, `#36f9f6` came out as `#31d7d4`, so the Run button was not the palette's colour; a small function puts it back", and "from a 13px body antd computes 10px small and 14px large; the design wants 11 and 15, so both are set by hand". The token name can follow in a code span, it is not the explanation.
 - **When two sources of a handoff disagree, present the choice as a decision with the visible consequence of each option.** Flagging "base07 per the table, not base05 per the snippet" left the user asking « que dois-je décider ? ». Give: what each option looks like on a dark and a light theme, which one the mock shows, and a recommendation.
 
+## Design handoff
+
+- **The mock is not an inventory of what to keep — it omits things it never argued against.** Reviewing step 4 (2026-09-04) the user asked for the grid's row separators back: « il faut garder le séparateur de ligne, je ne l'avais pas vu dans le design mais c'est important ». The mock drew only vertical cell separators, and I had read that as a decision. Before removing an existing structural element that the mock merely leaves out (a separator, a count, a label carrying information), name it in the recap as a removal to confirm, or keep it and let the user ask for its removal. What the handoff explicitly lists as "removed" is the only safe deletion list.
+
 ## Renderer / dependencies
 
 - **Never import from `mysql2` in renderer code.** `mysql2` is CommonJS and breaks in the renderer bundle. Import type-only symbols from `mysql2/promise` with `import type`, and runtime values like `Types` from the legacy `mysql` package (see `src/renderer/component/Cell.tsx`).
