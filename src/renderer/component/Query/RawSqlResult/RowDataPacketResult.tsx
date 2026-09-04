@@ -1,8 +1,7 @@
-import { ReactElement } from 'react';
-import { Empty, Spin, Tooltip } from 'antd';
+import { ReactElement, useEffect, useState } from 'react';
+import { Empty, Segmented, Spin } from 'antd';
 import { Fetcher } from 'react-router';
 import { styled } from 'styled-components';
-import invariant from 'tiny-invariant';
 import { useTranslation } from '../../../../i18n';
 import { SqlError } from '../../../../sql/errorSerializer';
 import {
@@ -10,12 +9,20 @@ import {
   isRowDataPacketArray,
 } from '../../../../sql/type-guard';
 import { QueryResult } from '../../../../sql/types';
-import { variableForeground } from '../../../theme';
+import { selection, space } from '../../../theme';
 import ChartPanel from '../../Chart/ChartPanel';
 import { chartUnavailableReason } from '../../Chart/chartConfig';
+import {
+  Region,
+  RegionBody,
+  RegionGroup,
+  RegionHeader,
+  RegionMeta,
+  RegionName,
+} from '../../Style/Region';
+import { Strip, StripItem } from '../../Style/Strip';
 import TableGrid from '../../TableGrid';
 import SqlErrorComponent from '../SqlErrorComponent';
-import { FullHeightTabs } from './FullHeightTabs';
 
 /** What one statement of the editor answered with. */
 export type StatementOutcome =
@@ -28,6 +35,8 @@ export type StatementOutcome =
        * one without having to hold on to the SQL.
        */
       hasLimit: boolean;
+      /** how long the server took to answer */
+      durationMs: number;
       error?: undefined;
     }
   | {
@@ -35,6 +44,7 @@ export type StatementOutcome =
       error: SqlError;
       result?: undefined;
       hasLimit?: undefined;
+      durationMs?: undefined;
     };
 
 export type SqlActionReturnTypes = { outcomes: StatementOutcome[] };
@@ -44,12 +54,15 @@ type Props = {
   fetcher: Fetcher<SqlActionReturnTypes>;
 };
 
-/** how much of a statement a tab label shows before eliding it */
-const LABEL_LENGTH = 24;
+enum View {
+  Data = 'data',
+  Chart = 'chart',
+}
 
-const FailedLabel = styled.span`
-  color: ${variableForeground};
-`;
+const NO_OUTCOMES: StatementOutcome[] = [];
+
+/** how much of a statement a tab label shows before eliding it */
+const LABEL_LENGTH = 40;
 
 /** the statement on one line, short enough to sit in a tab */
 function statementSummary(sql: string): string {
@@ -60,154 +73,226 @@ function statementSummary(sql: string): string {
     : oneLine;
 }
 
-function StatementOutcomePanel({
+/** the tabular part of an outcome, when it has one */
+function rowsOf(outcome: StatementOutcome) {
+  const first = outcome.result?.[0];
+
+  return first && isRowDataPacketArray(first) ? first : null;
+}
+
+const Centered = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: ${space.xl};
+`;
+
+/**
+ * Every pane stays mounted, so `TableGrid`'s virtualization state and the
+ * chart's axis selection survive switching statements or views; only the
+ * active one is displayed.
+ */
+const Pane = styled.div<{ $active: boolean }>`
+  display: ${({ $active }) => ($active ? 'flex' : 'none')};
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+`;
+
+const Written = styled.div`
+  padding: ${space.md};
+`;
+
+/**
+ * The Data / Chart switch: a 20px segmented control in a base02 frame. The
+ * control itself is styled through its antd tokens, in `ThemeContext`.
+ */
+const ViewSwitch = styled.div`
+  display: inline-flex;
+  border: 1px solid ${selection};
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+`;
+
+function OutcomePane({
   outcome,
+  view,
   rowsAsArray,
 }: {
   outcome: StatementOutcome;
+  view: View;
   rowsAsArray: boolean;
 }): ReactElement {
   const { t } = useTranslation();
-  const { result, error, hasLimit } = outcome;
+  const { result, error } = outcome;
 
   if (error) {
     return <SqlErrorComponent error={error} />;
   }
 
-  const rows = isRowDataPacketArray(result[0]) ? result[0] : null;
+  const rows = rowsOf(outcome);
   const fields = result[1] ?? [];
 
-  const unavailable = chartUnavailableReason({
-    isTabular: rows !== null,
-    hasLimit,
-    rowCount: rows?.length ?? 0,
-    fields,
-  });
+  if (rows) {
+    return (
+      <>
+        <Pane $active={view === View.Data}>
+          <TableGrid result={rows} fields={fields} rowsAsArray={rowsAsArray} />
+        </Pane>
+        <Pane $active={view === View.Chart}>
+          <ChartPanel result={rows} fields={fields} rowsAsArray={rowsAsArray} />
+        </Pane>
+      </>
+    );
+  }
 
-  return (
-    <FullHeightTabs
-      defaultActiveKey="data"
-      items={[
-        {
-          key: 'data',
-          label: t('chart.tab.data'),
-          children: (
-            <>
-              {rows && (
-                // TOOD maybe fetch foreign keys of queried table to activate navlinks
-                <TableGrid
-                  result={rows}
-                  fields={fields}
-                  rowsAsArray={rowsAsArray}
-                  title={() => t('rawSql.result.title')}
-                />
-              )}
+  if (isResultSetHeader(result[0])) {
+    return (
+      <Written>
+        <div>
+          {t('rawSql.result.affectedRows')} {result[0].affectedRows}
+        </div>
+        <div>
+          {t('rawSql.result.insertId')} {result[0].insertId}
+        </div>
+      </Written>
+    );
+  }
 
-              {isResultSetHeader(result[0]) && (
-                <div>
-                  <div>
-                    {t('rawSql.result.affectedRows')} {result[0].affectedRows}
-                  </div>
-                  <div>
-                    {t('rawSql.result.insertId')} {result[0].insertId}
-                  </div>
-                </div>
-              )}
-              {/* TODO handle all other types of query result ? if we do handle multiple calls */}
-            </>
-          ),
-        },
-        {
-          key: 'chart',
-          // The tab stays in place when it cannot be used: an absent tab is a
-          // mystery, a greyed one that says why on hover is not. The tooltip
-          // wraps the label rather than the tab, so it still receives the
-          // pointer once antd marks the tab disabled.
-          label: (
-            <Tooltip
-              title={
-                unavailable
-                  ? t('chart.unavailable', { reason: unavailable })
-                  : undefined
-              }
-            >
-              <span>{t('chart.tab.chart')}</span>
-            </Tooltip>
-          ),
-          disabled: unavailable !== null,
-          children: rows && (
-            <ChartPanel
-              result={rows}
-              fields={fields}
-              rowsAsArray={rowsAsArray}
-            />
-          ),
-        },
-      ]}
-    />
-  );
+  // TODO handle all other types of query result
+  return <></>;
 }
 
+/**
+ * The result region of the SQL page: one header row holding the name, the
+ * statements of the last run as a strip, what the active one answered in
+ * numbers, and the Data / Chart switch. The body shows the active statement.
+ */
 export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
   const { t } = useTranslation();
   const { data, state } = fetcher;
+  const outcomes = data?.outcomes ?? NO_OUTCOMES;
 
-  if (state === 'idle' && !data) {
-    return null;
-  }
+  // `null` until the user picks one: a new run, with other statements, must
+  // not keep pointing at a tab that no longer exists
+  const [chosen, setChosen] = useState<number | null>(null);
+  const [view, setView] = useState<View>(View.Data);
 
-  if (state === 'submitting') {
-    return <Spin />;
-  }
-
-  invariant(data, 'Data is required');
-
-  const { outcomes } = data;
-  const [only] = outcomes;
-
-  if (!only) {
-    return <Empty description={t('rawSql.result.noStatement')} />;
-  }
-
-  if (outcomes.length === 1) {
-    return <StatementOutcomePanel outcome={only} rowsAsArray={rowsAsArray} />;
-  }
+  useEffect(() => {
+    setChosen(null);
+  }, [outcomes]);
 
   // A run stops at the first error, so a failed statement is always the last
   // one — and the one worth reading first.
   const failedIndex = outcomes.findIndex(({ error }) => error);
+  const active = chosen ?? Math.max(failedIndex, 0);
+  const outcome = outcomes[active];
+  const rows = outcome ? rowsOf(outcome) : null;
 
-  return (
-    <FullHeightTabs
-      // the active tab is held in a state: a new run, with a different number
-      // of statements, must not keep pointing at a tab that no longer exists
-      key={outcomes.length}
-      defaultActiveKey={String(failedIndex === -1 ? 0 : failedIndex)}
-      items={outcomes.map((outcome, index) => {
-        const label = t('rawSql.result.statement', {
-          number: index + 1,
-          sql: statementSummary(outcome.sql),
-        });
+  const unavailable = outcome
+    ? chartUnavailableReason({
+        isTabular: rows !== null,
+        hasLimit: outcome.hasLimit ?? false,
+        rowCount: rows?.length ?? 0,
+        fields: outcome.result?.[1] ?? [],
+      })
+    : null;
+  const shownView = unavailable === null ? view : View.Data;
 
-        return {
-          key: String(index),
-          label: (
-            <Tooltip title={outcome.sql}>
-              {outcome.error ? (
-                <FailedLabel>{label}</FailedLabel>
-              ) : (
-                <span>{label}</span>
-              )}
-            </Tooltip>
-          ),
-          children: (
-            <StatementOutcomePanel
-              outcome={outcome}
+  const meta =
+    outcome && outcome.durationMs !== undefined
+      ? rows
+        ? t('rawSql.result.meta.rows', {
+            count: rows.length,
+            ms: outcome.durationMs,
+          })
+        : t('rawSql.result.meta.duration', { ms: outcome.durationMs })
+      : null;
+
+  let body: ReactElement | null = null;
+
+  if (state === 'submitting') {
+    body = (
+      <Centered>
+        <Spin />
+      </Centered>
+    );
+  } else if (data && outcomes.length === 0) {
+    body = (
+      <Centered>
+        <Empty description={t('rawSql.result.noStatement')} />
+      </Centered>
+    );
+  } else if (data) {
+    body = (
+      <>
+        {outcomes.map((one, index) => (
+          <Pane key={index} $active={index === active}>
+            <OutcomePane
+              outcome={one}
+              view={shownView}
               rowsAsArray={rowsAsArray}
             />
-          ),
-        };
-      })}
-    />
+          </Pane>
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <Region>
+      <RegionHeader>
+        <RegionGroup>
+          <RegionName>{t('rawSql.result.title')}</RegionName>
+          {outcomes.length > 1 && (
+            <Strip>
+              {outcomes.map((one, index) => (
+                <StripItem
+                  key={index}
+                  active={index === active}
+                  failed={one.error !== undefined}
+                  title={one.sql}
+                  onClick={() => setChosen(index)}
+                >
+                  {statementSummary(one.sql)}
+                </StripItem>
+              ))}
+            </Strip>
+          )}
+        </RegionGroup>
+
+        {outcome && !outcome.error && (
+          <RegionGroup style={{ gap: space.md }}>
+            {meta && <RegionMeta>{meta}</RegionMeta>}
+            {rows && (
+              <ViewSwitch>
+                <Segmented<View>
+                  size="small"
+                  value={shownView}
+                  onChange={setView}
+                  options={[
+                    { label: t('chart.tab.data'), value: View.Data },
+                    {
+                      label: t('chart.tab.chart'),
+                      value: View.Chart,
+                      // The option stays in place when it cannot be used: an
+                      // absent option is a mystery, a greyed one that says why
+                      // on hover is not.
+                      disabled: unavailable !== null,
+                      tooltip: unavailable
+                        ? t('chart.unavailable', { reason: unavailable })
+                        : undefined,
+                    },
+                  ]}
+                />
+              </ViewSwitch>
+            )}
+          </RegionGroup>
+        )}
+      </RegionHeader>
+
+      <RegionBody>{body}</RegionBody>
+    </Region>
   );
 }

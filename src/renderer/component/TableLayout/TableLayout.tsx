@@ -1,8 +1,7 @@
 import { ReactElement, useCallback, useEffect, useState } from 'react';
-import { Button, Flex, Splitter } from 'antd';
+import { Button, Splitter } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { useNavigate } from 'react-router-dom';
-import { styled } from 'styled-components';
 import { PANEL } from '../../../configuration/panels';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
@@ -10,6 +9,15 @@ import { escapeIdentifier } from '../../../sql/escapeIdentifier';
 import { usePanelSize } from '../../hooks/usePanelSize';
 import ButtonLink from '../ButtonLink';
 import WhereFilter from '../Query/WhereFilter';
+import {
+  Region,
+  RegionBody,
+  RegionFoot,
+  RegionGroup,
+  RegionHeader,
+  RegionMeta,
+  RegionName,
+} from '../Style/Region';
 import TableGrid from '../TableGrid';
 
 interface TableNameProps {
@@ -19,12 +27,6 @@ interface TableNameProps {
   where?: string;
 }
 const DEFAULT_LIMIT = 100;
-
-const Pane = styled(Flex)`
-  height: 100%;
-  min-height: 0;
-  overflow: auto;
-`;
 
 export function TableLayout({
   tableName,
@@ -102,6 +104,8 @@ export function TableLayout({
     [navigate]
   );
 
+  // the same two-region split as the SQL page, so the two screens read as
+  // siblings: filters on top, data below
   return (
     <Splitter
       orientation="vertical"
@@ -109,49 +113,57 @@ export function TableLayout({
       style={{ height: '100%' }}
     >
       <Splitter.Panel {...panelProps}>
-        <Pane vertical gap="small">
-          <h3 style={{ margin: 0 }}>{t('table.filters.title')}</h3>
-          <WhereFilter defaultValue={where ?? ''} tableName={tableName} />
-        </Pane>
+        <WhereFilter defaultValue={where ?? ''} tableName={tableName} />
       </Splitter.Panel>
 
       <Splitter.Panel>
-        <Pane vertical gap="small">
-          {error ? (
-            error.message
-          ) : (
-            <>
+        <Region>
+          <RegionHeader>
+            <RegionGroup>
+              <RegionName>{tableName}</RegionName>
+              {result && (
+                <RegionMeta>
+                  {t('table.rows.count', { count: result.length })}
+                </RegionMeta>
+              )}
+            </RegionGroup>
+
+            <ButtonLink
+              size="small"
+              variant="link"
+              color="default"
+              to={`/connections/${currentConnectionSlug}/${database}/tables/${tableName}/structure`}
+            >
+              {t('table.structure.link')}
+            </ButtonLink>
+          </RegionHeader>
+
+          <RegionBody>
+            {error ? (
+              error.message
+            ) : (
               <TableGrid
                 fields={fields}
                 result={result}
                 primaryKeys={primaryKeys}
                 onValueUpdated={handleValueUpdated}
                 onFilterChange={handleFilterChange}
-                title={() => (
-                  <>
-                    {tableName}
-                    <ButtonLink
-                      style={{ marginLeft: '1em' }}
-                      to={`/connections/${currentConnectionSlug}/${database}/tables/${tableName}/structure`}
-                    >
-                      STRUCTURE
-                    </ButtonLink>
-                  </>
-                )}
               />
+            )}
+          </RegionBody>
 
-              <Flex justify="center" align="center">
-                <Button
-                  onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}
-                  color="primary"
-                  variant="solid"
-                >
-                  {t('table.rows.loadMore')}
-                </Button>
-              </Flex>
-            </>
+          {!error && (
+            <RegionFoot>
+              <Button
+                type="text"
+                size="small"
+                onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}
+              >
+                {t('table.rows.loadMore')}
+              </Button>
+            </RegionFoot>
           )}
-        </Pane>
+        </Region>
       </Splitter.Panel>
     </Splitter>
   );

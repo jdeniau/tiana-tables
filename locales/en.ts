@@ -73,10 +73,15 @@ export default {
   'menu.navigate': 'Navigate',
   'navigation_modal.search.placeholder': 'Start searching…',
   'navigation_modal.title': 'Navigate',
+  'rawSql.query.statementCount':
+    '{count, plural, one {# statement} other {# statements}}',
+  'rawSql.query.title': 'Query',
   'rawSql.result.affectedRows': 'Affected rows:',
   'rawSql.result.insertId': 'Insert ID:',
+  'rawSql.result.meta.duration': '{ms, number} ms',
+  'rawSql.result.meta.rows':
+    '{count, plural, one {# row} other {# rows}} · {ms, number} ms',
   'rawSql.result.noStatement': 'The editor holds no query to run.',
-  'rawSql.result.statement': 'Query {number}: {sql}',
   'rawSql.result.title': 'Result',
   'rawSql.run.description':
     '{mode, select,' +
@@ -87,7 +92,7 @@ export default {
     ' all {Run all queries}' +
     ' other {Run the query under the caret}}',
   'rawSql.run.more': 'Other ways to run',
-  'rawSql.submit': 'Run query',
+  'rawSql.submit': 'Run',
   'sqlPanel.callerButton': 'SQL',
   'table.contextMenu.filter': 'Filter',
   'table.contextMenu.filter.cellValue': 'Cell value',
@@ -95,7 +100,10 @@ export default {
   'table.contextMenu.filter.freeText': '…',
   'table.contextMenu.filter.freeText.title': 'Filter on a value',
   'table.filters.title': 'Filters',
+  'table.rows.count': '{count, plural, one {# row} other {# rows}}',
   'table.rows.loadMore': 'Load more…',
+  'table.structure.link': 'Structure',
+  'table.structure.title': 'Key column usage',
   'tableList.navigate': 'Navigate',
   'theme.group.dark': 'Dark',
   'theme.group.light': 'Light',

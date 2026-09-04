@@ -11,15 +11,16 @@ import {
 } from '../../theme';
 
 /**
- * A region of the workspace, as DESIGN.md rule 3 has it: bounded by a 1px
- * rule, named in condensed caps inside its own header row. No fill of its own
- * — structure rides on the line, whatever the palette.
+ * A region of the workspace, as DESIGN.md rule 3 has it: named in condensed
+ * caps inside its own header row, with no fill of its own. The rule between
+ * two regions is drawn by whatever stacks them — the `Splitter` bar on the SQL
+ * and table pages — so that it is never doubled.
  */
 export const Region = styled.section`
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-height: 0;
-  border-bottom: 1px solid ${commentForeground};
 `;
 
 export const RegionHeader = styled.header`
@@ -27,12 +28,21 @@ export const RegionHeader = styled.header`
   flex: none;
   align-items: center;
   justify-content: space-between;
-  gap: ${space.sm};
+  gap: ${space.md};
   height: ${size.regionHeader};
   padding: 0 ${space.md};
 `;
 
+/** the name and its meta on one side, the controls on the other */
+export const RegionGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${space.sm};
+  min-width: 0;
+`;
+
 export const RegionName = styled.h2`
+  flex: none;
   margin: 0;
   font-family: ${display};
   font-weight: ${displayWeight};
@@ -45,8 +55,10 @@ export const RegionName = styled.h2`
 
 /** The meta text of a header row: a statement count, `14 rows · 42 ms` */
 export const RegionMeta = styled.span`
+  flex: none;
   font-size: 11px;
   color: ${commentForeground};
+  white-space: nowrap;
 `;
 
 export const RegionBody = styled.div`
@@ -55,4 +67,17 @@ export const RegionBody = styled.div`
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: ${selection} ${background};
+`;
+
+/** A 24px row under the body: a row count, a "load more" */
+export const RegionFoot = styled.footer`
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: ${space.sm};
+  height: ${size.control};
+  padding: 0 ${space.md};
+  border-top: 1px solid ${commentForeground};
+  font-size: 11px;
+  color: ${commentForeground};
 `;

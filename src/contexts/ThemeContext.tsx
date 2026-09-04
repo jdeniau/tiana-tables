@@ -26,6 +26,7 @@ import {
   emphasisForeground,
   foreground,
   mono,
+  mutedForeground,
   selection,
   supportForeground,
 } from '../renderer/theme';
@@ -187,6 +188,24 @@ export function ThemeContextProvider({
         },
         Tabs: {
           horizontalItemPadding: '0 14px',
+        },
+        // the bar between two regions is the rule between them
+        Splitter: {
+          splitBarSize: 1,
+          colorFill: colorRule,
+        },
+        // the Data / Chart switch: a filled segment in the muted foreground,
+        // the frame is drawn by its owner
+        Segmented: {
+          fontSize: 11,
+          trackPadding: 0,
+          trackBg: 'transparent',
+          itemColor: mutedForeground(props),
+          itemHoverColor: colorText,
+          itemHoverBg: 'transparent',
+          itemActiveBg: 'transparent',
+          itemSelectedBg: mutedForeground(props),
+          itemSelectedColor: colorBg,
         },
       },
     };

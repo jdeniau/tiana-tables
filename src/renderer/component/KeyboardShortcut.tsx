@@ -1,6 +1,7 @@
 import { type JSX, ReactNode } from 'react';
 import { Tooltip } from 'antd';
 import { styled } from 'styled-components';
+import { mono } from '../theme';
 
 type Props = {
   /** The key to press to activate the shortcut */
@@ -10,29 +11,32 @@ type Props = {
   cmdOrCtrl: boolean;
 };
 
-function CtrlOrCmd(): string {
-  return window.isMac ? '⌘' : 'ctrl';
+/** keys that read better as their glyph */
+const KEY_GLYPHS: Record<string, string> = {
+  Enter: '⏎',
+};
+
+function modifier(): string {
+  return window.isMac ? '⌘' : 'ctrl+';
 }
 
 /**
- * Display the value of a keyboard shortcut.
+ * Display the value of a keyboard shortcut, as a hint next to the label it
+ * belongs to: `⌘⏎`, `ctrl+K`.
  */
 export function KeyboardShortcut({
   cmdOrCtrl,
   pressedKey,
 }: Props): JSX.Element {
+  // the space is a text node on purpose: antd's Button wraps it in a span of
+  // its own, which a CSS margin on the <kbd> would not give it
   return (
     <>
       {' '}
-      <SmallText>
-        (
-        {cmdOrCtrl && (
-          <>
-            <CtrlOrCmd />+
-          </>
-        )}
-        {pressedKey})
-      </SmallText>
+      <Keys>
+        {cmdOrCtrl && modifier()}
+        {KEY_GLYPHS[pressedKey] ?? pressedKey.toUpperCase()}
+      </Keys>
     </>
   );
 }
@@ -45,6 +49,9 @@ export function KeyboardShortcutTooltip(
   );
 }
 
-const SmallText = styled.span`
-  font-size: 0.9em;
+const Keys = styled.kbd`
+  font-family: ${mono};
+  font-size: 11px;
+  letter-spacing: 0;
+  opacity: 0.75;
 `;

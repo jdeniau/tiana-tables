@@ -77,11 +77,16 @@ const fr: Translation = {
   'menu.navigate': 'Naviguer',
   'navigation_modal.search.placeholder': 'Commencer à chercher…',
   'navigation_modal.title': 'Naviguer',
+  'rawSql.query.statementCount':
+    '{count, plural, one {# requête} other {# requêtes}}',
+  'rawSql.query.title': 'Requête',
   'rawSql.result.affectedRows': 'Lignes affectées :',
   'rawSql.result.insertId': 'ID inséré :',
+  'rawSql.result.meta.duration': '{ms, number} ms',
+  'rawSql.result.meta.rows':
+    '{count, plural, one {# ligne} other {# lignes}} · {ms, number} ms',
   'rawSql.result.noStatement': "L'éditeur ne contient aucune requête à exécuter.",
-  'rawSql.result.statement': 'Requête {number} : {sql}',
-  'rawSql.result.title': 'Résultat :',
+  'rawSql.result.title': 'Résultat',
   'rawSql.run.description':
     '{mode, select,' +
     " all {Toutes les requêtes de l'éditeur, dans l'ordre, en s'arrêtant à la première erreur.}" +
@@ -91,7 +96,7 @@ const fr: Translation = {
     ' all {Exécuter toutes les requêtes}' +
     ' other {Exécuter la requête sous le curseur}}',
   'rawSql.run.more': "Autres façons d'exécuter",
-  'rawSql.submit': 'Exécuter la requête',
+  'rawSql.submit': 'Exécuter',
   'sqlPanel.callerButton': 'SQL',
   'table.contextMenu.filter': 'Filtre',
   'table.contextMenu.filter.cellValue': 'Valeur de la cellule',
@@ -99,7 +104,10 @@ const fr: Translation = {
   'table.contextMenu.filter.freeText': '…',
   'table.contextMenu.filter.freeText.title': 'Filtrer sur une valeur',
   'table.filters.title': 'Filtres',
+  'table.rows.count': '{count, plural, one {# ligne} other {# lignes}}',
   'table.rows.loadMore': 'Charger plus…',
+  'table.structure.link': 'Structure',
+  'table.structure.title': 'Colonnes clés',
   'tableList.navigate': 'Naviguer',
   'theme.group.dark': 'Sombres',
   'theme.group.light': 'Clairs',

@@ -1,7 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Button, Flex } from 'antd';
 import { styled } from 'styled-components';
-import { constantForeground, selection, size, space } from '../../theme';
+import {
+  commentForeground,
+  constantForeground,
+  selection,
+  size,
+  space,
+} from '../../theme';
 import {
   Region,
   RegionBody,
@@ -18,7 +24,7 @@ const meta: Meta<typeof Region> = {
 export default meta;
 type Story = StoryObj<typeof Region>;
 
-/** the split the SQL page's `Splitter` will own: 40 % to the first region */
+/** what the SQL page's `Splitter` does: 40 % to the first region, one rule between */
 const Workspace = styled.div<{ $height: number }>`
   display: flex;
   flex-direction: column;
@@ -30,6 +36,7 @@ const Workspace = styled.div<{ $height: number }>`
 
   > :last-child {
     flex: 1;
+    border-top: 1px solid ${commentForeground};
   }
 `;
 
