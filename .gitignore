@@ -102,3 +102,6 @@ out/
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# flatpak-builder writes its state dir into the current directory
+.flatpak-builder/

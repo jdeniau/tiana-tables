@@ -4,15 +4,20 @@
 > décisions est maintenant actée. Ce document sert à reprendre le sujet sans
 > refaire le raisonnement.
 
-## État au 2026-08-28
+## État au 2026-09-03
 
-| Chantier                       | Décision                                           | Statut                                                                 |
-| ------------------------------ | -------------------------------------------------- | ---------------------------------------------------------------------- |
-| Garde `safeStorage`            | ✅ à faire, indépendant du packaging               | **fait** — PR [#158](https://github.com/jdeniau/tiana-tables/pull/158) |
-| Option 3 — notification in-app | ✅ **on commence par là**                          | en cours, branche `update-notification`                                |
-| Option 1 — dépôt APT/YUM       | ⏸️ **pas maintenant**, mais reste la suite logique | non commencé                                                           |
-| Option 4 — Flathub             | ⏸️ plus tard, sans rien casser du reste            | non commencé                                                           |
-| Option 2 — electron-builder    | ❌ écartée                                         | —                                                                      |
+| Chantier                       | Décision                                   | Statut                                                                 |
+| ------------------------------ | ------------------------------------------ | ---------------------------------------------------------------------- |
+| Garde `safeStorage`            | ✅ indépendant du packaging                | **fait** — PR [#158](https://github.com/jdeniau/tiana-tables/pull/158) |
+| Option 3 — notification in-app | ✅                                         | **fait** — PR [#159](https://github.com/jdeniau/tiana-tables/pull/159) |
+| Option 4 — Flathub             | ❌ **impossible**, politique IA générative | abandonnée, voir plus bas                                              |
+| Option 5 — dépôt Flatpak perso | étudiée, mise de côté                      | non commencée                                                          |
+| Option 1 — dépôt APT/YUM       | ✅ **la suite retenue**                    | non commencée                                                          |
+| Option 2 — electron-builder    | ❌ écartée                                 | —                                                                      |
+
+**Le contexte a changé et il change la conclusion : l'audience, aujourd'hui,
+c'est une personne, sur Fedora.** La découvrabilité ne vaut rien, et le budget
+tient en une soirée, pas en plusieurs jours. Voir « Ordre retenu » en bas.
 
 ---
 
@@ -316,7 +321,7 @@ MAJ Windows, pour résoudre un problème Linux. Mauvais ratio.
 
 ---
 
-## Option 3 — Notification in-app — EN COURS
+## Option 3 — Notification in-app — FAITE
 
 ### Pourquoi c'est le premier chantier, et pas un pansement
 
@@ -450,88 +455,196 @@ La pastille n'est pas cliquable : ouvrir la page de release demanderait un canal
 
 ---
 
-## Option 4 — Flathub
+## Option 4 — Flathub — IMPOSSIBLE
 
-### Ce qu'on gagne
+**À lire avant toute autre chose sur ce sujet.** Flathub interdit les
+applications assistées par IA, et la règle couvre aussi la soumission :
 
-- **MAJ automatique gratuite** : GNOME Software / KDE Discover / `flatpak update`
-  gèrent détection + download **delta** (OSTree ne transfère que les blocs
-  modifiés, quelques Mo au lieu de 100) + install. Zéro code, zéro clé GPG, zéro
-  bande passante à notre charge. Nettement plus économe que le dépôt apt, où
-  chaque MAJ retélécharge les 100 Mo.
-- On peut laisser `update-electron-app` tel quel (il sort en avance sur Linux).
-- Découvrabilité réelle + page vitrine.
-- **Sécurité** : c'est l'argument le plus fort pour cette app en particulier.
-  Aujourd'hui, les centaines de paquets npm du process main tournent avec **tous
-  les droits utilisateur** — ils peuvent lire `~/.ssh`, `~/.aws`, les profils
-  navigateur. En sandbox ils ne voient que ce que le manifeste accorde. C'est la
-  meilleure réponse au risque supply-chain npm, et elle est gratuite.
+> Applications containing AI-generated or AI-assisted code, documentation, or
+> any other content are not allowed.
+>
+> Submission pull requests must not be generated, opened, or automated using AI
+> tools or agents.
+>
+> [La politique] applies broadly to both the application being submitted to
+> Flathub and the Flathub submission itself, including the manifest, metadata,
+> patches, build scripts, and pull request.
 
-### Piège à éviter : NE PAS construire depuis les sources
+— <https://docs.flathub.org/docs/for-app-authors/requirements#generative-ai-policy>
 
-`flatpak-builder` build dans un sandbox **sans réseau**. La voie « from source »
-Node impose de vendorer les deps via `flatpak-node-generator` → point faible
-historique sur **Yarn 4** + rebuild natif d'Electron. C'est là que les gens
-abandonnent.
+Trois choses tombent donc d'un coup : le manifeste et le metainfo, la PR de
+soumission, et **l'application elle-même** — le dépôt porte `CLAUDE.md` et
+`.ai/lessons.md`, l'assistance IA y est explicite et ancienne. Le rejet est
+prévu « without any further review », avec bannissement en cas de récidive.
 
-**Chemin court : repackager le binaire déjà construit.** Le manifeste déclare
-comme source l'asset de la release GitHub (avec son sha256) et le décompresse
-dans `/app`. Les sources sont téléchargées _hors_ sandbox, checksums vérifiés →
-règle du build hors-ligne respectée. Pratique courante pour Electron sur Flathub.
+Il existe une exception étroite — « Exceptions may be granted for mature,
+well-maintained projects » — à demander en exposant la situation. C'est la seule
+voie légitime, et il ne faut pas miser dessus.
 
-Manifeste minimal : `base: org.electronjs.Electron2.BaseApp`, une source
-`type: archive`, un bloc `x-checker-data` (`github-releases`).
+**Leçon de méthode** : cette page était en référence dans ce document depuis la
+première version, et n'a jamais été ouverte. Lire la politique d'acceptation
+d'une plateforme **avant** de concevoir pour elle.
 
-Bonus : `flatpak-external-data-checker` ouvre une PR à chaque release avec la
-nouvelle URL + sha256. On merge, ça build, c'est publié.
+### Ce qui a quand même été appris, et reste utile
 
-### Le coût de la sandbox, pour un client SQL
+Le travail technique est valide ; c'est le canal de distribution qui tombe.
 
-La sandbox est un **gain net de sécurité** et une **taxe** sur exactement les
-fonctionnalités qu'un client SQL veut. La question n'est pas « la sandbox est-elle
-bien ? » mais **« la roadmap va-t-elle vers les tunnels SSH, les sockets Unix,
-les certificats clients et l'import/export ? »**
+**La sandbox fonctionne pour cette app.** Vérifié sur un build réel installé :
+`safeStorage status: { available: true, backend: 'gnome_libsecret', isSecure: true }`.
+C'était l'inconnue n°1. Il faut pour ça `--talk-name=org.freedesktop.secrets`,
+sinon Electron retombe silencieusement sur son backend `basic_text`, qui chiffre
+avec une clé en dur.
 
-1. **Système de fichiers** — rien hors du dossier de données. Ouvrir/enregistrer
-   un `.sql` passe par les **portails XDG** : l'utilisateur choisit, l'app reçoit
-   l'accès à _ce fichier_. Bien pour ouvrir/enregistrer ; pénible pour « rouvrir
-   le dernier fichier au démarrage » — il faut persister le handle du document
-   portal, pas un chemin. `src/main-process/sqlFileStorage.ts` est concerné.
-   `--filesystem=home` est questionné par les reviewers, à raison.
-2. **Sockets Unix MySQL** — `/var/run/mysqld/mysqld.sock` inaccessible. Vérifié :
-   aucun `socketPath` dans `src/sql/`, on ne fait que du TCP (OK avec
-   `--share=network`). Neutre aujourd'hui, porte fermée demain.
-3. **Tunnels SSH** — la fonctionnalité que tout client SQL finit par ajouter. Pas
-   de `~/.ssh`, et `$SSH_AUTH_SOCK` pointe vers l'hôte. Faisable
-   (`--socket=ssh-auth`, `--filesystem=~/.ssh:ro`) mais à concevoir dès le départ.
-4. **Certificats clients TLS** — même problème de chemins arbitraires.
-5. **`safeStorage`** — nécessite `--talk-name=org.freedesktop.secrets`, sinon
-   repli silencieux sur `basic_text`. ✅ **Couvert** : le garde de la PR #158 rend
-   ce cas visible au lieu de silencieux.
-6. **Outils de l'hôte** — pas de `mysqldump` système. Y accéder demanderait
-   `--talk-name=org.freedesktop.Flatpak`, une évasion de sandbox que les
-   reviewers refusent, à raison.
-7. **Contrainte permanente** — chaque nouvelle fonctionnalité doit être pensée
-   sandbox, et élargir les permissions repasse en review.
-8. **Ne couvre pas les utilisateurs `.deb`/`.rpm` actuels.**
-9. **App ID définitif** : `io.github.jdeniau.TianaTables` (tirets tolérés
-   seulement dans le dernier segment). Doit matcher le `.desktop` et le MetaInfo,
-   **non renommable** après publication.
+**Aucun accès au système de fichiers n'est nécessaire.** Contrairement à ce
+qu'affirmait la première version de ce document, `sqlFileStorage` n'ouvre aucun
+fichier arbitraire : il lit et écrit un seul `latest.sql` sous
+`app.getPath('userData')`, que la sandbox possède déjà. `shell.openPath` et
+`shell.openExternal` passent par le portail OpenURI, sans permission. Donc pas
+de `--filesystem=home`, et pas de portails XDG à écrire.
 
-### Coût d'entrée
+**`@electron-forge/maker-flatpak` est à éviter.** Il fonctionne, mais au prix de
+six surcharges, et chaque échec se présente comme un `status code 1` opaque. Cinq
+blocages traversés, dans l'ordre :
 
-- Un **MetaInfo AppStream** valide : résumé, description, licence,
-  `content_rating`, **captures d'écran**, `<releases>` à jour. One-shot, mais pas
-  10 min.
-- Une **PR sur `flathub/flathub`** avec review humaine : plusieurs semaines +
-  allers-retours sur les permissions (points 1 et 3 surtout).
-- Ensuite, avec le bot, c'est quasi de la lecture.
+| Symptôme                               | Cause réelle                                                                                                                                                                                              |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `runtime 19.08 : No remote refs found` | `--targets @electron-forge/maker-flatpak` ne correspond pas au `name` du maker, qui est **`flatpak`**. Forge reconstruit alors le maker **sans configuration** et applique tous ses défauts, sans un mot. |
+| `Sdk 25.08 : No remote refs found`     | flathub était un remote **système**, le bundler installe en `--user`, qui ne voit que les remotes utilisateur.                                                                                            |
+| `make: clang++: No such file`          | le maker compile zypak depuis un tag de 2021 dont le Makefile force `clang++`, absent du SDK. Inutile de toute façon : le BaseApp Electron fournit déjà `zypak-wrapper`. `modules: []`.                   |
+| `E: icon-not-found`                    | icône passée en chaîne → `share/pixmaps/`, que `appstreamcli` ne consulte pas. La passer en objet indexé par résolution la met dans hicolor.                                                              |
+| `E: icon-not-found` (bis)              | `1024x1024` n'est pas une taille du thème hicolor. Il faut 128/256/512.                                                                                                                                   |
 
-### Comment lever le doute sans s'engager
+Le premier est le plus vicieux, et la règle générale vaut pour **tous** les
+makers (`deb`, `rpm`, `squirrel`, `zip`) : une cible mal orthographiée ne
+prévient pas, elle applique silencieusement les défauts. Seul
+`DEBUG='*flatpak*'` et la lecture du manifeste généré permettent de le voir.
 
-Écrire le manifeste, `flatpak-builder` en local, `flatpak install` du bundle. On
-voit immédiatement ce qui casse (secrets, dialogues de fichiers) et on peut
-distribuer un `.flatpak` pour valider. La review Flathub ne vient qu'après.
+État documenté en amont : [electron/forge#4240](https://github.com/electron/forge/issues/4240)
+et [malept/electron-installer-flatpak#132](https://github.com/malept/electron-installer-flatpak/issues/132)
+— le paquet n'a rien publié depuis 2021.
+
+**Blocage local non résolu, et il touche les deux chemins.** Sur cette Fedora,
+`flatpak build-init --base=…` échoue avec
+`lsetxattr(security.selinux): Operation not supported` en copiant les fichiers
+du BaseApp — que la commande vienne d'un manifeste écrit à la main **ou** du
+maker. Le maker a produit un bundle avec succès le 2026-09-02 à 22:29, puis a
+échoué à l'identique le lendemain à 08:43, après un redémarrage à 08:34. Rien
+dans le dépôt n'avait changé entre les deux.
+
+Ce qui a été écarté par mesure, sans trouver la cause :
+
+- ce n'est pas un système de fichiers sans support SELinux : `/tmp` (tmpfs) et
+  `/home` (btrfs) sont tous deux montés avec `seclabel` ;
+- ce n'est pas une interdiction générale d'écrire `security.selinux` : `chcon`
+  fonctionne pour l'utilisateur ;
+- ce n'est pas un bac à sable d'outillage : l'échec persiste en le désactivant ;
+- ce n'est pas `--allow-missing-runtimes` qui protégeait le maker — le log
+  montre qu'il passe ce drapeau et échoue quand même à « Initializing build
+  dir » ;
+- `--disable-rofiles-fuse` ne change rien.
+
+Conséquence pratique : **aucun build Flatpak n'est reproductible en local sur
+cette machine**, ni par le maker ni par un manifeste. Ça n'empêcherait pas une
+CI Ubuntu de builder, mais ça retire au maker sa seule justification — on l'a
+gardé en croyant qu'il offrait un chemin local qui marchait. À reprendre à zéro
+si le sujet revient, en cherchant d'abord du côté de Fedora 44 / flatpak 1.18.
+
+---
+
+## Option 5 — Dépôt Flatpak auto-hébergé
+
+L'issue de secours quand Flathub est fermé : garder Flatpak comme technologie et
+publier soi-même. Étudiée en détail, **mise de côté** au profit de l'option 1.
+
+### Le principe
+
+Un dépôt Flatpak est un dépôt **OSTree** : des fichiers statiques servis en
+HTTPS, aucune logique serveur — même modèle que le dépôt APT. Sa particularité
+est d'être **adressé par contenu** : le client ne télécharge que les objets
+qu'il n'a pas.
+
+Mesuré sur l'app packagée :
+
+| Élément                                                     | Taille     | Change entre deux versions ? |
+| ----------------------------------------------------------- | ---------- | ---------------------------- |
+| Total packagé                                               | **315 Mo** | —                            |
+| Binaires Electron (`.so`, `.pak`, `icudtl.dat`, exécutable) | **229 Mo** | non, sauf montée d'Electron  |
+| `resources/` (notre code)                                   | **19 Mo**  | oui                          |
+
+D'où le gain réel : une release qui ne change que notre code fait transférer
+**~19 Mo au lieu de 315**, contre ~100 Mo à chaque fois avec APT.
+
+### La chaîne
+
+```sh
+flatpak-builder --repo=repo --gpg-sign=$KEYID --force-clean \
+  build-dir flatpak/io.github.jdeniau.TianaTables.yml
+
+flatpak build-update-repo --generate-static-deltas \
+  --title="Tiana Tables" --gpg-sign=$KEYID repo
+
+ostree prune --repo=repo --refs-only --depth=1
+```
+
+La purge est **obligatoire**, pas une optimisation : sans elle le dépôt grossit
+indéfiniment. Elle est sans danger, la déduplication étant faite objet par objet
+côté client. `build-update-repo` alimente aussi la branche AppStream, ce qui fait
+apparaître l'app correctement dans GNOME Software — le metainfo reste utile.
+
+### Installation en un clic
+
+Un `.flatpakref` d'une dizaine de lignes, avec la clé publique **en base64
+dedans** — l'utilisateur n'a aucune clé à installer à la main, ce qui évite le
+piège de la clé dé-armorée d'APT :
+
+```ini
+[Flatpak Ref]
+Title=Tiana Tables
+Name=io.github.jdeniau.TianaTables
+Branch=stable
+Url=https://<hébergement>/flatpak
+RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
+GPGKey=<clé publique en base64>
+```
+
+⚠️ `RuntimeRepo` : notre dépôt ne contient **pas** `org.freedesktop.Platform`,
+ce serait plus d'un Go. Les utilisateurs dépendent donc toujours de Flathub pour
+le runtime. Rien à voir avec la politique de soumission — récupérer un runtime
+public est libre — mais c'est une dépendance réelle.
+
+### Hébergement : R2, pas Pages
+
+|                                    | GitHub Pages                           | Cloudflare R2                                        |
+| ---------------------------------- | -------------------------------------- | ---------------------------------------------------- |
+| Dépôt initial (~150 Mo compressés) | sous la limite de 1 Go                 | dans les 10 Go gratuits                              |
+| Publication d'une release          | pousser ~150 Mo dans git à chaque fois | `rclone sync` : **seuls les objets changés**, ~19 Mo |
+| Bande passante                     | 100 Go/mois (limite douce)             | egress gratuit                                       |
+
+Un dépôt OSTree se marie mal avec git et très bien avec du stockage objet,
+précisément parce qu'il est adressé par contenu.
+
+### Ce que ça simplifie, et ce que ça coûte
+
+Simplification : plus besoin d'URL de release avec `sha256`, ni du bot
+`flatpak-external-data-checker`. La CI vient de packager l'app, le manifeste
+consomme directement sa sortie.
+
+Coûts : une clé GPG à vie ; un dépôt qui, s'il casse, casse la mise à jour de
+tous les utilisateurs d'un coup ; une compétence peu courante (beaucoup savent
+déboguer un dépôt APT, peu un OSTree) ; ~1,5 Go de SDK à mettre en cache en CI ;
+et le blocage SELinux local qui empêche de tester sur Fedora.
+
+### Ce qu'il reste dans le dépôt
+
+Le manifeste, le `.desktop` et le lanceur `zypak-wrapper` ont été **retirés** en
+mettant le sujet de côté : le manifeste portait un `sha256` factice et un bloc
+`x-checker-data` qui n'a de sens que pour le bot de Flathub, et le `.desktop`
+comme le lanceur étaient générés par le maker de toute façon.
+
+Ne restent que ce dont `maker-flatpak` a besoin :
+`flatpak/io.github.jdeniau.TianaTables.metainfo.xml` et les trois icônes
+`images/icons/icon-{128,256,512}.png`. Le contenu de ce document suffit à
+réécrire le reste — la chaîne de commandes et les pièges y sont.
 
 ---
 
@@ -542,16 +655,41 @@ distribuer un `.flatpak` pour valider. La review Flathub ne vient qu'après.
 | **1. Dépôt apt/yum**       | Moyen (CI + GPG)          | Faible, mais clé GPG à vie | Debian/Ubuntu + Fedora, en natif |
 | **2. electron-builder**    | Élevé (rebuild 3 OS)      | Moyen                      | Linux, MAIS casse MAJ Windows    |
 | **3. Notification in-app** | Faible (~1-2 h)           | Nulle                      | Tout le monde, MAJ manuelle      |
-| **4. Flathub**             | Moyen (metainfo + review) | ~nulle (bot)               | Utilisateurs Flatpak             |
+| **4. Flathub**             | —                         | —                          | **interdit** (politique IA)      |
+| **5. Dépôt Flatpak perso** | Moyen (OSTree + GPG + R2) | Moyenne                    | Utilisateurs Flatpak volontaires |
 
 ## Ordre retenu
 
-1. **Notification in-app** — valeur indépendante de tout le reste, et c'est elle
-   qui rend le dépôt atteignable pour les utilisateurs existants. ← _en cours_
-2. **Dépôt apt/yum** — banc d'essai local d'abord, CI ensuite.
-3. **Flathub** — plus tard, sans rien casser de ce qui précède.
+L'audience actuelle est **une personne, sur Fedora**, avec des releases
+fréquentes. Ça réduit fortement le périmètre utile :
 
-Chaque étape rend la suivante plus utile, et aucune ne dépend de la suivante.
+1. **Notification in-app** — faite (PR #159). Couvre déjà le besoin réel :
+   savoir qu'une version existe.
+2. **Dépôt YUM seulement** — pas apt/yum. Un seul format, un seul
+   `createrepo_c`, et la question du scriptlet `%post` côté RPM se pose une
+   fois. Les 100 Mo par mise à jour sont sans importance pour un utilisateur.
+   Le dépôt APT s'ajoutera si quelqu'un d'autre en a besoin.
+3. **Signature GPG : optionnelle au départ.** Pour un dépôt personnel servi en
+   HTTPS, démarrer avec `gpgcheck=0` supprime toute la charge de la clé à vie.
+   Ça n'est défendable que tant que l'audience est soi-même — à reprendre dès
+   qu'on distribue à d'autres, et à noter comme tel dans le `.repo`.
+
+Ainsi cadré, ce n'est pas plusieurs jours : c'est un job CI d'une trentaine de
+lignes, testable en local dans un conteneur Fedora avant de toucher à la CI.
+
+## Ce qui reste ouvert
+
+- Le blocage SELinux de `flatpak build-init --base` sur Fedora.
+- Le scriptlet `%post` côté RPM : `electron-installer-redhat` n'expose pas les
+  scriptlets aussi proprement que `electron-installer-debian`. À vérifier — sans
+  lui, l'ajout du dépôt reste une étape manuelle (sans importance pour une
+  audience de un).
+- `MakerZIP` avait été activé pour linux afin qu'un manifeste Flatpak dispose
+  d'une archive propre. **Revenu à `['darwin']`** : sans consommateur, c'était
+  un asset de 117 Mo ajouté à chaque release pour rien. Une ligne à rechanger si
+  le sujet reprend — en notant que l'artefact s'appelle alors
+  `Tiana Tables-linux-x64-<version>.zip`, **avec des espaces** (dérivé de
+  `productName`), ce qui casse tout script naïf.
 
 ## Bug latent corrigé en passant
 
@@ -570,3 +708,9 @@ natif, indépendante du packaging. Corrigé dans la PR
 - Flathub Requirements : https://docs.flathub.org/docs/for-app-authors/requirements
 - Flatpak conventions : https://docs.flatpak.org/en/latest/conventions.html
 - GitHub Pages limites : https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages#usage-limits
+- Flathub — politique IA générative :
+  https://docs.flathub.org/docs/for-app-authors/requirements#generative-ai-policy
+- electron/forge#4240 — état du maker flatpak :
+  https://github.com/electron/forge/issues/4240
+- malept/electron-installer-flatpak#132 — la source du problème zypak :
+  https://github.com/malept/electron-installer-flatpak/issues/132
