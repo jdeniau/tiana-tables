@@ -1,10 +1,10 @@
 import ConnectionPage from '../component/Connection/ConnectionPage';
-import ModalLike from '../component/Style/ModalLike';
+import { Centered } from '../component/Style/Region';
 
 export default function Connect() {
   return (
-    <ModalLike>
+    <Centered>
       <ConnectionPage />
-    </ModalLike>
+    </Centered>
   );
 }

@@ -81,3 +81,26 @@ export const RegionFoot = styled.footer`
   font-size: 11px;
   color: ${commentForeground};
 `;
+
+/** The layout of a screen with no data: one region alone on the background. */
+export const Centered = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: ${space.xl};
+  overflow: auto;
+`;
+
+/** A region standing alone gets its frame: the rule on all four sides, and under its header. */
+export const FramedRegion = styled(Region)`
+  width: 480px;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  border: 1px solid ${commentForeground};
+
+  > ${RegionHeader} {
+    border-bottom: 1px solid ${commentForeground};
+  }
+`;

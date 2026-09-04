@@ -4,27 +4,14 @@ import { Button, Dropdown } from 'antd';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import { RunMode, toRunMode } from '../../../sql/runMode';
-import {
-  background,
-  commentForeground,
-  display,
-  displayWeight,
-} from '../../theme';
+import { background, commentForeground } from '../../theme';
 import { KeyboardShortcut } from '../KeyboardShortcut';
+import { ActionLabel } from '../Style/ActionLabel';
 
 const RUN_MODES = [RunMode.Current, RunMode.All];
 
 /** the key the editor binds to run the statement under the caret */
 const SUBMIT_KEY = 'Enter';
-
-/** the one word set in the display face outside a region name */
-const RunLabel = styled.span`
-  font-family: ${display};
-  font-weight: ${displayWeight};
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-`;
 
 /**
  * The two segments sit flush, as a plain row rather than a `Space.Compact`:
@@ -84,7 +71,7 @@ export function RunQueryButton({
       variant="solid"
       onClick={() => onRun(RunMode.Current)}
     >
-      <RunLabel>{t('rawSql.submit')}</RunLabel>
+      <ActionLabel>{t('rawSql.submit')}</ActionLabel>
       <KeyboardShortcut cmdOrCtrl pressedKey={SUBMIT_KEY} />
     </Button>
   );

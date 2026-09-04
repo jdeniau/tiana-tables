@@ -193,6 +193,13 @@ export function ThemeContextProvider({
           itemSelectedBg: colorSelection,
           itemSelectedColor: emphasisForeground(props),
         },
+        // form labels read as meta text: 11px, the rule colour, close to
+        // their field
+        Form: {
+          labelFontSize: 11,
+          labelColor: colorRule,
+          verticalLabelPadding: `0 0 ${space.xs}`,
+        },
         Layout: {
           headerHeight: 38,
           headerPadding: `0 ${space.md}`,

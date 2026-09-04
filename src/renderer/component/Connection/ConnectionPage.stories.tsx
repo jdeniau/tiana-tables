@@ -5,6 +5,7 @@ import { DEFAULT_LOCALE } from '../../../configuration/locale';
 import { DEFAULT_THEME } from '../../../configuration/themes';
 import { testables } from '../../../contexts/ConfigurationContext';
 import { ConnectionContext } from '../../../contexts/ConnectionContext';
+import { Centered } from '../Style/Region';
 import ConnectionPage from './ConnectionPage';
 
 const { ConfigurationContext } = testables;
@@ -12,6 +13,11 @@ const { ConfigurationContext } = testables;
 const meta: Meta<typeof ConnectionPage> = {
   component: ConnectionPage,
   decorators: [
+    (Story) => (
+      <Centered style={{ height: '90vh' }}>
+        <Story />
+      </Centered>
+    ),
     reactRouterDecorator,
     (Story) => (
       <ConnectionContext.Provider

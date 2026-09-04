@@ -3,7 +3,7 @@ import invariant from 'tiny-invariant';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
 import ConnectionForm from '../../component/Connection/ConnectionForm';
-import ModalLike from '../../component/Style/ModalLike';
+import { Centered } from '../../component/Style/Region';
 
 export default function Edit() {
   const { t } = useTranslation();
@@ -20,8 +20,8 @@ export default function Edit() {
   }
 
   return (
-    <ModalLike>
+    <Centered>
       <ConnectionForm connection={connection} />
-    </ModalLike>
+    </Centered>
   );
 }
