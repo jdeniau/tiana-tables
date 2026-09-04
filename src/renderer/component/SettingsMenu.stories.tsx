@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Layout } from 'antd';
+import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import SettingsMenu from './SettingsMenu';
-import { TitleBar, TitleGroup } from './Style/TitleBar';
+import { Brand, TitleBar, TitleGroup } from './Style/TitleBar';
 
 const meta: Meta<typeof SettingsMenu> = {
   component: SettingsMenu,
@@ -15,13 +16,15 @@ const meta: Meta<typeof SettingsMenu> = {
     (Story) => (
       <Layout>
         <TitleBar>
-          <TitleGroup />
           <TitleGroup>
+            <Brand to="/">Tiana Tables</Brand>
             <Story />
           </TitleGroup>
         </TitleBar>
       </Layout>
     ),
+    // outermost: the brand is a link
+    reactRouterDecorator,
   ],
 };
 

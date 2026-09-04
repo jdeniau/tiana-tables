@@ -15,14 +15,13 @@ const PIP = '6px';
  * A run of sibling items — statement tabs, connections — separated by a 1px
  * rule, never by whitespace alone. Every item shrinks the same way, so three
  * items degrade to three ellipses rather than to two full tabs and a bare
- * separator. The right gutter keeps the run off whatever follows it.
+ * separator. The owner adds the gutter that keeps the run off what follows.
  */
-export const Strip = styled.div<{ $caps?: boolean }>`
+export const Strip = styled.div<{ $caps?: boolean; $framed?: boolean }>`
   display: flex;
   align-items: center;
   min-width: 0;
   overflow: hidden;
-  margin-inline-end: ${space.xl};
   font-size: 11px;
 
   ${({ $caps }) =>
@@ -30,6 +29,16 @@ export const Strip = styled.div<{ $caps?: boolean }>`
     css`
       text-transform: uppercase;
       letter-spacing: 0.06em;
+    `}
+
+  /* a rule before the first item too, when the run follows something else */
+  ${({ $framed }) =>
+    $framed &&
+    css`
+      && > :first-child {
+        padding-inline-start: ${space.md};
+        border-inline-start: 1px solid ${commentForeground};
+      }
     `}
 `;
 

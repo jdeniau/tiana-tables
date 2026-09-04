@@ -21,7 +21,7 @@ export default function Nav(): ReactElement | null {
   }
 
   return (
-    <Strip $caps>
+    <Strip $caps $framed>
       {Array.from(connectionSlugList).map((connectionSlug) => {
         const connectionName =
           configuration.connections[connectionSlug]?.name || connectionSlug;

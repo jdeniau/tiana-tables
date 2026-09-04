@@ -71,6 +71,7 @@ export default {
   'menu.navigate.previous': 'Previous',
   'menu.navigate.sqlPanel': 'SQL Panel',
   'menu.navigate': 'Navigate',
+  'menu.settings': 'Settings…',
   'navigation_modal.search.placeholder': 'Start searching…',
   'navigation_modal.title': 'Navigate',
   'rawSql.query.statementCount':

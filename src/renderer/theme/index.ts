@@ -103,3 +103,6 @@ export const mono = "'SF Mono', Menlo, Consolas, monospace";
  */
 export const display = "'Oswald', system-ui, sans-serif";
 export const displayWeight = 600;
+
+/** The software name only. Syne Mono, bundled by `@fontsource/syne-mono`. */
+export const brand = "'Syne Mono', 'SF Mono', Menlo, Consolas, monospace";

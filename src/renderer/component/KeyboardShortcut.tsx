@@ -20,6 +20,11 @@ function modifier(): string {
   return window.isMac ? '⌘' : 'ctrl+';
 }
 
+/** the shortcut as plain text, for a `title` attribute */
+export function keyboardShortcutText({ cmdOrCtrl, pressedKey }: Props): string {
+  return `${cmdOrCtrl ? modifier() : ''}${KEY_GLYPHS[pressedKey] ?? pressedKey.toUpperCase()}`;
+}
+
 /**
  * Display the value of a keyboard shortcut, as a hint next to the label it
  * belongs to: `⌘⏎`, `ctrl+K`.
@@ -33,10 +38,7 @@ export function KeyboardShortcut({
   return (
     <>
       {' '}
-      <Keys>
-        {cmdOrCtrl && modifier()}
-        {KEY_GLYPHS[pressedKey] ?? pressedKey.toUpperCase()}
-      </Keys>
+      <Keys>{keyboardShortcutText({ cmdOrCtrl, pressedKey })}</Keys>
     </>
   );
 }

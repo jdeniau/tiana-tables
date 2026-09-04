@@ -26,8 +26,10 @@
  * ```
  */
 
-// the display face, one weight — see `display` in `src/renderer/theme`
+// the display and brand faces, bundled — see `display` and `brand` in
+// `src/renderer/theme`
 import '@fontsource/oswald/600.css';
+import '@fontsource/syne-mono/400.css';
 import './renderer/index.css';
 
 // Add this to the end of the existing file

@@ -75,6 +75,7 @@ const fr: Translation = {
   'menu.navigate.previous': 'Précédent',
   'menu.navigate.sqlPanel': 'Panneau SQL',
   'menu.navigate': 'Naviguer',
+  'menu.settings': 'Réglages…',
   'navigation_modal.search.placeholder': 'Commencer à chercher…',
   'navigation_modal.title': 'Naviguer',
   'rawSql.query.statementCount':

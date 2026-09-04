@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { Layout } from 'antd';
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useMatch, useNavigate } from 'react-router';
 import { styled } from 'styled-components';
 import packageJson from '../../../package.json';
 import { ConfigurationContextProvider } from '../../contexts/ConfigurationContext';
@@ -12,12 +12,8 @@ import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import SettingsMenu from '../component/SettingsMenu';
-import {
-  Brand,
-  TitleActionLink,
-  TitleBar,
-  TitleGroup,
-} from '../component/Style/TitleBar';
+import { Strip, StripItem } from '../component/Style/Strip';
+import { Brand, TitleBar, TitleGroup } from '../component/Style/TitleBar';
 import useEffectOnce from '../hooks/useEffectOnce';
 import useUpdateStatus from '../hooks/useUpdateStatus';
 import { background } from '../theme';
@@ -30,24 +26,32 @@ const Content = styled(Layout.Content)`
   background-color: ${background};
 `;
 
+/** the way to the SQL page, carrying the pip while the page is open */
 function ToggleRawSqlButton() {
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const onSqlPage =
+    useMatch('/connections/:connectionSlug/:databaseName/sql') !== null;
 
   if (!currentConnectionSlug) {
     return null;
   }
 
   return (
-    <KeyboardShortcutTooltip cmdOrCtrl pressedKey="t">
-      <TitleActionLink
-        type="text"
-        to={`/connections/${currentConnectionSlug}/${database}/sql`}
-      >
-        {t('sqlPanel.callerButton')}
-      </TitleActionLink>
-    </KeyboardShortcutTooltip>
+    <Strip $caps>
+      <KeyboardShortcutTooltip cmdOrCtrl pressedKey="t">
+        <StripItem
+          active={onSqlPage}
+          onClick={() =>
+            navigate(`/connections/${currentConnectionSlug}/${database}/sql`)
+          }
+        >
+          {t('sqlPanel.callerButton')}
+        </StripItem>
+      </KeyboardShortcutTooltip>
+    </Strip>
   );
 }
 
@@ -81,15 +85,15 @@ export default function Root() {
             <TitleBar>
               <TitleGroup>
                 <Brand to="/">Tiana Tables</Brand>
+                <SettingsMenu
+                  version={packageJson.version}
+                  updateStatus={updateStatus}
+                />
                 <ConnectionNav />
               </TitleGroup>
 
               <TitleGroup>
                 <ToggleRawSqlButton />
-                <SettingsMenu
-                  version={packageJson.version}
-                  updateStatus={updateStatus}
-                />
               </TitleGroup>
             </TitleBar>
 

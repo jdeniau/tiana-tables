@@ -100,6 +100,11 @@ const Pane = styled.div<{ $active: boolean }>`
   min-height: 0;
 `;
 
+/** the hard right gutter: the run can never touch the row count */
+const StatementStrip = styled(Strip)`
+  margin-inline-end: ${space.xl};
+`;
+
 const Written = styled.div`
   padding: ${space.md};
 `;
@@ -246,7 +251,7 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
         <RegionGroup>
           <RegionName>{t('rawSql.result.title')}</RegionName>
           {outcomes.length > 1 && (
-            <Strip>
+            <StatementStrip>
               {outcomes.map((one, index) => (
                 <StripItem
                   key={index}
@@ -258,7 +263,7 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
                   {statementSummary(one.sql)}
                 </StripItem>
               ))}
-            </Strip>
+            </StatementStrip>
           )}
         </RegionGroup>
 
