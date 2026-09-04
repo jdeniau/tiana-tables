@@ -2,7 +2,7 @@
 # The README screenshots, from a running Storybook (`yarn storybook`), in
 # headless Chromium. Each story is rendered at the device scale factor that
 # gives the README's 2x width directly, so nothing is upscaled; the 16px
-# Storybook padding is cropped away, then the PNG is reduced to 256 colours.
+# Storybook padding is cropped away.
 #
 #   docs/screenshots/shots.sh
 set -euo pipefail
@@ -34,11 +34,6 @@ capture() {
   crop "$file" "$dsf" "$w" "$h"
 }
 
-# flat UI screenshots lose nothing to a 256-colour palette, and weigh a quarter
-palette() {
-  magick "$1" +dither -colors 256 -strip -define png:compression-level=9 "PNG8:$1"
-}
-
 # hero: the grid, 1200 css px at 1.5 = 1800; the story is 90vh tall, a 608 px
 # window gives 547 px of grid, cropped to the header + 20 whole rows = 546
 capture hero.png component-tablegrid--default Dracula 1200 546 1.5 608
@@ -49,7 +44,14 @@ capture chart.png component-chart-chartpanel--default Dracula 980 430 1.4285714
 # themes: two 560 css px captures at 1.25 = 700 each, side by side
 capture themes-a.png component-tablegrid--default "Solarized%20Light" 560 380 1.25
 capture themes-b.png component-tablegrid--default "Tokyo%20Night%20Dark" 560 380 1.25
-magick themes-a.png themes-b.png +append themes.png
+python3 - <<'PY'
+from PIL import Image
+a, b = Image.open('themes-a.png'), Image.open('themes-b.png')
+out = Image.new('RGB', (a.width + b.width, max(a.height, b.height)))
+out.paste(a, (0, 0))
+out.paste(b, (a.width, 0))
+out.save('themes.png', optimize=True)
+PY
 rm themes-a.png themes-b.png
 
 # sql-editor: the Primary story retyped up to `WHERE e.` so the suggest widget
@@ -63,6 +65,5 @@ node sql-editor-shot.mjs 9340 sql-editor.png 1.4 1000 322
 kill "$CHROME"
 
 for f in hero.png chart.png themes.png sql-editor.png; do
-  palette "$f"
   python3 -c "from PIL import Image; im = Image.open('$f'); print('$f', im.size, im.mode)"
 done

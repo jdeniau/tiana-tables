@@ -16,11 +16,9 @@ docs/screenshots/shots.sh   # in another, once Storybook answers on :6006
 | `themes.png`     | `TableGrid / Default`                   | Solarized Light + Tokyo Night Dark | Two 560 css px captures at 1.25×, montaged side by side.                                                       |
 
 Each story is rendered at the device scale factor that gives exactly twice the
-width the README renders it at, so nothing is upscaled. The 16 px Storybook
-padding is cropped away, and the PNG is reduced to a 256-color palette without
-dithering — flat UI screenshots lose nothing to it, and it divides the total
-weight by four. Needs `chromium-browser` (or `CHROMIUM=…`), `magick`, `node`
-and Python with Pillow.
+width the README renders it at, so nothing is upscaled, and the 16 px Storybook
+padding is cropped away. Needs `chromium-browser` (or `CHROMIUM=…`), `node` and
+Python with Pillow.
 
 `hero.png` is the grid component alone, without the surrounding window. A
 capture of the real app — title bar, table list, filters — would be a better
