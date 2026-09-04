@@ -26,6 +26,8 @@
  * ```
  */
 
+// the display face, one weight — see `display` in `src/renderer/theme`
+import '@fontsource/oswald/600.css';
 import './renderer/index.css';
 
 // Add this to the end of the existing file

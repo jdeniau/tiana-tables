@@ -1127,6 +1127,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/oswald@npm:5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/oswald@npm:5.3.0"
+  checksum: 10c0/040a1ad2b0a802dde7f0796daa4c85d1abe4e5220acaafcaa72787abfe5b11127f40a55ac3bff278e32c6a76df45c1f8fa515abe9a69afc5469a6eecb883a89d
+  languageName: node
+  linkType: hard
+
 "@formatjs/fast-memoize@npm:3.1.7":
   version: 3.1.7
   resolution: "@formatjs/fast-memoize@npm:3.1.7"
@@ -12177,6 +12184,7 @@ __metadata:
     "@electron-forge/publisher-github": "npm:^7.11.1"
     "@electron-forge/shared-types": "npm:^7.11.1"
     "@eslint/js": "npm:^9.39.0"
+    "@fontsource/oswald": "npm:5.3.0"
     "@nivo/bar": "npm:^0.99.0"
     "@nivo/line": "npm:^0.99.0"
     "@nivo/theming": "npm:^0.99.0"

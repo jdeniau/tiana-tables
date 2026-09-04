@@ -1,11 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { THEME_LIST } from '../../configuration/themes';
 import {
+  accent,
   background,
   backgroundAlt,
   classForeground,
   commentForeground,
   constantForeground,
+  emphasisForeground,
   foreground,
   functionForeground,
   keywordForeground,
@@ -23,6 +25,7 @@ const accessors = {
   commentForeground,
   mutedForeground,
   foreground,
+  emphasisForeground,
   variableForeground,
   constantForeground,
   classForeground,
@@ -30,6 +33,7 @@ const accessors = {
   supportForeground,
   functionForeground,
   keywordForeground,
+  accent,
 };
 
 describe.each(Object.values(THEME_LIST))('style helpers: $name', (theme) => {
