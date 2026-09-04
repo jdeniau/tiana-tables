@@ -47,7 +47,7 @@ export default {
     ' noRow {The query returned no row.}' +
     ' noNumericColumn {Plotting needs a numeric column to chart against another column.}' +
     ' other {This result cannot be plotted.}}',
-  'connect.new': 'New…',
+  'connect.new': 'New connection',
   'connection.create.button': 'Create connection…',
   'connection.form.action.connect': 'Connect',
   'connection.form.action.saveAndConnect': 'Save and connect',
@@ -60,7 +60,7 @@ export default {
   'errorPage.goHome': 'Go back to the home page',
   'errorPage.sorry': 'Sorry, an unexpected error has occurred.',
   'errorPage.title': 'Oops!',
-  'language.switch.label': 'Lang:',
+  'language.switch.label': 'Language',
   'menu.help.configuration': 'Configuration',
   'menu.help.dataFolders': 'Data folders',
   'menu.help.githubRepository': 'GitHub repository',
@@ -93,6 +93,7 @@ export default {
     ' other {Run the query under the caret}}',
   'rawSql.run.more': 'Other ways to run',
   'rawSql.submit': 'Run',
+  'settings.title': 'Settings',
   'sqlPanel.callerButton': 'SQL',
   'table.contextMenu.filter': 'Filter',
   'table.contextMenu.filter.cellValue': 'Cell value',
@@ -104,10 +105,11 @@ export default {
   'table.rows.loadMore': 'Load more…',
   'table.structure.link': 'Structure',
   'table.structure.title': 'Key column usage',
-  'tableList.navigate': 'Navigate',
+  'tableList.count': '{count, plural, one {# table} other {# tables}}',
+  'tableList.navigate': 'Go to table…',
   'theme.group.dark': 'Dark',
   'theme.group.light': 'Light',
-  'theme.switch.label': 'Theme:',
+  'theme.switch.label': 'Theme',
   'update.available':
     '{source, select,' +
     ' appimage {Version {version} is available — download the new AppImage from GitHub.}' +

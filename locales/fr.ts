@@ -51,7 +51,7 @@ const fr: Translation = {
     " noRow {La requête n'a retourné aucune ligne.}" +
     " noNumericColumn {Il faut une colonne numérique à tracer en face d'une autre colonne.}" +
     ' other {Ce résultat ne peut pas être tracé.}}',
-  'connect.new': 'Nouveau…',
+  'connect.new': 'Nouvelle connexion',
   'connection.create.button': 'Créer une connexion…',
   'connection.form.action.connect': 'Connecter',
   'connection.form.action.saveAndConnect': 'Enregistrer et connecter',
@@ -64,7 +64,7 @@ const fr: Translation = {
   'errorPage.goHome': "Retourner à la page d'accueil",
   'errorPage.sorry': "Désolé, une erreur inattendue s'est produite.",
   'errorPage.title': 'Oups !',
-  'language.switch.label': 'Langue :',
+  'language.switch.label': 'Langue',
   'menu.help.configuration': 'Configuration',
   'menu.help.dataFolders': 'Dossiers de données',
   'menu.help.githubRepository': 'Dépôt GitHub',
@@ -85,7 +85,8 @@ const fr: Translation = {
   'rawSql.result.meta.duration': '{ms, number} ms',
   'rawSql.result.meta.rows':
     '{count, plural, one {# ligne} other {# lignes}} · {ms, number} ms',
-  'rawSql.result.noStatement': "L'éditeur ne contient aucune requête à exécuter.",
+  'rawSql.result.noStatement':
+    "L'éditeur ne contient aucune requête à exécuter.",
   'rawSql.result.title': 'Résultat',
   'rawSql.run.description':
     '{mode, select,' +
@@ -97,6 +98,7 @@ const fr: Translation = {
     ' other {Exécuter la requête sous le curseur}}',
   'rawSql.run.more': "Autres façons d'exécuter",
   'rawSql.submit': 'Exécuter',
+  'settings.title': 'Réglages',
   'sqlPanel.callerButton': 'SQL',
   'table.contextMenu.filter': 'Filtre',
   'table.contextMenu.filter.cellValue': 'Valeur de la cellule',
@@ -108,10 +110,11 @@ const fr: Translation = {
   'table.rows.loadMore': 'Charger plus…',
   'table.structure.link': 'Structure',
   'table.structure.title': 'Colonnes clés',
-  'tableList.navigate': 'Naviguer',
+  'tableList.count': '{count, plural, one {# table} other {# tables}}',
+  'tableList.navigate': 'Aller à une table…',
   'theme.group.dark': 'Sombres',
   'theme.group.light': 'Clairs',
-  'theme.switch.label': 'Thème :',
+  'theme.switch.label': 'Thème',
   'update.available':
     '{source, select,' +
     ' appimage {La version {version} est disponible — télécharge le nouvel AppImage depuis GitHub.}' +

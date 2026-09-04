@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { styled } from 'styled-components';
+import { ComponentPropsWithRef } from 'react';
+import { css, styled } from 'styled-components';
 import {
   accent,
   commentForeground,
@@ -17,13 +17,20 @@ const PIP = '6px';
  * items degrade to three ellipses rather than to two full tabs and a bare
  * separator. The right gutter keeps the run off whatever follows it.
  */
-export const Strip = styled.div`
+export const Strip = styled.div<{ $caps?: boolean }>`
   display: flex;
   align-items: center;
   min-width: 0;
   overflow: hidden;
   margin-inline-end: ${space.xl};
   font-size: 11px;
+
+  ${({ $caps }) =>
+    $caps &&
+    css`
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    `}
 `;
 
 const Item = styled.button<{ $active: boolean; $failed: boolean }>`
@@ -36,6 +43,9 @@ const Item = styled.button<{ $active: boolean; $failed: boolean }>`
   border: 0;
   background: none;
   font: inherit;
+  /* a button does not inherit these from its run, its UA style resets them */
+  text-transform: inherit;
+  letter-spacing: inherit;
   cursor: pointer;
   color: ${(props) =>
     props.$failed
@@ -71,30 +81,26 @@ const Label = styled.span`
   white-space: nowrap;
 `;
 
-type StripItemProps = {
+type StripItemProps = ComponentPropsWithRef<'button'> & {
   active: boolean;
   /** a failed statement keeps its place in the run, in the error colour */
   failed?: boolean;
-  title?: string;
-  onClick: () => void;
-  children: ReactNode;
 };
 
+/** the rest of the props reach the button, so a `Tooltip` can wrap an item */
 export function StripItem({
   active,
   failed = false,
-  title,
-  onClick,
   children,
+  ...rest
 }: StripItemProps) {
   return (
     <Item
       type="button"
+      aria-current={active || undefined}
+      {...rest}
       $active={active}
       $failed={failed}
-      title={title}
-      aria-current={active || undefined}
-      onClick={onClick}
     >
       {active && <Pip />}
       <Label>{children}</Label>

@@ -1,11 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { ShowTableStatus } from '../../sql/types';
+import { RegionBody } from './Style/Region';
 import TableList from './TableList';
 
 const meta: Meta<typeof TableList> = {
   component: TableList,
-  decorators: [reactRouterDecorator],
+  // the sidebar the list lives in
+  decorators: [
+    (Story) => (
+      <RegionBody style={{ width: 212, height: 300 }}>
+        <Story />
+      </RegionBody>
+    ),
+  ],
 };
 
 export default meta;
@@ -21,32 +30,28 @@ function createTableStatusRow(
   };
 }
 
-/*
- *👇 Render functions are a framework specific feature to allow you control on how the component renders.
- * See https://storybook.js.org/docs/api/csf
- * to learn how to use render functions.
- */
+const TABLES = ['foo', 'bar', 'baz'].map((Name) =>
+  createTableStatusRow({ Name, Rows: 150, Data_length: 1234, Comment: '' })
+);
+
 export const Primary: Story = {
-  args: {
-    tableStatusList: [
-      createTableStatusRow({
-        Name: 'foo',
-        Rows: 150,
-        Data_length: 1234,
-        Comment: '',
-      }),
-      createTableStatusRow({
-        Name: 'bar',
-        Rows: 150,
-        Data_length: 1234,
-        Comment: '',
-      }),
-      createTableStatusRow({
-        Name: 'baz',
-        Rows: 150,
-        Data_length: 1234,
-        Comment: '',
-      }),
-    ],
-  },
+  decorators: [reactRouterDecorator],
+  args: { tableStatusList: TABLES },
+};
+
+/** the route names a table: its row gets the fill and the accent rule */
+export const Selected: Story = {
+  args: { tableStatusList: TABLES },
+  decorators: [
+    (Story) => (
+      <MemoryRouter initialEntries={['/connections/test/shop/tables/bar']}>
+        <Routes>
+          <Route
+            path="/connections/:connectionSlug/:databaseName/tables/:tableName"
+            element={<Story />}
+          />
+        </Routes>
+      </MemoryRouter>
+    ),
+  ],
 };

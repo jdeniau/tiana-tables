@@ -28,6 +28,7 @@ import {
   mono,
   mutedForeground,
   selection,
+  space,
   supportForeground,
 } from '../renderer/theme';
 import { useConfiguration } from './ConfigurationContext';
@@ -173,18 +174,31 @@ export function ThemeContextProvider({
           // base00 on base0D reads on every palette; white does not on Dracula
           primaryColor: colorBg,
         },
+        // the sidebar rows: 24px, 12px mono, no margins, the fill flush to
+        // the edges; the label owns the padding, so that the selected row can
+        // draw its rule on the left (see `TableList`)
         Menu: {
           itemHeight: 24,
           padding: 8,
           itemBorderRadius: 0,
           itemMarginInline: 0,
           itemMarginBlock: 0,
+          itemPaddingInline: 0,
+          iconMarginInlineEnd: 0,
           activeBarBorderWidth: 0,
           activeBarWidth: 0,
           fontSize: 12,
           itemColor: colorText,
+          itemHoverBg: `color-mix(in srgb, ${colorSelection} 40%, transparent)`,
           itemSelectedBg: colorSelection,
           itemSelectedColor: emphasisForeground(props),
+        },
+        Layout: {
+          headerHeight: 38,
+          headerPadding: `0 ${space.md}`,
+          headerBg: colorBg,
+          headerColor: colorText,
+          bodyBg: colorBg,
         },
         Tabs: {
           horizontalItemPadding: '0 14px',
