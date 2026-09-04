@@ -29,6 +29,9 @@ import useSemanticTokens from './useSemanticTokens';
 const CURRENT_STATEMENT_CLASS = 'sql-current-statement';
 const CURRENT_STATEMENT_BAR_CLASS = 'sql-current-statement-bar';
 
+/** how much of the selection colour a dot of the editor's grid holds */
+const DOT_ALPHA = '35%';
+
 /**
  * How much of the selection color the band of the current statement holds.
  *
@@ -45,7 +48,21 @@ const CURRENT_STATEMENT_ALPHA = '30%';
 const CurrentStatementStyle = createGlobalStyle<{
   $background: string;
   $bar: string;
+  $dot: string;
 }>`
+  /* The dot grid of DESIGN.md, on the layer Monaco scrolls with the text, so
+     the dots keep their place between the lines. The tile is one line high
+     and the dot sits at its centre, so a half-line offset puts every dot on a
+     line boundary rather than behind the glyphs. */
+  .monaco-editor .lines-content {
+    background-image: radial-gradient(
+      ${({ $dot }) => $dot} 1px,
+      transparent 1px
+    );
+    background-size: ${size.line} ${size.line};
+    background-position: 0 calc(${size.line} / 2);
+  }
+
   .${CURRENT_STATEMENT_CLASS} {
     background-color: ${({ $background }) => $background};
   }
@@ -299,6 +316,7 @@ export function RawSqlEditor({
       <CurrentStatementStyle
         $background={`color-mix(in srgb, ${selection({ theme })} ${CURRENT_STATEMENT_ALPHA}, transparent)`}
         $bar={accent({ theme })}
+        $dot={`color-mix(in srgb, ${selection({ theme })} ${DOT_ALPHA}, transparent)`}
       />
       <div style={style} ref={monacoEl}></div>
     </>

@@ -509,9 +509,9 @@ const GridCell = memo(function GridCell({
 });
 
 // DESIGN.md: the grid sits flush at the region edge, with no frame of its own.
-// Column heads are 11px caps over a base03 rule, rows are 26px, cells are
-// divided by base02 hairlines, and hover is the selection fill at low opacity
-// so that it never reads as selected.
+// Column heads are 11px caps over a base03 rule, rows are 26px, cells and rows
+// are divided by base02 hairlines, and hover is the selection fill at low
+// opacity so that it never reads as selected.
 type StyledProps = Parameters<typeof selection>[0];
 
 const hoverBackground = (props: StyledProps): string =>
@@ -556,6 +556,7 @@ const ScrollContainer = styled.div`
     padding: 0 ${space.md};
     font-size: 13px;
     background: ${background};
+    border-bottom: 1px solid ${selection};
     border-inline-end: 1px solid ${selection};
   }
 
