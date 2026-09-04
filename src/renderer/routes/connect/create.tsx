@@ -1,10 +1,10 @@
 import ConnectionForm from '../../component/Connection/ConnectionForm';
-import ModalLike from '../../component/Style/ModalLike';
+import { Centered } from '../../component/Style/Region';
 
 export default function Create() {
   return (
-    <ModalLike>
+    <Centered>
       <ConnectionForm />
-    </ModalLike>
+    </Centered>
   );
 }

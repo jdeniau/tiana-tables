@@ -183,7 +183,6 @@ export const Default: Story = {
     fields: makeFields(8),
     result: makeRows(100, 8),
     primaryKeys: ['id'],
-    title: () => 'items',
   },
 };
 
@@ -193,7 +192,6 @@ export const ManyRowsAndColumns: Story = {
     fields: makeFields(30),
     result: makeRows(10_000, 30),
     primaryKeys: ['id'],
-    title: () => 'items (10 000 rows × 30 columns)',
   },
 };
 
@@ -203,7 +201,6 @@ export const RealWorldCase: Story = {
     fields: makeFields(40),
     result: makeRows(1_000, 40),
     primaryKeys: ['id'],
-    title: () => 'items (1 000 rows × 40 columns)',
   },
 };
 
@@ -212,7 +209,6 @@ export const Empty: Story = {
     fields: makeFields(8),
     result: [],
     primaryKeys: ['id'],
-    title: () => 'items (empty)',
   },
 };
 
@@ -220,7 +216,6 @@ export const WithoutPrimaryKey: Story = {
   args: {
     fields: makeFields(8),
     result: makeRows(50, 8),
-    title: () => 'items (no primary key, no pinned column)',
   },
 };
 
@@ -241,7 +236,6 @@ export const WithFilterContextMenu: Story = {
     fields: makeFields(8),
     result: makeRows(100, 8),
     primaryKeys: ['id'],
-    title: () => 'items (right-click a cell)',
     onFilterChange: (where) => {
       action('onFilterChange')(where);
     },

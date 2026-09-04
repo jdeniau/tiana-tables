@@ -1,22 +1,26 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Layout } from 'antd';
-import { styled } from 'styled-components';
 import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
 import { ConnectionContext } from '../../../contexts/ConnectionContext';
-import { selection } from '../../theme';
+import { Brand, TitleBar, TitleGroup } from '../Style/TitleBar';
 import Nav from './Nav';
-
-const Header = styled(Layout.Header)`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: ${selection};
-`;
 
 const meta: Meta<typeof Nav> = {
   component: Nav,
+  parameters: { layout: 'fullscreen' },
+  // the first decorator is the innermost: the title bar holds the nav, the
+  // router wraps everything, since the brand is a link too
   decorators: [
-    reactRouterDecorator,
+    (Story) => (
+      <Layout>
+        <TitleBar>
+          <TitleGroup>
+            <Brand to="/">Tiana Tables</Brand>
+            <Story />
+          </TitleGroup>
+        </TitleBar>
+      </Layout>
+    ),
     (Story) => (
       <ConnectionContext.Provider
         value={{
@@ -28,22 +32,13 @@ const meta: Meta<typeof Nav> = {
         <Story />
       </ConnectionContext.Provider>
     ),
-    (Story) => (
-      <Header>
-        <Story />
-      </Header>
-    ),
+    reactRouterDecorator,
   ],
 };
 
 export default meta;
 type Story = StoryObj<typeof Nav>;
 
-/*
- *👇 Render functions are a framework specific feature to allow you control on how the component renders.
- * See https://storybook.js.org/docs/api/csf
- * to learn how to use render functions.
- */
 export const Primary: Story = {
   render: () => <Nav />,
 };

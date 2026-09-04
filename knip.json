@@ -7,7 +7,8 @@
     ".storybook/vite.config.ts",
     "vite.main.config.ts",
     "vite.preload.config.ts",
-    "vite.renderer.config.ts"
+    "vite.renderer.config.ts",
+    "docs/screenshots/sql-editor-shot.mjs"
   ],
   "project": ["**/*.{ts,tsx,js,mjs,mdx}"],
   "ignoreDependencies": [

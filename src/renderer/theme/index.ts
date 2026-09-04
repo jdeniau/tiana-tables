@@ -61,3 +61,48 @@ export const functionForeground = ({ theme }: StyledProps): string =>
 /** Keywords, storage, selectors (base0E) */
 export const keywordForeground = ({ theme }: StyledProps): string =>
   theme.palette.base0E;
+
+/** Lightest Foreground — emphasis: region names, selected row text (base07) */
+export const emphasisForeground = ({ theme }: StyledProps): string =>
+  theme.palette.base07;
+
+/**
+ * The accent mark of the frame: the Run fill, the pip on the active item, the
+ * rule beside the current statement (base0D). Same slot as
+ * `functionForeground`, named for what it does in the UI rather than in SQL.
+ */
+export const accent = ({ theme }: StyledProps): string => theme.palette.base0D;
+
+/**
+ * Layout tokens, from DESIGN.md. The parent owns the `gap`; between two
+ * regions there is only the 1px rule.
+ */
+export const space = {
+  xs: '4px',
+  sm: '8px',
+  md: '12px',
+  lg: '16px',
+  xl: '24px',
+} as const;
+
+export const size = {
+  titleBar: '38px',
+  regionHeader: '32px',
+  control: '24px',
+  row: '26px',
+  line: '22px',
+} as const;
+
+/** Every text of the app but the region names */
+export const mono = "'SF Mono', Menlo, Consolas, monospace";
+
+/**
+ * Region names only. Oswald is bundled by `@fontsource/oswald`, in this single
+ * weight — the CSS import in `src/renderer.ts` and `.storybook/preview.tsx`
+ * must pin the same one.
+ */
+export const display = "'Oswald', system-ui, sans-serif";
+export const displayWeight = 600;
+
+/** The software name only. Syne Mono, bundled by `@fontsource/syne-mono`. */
+export const brand = "'Syne Mono', 'SF Mono', Menlo, Consolas, monospace";

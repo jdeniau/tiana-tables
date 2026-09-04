@@ -1,24 +1,44 @@
 import { ReactElement } from 'react';
 import { DownOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Space } from 'antd';
+import { Button, Dropdown } from 'antd';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import { RunMode, toRunMode } from '../../../sql/runMode';
-import { mutedForeground } from '../../theme';
+import { background, commentForeground } from '../../theme';
 import { KeyboardShortcut } from '../KeyboardShortcut';
+import { ActionLabel } from '../Style/ActionLabel';
 
 const RUN_MODES = [RunMode.Current, RunMode.All];
 
 /** the key the editor binds to run the statement under the caret */
 const SUBMIT_KEY = 'Enter';
 
+/**
+ * The two segments sit flush, as a plain row rather than a `Space.Compact`:
+ * the compact group draws its own divider between two solid buttons, in the
+ * hover colour, where the design wants the background at 35 %.
+ */
+const RunGroup = styled.div`
+  display: inline-flex;
+`;
+
+const CaretButton = styled(Button)`
+  &&& {
+    border-inline-start-color: color-mix(
+      in srgb,
+      ${background} 35%,
+      transparent
+    );
+  }
+`;
+
 const OptionTitle = styled.div`
   font-weight: 600;
 `;
 
 const OptionDescription = styled.div`
-  color: ${mutedForeground};
-  font-size: 0.85em;
+  color: ${commentForeground};
+  font-size: 11px;
   max-width: 24em;
   white-space: normal;
 `;
@@ -51,7 +71,7 @@ export function RunQueryButton({
       variant="solid"
       onClick={() => onRun(RunMode.Current)}
     >
-      {t('rawSql.submit')}
+      <ActionLabel>{t('rawSql.submit')}</ActionLabel>
       <KeyboardShortcut cmdOrCtrl pressedKey={SUBMIT_KEY} />
     </Button>
   );
@@ -61,12 +81,12 @@ export function RunQueryButton({
   }
 
   return (
-    <Space.Compact>
+    <RunGroup>
       {runButton}
 
       <Dropdown
         trigger={['click']}
-        placement="bottomLeft"
+        placement="bottomRight"
         menu={{
           items: RUN_MODES.map((mode) => ({
             key: mode,
@@ -93,7 +113,7 @@ export function RunQueryButton({
           },
         }}
       >
-        <Button
+        <CaretButton
           disabled={disabled}
           color="primary"
           variant="solid"
@@ -101,6 +121,6 @@ export function RunQueryButton({
           aria-label={t('rawSql.run.more')}
         />
       </Dropdown>
-    </Space.Compact>
+    </RunGroup>
   );
 }

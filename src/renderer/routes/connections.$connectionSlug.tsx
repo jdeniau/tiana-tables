@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Button, Flex, Splitter } from 'antd';
+import { Button, Splitter } from 'antd';
 import {
   LoaderFunctionArgs,
   Outlet,
@@ -19,18 +19,40 @@ import { TableListContextProvider } from '../../contexts/TableListContext';
 import { useTranslation } from '../../i18n';
 import DatabaseSelector from '../component/DatabaseSelector';
 import { KeyboardShortcut } from '../component/KeyboardShortcut';
+import { RegionBody, RegionFoot } from '../component/Style/Region';
 import TableList from '../component/TableList';
 import { usePanelSize } from '../hooks/usePanelSize';
-import { background, foreground } from '../theme';
+import { background, commentForeground, space } from '../theme';
 import NavigateModalContextProvider, {
   useNavigateModalContext,
 } from '../useNavigationListener';
 
+// The sidebar: the database name, the way to a table, the tables, their count.
+// The rule on its right is the bar of the splitter, not a border of its own.
 const Sider = styled.div`
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  border-right: 1px solid ${foreground};
   background: ${background};
-  overflow: auto;
+`;
+
+const SiderHead = styled.div`
+  display: flex;
+  align-items: center;
+  padding: ${space.md} ${space.md} 0;
+`;
+
+const SiderTools = styled.div`
+  padding: ${space.md};
+`;
+
+/** looks like the input it stands for, opens the table palette */
+const GoToTable = styled(Button)`
+  &&& {
+    justify-content: space-between;
+    font-size: 11px;
+    color: ${commentForeground};
+  }
 `;
 
 const Content = styled.div`
@@ -114,6 +136,7 @@ export async function loader({ params, request }: RouteParams) {
 }
 
 export default function ConnectionDetailPage() {
+  const { t } = useTranslation();
   const { databaseList, tableStatusList, keyColumnUsageRows, allColumns } =
     useLoaderData() as Exclude<Awaited<ReturnType<typeof loader>>, Response>;
   const { addConnectionToList } = useConnectionContext();
@@ -138,11 +161,18 @@ export default function ConnectionDetailPage() {
               >
                 <Splitter.Panel {...panelProps}>
                   <Sider>
-                    <Flex vertical gap="small">
+                    <SiderHead>
                       <DatabaseSelector databaseList={databaseList} />
+                    </SiderHead>
+                    <SiderTools>
                       <OpenNavigateModalButton />
+                    </SiderTools>
+                    <RegionBody>
                       <TableList tableStatusList={tableStatusList} />
-                    </Flex>
+                    </RegionBody>
+                    <RegionFoot>
+                      {t('tableList.count', { count: tableStatusList.length })}
+                    </RegionFoot>
                   </Sider>
                 </Splitter.Panel>
                 <Splitter.Panel>
@@ -164,9 +194,14 @@ function OpenNavigateModalButton() {
   const { openNavigateModal } = useNavigateModalContext();
 
   return (
-    <Button block size="small" onClick={openNavigateModal}>
-      {t('tableList.navigate')}
+    <GoToTable
+      block
+      variant="outlined"
+      color="default"
+      onClick={openNavigateModal}
+    >
+      <span>{t('tableList.navigate')}</span>
       <KeyboardShortcut cmdOrCtrl pressedKey="k" />
-    </Button>
+    </GoToTable>
   );
 }

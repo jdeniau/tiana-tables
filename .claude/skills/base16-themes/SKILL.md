@@ -90,8 +90,15 @@ slot, named after the role: `background` (base00), `backgroundAlt` (base01),
 `selection`, `commentForeground`, `mutedForeground`, `foreground` (base05),
 `variableForeground` (base08), `constantForeground` (base09),
 `classForeground` (base0A), `stringForeground` (base0B), `supportForeground`
-(base0C), `functionForeground` (base0D), `keywordForeground` (base0E).
+(base0C), `functionForeground` (base0D), `keywordForeground` (base0E). Two
+more serve the frame rather than the SQL, as `DESIGN.md` names them:
+`emphasisForeground` (base07 — region names, selected row text) and `accent`
+(base0D again — the Run fill, the active pip, the current-statement rule).
 Use these in styled-components — never a raw `theme.palette.base0X`.
+
+The same file holds the layout tokens of `DESIGN.md`: `space`, `size`, `mono`,
+`display` (+ `displayWeight`). Raw pixel values in a styled-component are a
+review comment.
 
 **Monaco / SQL editor** (`MonacoEditor/themes.ts`):
 

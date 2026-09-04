@@ -1,54 +1,52 @@
 import { ReactElement } from 'react';
-import { Menu } from 'antd';
-import { Link } from 'react-router-dom';
-import { styled } from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
-import { selection } from '../../theme';
-import ButtonLink from '../ButtonLink';
 import { KeyboardShortcutTooltip } from '../KeyboardShortcut';
+import { Strip, StripItem } from '../Style/Strip';
 
-const StyledMenu = styled(Menu)`
-  flex: 1;
-  min-width: 0;
-  background-color: ${selection};
-`;
-
+/**
+ * The connections, as a run in the title bar: the active one carries the pip,
+ * the last item opens the form for a new one.
+ */
 export default function Nav(): ReactElement | null {
   const { connectionSlugList, currentConnectionSlug } = useConnectionContext();
   const { configuration } = useConfiguration();
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   if (!connectionSlugList.length) {
     return null;
   }
 
-  const items = Array.from(connectionSlugList).map((connectionSlug) => {
-    const connectionName =
-      configuration.connections[connectionSlug]?.name || connectionSlug;
-
-    return {
-      key: connectionSlug,
-      label: (
-        <Link to={`/connections/${connectionSlug}`}>{connectionName}</Link>
-      ),
-    };
-  });
-
   return (
-    <>
-      <KeyboardShortcutTooltip cmdOrCtrl pressedKey="n">
-        <ButtonLink style={{ margin: '0 10px' }} to="/connect">
-          {t('connect.new')}
-        </ButtonLink>
-      </KeyboardShortcutTooltip>
+    <Strip $caps $framed>
+      {Array.from(connectionSlugList).map((connectionSlug) => {
+        const connectionName =
+          configuration.connections[connectionSlug]?.name || connectionSlug;
 
-      <StyledMenu
-        mode="horizontal"
-        selectedKeys={[currentConnectionSlug ?? '']}
-        items={items}
-      />
-    </>
+        return (
+          <StripItem
+            key={connectionSlug}
+            active={connectionSlug === currentConnectionSlug}
+            title={connectionName}
+            onClick={() => navigate(`/connections/${connectionSlug}`)}
+          >
+            {connectionName}
+          </StripItem>
+        );
+      })}
+
+      <KeyboardShortcutTooltip cmdOrCtrl pressedKey="n">
+        <StripItem
+          active={false}
+          aria-label={t('connect.new')}
+          onClick={() => navigate('/connect')}
+        >
+          +
+        </StripItem>
+      </KeyboardShortcutTooltip>
+    </Strip>
   );
 }

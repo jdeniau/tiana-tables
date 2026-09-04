@@ -51,20 +51,24 @@ const fr: Translation = {
     " noRow {La requête n'a retourné aucune ligne.}" +
     " noNumericColumn {Il faut une colonne numérique à tracer en face d'une autre colonne.}" +
     ' other {Ce résultat ne peut pas être tracé.}}',
-  'connect.new': 'Nouveau…',
-  'connection.create.button': 'Créer une connexion…',
+  'connect.new': 'Nouvelle connexion',
   'connection.form.action.connect': 'Connecter',
   'connection.form.action.saveAndConnect': 'Enregistrer et connecter',
   'connection.form.host.label': 'Hôte',
   'connection.form.name.label': 'Nom',
   'connection.form.password.label': 'Mot de passe',
   'connection.form.port.label': 'Port',
+  'connection.form.title.create': 'Nouvelle connexion',
+  'connection.form.title.edit': 'Modifier {name}',
   'connection.form.user.label': 'Utilisateur',
+  'connection.list.count':
+    '{count, plural, one {# enregistrée} other {# enregistrées}}',
+  'connection.list.title': 'Connexions',
   'error.connection.notFound': 'Connexion introuvable',
   'errorPage.goHome': "Retourner à la page d'accueil",
   'errorPage.sorry': "Désolé, une erreur inattendue s'est produite.",
   'errorPage.title': 'Oups !',
-  'language.switch.label': 'Langue :',
+  'language.switch.label': 'Langue',
   'menu.help.configuration': 'Configuration',
   'menu.help.dataFolders': 'Dossiers de données',
   'menu.help.githubRepository': 'Dépôt GitHub',
@@ -75,13 +79,20 @@ const fr: Translation = {
   'menu.navigate.previous': 'Précédent',
   'menu.navigate.sqlPanel': 'Panneau SQL',
   'menu.navigate': 'Naviguer',
+  'menu.settings': 'Réglages…',
   'navigation_modal.search.placeholder': 'Commencer à chercher…',
   'navigation_modal.title': 'Naviguer',
+  'rawSql.query.statementCount':
+    '{count, plural, one {# requête} other {# requêtes}}',
+  'rawSql.query.title': 'Requête',
   'rawSql.result.affectedRows': 'Lignes affectées :',
   'rawSql.result.insertId': 'ID inséré :',
-  'rawSql.result.noStatement': "L'éditeur ne contient aucune requête à exécuter.",
-  'rawSql.result.statement': 'Requête {number} : {sql}',
-  'rawSql.result.title': 'Résultat :',
+  'rawSql.result.meta.duration': '{ms, number} ms',
+  'rawSql.result.meta.rows':
+    '{count, plural, one {# ligne} other {# lignes}} · {ms, number} ms',
+  'rawSql.result.noStatement':
+    "L'éditeur ne contient aucune requête à exécuter.",
+  'rawSql.result.title': 'Résultat',
   'rawSql.run.description':
     '{mode, select,' +
     " all {Toutes les requêtes de l'éditeur, dans l'ordre, en s'arrêtant à la première erreur.}" +
@@ -91,7 +102,8 @@ const fr: Translation = {
     ' all {Exécuter toutes les requêtes}' +
     ' other {Exécuter la requête sous le curseur}}',
   'rawSql.run.more': "Autres façons d'exécuter",
-  'rawSql.submit': 'Exécuter la requête',
+  'rawSql.submit': 'Exécuter',
+  'settings.title': 'Réglages',
   'sqlPanel.callerButton': 'SQL',
   'table.contextMenu.filter': 'Filtre',
   'table.contextMenu.filter.cellValue': 'Valeur de la cellule',
@@ -99,11 +111,15 @@ const fr: Translation = {
   'table.contextMenu.filter.freeText': '…',
   'table.contextMenu.filter.freeText.title': 'Filtrer sur une valeur',
   'table.filters.title': 'Filtres',
+  'table.rows.count': '{count, plural, one {# ligne} other {# lignes}}',
   'table.rows.loadMore': 'Charger plus…',
-  'tableList.navigate': 'Naviguer',
+  'table.structure.link': 'Structure',
+  'table.structure.title': 'Colonnes clés',
+  'tableList.count': '{count, plural, one {# table} other {# tables}}',
+  'tableList.navigate': 'Aller à une table…',
   'theme.group.dark': 'Sombres',
   'theme.group.light': 'Clairs',
-  'theme.switch.label': 'Thème :',
+  'theme.switch.label': 'Thème',
   'update.available':
     '{source, select,' +
     ' appimage {La version {version} est disponible — télécharge le nouvel AppImage depuis GitHub.}' +

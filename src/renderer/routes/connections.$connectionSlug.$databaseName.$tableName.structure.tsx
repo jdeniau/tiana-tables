@@ -1,6 +1,12 @@
-import { Flex } from 'antd';
 import { LoaderFunctionArgs, Params, useLoaderData } from 'react-router';
 import invariant from 'tiny-invariant';
+import { useTranslation } from '../../i18n';
+import {
+  Region,
+  RegionBody,
+  RegionHeader,
+  RegionName,
+} from '../component/Style/Region';
 import TableGrid from '../component/TableGrid';
 
 interface RouteParams extends LoaderFunctionArgs {
@@ -22,18 +28,24 @@ export async function loader({ params }: RouteParams) {
 }
 
 export default function TableStructure() {
+  const { t } = useTranslation();
   const {
     data: [result, fields],
   } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
 
   return (
-    <Flex vertical style={{ height: '100%' }}>
-      <TableGrid
-        title={() => 'KEY COLUMN USAGE'}
-        result={result}
-        fields={fields}
-        primaryKeys={['TABLE_NAME', 'COLUMN_NAME']}
-      />
-    </Flex>
+    <Region>
+      <RegionHeader>
+        <RegionName>{t('table.structure.title')}</RegionName>
+      </RegionHeader>
+
+      <RegionBody>
+        <TableGrid
+          result={result}
+          fields={fields}
+          primaryKeys={['TABLE_NAME', 'COLUMN_NAME']}
+        />
+      </RegionBody>
+    </Region>
   );
 }
