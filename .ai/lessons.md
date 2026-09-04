@@ -77,6 +77,8 @@ Rules learned from past mistakes and audits. Review this file at the start of ea
 ## Design handoff
 
 - **The mock is not an inventory of what to keep — it omits things it never argued against.** Reviewing step 4 (2026-09-04) the user asked for the grid's row separators back: « il faut garder le séparateur de ligne, je ne l'avais pas vu dans le design mais c'est important ». The mock drew only vertical cell separators, and I had read that as a decision. Before removing an existing structural element that the mock merely leaves out (a separator, a count, a label carrying information), name it in the recap as a removal to confirm, or keep it and let the user ask for its removal. What the handoff explicitly lists as "removed" is the only safe deletion list.
+- **A `<button>` does not inherit `text-transform` or `letter-spacing`: the UA stylesheet resets them.** The connections strip (2026-09-04) set `text-transform: uppercase` on the run and its `<button>` items stayed lower-case; `text-transform: inherit; letter-spacing: inherit` on the button fixes it. Same family as `font: inherit`, which the items already had.
+- **Fonts are bundled, never linked.** Stated by the user (2026-09-04): « je veux les fonts en dur et pas de lien vers google font ou autre ». Oswald and Syne Mono come from `@fontsource/*` packages, imported once in `src/renderer.ts` and `.storybook/preview.tsx`; Vite copies the woff2 files into the build and the CSP (`default-src 'self'`) would block a remote font anyway. A `fonts.googleapis.com` link belongs only in a design mock, not in the app.
 
 ## Renderer / dependencies
 
