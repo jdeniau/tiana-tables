@@ -22,7 +22,7 @@ import { KeyboardShortcut } from '../component/KeyboardShortcut';
 import { RegionBody, RegionFoot } from '../component/Style/Region';
 import TableList from '../component/TableList';
 import { usePanelSize } from '../hooks/usePanelSize';
-import { background, commentForeground, space } from '../theme';
+import { commentForeground, space } from '../theme';
 import NavigateModalContextProvider, {
   useNavigateModalContext,
 } from '../useNavigationListener';
@@ -33,7 +33,6 @@ const Sider = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: ${background};
 `;
 
 const SiderHead = styled.div`

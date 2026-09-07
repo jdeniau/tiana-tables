@@ -13,6 +13,7 @@ import { space } from '../../../theme';
 import ChartPanel from '../../Chart/ChartPanel';
 import { chartUnavailableReason } from '../../Chart/chartConfig';
 import {
+  Centered,
   Region,
   RegionBody,
   RegionGroup,
@@ -79,14 +80,6 @@ function rowsOf(outcome: StatementOutcome) {
 
   return first && isRowDataPacketArray(first) ? first : null;
 }
-
-const Centered = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: ${space.xl};
-`;
 
 /**
  * Every pane stays mounted, so `TableGrid`'s virtualization state and the
