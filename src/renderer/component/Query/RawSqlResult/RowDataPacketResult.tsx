@@ -20,7 +20,7 @@ import {
   RegionMeta,
   RegionName,
 } from '../../Style/Region';
-import { Strip, StripItem } from '../../Style/Strip';
+import { TabStrip, TabStripItem } from '../../Style/TabStrip';
 import TableGrid from '../../TableGrid';
 import SqlErrorComponent from '../SqlErrorComponent';
 
@@ -101,7 +101,7 @@ const Pane = styled.div<{ $active: boolean }>`
 `;
 
 /** the hard right gutter: the run can never touch the row count */
-const StatementStrip = styled(Strip)`
+const StatementTabStrip = styled(TabStrip)`
   margin-inline-end: ${space.xl};
 `;
 
@@ -251,9 +251,9 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
         <RegionGroup>
           <RegionName>{t('rawSql.result.title')}</RegionName>
           {outcomes.length > 1 && (
-            <StatementStrip>
+            <StatementTabStrip>
               {outcomes.map((one, index) => (
-                <StripItem
+                <TabStripItem
                   key={index}
                   active={index === active}
                   failed={one.error !== undefined}
@@ -261,9 +261,9 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
                   onClick={() => setChosen(index)}
                 >
                   {statementSummary(one.sql)}
-                </StripItem>
+                </TabStripItem>
               ))}
-            </StatementStrip>
+            </StatementTabStrip>
           )}
         </RegionGroup>
 

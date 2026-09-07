@@ -3,7 +3,7 @@ import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
 import { KeyboardShortcutTooltip } from '../KeyboardShortcut';
-import { Strip, StripLink } from '../Style/Strip';
+import { TabStrip, TabStripLink } from '../Style/TabStrip';
 
 /**
  * The connections, as a run in the title bar: the active one carries the pip,
@@ -19,28 +19,32 @@ export default function Nav(): ReactElement | null {
   }
 
   return (
-    <Strip $caps $framed>
+    <TabStrip $caps $framed>
       {Array.from(connectionSlugList).map((connectionSlug) => {
         const connectionName =
           configuration.connections[connectionSlug]?.name || connectionSlug;
 
         return (
-          <StripLink
+          <TabStripLink
             key={connectionSlug}
             active={connectionSlug === currentConnectionSlug}
             title={connectionName}
             to={`/connections/${connectionSlug}`}
           >
             {connectionName}
-          </StripLink>
+          </TabStripLink>
         );
       })}
 
       <KeyboardShortcutTooltip cmdOrCtrl pressedKey="n">
-        <StripLink active={false} aria-label={t('connect.new')} to="/connect">
+        <TabStripLink
+          active={false}
+          aria-label={t('connect.new')}
+          to="/connect"
+        >
           +
-        </StripLink>
+        </TabStripLink>
       </KeyboardShortcutTooltip>
-    </Strip>
+    </TabStrip>
   );
 }

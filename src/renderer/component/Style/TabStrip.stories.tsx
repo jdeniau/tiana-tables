@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { RegionGroup, RegionMeta, RegionName } from './Region';
-import { Strip, StripItem } from './Strip';
+import { TabStrip, TabStripItem } from './TabStrip';
 
 const STATEMENTS = [
   'SELECT sc.contract_id, count(s.id) as nb_seats FROM seat s',
@@ -16,9 +16,9 @@ function Demo({ count, width }: { count: number; width: number }) {
   return (
     <RegionGroup style={{ width, padding: 8 }}>
       <RegionName>Result</RegionName>
-      <Strip>
+      <TabStrip>
         {STATEMENTS.slice(0, count).map((sql, index) => (
-          <StripItem
+          <TabStripItem
             key={sql}
             active={index === active}
             failed={index === 3}
@@ -26,9 +26,9 @@ function Demo({ count, width }: { count: number; width: number }) {
             onClick={() => setActive(index)}
           >
             {sql}
-          </StripItem>
+          </TabStripItem>
         ))}
-      </Strip>
+      </TabStrip>
       <RegionMeta>14 rows · 42 ms</RegionMeta>
     </RegionGroup>
   );

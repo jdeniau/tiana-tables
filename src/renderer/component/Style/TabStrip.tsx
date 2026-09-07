@@ -18,7 +18,7 @@ const PIP = '6px';
  * items degrade to three ellipses rather than to two full tabs and a bare
  * separator. The owner adds the gutter that keeps the run off what follows.
  */
-export const Strip = styled.div<{ $caps?: boolean; $framed?: boolean }>`
+export const TabStrip = styled.div<{ $caps?: boolean; $framed?: boolean }>`
   display: flex;
   align-items: center;
   min-width: 0;
@@ -127,7 +127,7 @@ function Content({
 }
 
 /** An item that acts: the rest of the props reach the button, so a `Tooltip` can wrap it. */
-export function StripItem({
+export function TabStripItem({
   active,
   failed = false,
   children,
@@ -147,7 +147,7 @@ export function StripItem({
 }
 
 /** An item that navigates: a router `Link`, so the destination is a real one. */
-export function StripLink({
+export function TabStripLink({
   active,
   failed = false,
   children,

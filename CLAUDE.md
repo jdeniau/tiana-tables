@@ -86,7 +86,7 @@ mono everywhere except region names in the condensed display face, the accent
   `mono`, `display` next to the base16 accessors. Raw pixel values in a
   styled-component are a review comment.
 - **`src/renderer/component/Style/`** holds the frame: `Region*` (a named,
-  scrollable region of the workspace), `Strip` (a run of siblings separated by
+  scrollable region of the workspace), `TabStrip` (a run of siblings separated by
   hairlines, with a pip on the active one), `TitleBar`. Routes compose these,
   they never rebuild them. Never style antd internals through `.ant-*` classes.
 
