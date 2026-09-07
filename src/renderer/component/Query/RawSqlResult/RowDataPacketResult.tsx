@@ -1,5 +1,5 @@
 import { ReactElement, useEffect, useState } from 'react';
-import { Empty, Segmented, Spin } from 'antd';
+import { Empty, Segmented, Spin, theme as antdTheme } from 'antd';
 import { Fetcher } from 'react-router';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../../i18n';
@@ -9,7 +9,7 @@ import {
   isRowDataPacketArray,
 } from '../../../../sql/type-guard';
 import { QueryResult } from '../../../../sql/types';
-import { selection, space } from '../../../theme';
+import { space } from '../../../theme';
 import ChartPanel from '../../Chart/ChartPanel';
 import { chartUnavailableReason } from '../../Chart/chartConfig';
 import {
@@ -109,17 +109,6 @@ const Written = styled.div`
   padding: ${space.md};
 `;
 
-/**
- * The Data / Chart switch: a 20px segmented control in a base02 frame. The
- * control itself is styled through its antd tokens, in `ThemeContext`.
- */
-const ViewSwitch = styled.div`
-  display: inline-flex;
-  border: 1px solid ${selection};
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-`;
-
 function OutcomePane({
   outcome,
   view,
@@ -176,6 +165,7 @@ function OutcomePane({
  */
 export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
   const { t } = useTranslation();
+  const { token } = antdTheme.useToken();
   const { data, state } = fetcher;
   const outcomes = data?.outcomes ?? NO_OUTCOMES;
 
@@ -271,27 +261,34 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
           <RegionGroup style={{ gap: space.md }}>
             {meta && <RegionMeta>{meta}</RegionMeta>}
             {rows && (
-              <ViewSwitch>
-                <Segmented<View>
-                  size="small"
-                  value={shownView}
-                  onChange={setView}
-                  options={[
-                    { label: t('chart.tab.data'), value: View.Data },
-                    {
-                      label: t('chart.tab.chart'),
-                      value: View.Chart,
-                      // The option stays in place when it cannot be used: an
-                      // absent option is a mystery, a greyed one that says why
-                      // on hover is not.
-                      disabled: unavailable !== null,
-                      tooltip: unavailable
-                        ? t('chart.unavailable', { reason: unavailable })
-                        : undefined,
-                    },
-                  ]}
-                />
-              </ViewSwitch>
+              // the Data / Chart switch: its tokens give the flat track and the
+              // filled segment, its own parts take the frame and the caps
+              <Segmented<View>
+                size="small"
+                value={shownView}
+                onChange={setView}
+                styles={{
+                  root: { border: `1px solid ${token.colorBorderSecondary}` },
+                  label: {
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                  },
+                }}
+                options={[
+                  { label: t('chart.tab.data'), value: View.Data },
+                  {
+                    label: t('chart.tab.chart'),
+                    value: View.Chart,
+                    // The option stays in place when it cannot be used: an
+                    // absent option is a mystery, a greyed one that says why
+                    // on hover is not.
+                    disabled: unavailable !== null,
+                    tooltip: unavailable
+                      ? t('chart.unavailable', { reason: unavailable })
+                      : undefined,
+                  },
+                ]}
+              />
             )}
           </RegionGroup>
         )}
