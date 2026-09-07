@@ -1,7 +1,6 @@
-import { Button, Form, Input } from 'antd';
+import { Button, Flex, Form, Input } from 'antd';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router';
-import { styled } from 'styled-components';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
 import type {
@@ -31,50 +30,11 @@ function getSubmitButtonLabel(
 }
 
 /** labels read as meta text: caps, like the column heads */
-const Body = styled(RegionBody)`
-  padding: ${space.lg};
+const LABEL = { letterSpacing: '0.1em', textTransform: 'uppercase' } as const;
 
-  label {
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-`;
-
-/** field groups 24px apart, fields 8px apart within a group */
-const Fields = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${space.xl};
-`;
-
-const Group = styled.div<{ $row?: boolean }>`
-  display: flex;
-  flex-direction: ${({ $row }) => ($row ? 'row' : 'column')};
-  gap: ${space.sm};
-
-  > :first-child {
-    flex: 1;
-  }
-`;
-
-/** the group owns the spacing, so the item drops its own margin */
-const Item = styled(Form.Item)`
-  && {
-    margin-bottom: 0;
-  }
-`;
-
-const Port = styled(Item)`
-  && {
-    width: 96px;
-  }
-`;
-
-const Actions = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
+/** the groups own the spacing, so an item drops its own bottom margin */
+const ITEM = { marginBottom: 0 } as const;
+const PORT = { ...ITEM, width: 96 } as const;
 
 function ConnectionForm({ connection }: Props) {
   const initialValues: ConnectionObjectWithoutSlug = connection ?? {
@@ -120,58 +80,66 @@ function ConnectionForm({ connection }: Props) {
         </RegionName>
       </RegionHeader>
 
-      <Body>
+      <RegionBody style={{ padding: space.lg }}>
         <Form
           layout="vertical"
           requiredMark={false}
+          styles={{ label: LABEL }}
           initialValues={initialValues}
           onFinish={handleSubmit}
           form={form}
         >
-          <Fields>
-            <Group>
-              <Item
-                name="name"
-                label={t('connection.form.name.label')}
-                rules={[{ required: true }]}
-              >
-                <Input />
-              </Item>
-            </Group>
+          {/* field groups 24px apart, fields 8px apart within a group */}
+          <Flex vertical gap={space.xl}>
+            <Form.Item
+              name="name"
+              label={t('connection.form.name.label')}
+              rules={[{ required: true }]}
+              style={ITEM}
+            >
+              <Input />
+            </Form.Item>
 
-            <Group $row>
-              <Item
+            <Flex gap={space.sm}>
+              <Form.Item
                 name="host"
                 label={t('connection.form.host.label')}
                 rules={[{ required: true }]}
+                style={{ ...ITEM, flex: 1 }}
               >
                 <Input />
-              </Item>
+              </Form.Item>
 
-              <Port
+              <Form.Item
                 name="port"
                 label={t('connection.form.port.label')}
                 rules={[{ required: true }]}
+                style={PORT}
               >
                 <Input />
-              </Port>
-            </Group>
+              </Form.Item>
+            </Flex>
 
-            <Group>
-              <Item
+            <Flex vertical gap={space.sm}>
+              <Form.Item
                 name="user"
                 label={t('connection.form.user.label')}
                 rules={[{ required: true }]}
+                style={ITEM}
               >
                 <Input />
-              </Item>
+              </Form.Item>
 
-              <Item name="password" label={t('connection.form.password.label')}>
+              <Form.Item
+                name="password"
+                label={t('connection.form.password.label')}
+                style={ITEM}
+              >
                 <Input type="password" />
-              </Item>
-            </Group>
+              </Form.Item>
+            </Flex>
 
-            <Actions>
+            <Flex align="center" justify="space-between">
               {canCancel ? (
                 <Button
                   type="text"
@@ -189,10 +157,10 @@ function ConnectionForm({ connection }: Props) {
               <Button color="primary" variant="solid" htmlType="submit">
                 <ActionLabel>{getSubmitButtonLabel(t, connection)}</ActionLabel>
               </Button>
-            </Actions>
-          </Fields>
+            </Flex>
+          </Flex>
         </Form>
-      </Body>
+      </RegionBody>
     </FramedRegion>
   );
 }
