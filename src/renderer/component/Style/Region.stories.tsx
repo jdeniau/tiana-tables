@@ -1,16 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Button, Flex } from 'antd';
+import { Splitter } from 'antd';
 import { styled } from 'styled-components';
-import {
-  commentForeground,
-  constantForeground,
-  selection,
-  size,
-  space,
-} from '../../theme';
+import { size, space } from '../../theme';
+import { ActionButton } from './ActionButton';
 import {
   Region,
   RegionBody,
+  RegionGroup,
   RegionHeader,
   RegionMeta,
   RegionName,
@@ -19,27 +15,20 @@ import {
 const meta: Meta<typeof Region> = {
   component: Region,
   parameters: { layout: 'fullscreen' },
+  // the workspace the regions fill
+  decorators: [
+    (Story) => (
+      <div style={{ height: '90vh' }}>
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export default meta;
 type Story = StoryObj<typeof Region>;
 
-/** what the SQL page's `Splitter` does: 40 % to the first region, one rule between */
-const Workspace = styled.div<{ $height: number }>`
-  display: flex;
-  flex-direction: column;
-  height: ${({ $height }) => $height}px;
-
-  > :first-child {
-    flex: 0 0 40%;
-  }
-
-  > :last-child {
-    flex: 1;
-    border-top: 1px solid ${commentForeground};
-  }
-`;
-
+/** a body's worth of lines, standing in for the editor or the grid */
 const Lines = styled.pre`
   margin: 0;
   padding: 0 ${space.md};
@@ -47,79 +36,62 @@ const Lines = styled.pre`
   line-height: ${size.line};
 `;
 
-const Row = styled.div<{ $selected?: boolean }>`
-  display: flex;
-  align-items: center;
-  height: ${size.row};
-  padding: 0 ${space.md};
-  font-size: 13px;
-  color: ${constantForeground};
-  background: ${({ $selected, ...props }) =>
-    $selected ? selection(props) : 'transparent'};
-`;
+const QUERY = `SELECT sc.contract_id, count(s.id) as nb_seats
+  FROM seat s
+  JOIN seat_config sc ON sc.id = s.seat_config_id
+GROUP BY sc.contract_id;`;
 
-const rows = Array.from({ length: 40 }, (_, i) => [i * 7 + 13, i * 391 + 125]);
+const ROWS = Array.from(
+  { length: 40 },
+  (_, i) => `${String(i * 7 + 13).padStart(6)}  ${i * 391 + 125}`
+).join('\n');
 
 export const Query: Story = {
   render: () => (
-    <Workspace $height={240}>
-      <Region>
-        <RegionHeader>
-          <Flex align="baseline" gap={space.sm}>
-            <RegionName>Query</RegionName>
-            <RegionMeta>3 statements</RegionMeta>
-          </Flex>
-          <Button color="primary" variant="solid">
-            Run
-          </Button>
-        </RegionHeader>
-        <RegionBody>
-          <Lines>
-            {
-              'SELECT sc.contract_id, count(s.id) as nb_seats\n  FROM seat s\n  JOIN seat_config sc ON sc.id = s.seat_config_id\nGROUP BY sc.contract_id;'
-            }
-          </Lines>
-        </RegionBody>
-      </Region>
-    </Workspace>
+    <Region>
+      <RegionHeader>
+        <RegionGroup>
+          <RegionName>Query</RegionName>
+          <RegionMeta>3 statements</RegionMeta>
+        </RegionGroup>
+        <ActionButton>Run</ActionButton>
+      </RegionHeader>
+      <RegionBody>
+        <Lines>{QUERY}</Lines>
+      </RegionBody>
+    </Region>
   ),
 };
 
-/** Two regions share nothing but the rule between them. */
+/** Two regions in the SQL page's Splitter: its bar is the rule between them. */
 export const Stacked: Story = {
   render: () => (
-    <Workspace $height={480}>
-      <Region>
-        <RegionHeader>
-          <Flex align="baseline" gap={space.sm}>
-            <RegionName>Query</RegionName>
-            <RegionMeta>1 statement</RegionMeta>
-          </Flex>
-          <Button color="primary" variant="solid">
-            Run
-          </Button>
-        </RegionHeader>
-        <RegionBody>
-          <Lines>{'SELECT * FROM tax t'}</Lines>
-        </RegionBody>
-      </Region>
-      <Region>
-        <RegionHeader>
-          <Flex align="baseline" gap={space.sm}>
+    <Splitter orientation="vertical" style={{ height: '100%' }}>
+      <Splitter.Panel defaultSize="40%">
+        <Region>
+          <RegionHeader>
+            <RegionGroup>
+              <RegionName>Query</RegionName>
+              <RegionMeta>1 statement</RegionMeta>
+            </RegionGroup>
+            <ActionButton>Run</ActionButton>
+          </RegionHeader>
+          <RegionBody>
+            <Lines>SELECT * FROM tax t</Lines>
+          </RegionBody>
+        </Region>
+      </Splitter.Panel>
+      <Splitter.Panel>
+        <Region>
+          <RegionHeader>
             <RegionName>Result</RegionName>
-          </Flex>
-          <RegionMeta>40 rows · 42 ms</RegionMeta>
-        </RegionHeader>
-        <RegionBody>
-          {rows.map(([id, count], i) => (
-            <Row key={id} $selected={i === 3}>
-              {id}
-              {' '.repeat(8 - String(id).length)}
-              {count}
-            </Row>
-          ))}
-        </RegionBody>
-      </Region>
-    </Workspace>
+            <RegionMeta>40 rows · 42 ms</RegionMeta>
+          </RegionHeader>
+          <RegionBody>
+            <Lines>{ROWS}</Lines>
+          </RegionBody>
+        </Region>
+      </Splitter.Panel>
+    </Splitter>
   ),
 };

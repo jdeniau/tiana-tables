@@ -1,13 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Layout } from 'antd';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
+import packageJson from '../../../package.json';
 import SettingsMenu from './SettingsMenu';
 import { Brand, TitleBar, TitleGroup } from './Style/TitleBar';
 
 const meta: Meta<typeof SettingsMenu> = {
   component: SettingsMenu,
   args: {
-    version: '1.5.0',
+    version: packageJson.version,
     updateStatus: { available: false },
   },
   parameters: { layout: 'fullscreen' },
