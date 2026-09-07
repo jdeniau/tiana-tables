@@ -1,12 +1,12 @@
 import { ReactElement } from 'react';
 import { DownOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Space } from 'antd';
+import { Dropdown, Space } from 'antd';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import { RunMode, toRunMode } from '../../../sql/runMode';
 import { commentForeground } from '../../theme';
 import { KeyboardShortcut } from '../KeyboardShortcut';
-import { ActionLabel } from '../Style/ActionLabel';
+import { ActionButton } from '../Style/ActionButton';
 
 const RUN_MODES = [RunMode.Current, RunMode.All];
 
@@ -46,15 +46,10 @@ export function RunQueryButton({
   const { t } = useTranslation();
 
   const runButton = (
-    <Button
-      disabled={disabled}
-      color="primary"
-      variant="solid"
-      onClick={() => onRun(RunMode.Current)}
-    >
-      <ActionLabel>{t('rawSql.submit')}</ActionLabel>
+    <ActionButton disabled={disabled} onClick={() => onRun(RunMode.Current)}>
+      {t('rawSql.submit')}
       <KeyboardShortcut cmdOrCtrl pressedKey={SUBMIT_KEY} />
-    </Button>
+    </ActionButton>
   );
 
   if (statementCount <= 1) {
@@ -97,10 +92,8 @@ export function RunQueryButton({
           },
         }}
       >
-        <Button
+        <ActionButton
           disabled={disabled}
-          color="primary"
-          variant="solid"
           icon={<DownOutlined />}
           aria-label={t('rawSql.run.more')}
         />

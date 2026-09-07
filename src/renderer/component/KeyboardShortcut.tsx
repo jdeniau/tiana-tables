@@ -55,5 +55,6 @@ const Keys = styled.kbd`
   font-family: ${mono};
   font-size: 11px;
   letter-spacing: 0;
+  text-transform: none;
   opacity: 0.75;
 `;

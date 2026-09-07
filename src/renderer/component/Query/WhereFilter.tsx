@@ -1,15 +1,10 @@
 import { ReactElement, useRef, useState } from 'react';
-import { Button } from 'antd';
 import { Form } from 'react-router-dom';
 import { useTranslation } from '../../../i18n';
 import { escapeIdentifier } from '../../../sql/escapeIdentifier';
 import { RawSqlEditor } from '../MonacoEditor/RawSqlEditor';
-import {
-  Region,
-  RegionBody,
-  RegionHeader,
-  RegionName,
-} from '../Style/Region';
+import { ActionButton } from '../Style/ActionButton';
+import { Region, RegionBody, RegionHeader, RegionName } from '../Style/Region';
 
 interface Props {
   defaultValue: string;
@@ -35,9 +30,7 @@ function WhereFilter({ defaultValue, tableName }: Props): ReactElement {
         <RegionHeader>
           <RegionName>{t('table.filters.title')}</RegionName>
 
-          <Button htmlType="submit" color="primary" variant="solid">
-            {t('filter')}
-          </Button>
+          <ActionButton htmlType="submit">{t('filter')}</ActionButton>
         </RegionHeader>
 
         <RegionBody>
@@ -51,7 +44,9 @@ function WhereFilter({ defaultValue, tableName }: Props): ReactElement {
             }}
             onSubmit={() => {
               // submit the form
-              ref.current?.dispatchEvent(new Event('submit', { bubbles: true }));
+              ref.current?.dispatchEvent(
+                new Event('submit', { bubbles: true })
+              );
             }}
           />
         </RegionBody>

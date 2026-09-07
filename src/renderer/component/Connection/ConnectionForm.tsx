@@ -9,7 +9,7 @@ import type {
   ConnectionObjectWithoutSlug,
 } from '../../../sql/types';
 import { space } from '../../theme';
-import { ActionLabel } from '../Style/ActionLabel';
+import { ActionButton } from '../Style/ActionButton';
 import {
   FramedRegion,
   RegionBody,
@@ -159,9 +159,9 @@ function ConnectionForm({ connection }: Props) {
                 <span />
               )}
 
-              <Button color="primary" variant="solid" htmlType="submit">
-                <ActionLabel>{getSubmitButtonLabel(t, connection)}</ActionLabel>
-              </Button>
+              <ActionButton htmlType="submit">
+                {getSubmitButtonLabel(t, connection)}
+              </ActionButton>
             </Flex>
           </Flex>
         </Form>
