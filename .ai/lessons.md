@@ -81,6 +81,10 @@ Rules learned from past mistakes and audits. Review this file at the start of ea
 - **A `<button>` does not inherit `text-transform` or `letter-spacing`: the UA stylesheet resets them.** The connections strip (2026-09-04) set `text-transform: uppercase` on the run and its `<button>` items stayed lower-case; `text-transform: inherit; letter-spacing: inherit` on the button fixes it. Same family as `font: inherit`, which the items already had.
 - **Fonts are bundled, never linked.** Stated by the user (2026-09-04): « je veux les fonts en dur et pas de lien vers google font ou autre ». Oswald and Syne Mono come from `@fontsource/*` packages, imported once in `src/renderer.ts` and `.storybook/preview.tsx`; Vite copies the woff2 files into the build and the CSP (`default-src 'self'`) would block a remote font anyway. A `fonts.googleapis.com` link belongs only in a design mock, not in the app.
 
+## Navigation
+
+- **A navigation is a `Link`, never an `onClick` that calls `navigate`.** Corrected by the user (2026-09-04) on the connections strip, which had turned the previous `Link`s into buttons: « je préfère des liens, même si on n'est pas sur du web ». A link keeps the router's semantics (href, middle-click, focus order, `aria-current`) and says where it goes; a button that navigates hides it. Reserve `navigate()` for what follows an action (a form submitted, a filter built).
+
 ## Renderer / dependencies
 
 - **Never import from `mysql2` in renderer code.** `mysql2` is CommonJS and breaks in the renderer bundle. Import type-only symbols from `mysql2/promise` with `import type`, and runtime values like `Types` from the legacy `mysql` package (see `src/renderer/component/Cell.tsx`).

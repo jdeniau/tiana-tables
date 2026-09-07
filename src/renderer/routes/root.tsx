@@ -12,7 +12,7 @@ import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import SettingsMenu from '../component/SettingsMenu';
-import { Strip, StripItem } from '../component/Style/Strip';
+import { Strip, StripLink } from '../component/Style/Strip';
 import { Brand, TitleBar, TitleGroup } from '../component/Style/TitleBar';
 import useEffectOnce from '../hooks/useEffectOnce';
 import useUpdateStatus from '../hooks/useUpdateStatus';
@@ -31,7 +31,6 @@ function ToggleRawSqlButton() {
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const onSqlPage =
     useMatch('/connections/:connectionSlug/:databaseName/sql') !== null;
 
@@ -42,14 +41,12 @@ function ToggleRawSqlButton() {
   return (
     <Strip $caps>
       <KeyboardShortcutTooltip cmdOrCtrl pressedKey="t">
-        <StripItem
+        <StripLink
           active={onSqlPage}
-          onClick={() =>
-            navigate(`/connections/${currentConnectionSlug}/${database}/sql`)
-          }
+          to={`/connections/${currentConnectionSlug}/${database}/sql`}
         >
           {t('sqlPanel.callerButton')}
-        </StripItem>
+        </StripLink>
       </KeyboardShortcutTooltip>
     </Strip>
   );

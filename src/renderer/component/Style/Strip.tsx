@@ -1,4 +1,5 @@
-import { ComponentPropsWithRef } from 'react';
+import { ComponentPropsWithRef, ReactNode, RefAttributes } from 'react';
+import { Link, LinkProps } from 'react-router-dom';
 import { css, styled } from 'styled-components';
 import {
   accent,
@@ -42,7 +43,9 @@ export const Strip = styled.div<{ $caps?: boolean; $framed?: boolean }>`
     `}
 `;
 
-const Item = styled.button<{ $active: boolean; $failed: boolean }>`
+type ItemProps = { $active: boolean; $failed: boolean };
+
+const item = css<ItemProps>`
   display: flex;
   align-items: center;
   gap: ${PIP};
@@ -76,6 +79,20 @@ const Item = styled.button<{ $active: boolean; $failed: boolean }>`
   }
 `;
 
+const ItemButton = styled.button<ItemProps>`
+  ${item}
+`;
+
+/** a navigation is a link, even in a desktop app: it keeps the router's semantics */
+const ItemLink = styled(Link)<ItemProps>`
+  ${item}
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: none;
+  }
+`;
+
 const Pip = styled.span`
   flex: none;
   width: ${PIP};
@@ -90,29 +107,60 @@ const Label = styled.span`
   white-space: nowrap;
 `;
 
-type StripItemProps = ComponentPropsWithRef<'button'> & {
+type CommonProps = {
   active: boolean;
   /** a failed statement keeps its place in the run, in the error colour */
   failed?: boolean;
+  children: ReactNode;
 };
 
-/** the rest of the props reach the button, so a `Tooltip` can wrap an item */
+function Content({
+  active,
+  children,
+}: Pick<CommonProps, 'active' | 'children'>) {
+  return (
+    <>
+      {active && <Pip />}
+      <Label>{children}</Label>
+    </>
+  );
+}
+
+/** An item that acts: the rest of the props reach the button, so a `Tooltip` can wrap it. */
 export function StripItem({
   active,
   failed = false,
   children,
   ...rest
-}: StripItemProps) {
+}: CommonProps & ComponentPropsWithRef<'button'>) {
   return (
-    <Item
+    <ItemButton
       type="button"
       aria-current={active || undefined}
       {...rest}
       $active={active}
       $failed={failed}
     >
-      {active && <Pip />}
-      <Label>{children}</Label>
-    </Item>
+      <Content active={active}>{children}</Content>
+    </ItemButton>
+  );
+}
+
+/** An item that navigates: a router `Link`, so the destination is a real one. */
+export function StripLink({
+  active,
+  failed = false,
+  children,
+  ...rest
+}: CommonProps & LinkProps & RefAttributes<HTMLAnchorElement>) {
+  return (
+    <ItemLink
+      aria-current={active ? 'page' : undefined}
+      {...rest}
+      $active={active}
+      $failed={failed}
+    >
+      <Content active={active}>{children}</Content>
+    </ItemLink>
   );
 }

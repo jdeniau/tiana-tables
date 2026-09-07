@@ -1,10 +1,9 @@
 import { ReactElement } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
 import { KeyboardShortcutTooltip } from '../KeyboardShortcut';
-import { Strip, StripItem } from '../Style/Strip';
+import { Strip, StripLink } from '../Style/Strip';
 
 /**
  * The connections, as a run in the title bar: the active one carries the pip,
@@ -14,7 +13,6 @@ export default function Nav(): ReactElement | null {
   const { connectionSlugList, currentConnectionSlug } = useConnectionContext();
   const { configuration } = useConfiguration();
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   if (!connectionSlugList.length) {
     return null;
@@ -27,25 +25,21 @@ export default function Nav(): ReactElement | null {
           configuration.connections[connectionSlug]?.name || connectionSlug;
 
         return (
-          <StripItem
+          <StripLink
             key={connectionSlug}
             active={connectionSlug === currentConnectionSlug}
             title={connectionName}
-            onClick={() => navigate(`/connections/${connectionSlug}`)}
+            to={`/connections/${connectionSlug}`}
           >
             {connectionName}
-          </StripItem>
+          </StripLink>
         );
       })}
 
       <KeyboardShortcutTooltip cmdOrCtrl pressedKey="n">
-        <StripItem
-          active={false}
-          aria-label={t('connect.new')}
-          onClick={() => navigate('/connect')}
-        >
+        <StripLink active={false} aria-label={t('connect.new')} to="/connect">
           +
-        </StripItem>
+        </StripLink>
       </KeyboardShortcutTooltip>
     </Strip>
   );
