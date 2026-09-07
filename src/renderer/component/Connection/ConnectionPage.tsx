@@ -1,16 +1,12 @@
 import type { JSX } from 'react';
+import { Menu, MenuProps } from 'antd';
 import { Link, Navigate } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { EncryptedConnectionObject } from '../../../configuration/type';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
-import {
-  commentForeground,
-  foreground,
-  selection,
-  size,
-  space,
-} from '../../theme';
+import { foreground, size, space } from '../../theme';
+import ButtonLink from '../ButtonLink';
 import {
   FramedRegion,
   RegionBody,
@@ -21,69 +17,32 @@ import {
   RegionName,
 } from '../Style/Region';
 
-/** a saved connection: the same 24px row as the tables of the sidebar */
-const Row = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${space.md};
-  height: ${size.control};
-  padding: 0 ${space.md};
-
-  &:hover {
-    background: color-mix(in srgb, ${selection} 40%, transparent);
-  }
-`;
-
+/**
+ * The label fills the row, as the tables of the sidebar do: the name, and
+ * where the connection goes, on one 24px line that is a link.
+ */
 const Open = styled(Link)`
   display: flex;
-  flex: 1;
   align-items: center;
   justify-content: space-between;
   gap: ${space.md};
   min-width: 0;
+  padding: 0 ${space.md};
+  line-height: ${size.control};
   color: ${foreground};
-  text-decoration: none;
 
   &:hover {
     color: ${foreground};
   }
 `;
 
-const Host = styled.span`
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11px;
-  color: ${commentForeground};
-`;
-
-/** shown on the row it belongs to, and to the keyboard */
-const Edit = styled(Link)`
-  flex: none;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: ${commentForeground};
-  text-decoration: none;
+/** shown on the row it belongs to — the Menu's `li` — and to the keyboard */
+const Edit = styled(ButtonLink)`
   visibility: hidden;
 
-  ${Row}:hover &,
+  li:hover &,
   &:focus-visible {
     visibility: visible;
-  }
-
-  &:hover {
-    color: ${foreground};
-  }
-`;
-
-const Add = styled(Link)`
-  color: inherit;
-  text-decoration: none;
-
-  &:hover {
-    color: ${foreground};
   }
 `;
 
@@ -98,6 +57,24 @@ function ConnectionPage(): JSX.Element {
     return <Navigate replace to="/connect/create" />;
   }
 
+  // the same Menu as the sidebar's tables, so the rows are the same rows
+  const items: MenuProps['items'] = connections.map((connection) => ({
+    key: connection.slug,
+    label: (
+      <Open to={`/connections/${connection.slug}`}>
+        <span>{connection.name}</span>
+        <RegionMeta>
+          {connection.user}@{connection.host}:{connection.port}
+        </RegionMeta>
+      </Open>
+    ),
+    extra: (
+      <Edit type="text" size="small" to={`/connect/edit/${connection.slug}`}>
+        {t('edit')}
+      </Edit>
+    ),
+  }));
+
   return (
     <FramedRegion>
       <RegionHeader>
@@ -110,21 +87,13 @@ function ConnectionPage(): JSX.Element {
       </RegionHeader>
 
       <RegionBody>
-        {connections.map((connection) => (
-          <Row key={connection.slug}>
-            <Open to={`/connections/${connection.slug}`}>
-              <span>{connection.name}</span>
-              <Host>
-                {connection.user}@{connection.host}:{connection.port}
-              </Host>
-            </Open>
-            <Edit to={`/connect/edit/${connection.slug}`}>{t('edit')}</Edit>
-          </Row>
-        ))}
+        <Menu items={items} selectable={false} />
       </RegionBody>
 
       <RegionFoot>
-        <Add to="/connect/create">+ {t('connect.new')}</Add>
+        <ButtonLink type="text" size="small" to="/connect/create">
+          + {t('connect.new')}
+        </ButtonLink>
       </RegionFoot>
     </FramedRegion>
   );
