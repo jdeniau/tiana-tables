@@ -31,6 +31,10 @@ import CellContextMenu, { CellFilterTarget } from './CellContextMenu';
 import CellDetailModal, { CellDetail, SaveCellParams } from './CellDetailModal';
 import { toBoundValue } from './CellEditor/editableValue';
 import ForeignKeyLink from './ForeignKeyLink';
+import {
+  useWrittenCellFlash,
+  writtenCellFlashStyle,
+} from './useWrittenCellFlash';
 
 const features = tableFeatures({
   // columnOrderingFeature provides `getIsLastColumn`, used to draw the shadow
@@ -120,6 +124,15 @@ function TableGrid<Row extends RowDataPacket>({
 
   // the value shown by the detail modal, `null` when it is closed
   const [cellDetail, setCellDetail] = useState<CellDetail | null>(null);
+  const { rememberCell, flashCell } = useWrittenCellFlash();
+
+  const showCellDetail = useCallback<ShowCellDetail>(
+    (detail, cell) => {
+      rememberCell(cell);
+      setCellDetail(detail);
+    },
+    [rememberCell]
+  );
 
   // the cell the context menu is open on, `null` when it is closed
   const [filterTarget, setFilterTarget] = useState<CellFilterTarget | null>(
@@ -153,12 +166,13 @@ function TableGrid<Row extends RowDataPacket>({
       });
 
       if (outcome.status === 'updated') {
+        flashCell();
         onValueUpdated?.(detail.rowIndex, column.name, outcome.value);
       }
 
       return outcome;
     },
-    [database, onValueUpdated]
+    [database, flashCell, onValueUpdated]
   );
 
   const columns = useMemo(() => {
@@ -282,7 +296,7 @@ function TableGrid<Row extends RowDataPacket>({
             rowsAsArray={rowsAsArray}
             primaryKeys={primaryKeys}
             scrollElement={scrollElement}
-            onShowCellDetail={setCellDetail}
+            onShowCellDetail={showCellDetail}
             onCellContextMenu={onCellContextMenu}
           />
         </StyledTable>
@@ -338,13 +352,16 @@ export interface ColumnMeta {
   detail: ColumnDetail | undefined;
 }
 
+/** opens the detail modal on a cell, from the `<td>` that was double-clicked */
+type ShowCellDetail = (detail: CellDetail, cell: HTMLTableCellElement) => void;
+
 interface TableBodyProps<Row extends RowDataPacket> {
   table: ReactTable<typeof features, Row>;
   columnsMeta: Array<ColumnMeta>;
   rowsAsArray: boolean;
   primaryKeys: Array<string> | undefined;
   scrollElement: HTMLDivElement | null;
-  onShowCellDetail: (detail: CellDetail) => void;
+  onShowCellDetail: ShowCellDetail;
   onCellContextMenu: ((target: CellFilterTarget) => void) | undefined;
 }
 
@@ -396,7 +413,7 @@ interface BodyRowProps<Row extends RowDataPacket> {
   columnsMeta: Array<ColumnMeta>;
   rowsAsArray: boolean;
   primaryKeys: Array<string> | undefined;
-  onShowCellDetail: (detail: CellDetail) => void;
+  onShowCellDetail: ShowCellDetail;
   onCellContextMenu: ((target: CellFilterTarget) => void) | undefined;
 }
 
@@ -435,15 +452,20 @@ function BodyRowInner<Row extends RowDataPacket>({
               width: column.width,
               left: column.pinnedLeft ?? undefined,
             }}
-            onDoubleClick={() => {
-              onShowCellDetail({
-                column,
-                value,
-                // a raw query result is a list of values, with no column to read a key from
-                // TODO later: handle raw query with possible primary key columns (e.g. `SELECT id, name FROM table`) and use them to identify the row
-                rowKey: rowsAsArray ? null : buildRowKey(original, primaryKeys),
-                rowIndex: row.index,
-              });
+            onDoubleClick={(event) => {
+              onShowCellDetail(
+                {
+                  column,
+                  value,
+                  // a raw query result is a list of values, with no column to read a key from
+                  // TODO later: handle raw query with possible primary key columns (e.g. `SELECT id, name FROM table`) and use them to identify the row
+                  rowKey: rowsAsArray
+                    ? null
+                    : buildRowKey(original, primaryKeys),
+                  rowIndex: row.index,
+                },
+                event.currentTarget
+              );
             }}
             onContextMenu={
               onCellContextMenu &&
@@ -563,6 +585,8 @@ const ScrollContainer = styled.div`
   .tg-cell:last-child {
     border-inline-end: none;
   }
+
+  ${writtenCellFlashStyle}
 
   .tg-num {
     justify-content: flex-end;
