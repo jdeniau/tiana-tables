@@ -11,6 +11,15 @@ import { isMacPlatform } from './helpers';
 const isMac = isMacPlatform();
 
 export function createMenu(mainWindow: BrowserWindow) {
+  // the preferences of the platform: the app menu on macOS, File elsewhere
+  const settingsItem = {
+    label: t('menu.settings'),
+    accelerator: 'CmdOrCtrl+,',
+    click: () => {
+      mainWindow.webContents.send('openSettings');
+    },
+  };
+
   const template = [
     ...(isMac
       ? [
@@ -19,6 +28,8 @@ export function createMenu(mainWindow: BrowserWindow) {
             // label: app.name,
             submenu: [
               { role: 'about' },
+              { type: 'separator' },
+              settingsItem,
               { type: 'separator' },
               { role: 'services' },
               { type: 'separator' },
@@ -34,7 +45,9 @@ export function createMenu(mainWindow: BrowserWindow) {
     {
       role: 'fileMenu',
       // label: 'File',
-      submenu: [isMac ? { role: 'close' } : { role: 'quit' }],
+      submenu: isMac
+        ? [{ role: 'close' }]
+        : [settingsItem, { type: 'separator' }, { role: 'quit' }],
     },
     {
       role: 'editMenu',

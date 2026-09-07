@@ -67,8 +67,14 @@ export function buildMonacoTheme(theme: AppTheme): editor.IStandaloneThemeData {
       'editorCursor.foreground': palette.base05,
       'editorWhitespace.foreground': palette.base03,
       'editorLineNumber.foreground': palette.base03,
+      'editorLineNumber.activeForeground': palette.base05,
       'editorIndentGuide.background': palette.base01,
       'editorIndentGuide.activeBackground': palette.base02,
+      // the same pair as every other scrollbar of the frame
+      'scrollbarSlider.background': palette.base02,
+      'scrollbarSlider.hoverBackground': palette.base03,
+      'scrollbarSlider.activeBackground': palette.base03,
+      'scrollbar.shadow': palette.base00,
     },
   };
 }

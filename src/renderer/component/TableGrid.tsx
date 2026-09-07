@@ -1,11 +1,4 @@
-import {
-  ReactElement,
-  ReactNode,
-  memo,
-  useCallback,
-  useMemo,
-  useState,
-} from 'react';
+import { ReactElement, memo, useCallback, useMemo, useState } from 'react';
 import {
   columnOrderingFeature,
   columnPinningFeature,
@@ -26,8 +19,14 @@ import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import { isJsonColumn } from '../../sql/columnEditing';
 import type { ColumnDetail } from '../../sql/types';
 import type { PrimaryKeyPart } from '../../sql/updateCell';
-import { background, foreground } from '../theme';
-import Cell from './Cell';
+import {
+  background,
+  commentForeground,
+  selection,
+  size,
+  space,
+} from '../theme';
+import Cell, { isNumericType } from './Cell';
 import CellContextMenu, { CellFilterTarget } from './CellContextMenu';
 import CellDetailModal, { CellDetail, SaveCellParams } from './CellDetailModal';
 import { toBoundValue } from './CellEditor/editableValue';
@@ -43,7 +42,7 @@ const features = tableFeatures({
 
 // matches the previous antd `scroll.x = 150 * fields.length` sizing
 const DEFAULT_COLUMN_WIDTH = 150;
-const ROW_HEIGHT = 40;
+const ROW_HEIGHT = parseInt(size.row, 10);
 
 const EMPTY_DATA: RowDataPacket[] = [];
 
@@ -52,7 +51,6 @@ interface TableGridProps<R extends RowDataPacket> {
   result: null | R[];
   fields: null | FieldPacket[];
   primaryKeys?: Array<string>;
-  title?: () => ReactNode;
   /**
    * Called once a cell has been written, with the value the server now holds.
    * The owner of `result` patches the row with it — without this the grid keeps
@@ -109,7 +107,6 @@ function TableGrid<Row extends RowDataPacket>({
   fields,
   result,
   primaryKeys,
-  title,
   rowsAsArray = false,
   onValueUpdated,
   onFilterChange,
@@ -230,6 +227,7 @@ function TableGrid<Row extends RowDataPacket>({
           width: column.getSize(),
           pinnedLeft: isPinned === 'start' ? column.getStart('start') : null,
           isLastPinned: isPinned === 'start' && column.getIsLastColumn('start'),
+          numeric: isNumericType(field?.type),
           hasForeignKey: foreignKey !== null,
           // the schema of the column, resolved here rather than in the modal so
           // that no context lookup happens per mounted cell
@@ -244,8 +242,6 @@ function TableGrid<Row extends RowDataPacket>({
 
   return (
     <Wrapper>
-      {title ? <TitleBar>{title()}</TitleBar> : null}
-
       <ScrollContainer ref={setScrollElement}>
         <StyledTable>
           <StyledThead>
@@ -328,6 +324,8 @@ export interface ColumnMeta {
   width: number;
   pinnedLeft: number | null;
   isLastPinned: boolean;
+  /** numbers are set flush right, as in a ledger */
+  numeric: boolean;
   // resolved once per column so that non-FK cells (the vast majority) don't
   // mount a ForeignKeyLink that would render null
   hasForeignKey: boolean;
@@ -420,11 +418,18 @@ function BodyRowInner<Row extends RowDataPacket>({
           ? (original as unknown as Array<unknown>)[column.fieldIndex]
           : original[column.name];
         const pinned = column.pinnedLeft !== null;
+        const className = [
+          'tg-cell',
+          pinned && 'tg-pinned',
+          column.numeric && 'tg-num',
+        ]
+          .filter(Boolean)
+          .join(' ');
 
         return (
           <td
             key={column.id}
-            className={pinned ? 'tg-cell tg-pinned' : 'tg-cell'}
+            className={className}
             data-last-pinned={column.isLastPinned || undefined}
             style={{
               width: column.width,
@@ -503,25 +508,14 @@ const GridCell = memo(function GridCell({
   );
 });
 
-type StyledProps = Parameters<typeof foreground>[0];
-
-// shadcn-inspired look: horizontal separators only, muted header, rounded
-// card container, subtle row hover — all derived from the current theme
-const borderColor = (props: StyledProps): string =>
-  `color-mix(in srgb, ${foreground(props)} 14%, transparent)`;
-
-// vertical separators stay barely visible, horizontal ones do the structure
-const subtleBorderColor = (props: StyledProps): string =>
-  `color-mix(in srgb, ${foreground(props)} 6%, transparent)`;
-
-const mutedForeground = (props: StyledProps): string =>
-  `color-mix(in srgb, ${foreground(props)} 70%, ${background(props)})`;
-
-const headerBackground = (props: StyledProps): string =>
-  `color-mix(in srgb, ${foreground(props)} 4%, ${background(props)})`;
+// DESIGN.md: the grid sits flush at the region edge, with no frame of its own.
+// Column heads are 11px caps over a base03 rule, rows are 26px, cells and rows
+// are divided by base02 hairlines, and hover is the selection fill at low
+// opacity so that it never reads as selected.
+type StyledProps = Parameters<typeof selection>[0];
 
 const hoverBackground = (props: StyledProps): string =>
-  `color-mix(in srgb, ${foreground(props)} 7%, ${background(props)})`;
+  `color-mix(in srgb, ${selection(props)} 40%, transparent)`;
 
 const Wrapper = styled.div`
   display: flex;
@@ -529,17 +523,6 @@ const Wrapper = styled.div`
   flex: 1;
   min-height: 0;
   background: ${background};
-  border: 1px solid ${borderColor};
-  border-radius: 8px;
-  overflow: hidden;
-`;
-
-const TitleBar = styled.div`
-  padding: 12px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  color: ${foreground};
-  border-bottom: 1px solid ${borderColor};
 `;
 
 // the .tg-* classes below style the virtualized body cells: they are plain
@@ -549,22 +532,9 @@ const ScrollContainer = styled.div`
   min-height: 0;
   overflow: auto;
   position: relative;
-
-  &::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, ${foreground} 25%, transparent);
-    border-radius: 5px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
+  scrollbar-width: thin;
+  scrollbar-color: ${selection} ${background};
+  font-variant-numeric: tabular-nums;
 
   .tg-row {
     display: flex;
@@ -583,16 +553,20 @@ const ScrollContainer = styled.div`
     overflow: hidden;
     flex-shrink: 0;
     box-sizing: border-box;
-    padding: 0 16px;
+    padding: 0 ${space.md};
     font-size: 13px;
     background: ${background};
-    border-bottom: 1px solid ${borderColor};
-    border-inline-end: 1px solid ${subtleBorderColor};
-    transition: background 0.1s ease;
+    border-bottom: 1px solid ${selection};
+    border-inline-end: 1px solid ${selection};
   }
 
   .tg-cell:last-child {
     border-inline-end: none;
+  }
+
+  .tg-num {
+    justify-content: flex-end;
+    text-align: right;
   }
 
   .tg-pinned {
@@ -601,18 +575,19 @@ const ScrollContainer = styled.div`
   }
 
   .tg-cell[data-last-pinned] {
-    box-shadow: inset -8px 0 8px -8px ${borderColor};
+    border-inline-end-color: ${commentForeground};
   }
 
   /* foreign key links (ForeignKeyLink) rendered next to the cell value */
   .tg-cell > a {
-    margin-left: 4px;
+    margin-left: ${space.xs};
     flex-shrink: 0;
   }
 `;
 
 const StyledTable = styled.table`
   display: grid;
+  min-width: 100%;
   border-collapse: collapse;
 `;
 
@@ -623,9 +598,14 @@ const StyledThead = styled.thead`
   z-index: 2;
 `;
 
+// the rule under the column heads runs the whole width of the region, not
+// only under the columns
 const HeaderRow = styled.tr`
   display: flex;
+  box-sizing: border-box;
   height: ${ROW_HEIGHT}px;
+  background: ${background};
+  border-bottom: 1px solid ${commentForeground};
 `;
 
 const HeaderCell = styled.th`
@@ -634,22 +614,18 @@ const HeaderCell = styled.th`
   overflow: hidden;
   flex-shrink: 0;
   box-sizing: border-box;
-  padding: 0 16px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: 0 ${space.md};
+  font-size: 11px;
+  font-weight: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   text-align: left;
   white-space: nowrap;
-  color: ${mutedForeground};
-  background: ${headerBackground};
-  border-bottom: 1px solid ${borderColor};
-  border-inline-end: 1px solid ${subtleBorderColor};
-
-  &:last-child {
-    border-inline-end: none;
-  }
+  color: ${commentForeground};
+  background: ${background};
 
   &[data-last-pinned] {
-    box-shadow: inset -8px 0 8px -8px ${borderColor};
+    border-inline-end: 1px solid ${commentForeground};
   }
 `;
 
@@ -659,7 +635,7 @@ const StyledTbody = styled.tbody`
 `;
 
 const EmptyWrapper = styled.div`
-  padding: 32px;
+  padding: ${space.xl};
 `;
 
 export default TableGrid;

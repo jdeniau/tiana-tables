@@ -1,8 +1,9 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { Flex, Form, Splitter } from 'antd';
+import { Form, Splitter } from 'antd';
 import { ActionFunctionArgs, useFetcher } from 'react-router-dom';
 import invariant from 'tiny-invariant';
 import { PANEL } from '../../configuration/panels';
+import { useTranslation } from '../../i18n';
 import { escapeIdentifier } from '../../sql/escapeIdentifier';
 import { hasLimitClause } from '../../sql/hasLimitClause';
 import { isSqlError } from '../../sql/isSqlError';
@@ -14,6 +15,14 @@ import RawSqlResult, {
   StatementOutcome,
 } from '../component/Query/RawSqlResult/RowDataPacketResult';
 import { RunQueryButton } from '../component/Query/RunQueryButton';
+import {
+  Region,
+  RegionBody,
+  RegionGroup,
+  RegionHeader,
+  RegionMeta,
+  RegionName,
+} from '../component/Style/Region';
 import { usePanelSize } from '../hooks/usePanelSize';
 
 const RawSqlEditor = lazy(() =>
@@ -38,10 +47,17 @@ function useSqlFileStorage(): [string | null, (value: string) => void] {
 }
 
 async function runStatement(sql: string): Promise<StatementOutcome> {
+  const started = performance.now();
+
   try {
     const result = await window.sql.executeQuery(sql, true);
 
-    return { sql, result, hasLimit: hasLimitClause(sql) };
+    return {
+      sql,
+      result,
+      hasLimit: hasLimitClause(sql),
+      durationMs: Math.round(performance.now() - started),
+    };
   } catch (error) {
     if (!isSqlError(error)) {
       throw error;
@@ -69,11 +85,7 @@ export async function action({
   const statements = splitStatements(content);
   const caretStatement = statementAtOffset(statements, caretOffset);
   const toRun =
-    mode === RunMode.All
-      ? statements
-      : caretStatement
-        ? [caretStatement]
-        : [];
+    mode === RunMode.All ? statements : caretStatement ? [caretStatement] : [];
 
   if (toRun.length === 0) {
     return { outcomes: [] };
@@ -108,8 +120,8 @@ export async function action({
   return { outcomes };
 }
 
-// TODO : create an element for the `yScroll` (actually need to be wrapped in a Flex height 100 and overflow, etc.)
 export default function SqlPage() {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const fetcher = useFetcher<SqlActionReturnTypes>();
   const [sqlQuery, saveSqlQuery] = useSqlFileStorage();
@@ -139,6 +151,8 @@ export default function SqlPage() {
     return null;
   }
 
+  // the two regions share nothing but the bar of the splitter, which is the
+  // rule between them
   return (
     <Splitter
       orientation="vertical"
@@ -146,47 +160,49 @@ export default function SqlPage() {
       style={{ height: '100%' }}
     >
       <Splitter.Panel {...panelProps}>
-        <Form
-          form={form}
-          initialValues={{ raw: sqlQuery }}
-          style={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5em',
-          }}
-        >
-          <Suspense fallback={<div style={{ flex: 1 }}></div>}>
-            {/* `noStyle` renders the control alone: without it antd wraps the
-                editor in a few divs that would not pass the height down */}
-            <Form.Item name="raw" valuePropName="defaultValue" noStyle>
-              <RawSqlEditor
-                ref={editorRef}
-                style={{ flex: 1, minHeight: 0 }}
-                onStatementCountChange={setStatementCount}
-                onSubmit={() => run(RunMode.Current)}
-              />
-            </Form.Item>
-          </Suspense>
+        <Region>
+          <RegionHeader>
+            <RegionGroup>
+              <RegionName>{t('rawSql.query.title')}</RegionName>
+              {statementCount > 0 && (
+                <RegionMeta>
+                  {t('rawSql.query.statementCount', { count: statementCount })}
+                </RegionMeta>
+              )}
+            </RegionGroup>
 
-          <Flex>
             <RunQueryButton
               disabled={state === 'submitting'}
               statementCount={statementCount}
               onRun={run}
             />
-          </Flex>
-        </Form>
+          </RegionHeader>
+
+          <RegionBody>
+            <Form
+              form={form}
+              initialValues={{ raw: sqlQuery }}
+              style={{ height: '100%' }}
+            >
+              <Suspense fallback={<div style={{ height: '100%' }}></div>}>
+                {/* `noStyle` renders the control alone: without it antd wraps the
+                    editor in a few divs that would not pass the height down */}
+                <Form.Item name="raw" valuePropName="defaultValue" noStyle>
+                  <RawSqlEditor
+                    ref={editorRef}
+                    style={{ height: '100%' }}
+                    onStatementCountChange={setStatementCount}
+                    onSubmit={() => run(RunMode.Current)}
+                  />
+                </Form.Item>
+              </Suspense>
+            </Form>
+          </RegionBody>
+        </Region>
       </Splitter.Panel>
 
       <Splitter.Panel>
-        <Flex
-          vertical
-          gap="small"
-          style={{ height: '100%', minHeight: 0, overflow: 'auto' }}
-        >
-          <RawSqlResult fetcher={fetcher} rowsAsArray />
-        </Flex>
+        <RawSqlResult fetcher={fetcher} rowsAsArray />
       </Splitter.Panel>
     </Splitter>
   );

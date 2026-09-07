@@ -49,12 +49,14 @@ const SELECT: StatementOutcome = {
   sql: 'SELECT id, name FROM employe LIMIT 10;',
   result: [ROWS, FIELDS],
   hasLimit: true,
+  durationMs: 42,
 };
 
 const UPDATE: StatementOutcome = {
   sql: "UPDATE employe SET name = 'Ada Lovelace' WHERE id = 1;",
   result: [HEADER, []],
   hasLimit: false,
+  durationMs: 7,
 };
 
 const FAILED: StatementOutcome = {

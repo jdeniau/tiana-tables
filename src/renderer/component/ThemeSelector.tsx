@@ -69,6 +69,8 @@ export default function ThemeSelector() {
 
   return (
     <Select
+      prefix={t('theme.switch.label')}
+      style={{ width: '100%' }}
       popupMatchSelectWidth={false}
       onChange={changeTheme}
       value={themeName}

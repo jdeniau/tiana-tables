@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from '@storybook/test';
 import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
 import { testables } from '../../../contexts/ConfigurationContext';
+import { Centered } from '../Style/Region';
 import ConnectionForm from './ConnectionForm';
 
 const { ConfigurationContext } = testables;
@@ -12,6 +13,11 @@ const addConnectionToConfig = fn();
 const meta: Meta<typeof ConnectionForm> = {
   component: ConnectionForm,
   decorators: [
+    (Story) => (
+      <Centered style={{ height: '90vh' }}>
+        <Story />
+      </Centered>
+    ),
     reactRouterDecorator,
     (Story, { globals: { theme, locale } }) => (
       <ConfigurationContext.Provider

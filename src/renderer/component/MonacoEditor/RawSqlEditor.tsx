@@ -16,7 +16,7 @@ import {
   statementAtOffset,
 } from '../../../sql/splitStatements';
 import useEffectOnce from '../../hooks/useEffectOnce';
-import { functionForeground, selection } from '../../theme';
+import { accent, mono, selection, size } from '../../theme';
 import { setQueryPrefix } from './queryPrefix';
 import { buildMonacoTheme } from './themes';
 import useCompletion from './useCompletion';
@@ -28,6 +28,9 @@ import useSemanticTokens from './useSemanticTokens';
  */
 const CURRENT_STATEMENT_CLASS = 'sql-current-statement';
 const CURRENT_STATEMENT_BAR_CLASS = 'sql-current-statement-bar';
+
+/** how much of the selection colour a dot of the editor's grid holds */
+const DOT_ALPHA = '35%';
 
 /**
  * How much of the selection color the band of the current statement holds.
@@ -45,7 +48,21 @@ const CURRENT_STATEMENT_ALPHA = '30%';
 const CurrentStatementStyle = createGlobalStyle<{
   $background: string;
   $bar: string;
+  $dot: string;
 }>`
+  /* The dot grid of DESIGN.md, on the layer Monaco scrolls with the text, so
+     the dots keep their place between the lines. The tile is one line high
+     and the dot sits at its centre, so a half-line offset puts every dot on a
+     line boundary rather than behind the glyphs. */
+  .monaco-editor .lines-content {
+    background-image: radial-gradient(
+      ${({ $dot }) => $dot} 1px,
+      transparent 1px
+    );
+    background-size: ${size.line} ${size.line};
+    background-position: 0 calc(${size.line} / 2);
+  }
+
   .${CURRENT_STATEMENT_CLASS} {
     background-color: ${({ $background }) => $background};
   }
@@ -61,6 +78,27 @@ const CurrentStatementStyle = createGlobalStyle<{
     border-left: 3px solid ${({ $bar }) => $bar};
   }
 `;
+
+/**
+ * The editor as DESIGN.md draws it: 13px mono on 22px lines, a right-aligned
+ * gutter and nothing else in the margins — no folding, no glyphs, no overview
+ * ruler. The current-statement bar lives in the lines-decorations margin,
+ * right of the numbers.
+ */
+const BASE_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
+  fontFamily: mono,
+  fontSize: 13,
+  lineHeight: parseInt(size.line, 10),
+  lineNumbersMinChars: 3,
+  folding: false,
+  glyphMargin: false,
+  minimap: { enabled: false },
+  overviewRulerLanes: 0,
+  overviewRulerBorder: false,
+  hideCursorInOverviewRuler: true,
+  scrollBeyondLastLine: false,
+  scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
+};
 
 export type RawSqlEditorHandle = {
   /** where the caret sits in the content, `0` while the editor loads */
@@ -152,11 +190,11 @@ export function RawSqlEditor({
           value: defaultValue,
           language: LanguageIdEnum.MYSQL,
           theme: 'currentTheme',
-          minimap: { enabled: false },
           // standalone themes cannot opt in, `StandaloneTheme` hardcodes
           // `semanticHighlighting = false`
           'semanticHighlighting.enabled': true,
           automaticLayout: true,
+          ...BASE_OPTIONS,
           ...memoizedMonacoOptions,
         });
 
@@ -277,7 +315,8 @@ export function RawSqlEditor({
     <>
       <CurrentStatementStyle
         $background={`color-mix(in srgb, ${selection({ theme })} ${CURRENT_STATEMENT_ALPHA}, transparent)`}
-        $bar={functionForeground({ theme })}
+        $bar={accent({ theme })}
+        $dot={`color-mix(in srgb, ${selection({ theme })} ${DOT_ALPHA}, transparent)`}
       />
       <div style={style} ref={monacoEl}></div>
     </>

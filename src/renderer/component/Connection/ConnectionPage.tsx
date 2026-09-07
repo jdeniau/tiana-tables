@@ -1,42 +1,101 @@
 import type { JSX } from 'react';
-import { Flex } from 'antd';
-import { Navigate } from 'react-router-dom';
+import { Menu, MenuProps } from 'antd';
+import { Link, Navigate } from 'react-router-dom';
+import { styled } from 'styled-components';
 import { EncryptedConnectionObject } from '../../../configuration/type';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
+import { foreground, size, space } from '../../theme';
 import ButtonLink from '../ButtonLink';
+import {
+  FramedRegion,
+  RegionBody,
+  RegionFoot,
+  RegionGroup,
+  RegionHeader,
+  RegionMeta,
+  RegionName,
+} from '../Style/Region';
 
-function ConnectionPage() {
+/**
+ * The label fills the row, as the tables of the sidebar do: the name, and
+ * where the connection goes, on one 24px line that is a link.
+ */
+const Open = styled(Link)`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${space.md};
+  min-width: 0;
+  padding: 0 ${space.md};
+  line-height: ${size.control};
+  color: ${foreground};
+
+  &:hover {
+    color: ${foreground};
+  }
+`;
+
+/** shown on the row it belongs to — the Menu's `li` — and to the keyboard */
+const Edit = styled(ButtonLink)`
+  visibility: hidden;
+
+  li:hover &,
+  &:focus-visible {
+    visibility: visible;
+  }
+`;
+
+/** The saved connections, one row each; the form has its own page. */
+function ConnectionPage(): JSX.Element {
   const { t } = useTranslation();
-  const registeredConnectionList = useConfiguration().configuration.connections;
+  const connections: EncryptedConnectionObject[] = Object.values(
+    useConfiguration().configuration.connections
+  );
 
-  const connectionList = Object.values(registeredConnectionList);
-
-  if (Object.keys(registeredConnectionList).length === 0) {
+  if (connections.length === 0) {
     return <Navigate replace to="/connect/create" />;
   }
 
+  // the same Menu as the sidebar's tables, so the rows are the same rows
+  const items: MenuProps['items'] = connections.map((connection) => ({
+    key: connection.slug,
+    label: (
+      <Open to={`/connections/${connection.slug}`}>
+        <span>{connection.name}</span>
+        <RegionMeta>
+          {connection.user}@{connection.host}:{connection.port}
+        </RegionMeta>
+      </Open>
+    ),
+    extra: (
+      <Edit type="text" size="small" to={`/connect/edit/${connection.slug}`}>
+        {t('edit')}
+      </Edit>
+    ),
+  }));
+
   return (
-    <div>
-      {connectionList.map(
-        (connection: EncryptedConnectionObject): JSX.Element => (
-          <Flex key={connection.slug} gap="small">
-            <ButtonLink to={`/connections/${connection.slug}`} block>
-              {connection.name}
-            </ButtonLink>
-            <ButtonLink to={`/connect/edit/${connection.slug}`}>
-              {t('edit')}
-            </ButtonLink>
-          </Flex>
-        )
-      )}
+    <FramedRegion>
+      <RegionHeader>
+        <RegionGroup>
+          <RegionName>{t('connection.list.title')}</RegionName>
+          <RegionMeta>
+            {t('connection.list.count', { count: connections.length })}
+          </RegionMeta>
+        </RegionGroup>
+      </RegionHeader>
 
-      <hr />
+      <RegionBody>
+        <Menu items={items} selectable={false} />
+      </RegionBody>
 
-      <ButtonLink block to="/connect/create">
-        {t('connection.create.button')}
-      </ButtonLink>
-    </div>
+      <RegionFoot>
+        <ButtonLink type="text" size="small" to="/connect/create">
+          + {t('connect.new')}
+        </ButtonLink>
+      </RegionFoot>
+    </FramedRegion>
   );
 }
 

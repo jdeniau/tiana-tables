@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import '@fontsource/oswald/600.css';
+import '@fontsource/syne-mono/400.css';
 import { action } from '@storybook/addon-actions';
 import type { Preview } from '@storybook/react';
 import { DEFAULT_LOCALE } from '../src/configuration/locale';

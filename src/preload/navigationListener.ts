@@ -5,6 +5,7 @@ type OnNavigateCallback = (path: string) => void;
 type NavigationListener = {
   onNavigate: (callback: OnNavigateCallback) => void;
   onOpenNavigationPanel: (callback: () => void) => void;
+  onOpenSettings: (callback: () => void) => void;
 };
 
 export const navigationListener: NavigationListener = {
@@ -15,4 +16,6 @@ export const navigationListener: NavigationListener = {
 
   onOpenNavigationPanel: (callback) =>
     ipcRenderer.on('openNavigationPanel', callback),
+
+  onOpenSettings: (callback) => ipcRenderer.on('openSettings', callback),
 };

@@ -15,6 +15,24 @@ interface TableCellFactoryProps {
 // (JSON, TEXT, blobs) need a real detail view, not a tooltip.
 const MAX_TITLE_LENGTH = 300;
 
+/** the wire types the server announces a numeric column with */
+const NUMERIC_TYPES = new Set<number>([
+  Types.TINY, // aka TINYINT, 1 byte
+  Types.SHORT, // aka SMALLINT, 2 bytes
+  Types.LONG, // aka INT, 4 bytes
+  Types.INT24, // aka MEDIUMINT, 3 bytes
+  Types.FLOAT, // aka FLOAT, 4-8 bytes
+  Types.DOUBLE, // aka DOUBLE, 8 bytes
+  Types.DECIMAL, // aka DECIMAL (http://dev.mysql.com/doc/refman/5.0/en/precision-math-decimal-changes.html)
+  Types.NEWDECIMAL, // aka DECIMAL
+  Types.LONGLONG, // aka BIGINT, 8 bytes
+]);
+
+/** whether a column holds numbers — what the grid sets flush right */
+export function isNumericType(type: number | undefined): boolean {
+  return type !== undefined && NUMERIC_TYPES.has(type);
+}
+
 /**
  * Set the `title` on hover rather than on render: reading `scrollWidth` forces
  * a reflow, and doing it once per cell at mount time would cost on every
@@ -153,6 +171,10 @@ const TableCellFactory = memo(function TableCellFactory({
     return <NullCell />;
   }
 
+  if (isNumericType(type)) {
+    return <NumberCell value={value} />;
+  }
+
   switch (type) {
     // Dates
     case Types.DATETIME: // aka DATETIME
@@ -164,18 +186,6 @@ const TableCellFactory = memo(function TableCellFactory({
 
     case Types.DATE: // aka DATE
       return <DateCell value={value} />;
-
-    // Numbers
-    case Types.TINY: // aka TINYINT, 1 byte
-    case Types.SHORT: // aka SMALLINT, 2 bytes
-    case Types.LONG: // aka INT, 4 bytes
-    case Types.INT24: // aka MEDIUMINT, 3 bytes
-    case Types.FLOAT: // aka FLOAT, 4-8 bytes
-    case Types.DOUBLE: // aka DOUBLE, 8 bytes
-    case Types.DECIMAL: // aka DECIMAL (http://dev.mysql.com/doc/refman/5.0/en/precision-math-decimal-changes.html)
-    case Types.NEWDECIMAL: // aka DECIMAL
-    case Types.LONGLONG: // aka BIGINT, 8 bytes
-      return <NumberCell value={value} />;
 
     // Strings
     case Types.VARCHAR: // aka VARCHAR (?)

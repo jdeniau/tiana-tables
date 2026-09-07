@@ -72,6 +72,30 @@ State is managed via React Context (no Redux/Zustand). Contexts live in `src/con
 
 `src/renderer/component/` contains all UI components. Storybook stories are colocated as `Component.stories.tsx`. Shared hooks live in `src/renderer/hooks/`, theming in `src/renderer/theme/`.
 
+### Design system
+
+The rules live in `DESIGN.md` at the root (from the 2026-09 design handoff): one
+background (base00), structure by 1px base03 hairlines, radius 0, 24px controls,
+mono everywhere except region names in the condensed display face, the accent
+(base0D) as a mark only. Where the values live:
+
+- **antd owns the components** — the `ConfigProvider` theme in
+  `src/contexts/ThemeContext.tsx` (tokens, plus Menu / Splitter / Segmented /
+  Layout component tokens). Change a token before writing CSS. Every colour
+  has a slot of the palette as its base, never an antd default: the semantic
+  seeds (`colorError`, `colorWarning`, `colorSuccess`, `colorInfo`,
+  `colorLink`) are mapped there and pinned through the dark algorithm. A
+  colour may be derived from its slot to emphasise or soften (an alert's
+  border and background are two variants of base08, a hover is base02 mixed
+  with the background), never taken from elsewhere.
+- **`src/renderer/theme/index.ts` owns layout and colour** — `space`, `size`,
+  `mono`, `display` next to the base16 accessors. Raw pixel values in a
+  styled-component are a review comment.
+- **`src/renderer/component/Style/`** holds the frame: `Region*` (a named,
+  scrollable region of the workspace), `TabStrip` (a run of siblings separated by
+  hairlines, with a pip on the active one), `TitleBar`. Routes compose these,
+  they never rebuild them. Never style antd internals through `.ant-*` classes.
+
 ### Configuration & Encryption
 
 Connection credentials are encrypted with Electron's `safeStorage` API and stored in the user's home directory. Config loading/saving lives in `src/configuration/index.ts`.

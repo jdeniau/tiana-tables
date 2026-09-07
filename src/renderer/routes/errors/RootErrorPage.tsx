@@ -1,4 +1,4 @@
-import { Alert, Flex, Layout } from 'antd';
+import { Alert, Layout } from 'antd';
 import { useRouteError } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { ConfigurationContextProvider } from '../../../contexts/ConfigurationContext';
@@ -7,7 +7,7 @@ import { useTranslation } from '../../../i18n';
 import ButtonLink from '../../../renderer/component/ButtonLink';
 import { background } from '../../../renderer/theme';
 import Debug from '../../component/Debug';
-import { Header, RootLink } from '../root';
+import { Brand, TitleBar, TitleGroup } from '../../component/Style/TitleBar';
 
 const Content = styled(Layout.Content)`
   display: flex;
@@ -29,13 +29,11 @@ export default function RootErrorPage() {
         <div id="error-page">
           <Layout>
             <Debug />
-            <Header>
-              <Flex align="center" gap="small">
-                <h2>
-                  <RootLink to="/">Tiana Tables</RootLink>
-                </h2>
-              </Flex>
-            </Header>
+            <TitleBar>
+              <TitleGroup>
+                <Brand to="/">Tiana Tables</Brand>
+              </TitleGroup>
+            </TitleBar>
 
             <Content>
               <h1>{t('errorPage.title')}</h1>

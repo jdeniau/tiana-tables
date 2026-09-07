@@ -1,11 +1,12 @@
 import { ReactElement } from 'react';
 import { DownOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Space } from 'antd';
+import { Dropdown, Space } from 'antd';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import { RunMode, toRunMode } from '../../../sql/runMode';
-import { mutedForeground } from '../../theme';
+import { commentForeground } from '../../theme';
 import { KeyboardShortcut } from '../KeyboardShortcut';
+import { ActionButton } from '../Style/ActionButton';
 
 const RUN_MODES = [RunMode.Current, RunMode.All];
 
@@ -17,8 +18,8 @@ const OptionTitle = styled.div`
 `;
 
 const OptionDescription = styled.div`
-  color: ${mutedForeground};
-  font-size: 0.85em;
+  color: ${commentForeground};
+  font-size: 11px;
   max-width: 24em;
   white-space: normal;
 `;
@@ -45,28 +46,26 @@ export function RunQueryButton({
   const { t } = useTranslation();
 
   const runButton = (
-    <Button
-      disabled={disabled}
-      color="primary"
-      variant="solid"
-      onClick={() => onRun(RunMode.Current)}
-    >
+    <ActionButton disabled={disabled} onClick={() => onRun(RunMode.Current)}>
       {t('rawSql.submit')}
       <KeyboardShortcut cmdOrCtrl pressedKey={SUBMIT_KEY} />
-    </Button>
+    </ActionButton>
   );
 
   if (statementCount <= 1) {
     return runButton;
   }
 
+  // `Space.Compact` + `Dropdown` + `Button` is what antd 6 recommends in place
+  // of the deprecated `Dropdown.Button`; its divider between the two solid
+  // segments is antd's own
   return (
     <Space.Compact>
       {runButton}
 
       <Dropdown
         trigger={['click']}
-        placement="bottomLeft"
+        placement="bottomRight"
         menu={{
           items: RUN_MODES.map((mode) => ({
             key: mode,
@@ -93,10 +92,8 @@ export function RunQueryButton({
           },
         }}
       >
-        <Button
+        <ActionButton
           disabled={disabled}
-          color="primary"
-          variant="solid"
           icon={<DownOutlined />}
           aria-label={t('rawSql.run.more')}
         />

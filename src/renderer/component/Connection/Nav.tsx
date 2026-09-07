@@ -1,20 +1,14 @@
 import { ReactElement } from 'react';
-import { Menu } from 'antd';
-import { Link } from 'react-router-dom';
-import { styled } from 'styled-components';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
-import { selection } from '../../theme';
-import ButtonLink from '../ButtonLink';
 import { KeyboardShortcutTooltip } from '../KeyboardShortcut';
+import { TabStrip, TabStripLink } from '../Style/TabStrip';
 
-const StyledMenu = styled(Menu)`
-  flex: 1;
-  min-width: 0;
-  background-color: ${selection};
-`;
-
+/**
+ * The connections, as a run in the title bar: the active one carries the pip,
+ * the last item opens the form for a new one.
+ */
 export default function Nav(): ReactElement | null {
   const { connectionSlugList, currentConnectionSlug } = useConnectionContext();
   const { configuration } = useConfiguration();
@@ -24,31 +18,33 @@ export default function Nav(): ReactElement | null {
     return null;
   }
 
-  const items = Array.from(connectionSlugList).map((connectionSlug) => {
-    const connectionName =
-      configuration.connections[connectionSlug]?.name || connectionSlug;
-
-    return {
-      key: connectionSlug,
-      label: (
-        <Link to={`/connections/${connectionSlug}`}>{connectionName}</Link>
-      ),
-    };
-  });
-
   return (
-    <>
-      <KeyboardShortcutTooltip cmdOrCtrl pressedKey="n">
-        <ButtonLink style={{ margin: '0 10px' }} to="/connect">
-          {t('connect.new')}
-        </ButtonLink>
-      </KeyboardShortcutTooltip>
+    <TabStrip $caps $framed>
+      {Array.from(connectionSlugList).map((connectionSlug) => {
+        const connectionName =
+          configuration.connections[connectionSlug]?.name || connectionSlug;
 
-      <StyledMenu
-        mode="horizontal"
-        selectedKeys={[currentConnectionSlug ?? '']}
-        items={items}
-      />
-    </>
+        return (
+          <TabStripLink
+            key={connectionSlug}
+            active={connectionSlug === currentConnectionSlug}
+            title={connectionName}
+            to={`/connections/${connectionSlug}`}
+          >
+            {connectionName}
+          </TabStripLink>
+        );
+      })}
+
+      <KeyboardShortcutTooltip cmdOrCtrl pressedKey="n">
+        <TabStripLink
+          active={false}
+          aria-label={t('connect.new')}
+          to="/connect"
+        >
+          +
+        </TabStripLink>
+      </KeyboardShortcutTooltip>
+    </TabStrip>
   );
 }
