@@ -1,3 +1,4 @@
+import { ComponentProps, useEffect, useState } from 'react';
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Types } from 'mysql';
@@ -8,6 +9,7 @@ import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import { ColumnDetail, KeyColumnUsageRow } from '../../sql/types';
+import type { UpdateCellRequest } from '../../sql/updateCell';
 import TableGrid from './TableGrid';
 
 // deterministic pseudo-random generator so stories are stable across renders
@@ -240,4 +242,82 @@ export const WithFilterContextMenu: Story = {
       action('onFilterChange')(where);
     },
   },
+};
+
+/**
+ * What the server would answer a write with, for the types the story uses:
+ * mysql2 hands a `DATETIME` back as a `Date` and a JSON column parsed, not as
+ * the text that was sent.
+ */
+function readBack(
+  fields: FieldPacket[],
+  { column, newValue }: UpdateCellRequest
+): unknown {
+  if (newValue === null) {
+    return null;
+  }
+
+  switch (fields.find((field) => field.name === column)?.type) {
+    case Types.DATETIME:
+      return new Date(newValue);
+    case Types.JSON:
+      return JSON.parse(newValue);
+    case Types.LONG:
+    case Types.NEWDECIMAL:
+      return Number(newValue);
+    default:
+      return newValue;
+  }
+}
+
+/**
+ * A grid whose writes land: `window.sql.updateCell` answers as the server
+ * would, and the rows are held here as `TableLayout` holds them, so that the
+ * written cell shows its new value — and the flash that marks the write.
+ * Double-click a cell, change it, save.
+ */
+function EditableGrid(props: ComponentProps<typeof TableGrid>) {
+  const { fields, result } = props;
+  const [rows, setRows] = useState(result);
+
+  useEffect(() => {
+    window.sql = {
+      ...window.sql,
+      updateCell: async (request) => ({
+        status: 'updated',
+        value: readBack(fields ?? [], request),
+      }),
+    };
+  }, [fields]);
+
+  return (
+    <TableGrid
+      {...props}
+      result={rows}
+      onValueUpdated={(rowIndex, columnName, value) => {
+        action('onValueUpdated')(rowIndex, columnName, value);
+        setRows((previous) => {
+          const row = previous?.[rowIndex];
+
+          if (!previous || !row) {
+            return previous;
+          }
+
+          const next = [...previous];
+          next[rowIndex] = { ...row, [columnName]: value };
+
+          return next;
+        });
+      }}
+    />
+  );
+}
+
+export const Editable: Story = {
+  args: {
+    fields: makeFields(8),
+    result: makeRows(100, 8),
+    primaryKeys: ['id'],
+  },
+  render: (args) => <EditableGrid {...args} />,
 };
