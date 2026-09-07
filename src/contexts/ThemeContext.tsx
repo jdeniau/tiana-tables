@@ -22,6 +22,7 @@ import {
 import {
   accent,
   background,
+  classForeground,
   commentForeground,
   emphasisForeground,
   foreground,
@@ -29,7 +30,9 @@ import {
   mutedForeground,
   selection,
   space,
+  stringForeground,
   supportForeground,
+  variableForeground,
 } from '../renderer/theme';
 import { useConfiguration } from './ConfigurationContext';
 
@@ -61,13 +64,18 @@ const GlobalStyle = createGlobalStyle<object>`
 `;
 
 /**
- * antd's dark algorithm re-tunes the primary colour for a dark background,
- * and a seed token cannot be pinned from `token`. The accent is a mark at
- * full strength, so the seed is put back after the algorithm ran.
+ * antd's dark algorithm re-tunes the seed colours for a dark background, and
+ * a seed token cannot be pinned from `token`. Every colour comes from the
+ * palette, at full strength, so the seeds are put back after the algorithm ran.
  */
-const keepAccent: MappingAlgorithm = (seed, map) => ({
+const keepPalette: MappingAlgorithm = (seed, map) => ({
   ...(map ?? antdTheme.darkAlgorithm(seed)),
   colorPrimary: seed.colorPrimary,
+  colorLink: seed.colorLink,
+  colorError: seed.colorError,
+  colorWarning: seed.colorWarning,
+  colorSuccess: seed.colorSuccess,
+  colorInfo: seed.colorInfo,
 });
 
 const LayoutDiv = styled.div`
@@ -118,11 +126,17 @@ export function ThemeContextProvider({
 
     return {
       algorithm: isDarkTheme(theme)
-        ? [antdTheme.darkAlgorithm, keepAccent]
+        ? [antdTheme.darkAlgorithm, keepPalette]
         : undefined,
       token: {
         colorPrimary: accent(props),
         colorLink: supportForeground(props),
+        // the semantic colours are the palette's, never antd's: errors and
+        // deletions, attention, additions, support
+        colorError: variableForeground(props),
+        colorWarning: classForeground(props),
+        colorSuccess: stringForeground(props),
+        colorInfo: supportForeground(props),
 
         // one background — the algorithms would lift containers and popups
         colorBgBase: colorBg,

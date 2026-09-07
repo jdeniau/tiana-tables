@@ -9,10 +9,14 @@ import { THEME_LIST } from '../configuration/themes';
 import {
   accent,
   background,
+  classForeground,
   commentForeground,
   foreground,
   mono,
   selection,
+  stringForeground,
+  supportForeground,
+  variableForeground,
 } from '../renderer/theme';
 import { testables } from './ConfigurationContext';
 import { ThemeContextProvider } from './ThemeContext';
@@ -77,6 +81,14 @@ describe.each(Object.values(THEME_LIST))('antd tokens: $name', (theme) => {
     expect(token.colorText).toBe(foreground({ theme }));
     expect(token.colorBorder).toBe(commentForeground({ theme }));
     expect(token.colorBorderSecondary).toBe(selection({ theme }));
+  });
+
+  test("the semantic colours are the palette's, through the algorithm", () => {
+    expect(token.colorError).toBe(variableForeground({ theme }));
+    expect(token.colorWarning).toBe(classForeground({ theme }));
+    expect(token.colorSuccess).toBe(stringForeground({ theme }));
+    expect(token.colorInfo).toBe(supportForeground({ theme }));
+    expect(token.colorLink).toBe(supportForeground({ theme }));
   });
 
   test('no shadow, no radius', () => {

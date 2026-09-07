@@ -81,7 +81,13 @@ mono everywhere except region names in the condensed display face, the accent
 
 - **antd owns the components** — the `ConfigProvider` theme in
   `src/contexts/ThemeContext.tsx` (tokens, plus Menu / Splitter / Segmented /
-  Layout component tokens). Change a token before writing CSS.
+  Layout component tokens). Change a token before writing CSS. Every colour
+  has a slot of the palette as its base, never an antd default: the semantic
+  seeds (`colorError`, `colorWarning`, `colorSuccess`, `colorInfo`,
+  `colorLink`) are mapped there and pinned through the dark algorithm. A
+  colour may be derived from its slot to emphasise or soften (an alert's
+  border and background are two variants of base08, a hover is base02 mixed
+  with the background), never taken from elsewhere.
 - **`src/renderer/theme/index.ts` owns layout and colour** — `space`, `size`,
   `mono`, `display` next to the base16 accessors. Raw pixel values in a
   styled-component are a review comment.

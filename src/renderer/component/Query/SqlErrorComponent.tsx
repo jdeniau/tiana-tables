@@ -1,32 +1,18 @@
-import { styled } from 'styled-components';
+import { Alert } from 'antd';
 import { SqlError } from '../../../sql/errorSerializer';
-import { commentForeground, space, variableForeground } from '../../theme';
+import { space } from '../../theme';
 
 type Props = { error: SqlError };
 
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${space.xs};
-  padding: ${space.md};
-`;
-
-const Message = styled.div`
-  color: ${variableForeground};
-`;
-
-const Code = styled.div`
-  font-size: 11px;
-  color: ${commentForeground};
-`;
-
+/** what the server answered instead of rows: the message, then its code */
 export default function SqlErrorComponent({ error }: Props) {
   return (
-    <Wrapper>
-      <Message>{error.message}</Message>
-      <Code>
-        {error.errno}: {error.code}
-      </Code>
-    </Wrapper>
+    <Alert
+      type="error"
+      showIcon
+      title={error.message}
+      description={`${error.errno}: ${error.code}`}
+      style={{ margin: space.md }}
+    />
   );
 }
