@@ -173,6 +173,11 @@ export function ThemeContextProvider({
         Button: {
           // base00 on base0D reads on every palette; white does not on Dracula
           primaryColor: colorBg,
+          // a text button is a muted word that brightens on hover, no fill
+          textTextColor: colorRule,
+          textTextHoverColor: colorText,
+          textTextActiveColor: colorText,
+          textHoverBg: 'transparent',
         },
         // the sidebar rows: 24px, 12px mono, no margins, the fill flush to
         // the edges; the label owns the padding, so that the selected row can

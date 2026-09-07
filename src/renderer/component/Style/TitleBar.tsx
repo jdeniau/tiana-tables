@@ -1,11 +1,10 @@
-import { Button, Layout } from 'antd';
+import { Layout } from 'antd';
 import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
 import {
   brand,
   commentForeground,
   emphasisForeground,
-  foreground,
   space,
 } from '../../theme';
 
@@ -41,20 +40,5 @@ export const Brand = styled(Link)`
 
   &:hover {
     color: ${emphasisForeground};
-  }
-`;
-
-/** an icon action of the title bar, muted until hovered */
-export const TitleIcon = styled(Button)`
-  &&& {
-    height: auto;
-    padding: 0;
-    background: transparent;
-    font-size: 13px;
-    color: ${commentForeground};
-  }
-
-  &&&:hover {
-    color: ${foreground};
   }
 `;
