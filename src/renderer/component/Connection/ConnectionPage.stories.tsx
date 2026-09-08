@@ -1,6 +1,6 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
-import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
+import dataRouterDecorator from '../../../../.storybook/decorators/dataRouterDecorator';
 import { DEFAULT_LOCALE } from '../../../configuration/locale';
 import { DEFAULT_THEME } from '../../../configuration/themes';
 import { testables } from '../../../contexts/ConfigurationContext';
@@ -18,7 +18,7 @@ const meta: Meta<typeof ConnectionPage> = {
         <Story />
       </Centered>
     ),
-    reactRouterDecorator,
+    dataRouterDecorator,
     (Story) => (
       <ConnectionContext.Provider
         value={{

@@ -61,6 +61,16 @@ export const RegionMeta = styled.span`
   white-space: nowrap;
 `;
 
+/**
+ * The same text, verbatim and on as many lines as it needs: what a server
+ * answered, a driver's message. A header's meta must never wrap, this must.
+ */
+export const RegionDetail = styled(RegionMeta)`
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
+`;
+
 export const RegionBody = styled.div`
   flex: 1;
   min-height: 0;
@@ -90,6 +100,14 @@ export const Centered = styled.div`
   height: 100%;
   padding: ${space.xl};
   overflow: auto;
+`;
+
+/**
+ * The body of a framed region: text and controls, so it carries the padding a
+ * `Menu` or a grid provides for itself.
+ */
+export const FramedRegionBody = styled(RegionBody)`
+  padding: ${space.lg};
 `;
 
 /** A region standing alone gets its frame: the rule on all four sides, and under its header. */

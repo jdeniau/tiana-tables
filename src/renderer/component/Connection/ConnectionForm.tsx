@@ -1,7 +1,6 @@
 import { Button, Flex, Form, Input } from 'antd';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router';
-import { styled } from 'styled-components';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
 import type {
@@ -12,7 +11,7 @@ import { space } from '../../theme';
 import { ActionButton } from '../Style/ActionButton';
 import {
   FramedRegion,
-  RegionBody,
+  FramedRegionBody,
   RegionHeader,
   RegionName,
 } from '../Style/Region';
@@ -29,10 +28,6 @@ function getSubmitButtonLabel(
 
   return t('connection.form.action.saveAndConnect');
 }
-
-const Body = styled(RegionBody)`
-  padding: ${space.lg};
-`;
 
 /** labels read as meta text: caps, like the column heads */
 const LABEL = { letterSpacing: '0.1em', textTransform: 'uppercase' } as const;
@@ -85,7 +80,7 @@ function ConnectionForm({ connection }: Props) {
         </RegionName>
       </RegionHeader>
 
-      <Body>
+      <FramedRegionBody>
         <Form
           layout="vertical"
           requiredMark={false}
@@ -165,7 +160,7 @@ function ConnectionForm({ connection }: Props) {
             </Flex>
           </Flex>
         </Form>
-      </Body>
+      </FramedRegionBody>
     </FramedRegion>
   );
 }

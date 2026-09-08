@@ -48,6 +48,19 @@ export default {
     ' noNumericColumn {Plotting needs a numeric column to chart against another column.}' +
     ' other {This result cannot be plotted.}}',
   'connect.new': 'New connection',
+  'connection.connecting': 'Connecting…',
+  'connection.failed.back': 'Back to connections',
+  // ICU select on the `ConnectionFailure` enum
+  'connection.failed.reason':
+    '{reason, select,' +
+    ' timeout {The server did not answer within {seconds} seconds.}' +
+    ' refused {The server refused the connection. Check that it is running, and that the port is the right one.}' +
+    ' unknownHost {This host name could not be resolved.}' +
+    ' accessDenied {The server rejected these credentials.}' +
+    ' other {The connection could not be opened.}}',
+  'connection.failed.retry': 'Retry',
+  'connection.failed.target': 'Connecting to {host}:{port} failed',
+  'connection.failed.title': 'Connection failed',
   'connection.form.action.connect': 'Connect',
   'connection.form.action.saveAndConnect': 'Save and connect',
   'connection.form.host.label': 'Host',

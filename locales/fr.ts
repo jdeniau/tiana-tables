@@ -52,6 +52,19 @@ const fr: Translation = {
     " noNumericColumn {Il faut une colonne numérique à tracer en face d'une autre colonne.}" +
     ' other {Ce résultat ne peut pas être tracé.}}',
   'connect.new': 'Nouvelle connexion',
+  'connection.connecting': 'Connexion…',
+  'connection.failed.back': 'Retour aux connexions',
+  // ICU select on the `ConnectionFailure` enum
+  'connection.failed.reason':
+    '{reason, select,' +
+    " timeout {Le serveur n'a pas répondu en {seconds} secondes.}" +
+    " refused {Le serveur a refusé la connexion. Vérifiez qu'il tourne, et que le port est le bon.}" +
+    " unknownHost {Ce nom d'hôte n'a pas pu être résolu.}" +
+    ' accessDenied {Le serveur a rejeté ces identifiants.}' +
+    " other {La connexion n'a pas pu être ouverte.}}",
+  'connection.failed.retry': 'Réessayer',
+  'connection.failed.target': 'La connexion à {host}:{port} a échoué',
+  'connection.failed.title': 'Connexion impossible',
   'connection.form.action.connect': 'Connecter',
   'connection.form.action.saveAndConnect': 'Enregistrer et connecter',
   'connection.form.host.label': 'Hôte',
