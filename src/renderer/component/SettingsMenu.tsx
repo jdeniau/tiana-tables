@@ -28,11 +28,11 @@ export default function SettingsMenu({ version, updateStatus }: Props) {
 
   // the shortcut is an accelerator of the native menu, which the main process
   // relays; Storybook has no bridge to relay from
-  useEffectOnce(() => {
+  useEffectOnce(() =>
     window.navigationListener?.onOpenSettings(() => {
       setOpen((value) => !value);
-    });
-  });
+    })
+  );
 
   return (
     <Popover
