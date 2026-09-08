@@ -1,6 +1,7 @@
 import { Button, Flex, Form, Input } from 'antd';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router';
+import { slugify } from '../../../configuration/utils';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
 import type {
@@ -67,7 +68,9 @@ function ConnectionForm({ connection }: Props) {
 
     addConnectionToConfig(formData);
 
-    navigate(`/connections/${formData.name}`);
+    // the connection is saved under the slug of its name, and that is what the
+    // route reads: `docker (dev)` lives at `/connections/docker-dev`
+    navigate(`/connections/${slugify(formData.name)}`);
   };
 
   return (
