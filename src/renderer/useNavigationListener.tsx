@@ -2,56 +2,68 @@ import {
   type JSX,
   ReactNode,
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 import NavigateModal from './component/NavigateModal';
 
-type ReturnType = {
-  NavigateModal: React.FunctionComponent;
+type NavigateModalContext = { openNavigateModal: () => void };
+const NavigateModalContext = createContext<NavigateModalContext | null>(null);
+
+type NavigationListener = {
+  isNavigateModalOpen: boolean;
+  setIsNavigateModalOpen: (isOpened: boolean) => void;
   openNavigateModal: () => void;
 };
 
 /**
- * Listen to navigation event from the main process and navigate to the given path.
+ * Whether the table palette is open, and the two ways it opens: from the app,
+ * and from the main process, which owns the `Ctrl+K` accelerator.
+ *
+ * The hook returns state, never a component: a component declared in a hook
+ * body is a new type on every render, so React unmounts and remounts the
+ * palette — losing the search being typed into it.
  */
-function useNavigationListener(): ReturnType {
+function useNavigationListener(): NavigationListener {
   const [isNavigateModalOpen, setIsNavigateModalOpen] = useState(false);
 
-  useEffect(() => {
-    window.navigationListener.onOpenNavigationPanel(() => {
-      setIsNavigateModalOpen(true);
-    });
-  }, []);
-
-  const NavigateModalComponent = () => (
-    <NavigateModal
-      isNavigateModalOpen={isNavigateModalOpen}
-      setIsNavigateModalOpen={setIsNavigateModalOpen}
-    />
+  useEffect(
+    () =>
+      window.navigationListener.onOpenNavigationPanel(() => {
+        setIsNavigateModalOpen(true);
+      }),
+    []
   );
 
-  const openNavigateModal = () => {
+  const openNavigateModal = useCallback(() => {
     setIsNavigateModalOpen(true);
-  };
+  }, []);
 
-  return { NavigateModal: NavigateModalComponent, openNavigateModal };
+  return { isNavigateModalOpen, setIsNavigateModalOpen, openNavigateModal };
 }
-
-type NavigateModalContext = { openNavigateModal: () => void };
-const NavigateModalContext = createContext<NavigateModalContext | null>(null);
 
 function NavigateModalContextProvider({
   children,
 }: {
   children: ReactNode;
 }): JSX.Element {
-  const { NavigateModal, openNavigateModal } = useNavigationListener();
+  const { isNavigateModalOpen, setIsNavigateModalOpen, openNavigateModal } =
+    useNavigationListener();
+
+  const contextValue = useMemo(
+    () => ({ openNavigateModal }),
+    [openNavigateModal]
+  );
 
   return (
-    <NavigateModalContext.Provider value={{ openNavigateModal }}>
-      <NavigateModal />
+    <NavigateModalContext.Provider value={contextValue}>
+      <NavigateModal
+        isNavigateModalOpen={isNavigateModalOpen}
+        setIsNavigateModalOpen={setIsNavigateModalOpen}
+      />
 
       {children}
     </NavigateModalContext.Provider>

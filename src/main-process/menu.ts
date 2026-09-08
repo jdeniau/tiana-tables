@@ -200,6 +200,63 @@ export function createMenu(mainWindow: BrowserWindow) {
   // @ts-expect-error template is a Menu, issue with the `ìsMac`and the array unpacking
   const menu = Menu.buildFromTemplate(template);
 
+  /**
+   * The items whose accelerator the page takes first. On Linux and Windows a
+   * menu accelerator is only handled once the page has declined the key, and
+   * the SQL editor declines little: `Ctrl+K` is the prefix of 25 Monaco
+   * chords, and `Ctrl+T` never reaches the menu either.
+   *
+   * Only these two need it. Measured with the editor focused, `Ctrl+N`,
+   * `Ctrl+,`, `Alt+Left` and `Alt+Right` all come back out of the page
+   * unconsumed and reach the menu on their own.
+   *
+   * `before-input-event` runs before the page, whatever holds the focus, so
+   * these two are triggered from there. Its `preventDefault` drops the native
+   * accelerator as well, so they still fire once and only once.
+   */
+  const MENU_ITEMS_TRIGGERED_BEFORE_THE_PAGE = [
+    'sqlPanelLink',
+    'openNavigationPanelLink',
+  ];
+
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    // `CmdOrCtrl` and nothing else, which is the shape of both accelerators
+    // below — a `Ctrl+Shift+K` is Monaco's, not ours
+    const cmdOrCtrl = isMac
+      ? input.meta && !input.control
+      : input.control && !input.meta;
+
+    if (input.type !== 'keyDown' || !cmdOrCtrl || input.alt || input.shift) {
+      return;
+    }
+
+    for (const id of MENU_ITEMS_TRIGGERED_BEFORE_THE_PAGE) {
+      const item = menu.getMenuItemById(id);
+
+      // a disabled item keeps its key for the page: with no connection to
+      // open a SQL panel on, Monaco may as well have `Ctrl+T`
+      if (!item?.enabled || !item.accelerator) {
+        continue;
+      }
+
+      // `CmdOrCtrl+T` -> `t`. Only that shape is read: an accelerator holding
+      // another modifier is skipped rather than fired by its key alone, so
+      // adding one to the list means comparing its modifiers too.
+      const [modifier, key, ...rest] = item.accelerator.split('+');
+
+      if (modifier !== 'CmdOrCtrl' || !key || rest.length > 0) {
+        continue;
+      }
+
+      if (key.toLowerCase() === input.key.toLowerCase()) {
+        event.preventDefault();
+        item.click();
+
+        return;
+      }
+    }
+  });
+
   ipcMain.on(SQL_CHANNEL.ON_CONNECTION_CHANGED, () => {
     // on connection change, let's activate the SQL panel link menu
     // do wait because the event is also handled by the sql connectionStack

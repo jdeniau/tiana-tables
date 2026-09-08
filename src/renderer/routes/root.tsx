@@ -66,7 +66,8 @@ export default function Root() {
       `[startup][renderer] root-route-ready: +${Math.round(performance.now())}ms`
     );
 
-    window.navigationListener.onNavigate((path) => {
+    // returned, so the listener is removed with the component
+    return window.navigationListener.onNavigate((path) => {
       console.log('onNavigate called with path: ', path);
       navigate(path);
     });

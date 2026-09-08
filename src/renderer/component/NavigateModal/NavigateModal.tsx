@@ -1,5 +1,5 @@
-import { ReactElement, useCallback, useEffect, useRef, useState } from 'react';
-import { Flex, Input, InputRef, Modal } from 'antd';
+import { ReactElement, useCallback, useEffect, useState } from 'react';
+import { Flex, Input, Modal } from 'antd';
 import Fuse from 'fuse.js';
 import { useNavigate } from 'react-router-dom';
 import { styled } from 'styled-components';
@@ -27,7 +27,6 @@ export default function NavigateModal({
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
   const navigate = useNavigate();
-  const searchRef = useRef<InputRef>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
 
   let filteredTableStatusList = navigationItemList;
@@ -41,6 +40,11 @@ export default function NavigateModal({
     filteredTableStatusList = fuze.search(searchText).map((item) => item.item);
   }
 
+  // The active item, or nothing: a search that matches nothing empties the
+  // list while the index still points at its first row.
+  const activeItem =
+    activeIndex === -1 ? undefined : filteredTableStatusList[activeIndex];
+
   const navigateToItem = useCallback(
     (item: NavigationItem) => {
       setIsNavigateModalOpen(false);
@@ -52,11 +56,13 @@ export default function NavigateModal({
 
   // handle keyboard navigation
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (!filteredTableStatusList) {
-        return;
-      }
+    // Only while the palette is open: the listener sits on `window`, so an
+    // arrow or an `Enter` typed in the editor behind it would answer too.
+    if (!isNavigateModalOpen) {
+      return;
+    }
 
+    function handleKeyDown(e: KeyboardEvent) {
       const filteredTableStatusListLength = filteredTableStatusList.length;
 
       if (e.key === 'ArrowDown') {
@@ -69,10 +75,8 @@ export default function NavigateModal({
         e.preventDefault();
 
         setActiveIndex((prev) => Math.max(prev - 1, -1));
-      } else if (e.key === 'Enter') {
-        if (activeIndex !== -1) {
-          navigateToItem(filteredTableStatusList[activeIndex]);
-        }
+      } else if (e.key === 'Enter' && activeItem) {
+        navigateToItem(activeItem);
       }
     }
 
@@ -82,11 +86,10 @@ export default function NavigateModal({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [
-    activeIndex,
+    activeItem,
     filteredTableStatusList,
-    navigate,
+    isNavigateModalOpen,
     navigateToItem,
-    setIsNavigateModalOpen,
   ]);
 
   const resetActiveIndex = (searchIsEmpty: boolean) => {
@@ -101,11 +104,15 @@ export default function NavigateModal({
       onCancel={() => {
         setIsNavigateModalOpen(false);
       }}
+      // Reset the palette for its next opening.
       afterOpenChange={(open) => {
-        if (open) {
-          searchRef.current?.focus();
+        if (!open) {
+          setSearchText('');
+          setActiveIndex(-1);
         }
       }}
+      // Unmounted while closed, so the field below auto-focuses on *every* opening.
+      destroyOnHidden
       footer={null}
       width={800}
       style={{
@@ -124,7 +131,7 @@ export default function NavigateModal({
         }}
       >
         <Input.Search
-          ref={searchRef}
+          autoFocus
           placeholder={t('navigation_modal.search.placeholder')}
           value={searchText}
           onChange={(e) => {
