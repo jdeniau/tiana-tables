@@ -34,7 +34,10 @@ function ToggleRawSqlButton() {
   const onSqlPage =
     useMatch('/connections/:connectionSlug/:databaseName/sql') !== null;
 
-  if (!currentConnectionSlug) {
+  // The database is part of the link, so there is no SQL page to offer without
+  // one: on a connection that failed to open, the slug is in the URL but no
+  // database was ever resolved, and the tab would point at `/null/sql`.
+  if (!currentConnectionSlug || !database) {
     return null;
   }
 

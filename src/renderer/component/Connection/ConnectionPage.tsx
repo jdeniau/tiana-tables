@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
-import { Menu, MenuProps } from 'antd';
+import { Menu, MenuProps, Spin } from 'antd';
+import { matchPath, useNavigation } from 'react-router';
 import { Link, Navigate } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { EncryptedConnectionObject } from '../../../configuration/type';
@@ -46,9 +47,30 @@ const Edit = styled(ButtonLink)`
   }
 `;
 
+/**
+ * The connection the router is on its way to, if any.
+ *
+ * Read-only: the rows stay plain `Link`s, and the state clears itself when the
+ * navigation ends — whether it lands, fails on a timeout, or is replaced by a
+ * click on another row.
+ */
+function usePendingConnectionSlug(): string | undefined {
+  const navigation = useNavigation();
+
+  if (navigation.state === 'idle') {
+    return undefined;
+  }
+
+  return matchPath(
+    '/connections/:connectionSlug/*',
+    navigation.location.pathname
+  )?.params.connectionSlug;
+}
+
 /** The saved connections, one row each; the form has its own page. */
 function ConnectionPage(): JSX.Element {
   const { t } = useTranslation();
+  const pendingConnectionSlug = usePendingConnectionSlug();
   const connections: EncryptedConnectionObject[] = Object.values(
     useConfiguration().configuration.connections
   );
@@ -61,11 +83,21 @@ function ConnectionPage(): JSX.Element {
   const items: MenuProps['items'] = connections.map((connection) => ({
     key: connection.slug,
     label: (
-      <Open to={`/connections/${connection.slug}`}>
+      <Open
+        to={`/connections/${connection.slug}`}
+        aria-busy={connection.slug === pendingConnectionSlug}
+      >
         <span>{connection.name}</span>
-        <RegionMeta>
-          {connection.user}@{connection.host}:{connection.port}
-        </RegionMeta>
+        {connection.slug === pendingConnectionSlug ? (
+          <RegionGroup>
+            <Spin size="small" />
+            <RegionMeta>{t('connection.connecting')}</RegionMeta>
+          </RegionGroup>
+        ) : (
+          <RegionMeta>
+            {connection.user}@{connection.host}:{connection.port}
+          </RegionMeta>
+        )}
       </Open>
     ),
     extra: (

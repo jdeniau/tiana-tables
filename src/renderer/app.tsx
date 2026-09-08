@@ -10,6 +10,7 @@ import invariant from 'tiny-invariant';
 import Connect from './routes/connect';
 import Create from './routes/connect/create';
 import Edit from './routes/connect/edit.$connectionSlug';
+import ConnectionFailedPage from './routes/errors/ConnectionFailedPage';
 import ConnectionErrorPage from './routes/errors/ConnectionsErrorPage';
 import RootErrorPage from './routes/errors/RootErrorPage';
 import Root from './routes/root';
@@ -67,6 +68,10 @@ const router = createHashRouter([
       // smarter pre-fetching; revisit if/when we migrate from RR 6.
       {
         path: 'connections/:connectionSlug',
+        // A connection that cannot be opened is answered here rather than by
+        // the root boundary: the title bar and the connection tabs stay, so
+        // there is somewhere to go from the error.
+        errorElement: <ConnectionFailedPage />,
         shouldRevalidate: ({ currentParams, nextParams }) => {
           return (
             currentParams.connectionSlug !== nextParams.connectionSlug ||

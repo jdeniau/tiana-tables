@@ -7,6 +7,7 @@ import {
   buildReadCellQuery,
   buildUpdateCellQuery,
 } from './buildUpdateCellQuery';
+import { asConnectionError } from './connectionError';
 import {
   QueryResultOrError,
   ResultOrError,
@@ -30,8 +31,23 @@ import {
   UpdateCellRequest,
 } from './updateCell';
 
+/**
+ * How long a handshake is given before we call it off.
+ *
+ * mysql2 applies the same 10 s of its own when nothing is passed, but an
+ * implicit deadline is one we cannot name in an error message nor change.
+ */
+const CONNECT_TIMEOUT_MS = 10_000;
+
 class ConnectionStack {
-  #connections: Map<string, Connection> = new Map();
+  /**
+   * The open connections, and the ones still being opened: the promise is
+   * stored *before* the handshake, so the loaders React Router runs in
+   * parallel share one attempt — and one failure — instead of each opening
+   * their own socket. A rejected attempt is removed right away, so a failure
+   * is never cached and never retried on its own.
+   */
+  #connections: Map<string, Promise<Connection>> = new Map();
 
   #currentConnectionSlug: string | undefined;
 
@@ -288,11 +304,15 @@ class ConnectionStack {
     rowsAsArray: boolean,
     values?: SqlBoundValues
   ): QueryResultOrError<T> {
-    const connection = await this.#getConnection(connectionSlug);
-
-    log.debug(`Execute query on "${connectionSlug}": "${query}"`);
-
+    // Opening the connection is inside the try: a handshake that fails is an
+    // answer like any other, and must travel encoded next to the result. Left
+    // outside, it escaped the `{ result, error }` envelope and reached the
+    // renderer as Electron's own "Error invoking remote method …".
     try {
+      const connection = await this.#getConnection(connectionSlug);
+
+      log.debug(`Execute query on "${connectionSlug}": "${query}"`);
+
       return {
         result: await connection.query({
           sql: query,
@@ -321,9 +341,11 @@ class ConnectionStack {
   }
 
   async closeAllConnections(): Promise<void> {
-    await Promise.all(
+    // `allSettled`, because a pending or already failed attempt sits in the
+    // same map and must not keep the others from being closed.
+    await Promise.allSettled(
       Array.from(this.#connections.values()).map((connection) =>
-        connection.end()
+        connection.then((c) => c.end())
       )
     );
 
@@ -331,30 +353,36 @@ class ConnectionStack {
   }
 
   async #getConnection(connectionSlug: string): Promise<Connection> {
-    const connection = this.#connections.get(connectionSlug);
+    const pending = this.#connections.get(connectionSlug);
 
-    if (!connection) {
-      const { connections } = getConfiguration();
-
-      if (!(connectionSlug in connections)) {
-        throw new Error(`Connection "${connectionSlug}" not found`);
-      }
-
-      const { appState: _, ...connectionConfig } = connections[connectionSlug];
-
-      return await this.#connect(connectionConfig);
+    if (pending) {
+      return await pending;
     }
 
-    return connection;
+    const { connections } = getConfiguration();
+
+    if (!(connectionSlug in connections)) {
+      throw new Error(`Connection "${connectionSlug}" not found`);
+    }
+
+    const { appState: _, ...connectionConfig } = connections[connectionSlug];
+
+    const connection = this.#connect(connectionConfig);
+
+    this.#connections.set(connectionSlug, connection);
+
+    // A failed attempt is forgotten, so the next query starts a fresh one
+    // instead of awaiting a promise that will never resolve. The `catch`
+    // handles this branch of the promise; the caller below handles the other.
+    connection.catch(() => {
+      this.#connections.delete(connectionSlug);
+    });
+
+    return await connection;
   }
 
   async #connect(params: ConnectionObject): Promise<Connection> {
-    const { slug, name: _, ...rest } = params;
-
-    // don't connect twice to the same connection
-    if (this.#connections.has(slug)) {
-      throw new Error(`Connection already opened on "${slug}"`);
-    }
+    const { slug, name: _, host, port, ...rest } = params;
 
     log.debug(`Open connection to "${slug}"`);
 
@@ -362,27 +390,40 @@ class ConnectionStack {
     // to keep app startup light.
     const { createConnection } = await import('mysql2/promise');
 
-    // TODO use a connection pool instead ? https://github.com/mysqljs/mysql?tab=readme-ov-file#establishing-connections
-    const connection = await createConnection(rest);
+    try {
+      // `createConnection` already resolves on the `connect` event and rejects
+      // on `error`, so there is nothing left to await afterwards.
+      // TODO use a connection pool instead ? https://github.com/mysqljs/mysql?tab=readme-ov-file#establishing-connections
+      const connection = await createConnection({
+        ...rest,
+        host,
+        port,
+        connectTimeout: CONNECT_TIMEOUT_MS,
+      });
 
-    connection.on('end', () => {
-      log.debug(`Connection to "${slug}" ended`);
-      this.#connections.delete(slug);
-    });
+      connection.on('end', () => {
+        log.debug(`Connection to "${slug}" ended`);
+        this.#connections.delete(slug);
+      });
 
-    connection.on('error', (err) => {
-      log.debug(`Received error from "${slug}" connection`);
-      log.error(err);
+      connection.on('error', (err) => {
+        log.debug(`Received error from "${slug}" connection`);
+        log.error(err);
 
-      // end the connection from the stack. It will be regerenated on the next query
-      connection.end();
-    });
+        // end the connection from the stack. It will be regerenated on the next query
+        connection.end();
+      });
 
-    await connection.connect();
+      return connection;
+    } catch (error) {
+      log.error(`Could not connect to "${slug}"`, error);
 
-    this.#connections.set(slug, connection);
-
-    return connection;
+      throw asConnectionError(error, {
+        host,
+        port,
+        timeoutMs: CONNECT_TIMEOUT_MS,
+      });
+    }
   }
 }
 

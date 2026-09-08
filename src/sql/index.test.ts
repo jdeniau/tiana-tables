@@ -1,12 +1,22 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ConnectionFailure } from './connectionError';
 import connectionStack from './index';
+
+const mocks = vi.hoisted(() => ({
+  connections: {} as Record<string, unknown>,
+  createConnection: vi.fn(),
+}));
 
 vi.mock('electron-log', () => ({
   default: { debug: vi.fn(), error: vi.fn() },
 }));
 
 vi.mock('../configuration', () => ({
-  getConfiguration: () => ({ connections: {} }),
+  getConfiguration: () => ({ connections: mocks.connections }),
+}));
+
+vi.mock('mysql2/promise', () => ({
+  createConnection: mocks.createConnection,
 }));
 
 /**
@@ -88,5 +98,120 @@ describe('database-scoped queries', () => {
     );
 
     expect(executeQuery).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Opening a connection is the one operation the user waits on with nothing to
+ * look at, so it is bounded, attempted once, and answered — never thrown past
+ * the `{ result, error }` envelope the renderer decodes.
+ */
+describe('opening a connection', () => {
+  function fakeConnection() {
+    return {
+      on: vi.fn(),
+      end: vi.fn().mockResolvedValue(undefined),
+      query: vi.fn().mockResolvedValue([[], []]),
+    };
+  }
+
+  function timeout() {
+    return Object.assign(new Error('connect ETIMEDOUT'), {
+      code: 'ETIMEDOUT',
+    });
+  }
+
+  beforeEach(async () => {
+    // the suite above leaves `executeQueryAndRetry` spied by its last test
+    vi.restoreAllMocks();
+    mocks.createConnection.mockReset();
+
+    mocks.connections = {
+      'my-connection': {
+        name: 'My connection',
+        slug: 'my-connection',
+        host: 'db.example.org',
+        port: 3306,
+        user: 'root',
+        password: 'secret',
+        appState: { activeDatabase: 'some-database' },
+      },
+    };
+
+    await connectionStack.closeAllConnections();
+    connectionStack.onConnectionSlugChanged('my-connection', undefined);
+  });
+
+  test('the handshake is given a deadline of our own', async () => {
+    mocks.createConnection.mockResolvedValue(fakeConnection());
+
+    await connectionStack.showDatabases();
+
+    expect(mocks.createConnection).toHaveBeenCalledWith(
+      expect.objectContaining({
+        host: 'db.example.org',
+        port: 3306,
+        connectTimeout: 10_000,
+      })
+    );
+    // `appState` is configuration of ours, and no business of the driver's
+    expect(mocks.createConnection).toHaveBeenCalledWith(
+      expect.not.objectContaining({ appState: expect.anything() })
+    );
+  });
+
+  test('queries racing for the same connection share one handshake', async () => {
+    mocks.createConnection.mockResolvedValue(fakeConnection());
+
+    // what React Router does with the loaders of a `/connections/x/db/tables/t`
+    await Promise.all([
+      connectionStack.showDatabases(),
+      connectionStack.showTableStatus('some-database'),
+    ]);
+
+    expect(mocks.createConnection).toHaveBeenCalledTimes(1);
+  });
+
+  test('a handshake that fails is answered, not thrown', async () => {
+    mocks.createConnection.mockRejectedValue(timeout());
+
+    const { result, error } = await connectionStack.showDatabases();
+
+    expect(result).toBeUndefined();
+    expect(error).toMatchObject({
+      detail: {
+        kind: 'connection',
+        reason: ConnectionFailure.timeout,
+        host: 'db.example.org',
+        // the deadline travels with the failure, so the message can name it
+        timeoutMs: 10_000,
+      },
+    });
+  });
+
+  test('racing queries fail once, on one attempt', async () => {
+    mocks.createConnection.mockRejectedValue(timeout());
+
+    const [first, second] = await Promise.all([
+      connectionStack.showDatabases(),
+      connectionStack.showTableStatus('some-database'),
+    ]);
+
+    expect(mocks.createConnection).toHaveBeenCalledTimes(1);
+    expect(first.error).toBeDefined();
+    expect(second.error).toBeDefined();
+  });
+
+  test('a failed attempt is forgotten, so a later query tries again', async () => {
+    mocks.createConnection
+      .mockRejectedValueOnce(timeout())
+      .mockResolvedValueOnce(fakeConnection());
+
+    const failed = await connectionStack.showDatabases();
+    const retried = await connectionStack.showDatabases();
+
+    expect(failed.error).toBeDefined();
+    expect(retried.error).toBeUndefined();
+    expect(mocks.createConnection).toHaveBeenCalledTimes(2);
   });
 });

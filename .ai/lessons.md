@@ -2,6 +2,11 @@
 
 Rules learned from past mistakes and audits. Review this file at the start of each session. Add a new entry after any correction from the user.
 
+## Databases and throwaway infrastructure
+
+- **Never open a connection whose name does not carry `(dev)`, and name every connection I create `… (dev)`.** Set by the user (2026-09-08) the moment a MariaDB container appeared for a verification run. The name in the connection list is the only thing standing between a test query and someone's real data, so the marker lives there, and the absence of the marker is a stop sign — not something to weigh against how harmless the query looks.
+- **A database spun up to verify something is worth keeping: create it persistent from the start.** The same run used `docker run --rm` with no volume, and the tidy-up at the end destroyed it along with its schema — the user asked to keep it one message too late ("ne la supprime pas, garde-là ça permettra de développer dessus"). A named volume, no `--rm`, `--restart unless-stopped` and a stable name cost nothing at creation and turn a throwaway into a dev fixture. The dev database now lives in the `tiana-dev-mysql` container (MariaDB 11, port 13306, `root`/`devpassword`, volume `tiana-dev-mysql`, database `tiana_dev`). Corollary: **do not clean up what I did not have to create** — leaving a container running is reversible, `docker rm -f` is not.
+
 ## Git / PRs
 
 - **No "Generated with Claude" watermark.** The user does not want the `🤖 Generated with Claude Code` footer (or any similar attribution) in PR descriptions, nor `Co-Authored-By: Claude` trailers in commit messages. Omit them even though the default tooling instructions ask for them.
@@ -92,6 +97,8 @@ Rules learned from past mistakes and audits. Review this file at the start of ea
 
 - **A navigation is a `Link`, never an `onClick` that calls `navigate`.** Corrected by the user (2026-09-04) on the connections strip, which had turned the previous `Link`s into buttons: « je préfère des liens, même si on n'est pas sur du web ». A link keeps the router's semantics (href, middle-click, focus order, `aria-current`) and says where it goes; a button that navigates hides it. Reserve `navigate()` for what follows an action (a form submitted, a filter built).
 
+- **`useNavigation()` is not `useNavigate()` — say so when proposing it.** The plan for the connection spinner said "l'état d'attente est lu avec `useNavigation()`" and the user pushed back (2026-09-08): « on n'utilise pas `useNavigation`, on garde le `Link` ». The two names differ by one letter and mean opposite things: `useNavigate()` returns an imperative navigator (the thing [[feedback-links-over-navigate]] rules out), `useNavigation()` is read-only state about the navigation the router is already running, and the `Link` stays untouched. Naming the hook is not enough — spell out that nothing becomes imperative. Related: react-router offers no "on click" hook to hang a pending state on; `useLinkClickHandler` builds a link component, it does not observe one. And a hand-rolled `onClick` + `useState` is worse than it looks, because nothing clears it when the navigation *fails*.
+
 ## Renderer / dependencies
 
 - **Never import from `mysql2` in renderer code.** `mysql2` is CommonJS and breaks in the renderer bundle. Import type-only symbols from `mysql2/promise` with `import type`, and runtime values like `Types` from the legacy `mysql` package (see `src/renderer/component/Cell.tsx`).
@@ -130,6 +137,7 @@ Rules learned from past mistakes and audits. Review this file at the start of ea
 
 ## IPC
 
+- **The context bridge rebuilds an `Error` from `name`, `message` and `stack` alone — every property added to it is dropped, in silence.** Found by measuring rather than reading (2026-09-08): a connection failure tagged in the main process arrived in the renderer with `Object.keys(e)` empty, so the error page fell back to its generic branch. That is exactly why `decodeError` returns a plain object literal for `sqlError` instead of an `Error` — a plain object is cloned whole. So: anything a renderer must *read* off an error travels as a plain object, and only the last hop (a `throw` inside a route loader) may be error-shaped. Check a tag survived with `window.sql.x().catch(e => Object.keys(e))` in the page, not by reasoning about the encoder.
 - **Channel enums must stay in dedicated `src/preload/*Channel.ts` files.** They are imported by both preload and main; importing any other preload file into the main process breaks the build.
 
 ## Knip
