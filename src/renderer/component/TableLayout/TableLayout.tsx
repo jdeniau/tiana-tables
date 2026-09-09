@@ -105,11 +105,7 @@ export function TableLayout({
   // the same two-region split as the SQL page, so the two screens read as
   // siblings: filters on top, data below
   return (
-    <Splitter
-      orientation="vertical"
-      onResizeEnd={onResizeEnd}
-      style={{ height: '100%' }}
-    >
+    <Splitter orientation="vertical" onResizeEnd={onResizeEnd}>
       <Splitter.Panel {...panelProps}>
         <WhereFilter defaultValue={where ?? ''} tableName={tableName} />
       </Splitter.Panel>

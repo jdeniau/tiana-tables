@@ -20,6 +20,7 @@ import { useTranslation } from '../../i18n';
 import DatabaseSelector from '../component/DatabaseSelector';
 import { KeyboardShortcut } from '../component/KeyboardShortcut';
 import { RegionBody, RegionFoot } from '../component/Style/Region';
+import { fill } from '../component/Style/fill';
 import TableList from '../component/TableList';
 import { usePanelSize } from '../hooks/usePanelSize';
 import { commentForeground, fontSize, space } from '../theme';
@@ -30,9 +31,9 @@ import NavigateModalContextProvider, {
 // The sidebar: the database name, the way to a table, the tables, their count.
 // The rule on its right is the bar of the splitter, not a border of its own.
 const Sider = styled.div`
+  ${fill}
   display: flex;
   flex-direction: column;
-  height: 100%;
 `;
 
 const SiderHead = styled.div`
@@ -54,11 +55,13 @@ const GoToTable = styled(Button)`
   }
 `;
 
+// every page it hosts fills it and scrolls inside itself: a second scroller
+// here would carry a region's own scrollbar out of the viewport
 const Content = styled.div`
+  ${fill}
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: auto;
+  overflow: hidden;
 `;
 
 interface RouteParams extends LoaderFunctionArgs {
@@ -154,10 +157,7 @@ export default function ConnectionDetailPage() {
         <ForeignKeysContextProvider keyColumnUsageRows={keyColumnUsageRows}>
           <AllColumnsContextProvider allColumns={allColumns}>
             <NavigateModalContextProvider>
-              <Splitter
-                onResizeEnd={onResizeEnd}
-                style={{ flex: 'auto', minHeight: 0 }}
-              >
+              <Splitter onResizeEnd={onResizeEnd}>
                 <Splitter.Panel {...panelProps}>
                   <Sider>
                     <SiderHead>

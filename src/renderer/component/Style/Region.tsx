@@ -10,6 +10,7 @@ import {
   size,
   space,
 } from '../../theme';
+import { fill } from './fill';
 
 /**
  * A region of the workspace, as DESIGN.md rule 3 has it: named in condensed
@@ -18,10 +19,9 @@ import {
  * and table pages — so that it is never doubled.
  */
 export const Region = styled.section`
+  ${fill}
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;
 `;
 
 export const RegionHeader = styled.header`
@@ -72,9 +72,11 @@ export const RegionDetail = styled(RegionMeta)`
   word-break: break-word;
 `;
 
+/** The body holds one thing, and that thing fills it — a grid included. */
 export const RegionBody = styled.div`
-  flex: 1;
-  min-height: 0;
+  ${fill}
+  display: flex;
+  flex-direction: column;
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: ${selection} ${background};
@@ -95,10 +97,10 @@ export const RegionFoot = styled.footer`
 
 /** The layout of a screen with no data: one region alone on the background. */
 export const Centered = styled.div`
+  ${fill}
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
   padding: ${space.xl};
   overflow: auto;
 `;
@@ -113,6 +115,8 @@ export const FramedRegionBody = styled(RegionBody)`
 
 /** A region standing alone gets its frame: the rule on all four sides, and under its header. */
 export const FramedRegion = styled(Region)`
+  /* it sizes itself: Centered is a flex row, and a region grows by default */
+  flex: none;
   width: 480px;
   max-width: 100%;
   height: auto;
