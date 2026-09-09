@@ -6,7 +6,7 @@ import {
 import { t } from '../i18n';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import connectionStackInstance from '../sql';
-import { isMacPlatform } from './helpers';
+import { isDevApp, isMacPlatform } from './helpers';
 
 const isMac = isMacPlatform();
 
@@ -133,15 +133,33 @@ export function createMenu(mainWindow: BrowserWindow) {
       role: 'viewMenu',
       // label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
-        { type: 'separator' },
         { role: 'resetZoom' },
         { role: 'zoomIn' },
         { role: 'zoomOut' },
         { type: 'separator' },
         { role: 'togglefullscreen' },
+        {
+          type: 'separator',
+        },
+        {
+          label: t('menu.view.devTools'),
+          submenu: [
+            { role: 'reload' },
+            { role: 'forceReload' },
+            { role: 'toggleDevTools' },
+            {
+              label: t('menu.view.togglePath'),
+              type: 'checkbox',
+              checked: isDevApp(),
+              click: (item: Electron.MenuItem) => {
+                mainWindow.webContents.send(
+                  'pathBarVisibilityChange',
+                  item.checked
+                );
+              },
+            },
+          ],
+        },
       ],
     },
     {
@@ -270,7 +288,7 @@ export function createMenu(mainWindow: BrowserWindow) {
 
         sqlPanelLink.enabled = Boolean(
           connectionStackInstance.currentConnectionSlug &&
-            connectionStackInstance.databaseName
+          connectionStackInstance.databaseName
         );
       });
     }, 1);

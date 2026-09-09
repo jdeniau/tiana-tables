@@ -6,7 +6,7 @@ import { ThemeContextProvider } from '../../../contexts/ThemeContext';
 import { useTranslation } from '../../../i18n';
 import ButtonLink from '../../../renderer/component/ButtonLink';
 import { background } from '../../../renderer/theme';
-import Debug from '../../component/Debug';
+import PathBar from '../../component/PathBar';
 import { Brand, TitleBar, TitleGroup } from '../../component/Style/TitleBar';
 
 const Content = styled(Layout.Content)`
@@ -28,7 +28,7 @@ export default function RootErrorPage() {
       <ThemeContextProvider>
         <div id="error-page">
           <Layout>
-            <Debug />
+            <PathBar />
             <TitleBar>
               <TitleGroup>
                 <Brand to="/">Tiana Tables</Brand>
