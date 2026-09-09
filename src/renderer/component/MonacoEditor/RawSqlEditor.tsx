@@ -16,7 +16,7 @@ import {
   statementAtOffset,
 } from '../../../sql/splitStatements';
 import useEffectOnce from '../../hooks/useEffectOnce';
-import { accent, mono, selection, size } from '../../theme';
+import { accent, fontScale, mono, selection, size } from '../../theme';
 import { setQueryPrefix } from './queryPrefix';
 import { buildMonacoTheme } from './themes';
 import useCompletion from './useCompletion';
@@ -80,14 +80,14 @@ const CurrentStatementStyle = createGlobalStyle<{
 `;
 
 /**
- * The editor as DESIGN.md draws it: 13px mono on 22px lines, a right-aligned
- * gutter and nothing else in the margins — no folding, no glyphs, no overview
- * ruler. The current-statement bar lives in the lines-decorations margin,
- * right of the numbers.
+ * The editor as DESIGN.md draws it: the base size in mono on 22px lines, a
+ * right-aligned gutter and nothing else in the margins — no folding, no
+ * glyphs, no overview ruler. The current-statement bar lives in the
+ * lines-decorations margin, right of the numbers.
  */
 const BASE_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
   fontFamily: mono,
-  fontSize: 13,
+  fontSize: fontScale.base,
   lineHeight: parseInt(size.line, 10),
   lineNumbersMinChars: 3,
   folding: false,
