@@ -4,6 +4,7 @@ import {
   ResultSetHeader,
   RowDataPacket,
 } from 'mysql2/promise';
+import { ConnectionColor } from '../configuration/connectionColor';
 
 export type QueryReturnType =
   | ResultSetHeader
@@ -27,6 +28,7 @@ export type ConnectionObject = {
   port: number;
   user: string;
   password: string;
+  color?: ConnectionColor;
 };
 
 export type ConnectionObjectWithoutSlug = Omit<ConnectionObject, 'slug'>;

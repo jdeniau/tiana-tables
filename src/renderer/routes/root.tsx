@@ -1,8 +1,11 @@
 import { Layout } from 'antd';
 import { Outlet, useMatch, useNavigate } from 'react-router';
-import { styled } from 'styled-components';
+import { styled, useTheme } from 'styled-components';
 import packageJson from '../../../package.json';
-import { ConfigurationContextProvider } from '../../contexts/ConfigurationContext';
+import {
+  ConfigurationContextProvider,
+  useConfiguration,
+} from '../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { ThemeContextProvider } from '../../contexts/ThemeContext';
@@ -17,6 +20,7 @@ import { Brand, TitleBar, TitleGroup } from '../component/Style/TitleBar';
 import useEffectOnce from '../hooks/useEffectOnce';
 import useUpdateStatus from '../hooks/useUpdateStatus';
 import { background } from '../theme';
+import { ConnectionTint, resolveConnectionTint } from '../theme/connectionTint';
 
 const Content = styled(Layout.Content)`
   display: flex;
@@ -53,9 +57,48 @@ function ToggleRawSqlButton() {
   );
 }
 
+/**
+ * The colour the current connection is marked with, resolved against the
+ * theme. Without a current connection, or without a colour on it, the frame
+ * keeps the palette.
+ */
+function useCurrentConnectionTint(): ConnectionTint | undefined {
+  const { currentConnectionSlug } = useConnectionContext();
+  const { configuration } = useConfiguration();
+  const theme = useTheme();
+
+  const connection = currentConnectionSlug
+    ? configuration.connections[currentConnectionSlug]
+    : undefined;
+
+  return resolveConnectionTint(connection?.color, theme);
+}
+
+/** The frame: the brand, the settings and the connections left, the SQL toggle right. */
+function AppTitleBar() {
+  const updateStatus = useUpdateStatus();
+  const tint = useCurrentConnectionTint();
+
+  return (
+    <TitleBar $tint={tint}>
+      <TitleGroup>
+        <Brand to="/">Tiana Tables</Brand>
+        <SettingsMenu
+          version={packageJson.version}
+          updateStatus={updateStatus}
+        />
+        <ConnectionNav />
+      </TitleGroup>
+
+      <TitleGroup>
+        <ToggleRawSqlButton />
+      </TitleGroup>
+    </TitleBar>
+  );
+}
+
 export default function Root() {
   const navigate = useNavigate();
-  const updateStatus = useUpdateStatus();
 
   // Use `useEffectOnce` here as we don't want to register twice the same event
   // Do not use elsewhere, it's a hacky hook
@@ -77,20 +120,7 @@ export default function Root() {
         <ConnectionStack>
           <Layout>
             <PathBar />
-            <TitleBar>
-              <TitleGroup>
-                <Brand to="/">Tiana Tables</Brand>
-                <SettingsMenu
-                  version={packageJson.version}
-                  updateStatus={updateStatus}
-                />
-                <ConnectionNav />
-              </TitleGroup>
-
-              <TitleGroup>
-                <ToggleRawSqlButton />
-              </TitleGroup>
-            </TitleBar>
+            <AppTitleBar />
 
             <Content>
               <Outlet />

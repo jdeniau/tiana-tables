@@ -16,6 +16,7 @@ import {
   RegionHeader,
   RegionName,
 } from '../Style/Region';
+import ConnectionColorField from './ConnectionColorField';
 
 type Props = { connection?: ConnectionObject };
 
@@ -94,14 +95,25 @@ function ConnectionForm({ connection }: Props) {
         >
           {/* field groups 24px apart, fields 8px apart within a group */}
           <Flex vertical gap={space.xl}>
-            <Form.Item
-              name="name"
-              label={t('connection.form.name.label')}
-              rules={[{ required: true }]}
-              style={ITEM}
-            >
-              <Input />
-            </Form.Item>
+            {/* what the connection is called, and how it is marked in the frame */}
+            <Flex vertical gap={space.sm}>
+              <Form.Item
+                name="name"
+                label={t('connection.form.name.label')}
+                rules={[{ required: true }]}
+                style={ITEM}
+              >
+                <Input />
+              </Form.Item>
+
+              <Form.Item
+                name="color"
+                label={t('connection.form.color.label')}
+                style={ITEM}
+              >
+                <ConnectionColorField />
+              </Form.Item>
+            </Flex>
 
             <Flex gap={space.sm}>
               <Form.Item

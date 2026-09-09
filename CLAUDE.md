@@ -91,6 +91,12 @@ mono everywhere except region names in the condensed display face, the accent
 - **`src/renderer/theme/index.ts` owns layout and colour** — `space`, `size`,
   `mono`, `display` next to the base16 accessors. Raw pixel values in a
   styled-component are a review comment.
+- **The frame's colours go through `frame`**, five CSS custom properties whose
+  default value is the slot each replaces. A title bar tinted by the colour of
+  the current connection (`resolveConnectionTint`,
+  `src/renderer/theme/connectionTint.ts`) re-points them on itself, so the
+  popups it opens — a portal, outside it in the DOM — keep the palette. Use
+  them in anything the title bar renders, the accessors everywhere else.
 - **`src/renderer/component/Style/`** holds the frame: `Region*` (a named,
   scrollable region of the workspace), `TabStrip` (a run of siblings separated by
   hairlines, with a pip on the active one), `TitleBar`. Routes compose these,

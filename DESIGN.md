@@ -193,6 +193,15 @@ Ship it with a Storybook story — the repo already has Storybook.
   connections as a run separated by `base03` rules, the active one carrying its
   pip. Right: one settings affordance. Nothing in the middle. The inline
   language and theme selectors move into the settings menu with the version.
+  - **The one exception to the single background**: a connection may be marked
+    with a colour, and the bar is then filled with it — the point being that a
+    production connection is impossible to miss. Everything in the bar turns
+    `base07` or `base00`, whichever contrasts more with the fill, and the
+    hairlines and inactive items take 70 % of that tone over the fill. The
+    colour is one of the eight colourful slots, so it follows the theme, or one
+    of the user's own. The colours reach the bar as CSS custom properties
+    (`frame` in `renderer/theme`), which is what keeps the popups it opens —
+    rendered in a portal, outside it in the DOM — on the palette.
 - **Sidebar** — 212px. Database name in the display face with a caret, the ⌘K
   "Go to table…" input directly under it (it is deliberately *not* in the title
   bar — it belongs next to the tables it searches), then 24px mono rows, and a

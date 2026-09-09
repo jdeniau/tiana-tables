@@ -1,14 +1,7 @@
 import { ComponentPropsWithRef, ReactNode, RefAttributes } from 'react';
 import { Link, LinkProps } from 'react-router-dom';
 import { css, styled } from 'styled-components';
-import {
-  accent,
-  commentForeground,
-  emphasisForeground,
-  fontSize,
-  space,
-  variableForeground,
-} from '../../theme';
+import { fontSize, frame, space, variableForeground } from '../../theme';
 
 /** the square before an active item — the one selection motif of the frame */
 const PIP = '6px';
@@ -39,7 +32,7 @@ export const TabStrip = styled.div<{ $caps?: boolean; $framed?: boolean }>`
     css`
       && > :first-child {
         padding-inline-start: ${space.md};
-        border-inline-start: 1px solid ${commentForeground};
+        border-inline-start: 1px solid ${frame.muted};
       }
     `}
 `;
@@ -64,11 +57,11 @@ const item = css<ItemProps>`
     props.$failed
       ? variableForeground(props)
       : props.$active
-        ? emphasisForeground(props)
-        : commentForeground(props)};
+        ? frame.emphasis
+        : frame.muted};
 
   & + & {
-    border-inline-start: 1px solid ${commentForeground};
+    border-inline-start: 1px solid ${frame.muted};
   }
 
   &:first-child {
@@ -76,7 +69,7 @@ const item = css<ItemProps>`
   }
 
   &:focus-visible {
-    outline: 1px solid ${accent};
+    outline: 1px solid ${frame.accent};
   }
 `;
 
@@ -98,7 +91,7 @@ const Pip = styled.span`
   flex: none;
   width: ${PIP};
   height: ${PIP};
-  background: ${accent};
+  background: ${frame.accent};
 `;
 
 const Label = styled.span`
