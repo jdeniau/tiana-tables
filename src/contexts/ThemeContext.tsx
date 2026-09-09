@@ -28,6 +28,7 @@ import {
   fontScale,
   fontSize,
   foreground,
+  frame,
   mono,
   mutedForeground,
   selection,
@@ -53,8 +54,10 @@ const ThemeContext = createContext<ThemeContextProps>({
 ThemeContext.displayName = 'ThemeContext';
 
 /**
- * What the frame inherits rather than gets from antd: the mono face, and the
- * scrollbars — Chromium honours `scrollbar-color`, so no `::-webkit-scrollbar`.
+ * What the frame inherits rather than gets from antd: the mono face, the
+ * scrollbars — Chromium honours `scrollbar-color`, so no `::-webkit-scrollbar`
+ * — and the frame colours, which a tinted title bar re-points on itself
+ * (see `frame` in `renderer/theme`).
  */
 const GlobalStyle = createGlobalStyle<object>`
   body {
@@ -62,6 +65,12 @@ const GlobalStyle = createGlobalStyle<object>`
     font-size: ${fontSize.base};
     scrollbar-width: thin;
     scrollbar-color: ${selection} ${background};
+
+    --frame-bg: ${background};
+    --frame-text: ${foreground};
+    --frame-muted: ${commentForeground};
+    --frame-emphasis: ${emphasisForeground};
+    --frame-accent: ${accent};
   }
 `;
 
@@ -188,10 +197,12 @@ export function ThemeContextProvider({
         Button: {
           // base00 on base0D reads on every palette; white does not on Dracula
           primaryColor: colorBg,
-          // a text button is a muted word that brightens on hover, no fill
-          textTextColor: colorRule,
-          textTextHoverColor: colorText,
-          textTextActiveColor: colorText,
+          // a text button is a muted word that brightens on hover, no fill.
+          // Through the frame variables, so the settings affordance follows a
+          // tinted title bar; outside one they hold base03 and base05.
+          textTextColor: frame.muted,
+          textTextHoverColor: frame.text,
+          textTextActiveColor: frame.text,
           textHoverBg: 'transparent',
         },
         // the sidebar rows: 24px, 12px mono, no margins, the fill flush to
@@ -223,6 +234,10 @@ export function ThemeContextProvider({
         Layout: {
           headerHeight: 38,
           headerPadding: `0 ${space.md}`,
+          // the fill and the text of the title bar are the frame's, and
+          // `TitleBar` paints them itself — antd declares its own variables on
+          // the `Layout` element, so a `var()` given here is resolved there,
+          // above the header that re-points the frame colours
           headerBg: colorBg,
           headerColor: colorText,
           bodyBg: colorBg,

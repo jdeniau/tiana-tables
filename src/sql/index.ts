@@ -437,7 +437,7 @@ class ConnectionStack {
   }
 
   async #connect(params: ConnectionObject): Promise<Connection> {
-    const { slug, name: _, host, port, ...rest } = params;
+    const { slug, name: _name, color: _color, host, port, ...rest } = params;
 
     log.debug(`Open connection to "${slug}"`);
 

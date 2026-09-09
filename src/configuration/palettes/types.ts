@@ -51,6 +51,27 @@ interface Base16Palette {
   readonly base0F: string;
 }
 
+/**
+ * base08 to base0F: the eight slots base16 calls the accent colors. base00 to
+ * base07 are the greys the frame is built from, so a mark that has to be seen
+ * comes from one of these — hence the single list, ordered by slot.
+ *
+ * Not to be confused with `accent` in `renderer/theme`, which is the one base0D
+ * mark of the design.
+ */
+export const ACCENT_SLOTS = [
+  'base08',
+  'base09',
+  'base0A',
+  'base0B',
+  'base0C',
+  'base0D',
+  'base0E',
+  'base0F',
+] as const satisfies readonly (keyof Base16Palette)[];
+
+export type AccentSlot = (typeof ACCENT_SLOTS)[number];
+
 export interface AppTheme {
   readonly name: string;
   /** drives the antd algorithm and the Monaco base theme */

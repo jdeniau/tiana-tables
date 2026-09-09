@@ -74,6 +74,28 @@ export const emphasisForeground = ({ theme }: StyledProps): string =>
 export const accent = ({ theme }: StyledProps): string => theme.palette.base0D;
 
 /**
+ * The colours of the frame, as CSS custom properties rather than as palette
+ * accessors: a tinted title bar re-points them for its own subtree, and only
+ * for it — the popups it opens are rendered in a portal, outside that subtree
+ * in the DOM though inside it in the React tree, so they keep the palette.
+ *
+ * `GlobalStyle` gives each one the value of the slot it stands for, so
+ * anything outside a tinted frame renders as before.
+ */
+export const frame = {
+  /** base00 — the fill of the title bar */
+  background: 'var(--frame-bg)',
+  /** base05 — body text */
+  text: 'var(--frame-text)',
+  /** base03 — hairlines, and the items that are not active */
+  muted: 'var(--frame-muted)',
+  /** base07 — the active item, the brand */
+  emphasis: 'var(--frame-emphasis)',
+  /** base0D — the pip and the focus ring */
+  accent: 'var(--frame-accent)',
+} as const;
+
+/**
  * Layout tokens, from DESIGN.md. The parent owns the `gap`; between two
  * regions there is only the 1px rule.
  */
