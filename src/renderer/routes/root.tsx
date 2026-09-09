@@ -1,4 +1,3 @@
-import { Suspense, lazy } from 'react';
 import { Layout } from 'antd';
 import { Outlet, useMatch, useNavigate } from 'react-router';
 import { styled } from 'styled-components';
@@ -11,14 +10,13 @@ import { useTranslation } from '../../i18n';
 import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
+import PathBar from '../component/PathBar';
 import SettingsMenu from '../component/SettingsMenu';
 import { TabStrip, TabStripLink } from '../component/Style/TabStrip';
 import { Brand, TitleBar, TitleGroup } from '../component/Style/TitleBar';
 import useEffectOnce from '../hooks/useEffectOnce';
 import useUpdateStatus from '../hooks/useUpdateStatus';
 import { background } from '../theme';
-
-const Debug = lazy(() => import('../component/Debug'));
 
 const Content = styled(Layout.Content)`
   display: flex;
@@ -78,11 +76,7 @@ export default function Root() {
       <ThemeContextProvider>
         <ConnectionStack>
           <Layout>
-            {window.isDev ? (
-              <Suspense fallback={null}>
-                <Debug />
-              </Suspense>
-            ) : null}
+            <PathBar />
             <TitleBar>
               <TitleGroup>
                 <Brand to="/">Tiana Tables</Brand>
