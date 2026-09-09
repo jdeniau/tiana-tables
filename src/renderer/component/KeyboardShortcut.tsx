@@ -1,7 +1,7 @@
 import { type JSX, ReactNode } from 'react';
 import { Tooltip } from 'antd';
 import { styled } from 'styled-components';
-import { mono } from '../theme';
+import { fontSize, mono } from '../theme';
 
 type Props = {
   /** The key to press to activate the shortcut */
@@ -53,7 +53,7 @@ export function KeyboardShortcutTooltip(
 
 const Keys = styled.kbd`
   font-family: ${mono};
-  font-size: 11px;
+  font-size: ${fontSize.sm};
   letter-spacing: 0;
   text-transform: none;
   opacity: 0.75;

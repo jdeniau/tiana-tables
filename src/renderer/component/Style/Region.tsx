@@ -5,6 +5,7 @@ import {
   display,
   displayWeight,
   emphasisForeground,
+  fontSize,
   selection,
   size,
   space,
@@ -46,7 +47,7 @@ export const RegionName = styled.h2`
   margin: 0;
   font-family: ${display};
   font-weight: ${displayWeight};
-  font-size: 15px;
+  font-size: ${fontSize.lg};
   line-height: 1;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -56,7 +57,7 @@ export const RegionName = styled.h2`
 /** The meta text of a header row: a statement count, `14 rows · 42 ms` */
 export const RegionMeta = styled.span`
   flex: none;
-  font-size: 11px;
+  font-size: ${fontSize.sm};
   color: ${commentForeground};
   white-space: nowrap;
 `;
@@ -88,7 +89,7 @@ export const RegionFoot = styled.footer`
   height: ${size.control};
   padding: 0 ${space.md};
   border-top: 1px solid ${commentForeground};
-  font-size: 11px;
+  font-size: ${fontSize.sm};
   color: ${commentForeground};
 `;
 

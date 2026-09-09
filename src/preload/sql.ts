@@ -8,6 +8,7 @@ import type {
   ShowDatabasesResult,
   ShowKeyRow,
   ShowTableStatusResult,
+  TableStructureResult,
 } from '../sql/types';
 import type { UpdateCellOutcome, UpdateCellRequest } from '../sql/updateCell';
 import { bindChannel, bindEvent } from './bindChannel';
@@ -40,6 +41,11 @@ interface Sql {
     tableName?: string
   ): QueryResult<KeyColumnUsageRow[]>;
   getAllColumns(databaseName: string): QueryResult<ColumnDetailResult>;
+  /** Every column of one table with its detail, for the structure page. */
+  getTableStructure(
+    databaseName: string,
+    tableName: string
+  ): QueryResult<TableStructureResult>;
   showDatabases(): QueryResult<ShowDatabasesResult>;
   getPrimaryKeys(
     databaseName: string,
@@ -70,6 +76,9 @@ export const sql: Sql = {
 
   getAllColumns: async (databaseName) =>
     doInvokeQuery(SQL_CHANNEL.GET_ALL_COLUMNS, databaseName),
+
+  getTableStructure: async (databaseName, tableName) =>
+    doInvokeQuery(SQL_CHANNEL.GET_TABLE_STRUCTURE, databaseName, tableName),
 
   getPrimaryKeys: async (databaseName, tableName) =>
     doInvokeQuery(SQL_CHANNEL.GET_PRIMARY_KEYS, databaseName, tableName),

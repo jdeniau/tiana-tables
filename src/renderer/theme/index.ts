@@ -89,8 +89,40 @@ export const size = {
   titleBar: '38px',
   regionHeader: '32px',
   control: '24px',
+  /** one segment of a view switch, the height antd's small `Segmented` has */
+  segment: '20px',
   row: '26px',
   line: '22px',
+} as const;
+
+/**
+ * The base of the type scale, and the one value a font size chosen in the
+ * settings would have to move: the two other steps are derived from it, so no
+ * size has to be re-tuned alongside.
+ *
+ * The step is ± 2, which is also why the antd `fontSize*` tokens are pinned
+ * from here: its own algorithm would derive 10 and 14 from a 13 base, and the
+ * frame is built on 11 / 13 / 15.
+ */
+const BASE_FONT_SIZE = 13;
+
+/**
+ * The type scale as numbers, for antd's `fontSize*` tokens — they take
+ * numbers, not lengths. `fontSize` below is the same scale for CSS.
+ */
+export const fontScale = {
+  base: BASE_FONT_SIZE,
+  /** the frame: column heads, meta text, segments, foot rows, shortcuts */
+  sm: BASE_FONT_SIZE - 2,
+  /** region names */
+  lg: BASE_FONT_SIZE + 2,
+} as const;
+
+/** The type scale, for styled-components. */
+export const fontSize = {
+  base: `${fontScale.base}px`,
+  sm: `${fontScale.sm}px`,
+  lg: `${fontScale.lg}px`,
 } as const;
 
 /** Every text of the app but the region names */

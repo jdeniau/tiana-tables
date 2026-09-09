@@ -3,11 +3,9 @@ import { Button, Splitter } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { useNavigate } from 'react-router-dom';
 import { PANEL } from '../../../configuration/panels';
-import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
 import { escapeIdentifier } from '../../../sql/escapeIdentifier';
 import { usePanelSize } from '../../hooks/usePanelSize';
-import ButtonLink from '../ButtonLink';
 import WhereFilter from '../Query/WhereFilter';
 import {
   Region,
@@ -19,6 +17,7 @@ import {
   RegionName,
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
+import TableViewSwitch from '../TableViewSwitch';
 
 interface TableNameProps {
   tableName: string;
@@ -36,7 +35,6 @@ export function TableLayout({
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { currentConnectionSlug } = useConnectionContext();
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.TABLE_FILTERS);
   const [result, setResult] = useState<null | RowDataPacket[]>(null);
   const [fields, setFields] = useState<null | FieldPacket[]>(null);
@@ -128,14 +126,7 @@ export function TableLayout({
               )}
             </RegionGroup>
 
-            <ButtonLink
-              size="small"
-              variant="link"
-              color="default"
-              to={`/connections/${currentConnectionSlug}/${database}/tables/${tableName}/structure`}
-            >
-              {t('table.structure.link')}
-            </ButtonLink>
+            <TableViewSwitch />
           </RegionHeader>
 
           <RegionBody>

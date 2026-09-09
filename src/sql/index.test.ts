@@ -92,8 +92,43 @@ describe('database-scoped queries', () => {
     expect(values).toEqual({ databaseName: 'some-database' });
   });
 
+  test('the structure of a table is read with bound names, in column order', async () => {
+    await connectionStack.getTableStructure('some-database', 'some-table');
+
+    const { query, values } = lastQuery();
+
+    expect(query).toContain('c.TABLE_SCHEMA = :databaseName');
+    expect(query).toContain('AND c.TABLE_NAME = :tableName');
+    // the page reads as the table is declared, not as INFORMATION_SCHEMA
+    // happens to answer
+    expect(query).toContain('ORDER BY');
+    expect(query).toContain('c.ORDINAL_POSITION');
+    expect(values).toEqual({
+      databaseName: 'some-database',
+      tableName: 'some-table',
+    });
+  });
+
+  test('the structure of a table is one statement, subquery included', async () => {
+    await connectionStack.getTableStructure('some-database', 'some-table');
+
+    const { query } = lastQuery();
+
+    // `multipleStatements` is off: a `;` anywhere but at the very end would
+    // make the whole read fail
+    expect(String(query).replace(/;\s*$/, '')).not.toContain(';');
+  });
+
+  test('a missing table name is refused rather than queried', async () => {
+    await expect(
+      connectionStack.getTableStructure('some-database', '')
+    ).rejects.toThrow('Table name is required');
+
+    expect(executeQuery).not.toHaveBeenCalled();
+  });
+
   test('a missing database name is refused rather than queried', async () => {
-    await expect(connectionStack.showTableStatus('')).rejects.toThrowError(
+    await expect(connectionStack.showTableStatus('')).rejects.toThrow(
       'Database name is required'
     );
 
