@@ -4,7 +4,7 @@ import { Dropdown, Space } from 'antd';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import { RunMode, toRunMode } from '../../../sql/runMode';
-import { commentForeground } from '../../theme';
+import { commentForeground, fontSize } from '../../theme';
 import { KeyboardShortcut } from '../KeyboardShortcut';
 import { ActionButton } from '../Style/ActionButton';
 
@@ -19,7 +19,7 @@ const OptionTitle = styled.div`
 
 const OptionDescription = styled.div`
   color: ${commentForeground};
-  font-size: 11px;
+  font-size: ${fontSize.sm};
   max-width: 24em;
   white-space: normal;
 `;

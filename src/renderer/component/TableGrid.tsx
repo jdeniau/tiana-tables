@@ -22,6 +22,7 @@ import type { PrimaryKeyPart } from '../../sql/updateCell';
 import {
   background,
   commentForeground,
+  fontSize,
   selection,
   size,
   space,
@@ -576,7 +577,7 @@ const ScrollContainer = styled.div`
     flex-shrink: 0;
     box-sizing: border-box;
     padding: 0 ${space.md};
-    font-size: 13px;
+    font-size: ${fontSize.base};
     background: ${background};
     border-bottom: 1px solid ${selection};
     border-inline-end: 1px solid ${selection};
@@ -639,7 +640,7 @@ const HeaderCell = styled.th`
   flex-shrink: 0;
   box-sizing: border-box;
   padding: 0 ${space.md};
-  font-size: 11px;
+  font-size: ${fontSize.sm};
   font-weight: normal;
   letter-spacing: 0.1em;
   text-transform: uppercase;

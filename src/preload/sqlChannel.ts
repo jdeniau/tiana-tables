@@ -3,6 +3,7 @@ export enum SQL_CHANNEL {
   UPDATE_CELL = 'sql:updateCell',
   GET_KEY_COLUMN_USAGE = 'sql:getKeyColumnUsage',
   GET_ALL_COLUMNS = 'sql:getAllColumns',
+  GET_TABLE_STRUCTURE = 'sql:getTableStructure',
   GET_PRIMARY_KEYS = 'sql:getPrimaryKeys',
   SHOW_DATABASES = 'sql:showDatabases',
   SHOW_TABLE_STATUS = 'sql:showTableStatus',

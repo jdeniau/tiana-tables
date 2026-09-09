@@ -5,6 +5,7 @@ import {
   accent,
   commentForeground,
   emphasisForeground,
+  fontSize,
   space,
   variableForeground,
 } from '../../theme';
@@ -23,7 +24,7 @@ export const TabStrip = styled.div<{ $caps?: boolean; $framed?: boolean }>`
   align-items: center;
   min-width: 0;
   overflow: hidden;
-  font-size: 11px;
+  font-size: ${fontSize.sm};
 
   ${({ $caps }) =>
     $caps &&

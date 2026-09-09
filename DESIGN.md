@@ -204,9 +204,11 @@ Ship it with a Storybook story — the repo already has Storybook.
   edge: 11px uppercase column heads over a `base03` rule, 26px rows, numbers
   right-aligned in `base09` with `base02` cell separators.
 - **Table view** — the same two-region split as the SQL page, so the two screens
-  read as siblings. Filters on top, data below. Table name and its Structure
-  link in the data region header. "Load more rows" is a foot row, not a centred
-  button in the flow.
+  read as siblings. Filters on top, data below. Table name, its count and the
+  Data/Structure switch in the region header — the same framed, filled control
+  as the result region's Data/Chart, since it sits in the same place; the
+  structure view carries that header over the column detail of the table.
+  "Load more rows" is a foot row, not a centred button in the flow.
 - **Connect** — the one screen with no data in it: a single 480px region
   centred on `base00`, `space.lg` padding, `space.xl` between field groups, one
   solid button.

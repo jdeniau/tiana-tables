@@ -24,6 +24,7 @@ import {
   ShowKeyRow,
   ShowTableStatusResult,
   SqlBoundValues,
+  TableStructureResult,
 } from './types';
 import {
   CellReadRow,
@@ -67,6 +68,7 @@ class ConnectionStack {
     [SQL_CHANNEL.GET_KEY_COLUMN_USAGE]: this.getKeyColumnUsage,
     [SQL_CHANNEL.GET_PRIMARY_KEYS]: this.getPrimaryKeys,
     [SQL_CHANNEL.GET_ALL_COLUMNS]: this.getAllColumns,
+    [SQL_CHANNEL.GET_TABLE_STRUCTURE]: this.getTableStructure,
     [SQL_CHANNEL.UPDATE_CELL]: this.updateCell,
     [SQL_CHANNEL.SHOW_DATABASES]: this.showDatabases,
     [SQL_CHANNEL.SHOW_TABLE_STATUS]: this.showTableStatus,
@@ -151,6 +153,59 @@ class ConnectionStack {
 
     return this.executeQueryAndRetry<ColumnDetailResult>(query, false, {
       databaseName,
+    });
+  }
+
+  /**
+   * Every column of one table, as the structure page shows them.
+   *
+   * The foreign keys are read as a correlated subquery rather than a join: a
+   * column can sit in two constraints, and a join would then answer the same
+   * column twice — one row per column is what the page is about.
+   */
+  async getTableStructure(
+    databaseName: string,
+    tableName: string
+  ): QueryResultOrError<TableStructureResult> {
+    invariant(databaseName, 'Database name is required');
+    invariant(tableName, 'Table name is required');
+
+    const query = `
+      SELECT
+        c.COLUMN_NAME AS \`Column\`,
+        c.COLUMN_TYPE AS \`Type\`,
+        c.IS_NULLABLE AS \`Null\`,
+        c.COLUMN_KEY AS \`Key\`,
+        c.COLUMN_DEFAULT AS \`Default\`,
+        c.EXTRA AS \`Extra\`,
+        (
+          SELECT
+            GROUP_CONCAT(
+              DISTINCT CONCAT(k.REFERENCED_TABLE_NAME, '.', k.REFERENCED_COLUMN_NAME)
+              SEPARATOR ', '
+            )
+          FROM
+            INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
+          WHERE
+            k.TABLE_SCHEMA = c.TABLE_SCHEMA
+            AND k.TABLE_NAME = c.TABLE_NAME
+            AND k.COLUMN_NAME = c.COLUMN_NAME
+            AND k.REFERENCED_TABLE_NAME IS NOT NULL
+        ) AS \`References\`,
+        c.COLLATION_NAME AS \`Collation\`,
+        c.COLUMN_COMMENT AS \`Comment\`
+      FROM
+        INFORMATION_SCHEMA.COLUMNS c
+      WHERE
+        c.TABLE_SCHEMA = :databaseName
+        AND c.TABLE_NAME = :tableName
+      ORDER BY
+        c.ORDINAL_POSITION
+    `;
+
+    return this.executeQueryAndRetry<TableStructureResult>(query, false, {
+      databaseName,
+      tableName,
     });
   }
 

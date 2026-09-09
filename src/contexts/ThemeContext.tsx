@@ -25,6 +25,8 @@ import {
   classForeground,
   commentForeground,
   emphasisForeground,
+  fontScale,
+  fontSize,
   foreground,
   mono,
   mutedForeground,
@@ -57,7 +59,7 @@ ThemeContext.displayName = 'ThemeContext';
 const GlobalStyle = createGlobalStyle<object>`
   body {
     font-family: ${mono};
-    font-size: 13px;
+    font-size: ${fontSize.base};
     scrollbar-width: thin;
     scrollbar-color: ${selection} ${background};
   }
@@ -169,10 +171,9 @@ export function ThemeContextProvider({
         controlHeight: 24,
         controlHeightSM: 20,
         borderRadius: 0,
-        fontSize: 13,
-        // antd would derive 10 and 14: the type scale is 11 / 13 / 15
-        fontSizeSM: 11,
-        fontSizeLG: 15,
+        fontSize: fontScale.base,
+        fontSizeSM: fontScale.sm,
+        fontSizeLG: fontScale.lg,
         fontFamily: mono,
         fontFamilyCode: mono,
         padding: 8,
@@ -212,10 +213,10 @@ export function ThemeContextProvider({
           itemSelectedBg: colorSelection,
           itemSelectedColor: emphasisForeground(props),
         },
-        // form labels read as meta text: 11px, the rule colour, close to
-        // their field
+        // form labels read as meta text: the small step, the rule colour,
+        // close to their field
         Form: {
-          labelFontSize: 11,
+          labelFontSize: fontScale.sm,
           labelColor: colorRule,
           verticalLabelPadding: `0 0 ${space.xs}`,
         },
@@ -243,7 +244,7 @@ export function ThemeContextProvider({
         // the Data / Chart switch: a filled segment in the muted foreground,
         // the frame is drawn by its owner
         Segmented: {
-          fontSize: 11,
+          fontSize: fontScale.sm,
           trackPadding: 0,
           trackBg: 'transparent',
           itemColor: mutedForeground(props),

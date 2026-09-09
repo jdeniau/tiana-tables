@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Splitter } from 'antd';
 import { styled } from 'styled-components';
-import { size, space } from '../../theme';
+import { fontSize, size, space } from '../../theme';
 import { ActionButton } from './ActionButton';
 import {
   Region,
@@ -32,7 +32,7 @@ type Story = StoryObj<typeof Region>;
 const Lines = styled.pre`
   margin: 0;
   padding: 0 ${space.md};
-  font-size: 13px;
+  font-size: ${fontSize.base};
   line-height: ${size.line};
 `;
 

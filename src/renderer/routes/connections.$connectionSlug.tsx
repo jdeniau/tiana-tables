@@ -22,7 +22,7 @@ import { KeyboardShortcut } from '../component/KeyboardShortcut';
 import { RegionBody, RegionFoot } from '../component/Style/Region';
 import TableList from '../component/TableList';
 import { usePanelSize } from '../hooks/usePanelSize';
-import { commentForeground, space } from '../theme';
+import { commentForeground, fontSize, space } from '../theme';
 import NavigateModalContextProvider, {
   useNavigateModalContext,
 } from '../useNavigationListener';
@@ -49,7 +49,7 @@ const SiderTools = styled.div`
 const GoToTable = styled(Button)`
   &&& {
     justify-content: space-between;
-    font-size: 11px;
+    font-size: ${fontSize.sm};
     color: ${commentForeground};
   }
 `;
