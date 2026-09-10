@@ -32,6 +32,7 @@ import CellContextMenu, { CellFilterTarget } from './CellContextMenu';
 import CellDetailModal, { CellDetail, SaveCellParams } from './CellDetailModal';
 import { toBoundValue } from './CellEditor/editableValue';
 import ForeignKeyLink from './ForeignKeyLink';
+import { fill } from './Style/fill';
 import {
   useWrittenCellFlash,
   writtenCellFlashStyle,
@@ -540,11 +541,11 @@ type StyledProps = Parameters<typeof selection>[0];
 const hoverBackground = (props: StyledProps): string =>
   `color-mix(in srgb, ${selection(props)} 40%, transparent)`;
 
+// the grid scrolls itself, so its host has to bound its height
 const Wrapper = styled.div`
+  ${fill}
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
   background: ${background};
 `;
 

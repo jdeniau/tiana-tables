@@ -19,6 +19,7 @@ import {
   THEME_LIST,
   isDarkTheme,
 } from '../configuration/themes';
+import { fillStyle } from '../renderer/component/Style/fill';
 import {
   accent,
   background,
@@ -88,6 +89,13 @@ const keepPalette: MappingAlgorithm = (seed, map) => ({
   colorSuccess: seed.colorSuccess,
   colorInfo: seed.colorInfo,
 });
+
+// a splitter fills what holds it, and a panel is a column its single child
+// fills — declared here so that no page has to say it again
+const SPLITTER = {
+  style: fillStyle,
+  styles: { panel: { display: 'flex', flexDirection: 'column' } },
+} as const;
 
 const LayoutDiv = styled.div`
   width: 100%;
@@ -277,7 +285,7 @@ export function ThemeContextProvider({
     <ThemeProvider theme={theme}>
       <GlobalStyle />
       <ThemeContext.Provider value={themeContextValue}>
-        <AntdConfigProvider theme={antdThemeValue}>
+        <AntdConfigProvider theme={antdThemeValue} splitter={SPLITTER}>
           <LayoutDiv>{children}</LayoutDiv>
         </AntdConfigProvider>
       </ThemeContext.Provider>

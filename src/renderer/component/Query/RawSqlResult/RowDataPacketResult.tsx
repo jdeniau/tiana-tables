@@ -22,6 +22,7 @@ import {
   RegionName,
 } from '../../Style/Region';
 import { TabStrip, TabStripItem } from '../../Style/TabStrip';
+import { fill } from '../../Style/fill';
 import TableGrid from '../../TableGrid';
 import SqlErrorComponent from '../SqlErrorComponent';
 
@@ -87,10 +88,9 @@ function rowsOf(outcome: StatementOutcome) {
  * active one is displayed.
  */
 const Pane = styled.div<{ $active: boolean }>`
+  ${fill}
   display: ${({ $active }) => ($active ? 'flex' : 'none')};
   flex-direction: column;
-  height: 100%;
-  min-height: 0;
 `;
 
 /** the hard right gutter: the run can never touch the row count */

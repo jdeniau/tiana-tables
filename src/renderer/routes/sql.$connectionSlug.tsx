@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Form, Splitter } from 'antd';
 import { ActionFunctionArgs, useFetcher } from 'react-router-dom';
+import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import { PANEL } from '../../configuration/panels';
 import { useTranslation } from '../../i18n';
@@ -23,7 +24,13 @@ import {
   RegionMeta,
   RegionName,
 } from '../component/Style/Region';
+import { fill } from '../component/Style/fill';
 import { usePanelSize } from '../hooks/usePanelSize';
+
+// antd's Form is a block between the region body and the editor
+const FillForm = styled(Form)`
+  ${fill}
+`;
 
 const RawSqlEditor = lazy(() =>
   import('../component/MonacoEditor/RawSqlEditor').then((module) => ({
@@ -154,11 +161,7 @@ export default function SqlPage() {
   // the two regions share nothing but the bar of the splitter, which is the
   // rule between them
   return (
-    <Splitter
-      orientation="vertical"
-      onResizeEnd={onResizeEnd}
-      style={{ height: '100%' }}
-    >
+    <Splitter orientation="vertical" onResizeEnd={onResizeEnd}>
       <Splitter.Panel {...panelProps}>
         <Region>
           <RegionHeader>
@@ -179,12 +182,8 @@ export default function SqlPage() {
           </RegionHeader>
 
           <RegionBody>
-            <Form
-              form={form}
-              initialValues={{ raw: sqlQuery }}
-              style={{ height: '100%' }}
-            >
-              <Suspense fallback={<div style={{ height: '100%' }}></div>}>
+            <FillForm form={form} initialValues={{ raw: sqlQuery }}>
+              <Suspense fallback={<div />}>
                 {/* `noStyle` renders the control alone: without it antd wraps the
                     editor in a few divs that would not pass the height down */}
                 <Form.Item name="raw" valuePropName="defaultValue" noStyle>
@@ -196,7 +195,7 @@ export default function SqlPage() {
                   />
                 </Form.Item>
               </Suspense>
-            </Form>
+            </FillForm>
           </RegionBody>
         </Region>
       </Splitter.Panel>

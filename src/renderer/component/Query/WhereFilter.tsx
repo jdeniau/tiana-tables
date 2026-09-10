@@ -1,10 +1,17 @@
 import { ReactElement, useRef, useState } from 'react';
 import { Form } from 'react-router-dom';
+import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import { escapeIdentifier } from '../../../sql/escapeIdentifier';
 import { RawSqlEditor } from '../MonacoEditor/RawSqlEditor';
 import { ActionButton } from '../Style/ActionButton';
 import { Region, RegionBody, RegionHeader, RegionName } from '../Style/Region';
+import { fill } from '../Style/fill';
+
+// the router's Form is a block between the panel and the region
+const FillForm = styled(Form)`
+  ${fill}
+`;
 
 interface Props {
   defaultValue: string;
@@ -23,7 +30,7 @@ function WhereFilter({ defaultValue, tableName }: Props): ReactElement {
   const queryPrefix = `SELECT * FROM ${escapeIdentifier(tableName)} WHERE `;
 
   return (
-    <Form ref={ref} style={{ height: '100%' }}>
+    <FillForm ref={ref}>
       <input type="hidden" name="where" value={where} />
 
       <Region>
@@ -51,7 +58,7 @@ function WhereFilter({ defaultValue, tableName }: Props): ReactElement {
           />
         </RegionBody>
       </Region>
-    </Form>
+    </FillForm>
   );
 }
 

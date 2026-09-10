@@ -1,10 +1,12 @@
 import { ReactElement, useMemo, useState } from 'react';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
-import { Alert, Flex, Select, Space } from 'antd';
+import { Alert, Select, Space } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { styled, useTheme } from 'styled-components';
 import { useTranslation } from '../../../i18n';
+import { space } from '../../theme';
+import { fill } from '../Style/fill';
 import {
   ChartConfig,
   ChartKind,
@@ -26,6 +28,13 @@ interface ChartPanelProps {
  * `min-height: 0`) an unconstrained wrapper collapses and the chart renders at
  * zero height — with no error to explain it.
  */
+const Column = styled.div`
+  ${fill}
+  display: flex;
+  flex-direction: column;
+  gap: ${space.sm};
+`;
+
 const ChartArea = styled.div`
   flex: 1;
   min-height: 320px;
@@ -119,7 +128,7 @@ function ChartPanel({
   };
 
   return (
-    <Flex vertical gap="small" style={{ height: '100%', minHeight: 0 }}>
+    <Column>
       <Space wrap>
         <Select<ChartKind>
           value={config.kind}
@@ -187,7 +196,7 @@ function ChartPanel({
           />
         )}
       </ChartArea>
-    </Flex>
+    </Column>
   );
 }
 

@@ -10,6 +10,15 @@ import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import { ColumnDetail, KeyColumnUsageRow } from '../../sql/types';
 import type { UpdateCellRequest } from '../../sql/updateCell';
+import {
+  Region,
+  RegionBody,
+  RegionFoot,
+  RegionGroup,
+  RegionHeader,
+  RegionMeta,
+  RegionName,
+} from './Style/Region';
 import TableGrid from './TableGrid';
 
 // deterministic pseudo-random generator so stories are stable across renders
@@ -204,6 +213,36 @@ export const RealWorldCase: Story = {
     result: makeRows(1_000, 40),
     primaryKeys: ['id'],
   },
+};
+
+/**
+ * The grid in its real host, a `RegionBody` — the decorator of the other
+ * stories is a flex column, which is not what the app gives it. Without
+ * scrolling first: a horizontal scrollbar at the bottom of the body, column
+ * heads that stay put, and a bounded number of `.tg-row` in the DOM.
+ */
+export const InRegionBody: Story = {
+  args: {
+    fields: makeFields(30),
+    result: makeRows(10_000, 30),
+    primaryKeys: ['id'],
+  },
+  render: (args) => (
+    <Region>
+      <RegionHeader>
+        <RegionGroup>
+          <RegionName>items</RegionName>
+          <RegionMeta>{args.result?.length ?? 0} rows</RegionMeta>
+        </RegionGroup>
+      </RegionHeader>
+
+      <RegionBody>
+        <TableGrid {...args} />
+      </RegionBody>
+
+      <RegionFoot>Load more…</RegionFoot>
+    </Region>
+  ),
 };
 
 export const Empty: Story = {
