@@ -75,7 +75,7 @@
     "@electron-forge/cli": "^7.11.1",
     "@electron-forge/maker-deb": "^7.11.1",
     "@electron-forge/maker-dmg": "^7.11.1",
-    "@electron-forge/maker-rpm": "^7.11.1",
+    "@electron-forge/maker-rpm": "patch:@electron-forge/maker-rpm@npm%3A7.11.1#~/.yarn/patches/@electron-forge-maker-rpm-npm-7.11.1-dba4602758.patch",
     "@electron-forge/maker-squirrel": "^7.11.1",
     "@electron-forge/maker-zip": "^7.11.1",
     "@electron-forge/plugin-vite": "^7.11.1",
@@ -119,5 +119,8 @@
     "vite": "^8.0.12",
     "vitest": "^4.1.6"
   },
-  "packageManager": "yarn@4.5.0"
+  "packageManager": "yarn@4.5.0",
+  "resolutions": {
+    "electron-installer-redhat@npm:^3.2.0": "patch:electron-installer-redhat@npm%3A4.0.0#~/.yarn/patches/electron-installer-redhat-npm-4.0.0-4caad34a9a.patch"
+  }
 }

@@ -1,0 +1,16 @@
+diff --git a/dist/MakerRpm.js b/dist/MakerRpm.js
+index 67db2241f57e4580b017e0fc0841594e0fbaeff7..9c3c1f0d0529146a484538836e7bbe7a2a5eb75b 100644
+--- a/dist/MakerRpm.js
++++ b/dist/MakerRpm.js
+@@ -38,7 +38,10 @@ class MakerRpm extends maker_base_1.MakerBase {
+     }
+     async make({ dir, makeDir, targetArch }) {
+         // eslint-disable-next-line n/no-missing-require
+-        const installer = require('electron-installer-redhat');
++        const redhat = require('electron-installer-redhat');
++        // electron-installer-redhat is ESM since v4: require() hands back the
++        // module namespace, and the installer is its default export.
++        const installer = redhat.default ?? redhat;
+         const outDir = node_path_1.default.resolve(makeDir, 'rpm', targetArch);
+         await this.ensureDirectory(outDir);
+         const { packagePaths } = await installer({

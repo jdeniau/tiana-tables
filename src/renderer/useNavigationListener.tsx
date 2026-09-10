@@ -20,12 +20,7 @@ type NavigationListener = {
 };
 
 /**
- * Whether the table palette is open, and the two ways it opens: from the app,
- * and from the main process, which owns the `Ctrl+K` accelerator.
- *
- * The hook returns state, never a component: a component declared in a hook
- * body is a new type on every render, so React unmounts and remounts the
- * palette — losing the search being typed into it.
+ * Listen to navigation event from the main process and navigate to the given path.
  */
 function useNavigationListener(): NavigationListener {
   const [isNavigateModalOpen, setIsNavigateModalOpen] = useState(false);
