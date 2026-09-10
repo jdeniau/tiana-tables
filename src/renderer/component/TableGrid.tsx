@@ -33,6 +33,7 @@ import CellDetailModal, { CellDetail, SaveCellParams } from './CellDetailModal';
 import { toBoundValue } from './CellEditor/editableValue';
 import ForeignKeyLink from './ForeignKeyLink';
 import { fill } from './Style/fill';
+import { getColumnWidth } from './columnWidth';
 import {
   useWrittenCellFlash,
   writtenCellFlashStyle,
@@ -46,8 +47,6 @@ const features = tableFeatures({
   columnSizingFeature,
 });
 
-// matches the previous antd `scroll.x = 150 * fields.length` sizing
-const DEFAULT_COLUMN_WIDTH = 150;
 const ROW_HEIGHT = parseInt(size.row, 10);
 
 const EMPTY_DATA: RowDataPacket[] = [];
@@ -193,7 +192,7 @@ function TableGrid<Row extends RowDataPacket>({
             // that column pinning can match primary key names)
             id: rowsAsArray ? `${index}:${field.name}` : field.name,
             header: field.name,
-            size: DEFAULT_COLUMN_WIDTH,
+            size: getColumnWidth(field.type),
           }
         )
       )
