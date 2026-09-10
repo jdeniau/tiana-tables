@@ -1,0 +1,18 @@
+diff --git a/resources/spec.ejs b/resources/spec.ejs
+index e07a8a3dac52b7ac5e165d203bc26d0ac336c6ec..a47d1a33474b5c298116425f0bcc6eb1eccd54b8 100644
+--- a/resources/spec.ejs
++++ b/resources/spec.ejs
+@@ -1,3 +1,4 @@
++%global _build_id_links none
+ %define _binary_payload w<%= compressionLevel %>.xzdio
+ 
+ %if "%{_host_cpu}" != "%{_target_cpu}"
+@@ -24,7 +25,7 @@ print('\n\n\n') }
+ 
+ %>%install
+ mkdir -p %{buildroot}/usr/
+-cp <%= process.platform === 'darwin' ? '-R' : '-r' %> usr/* %{buildroot}/usr/
++cp <%= process.platform === 'darwin' ? '-R' : '-r' %> %{_topdir}/BUILD/usr/* %{buildroot}/usr/
+ 
+ 
+ %files
