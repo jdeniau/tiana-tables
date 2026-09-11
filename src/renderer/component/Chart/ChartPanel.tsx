@@ -1,11 +1,12 @@
-import { ReactElement, useMemo, useState } from 'react';
+import { ReactElement, useMemo, useRef, useState } from 'react';
+import { CheckOutlined, CopyOutlined, DownloadOutlined } from '@ant-design/icons';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
-import { Alert, Select, Space } from 'antd';
+import { Alert, Button, Select, Space } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { styled, useTheme } from 'styled-components';
 import { useTranslation } from '../../../i18n';
-import { space } from '../../theme';
+import { background, space } from '../../theme';
 import { fill } from '../Style/fill';
 import {
   ChartConfig,
@@ -13,6 +14,7 @@ import {
   defaultChartConfig,
   numericFieldIndexes,
 } from './chartConfig';
+import { chartToPngBlob } from './chartImage';
 import { buildChartTheme } from './chartTheme';
 import { MAX_POINTS, toBarData, toLineSeries } from './toSeries';
 
@@ -81,11 +83,66 @@ function ChartPanel({
 }: ChartPanelProps): ReactElement | null {
   const { t } = useTranslation();
   const theme = useTheme();
+  const chartAreaRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
   const [config, setConfig] = useState<ChartConfig | null>(() =>
     defaultChartConfig(fields)
   );
 
   const chartTheme = useMemo(() => buildChartTheme(theme), [theme]);
+
+  function chartSvg(): SVGSVGElement | null {
+    return chartAreaRef.current?.querySelector('svg') ?? null;
+  }
+
+  async function copyImage(): Promise<void> {
+    const svg = chartSvg();
+
+    if (!svg) {
+      return;
+    }
+
+    // the PNG is handed over as a promise rather than awaited first: the write
+    // then still runs under the click's user activation, which Chromium needs
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        'image/png': chartToPngBlob(svg, background({ theme })),
+      }),
+    ]);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function saveImage(): Promise<void> {
+    const svg = chartSvg();
+
+    if (!svg) {
+      return;
+    }
+
+    // the picker comes first, for the same user activation reason
+    const handle = await window
+      .showSaveFilePicker({
+        suggestedName: 'chart.png',
+        types: [{ accept: { 'image/png': ['.png'] } }],
+      })
+      // the user dismissing the dialog is not an error
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return null;
+        }
+
+        throw error;
+      });
+
+    if (!handle) {
+      return;
+    }
+
+    const writable = await handle.createWritable();
+    await writable.write(await chartToPngBlob(svg, background({ theme })));
+    await writable.close();
+  }
 
   const columnOptions = useMemo(
     () =>
@@ -156,6 +213,16 @@ function ChartPanel({
           placeholder={t('chart.axis.y')}
           style={{ minWidth: 220 }}
         />
+
+        <Button
+          icon={copied ? <CheckOutlined /> : <CopyOutlined />}
+          onClick={copyImage}
+        >
+          {copied ? t('chart.export.copied') : t('chart.export.copy')}
+        </Button>
+        <Button icon={<DownloadOutlined />} onClick={saveImage}>
+          {t('chart.export.download')}
+        </Button>
       </Space>
 
       {rendered.isTruncated && (
@@ -166,7 +233,7 @@ function ChartPanel({
         />
       )}
 
-      <ChartArea>
+      <ChartArea ref={chartAreaRef}>
         {rendered.kind === 'line' ? (
           <ResponsiveLine
             data={rendered.series}
