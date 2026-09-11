@@ -48,6 +48,14 @@ export const TitleGroup = styled.div`
   min-width: 0;
 `;
 
+/** The software name and the mark that rides on it, tight against each other. */
+export const BrandGroup = styled.div`
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: ${space.xs};
+`;
+
 /** the software name, in its own face, mixed case */
 export const Brand = styled(Link)`
   flex: none;

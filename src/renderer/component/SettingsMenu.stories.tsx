@@ -9,7 +9,6 @@ const meta: Meta<typeof SettingsMenu> = {
   component: SettingsMenu,
   args: {
     version: packageJson.version,
-    updateStatus: { available: false },
   },
   parameters: { layout: 'fullscreen' },
   // the title bar the menu hangs off, in the layout that sizes it

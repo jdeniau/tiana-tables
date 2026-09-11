@@ -2,18 +2,15 @@ import { useState } from 'react';
 import { SettingOutlined } from '@ant-design/icons';
 import { Button, Flex, Popover } from 'antd';
 import { useTranslation } from '../../i18n';
-import type { UpdateStatus } from '../../main-process/updateCheck';
 import useEffectOnce from '../hooks/useEffectOnce';
 import { space } from '../theme';
 import { keyboardShortcutText } from './KeyboardShortcut';
 import LangSelector from './LangSelector';
 import { RegionMeta } from './Style/Region';
 import ThemeSelector from './ThemeSelector';
-import VersionBadge from './VersionBadge';
 
 type Props = {
   version: string;
-  updateStatus: UpdateStatus;
 };
 
 /** the key the native menu binds to the settings, next to the brand */
@@ -22,7 +19,7 @@ const SHORTCUT = { cmdOrCtrl: true, pressedKey: ',' };
 /** wide enough for the longest theme name with its preview */
 const PANEL_WIDTH = 300;
 
-export default function SettingsMenu({ version, updateStatus }: Props) {
+export default function SettingsMenu({ version }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
@@ -46,9 +43,7 @@ export default function SettingsMenu({ version, updateStatus }: Props) {
         <Flex vertical gap={space.md} style={{ minWidth: PANEL_WIDTH }}>
           <LangSelector />
           <ThemeSelector />
-          <RegionMeta>
-            <VersionBadge version={version} updateStatus={updateStatus} />
-          </RegionMeta>
+          <RegionMeta>v{version}</RegionMeta>
         </Flex>
       }
     >
