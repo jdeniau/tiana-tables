@@ -14,7 +14,7 @@ import {
   defaultChartConfig,
   numericFieldIndexes,
 } from './chartConfig';
-import { chartToPngDataUrl } from './chartImage';
+import { chartToPngBlob } from './chartImage';
 import { buildChartTheme } from './chartTheme';
 import { MAX_POINTS, toBarData, toLineSeries } from './toSeries';
 
@@ -91,37 +91,57 @@ function ChartPanel({
 
   const chartTheme = useMemo(() => buildChartTheme(theme), [theme]);
 
-  async function exportPng(): Promise<string | null> {
-    const svg = chartAreaRef.current?.querySelector('svg');
-
-    return svg ? chartToPngDataUrl(svg, background({ theme })) : null;
+  function chartSvg(): SVGSVGElement | null {
+    return chartAreaRef.current?.querySelector('svg') ?? null;
   }
 
   async function copyImage(): Promise<void> {
-    const dataUrl = await exportPng();
+    const svg = chartSvg();
 
-    if (!dataUrl) {
+    if (!svg) {
       return;
     }
 
-    await window.clipboard.writeImage(dataUrl);
+    // the PNG is handed over as a promise rather than awaited first: the write
+    // then still runs under the click's user activation, which Chromium needs
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        'image/png': chartToPngBlob(svg, background({ theme })),
+      }),
+    ]);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
-  async function downloadImage(): Promise<void> {
-    const dataUrl = await exportPng();
+  async function saveImage(): Promise<void> {
+    const svg = chartSvg();
 
-    if (!dataUrl) {
+    if (!svg) {
       return;
     }
 
-    // a data URL on a download link is all Electron needs to open its own save
-    // dialog — no IPC, no temporary file
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = 'chart.png';
-    link.click();
+    // the picker comes first, for the same user activation reason
+    const handle = await window
+      .showSaveFilePicker({
+        suggestedName: 'chart.png',
+        types: [{ accept: { 'image/png': ['.png'] } }],
+      })
+      // the user dismissing the dialog is not an error
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return null;
+        }
+
+        throw error;
+      });
+
+    if (!handle) {
+      return;
+    }
+
+    const writable = await handle.createWritable();
+    await writable.write(await chartToPngBlob(svg, background({ theme })));
+    await writable.close();
   }
 
   const columnOptions = useMemo(
@@ -200,7 +220,7 @@ function ChartPanel({
         >
           {copied ? t('chart.export.copied') : t('chart.export.copy')}
         </Button>
-        <Button icon={<DownloadOutlined />} onClick={downloadImage}>
+        <Button icon={<DownloadOutlined />} onClick={saveImage}>
           {t('chart.export.download')}
         </Button>
       </Space>

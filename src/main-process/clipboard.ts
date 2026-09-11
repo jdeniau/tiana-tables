@@ -1,4 +1,4 @@
-import { clipboard, nativeImage } from 'electron';
+import { clipboard } from 'electron';
 import { CLIPBOARD_CHANNEL } from '../preload/clipboardChannel';
 
 /**
@@ -14,25 +14,12 @@ function readText(): string {
   return clipboard.readText();
 }
 
-/**
- * An image on the clipboard is a `NativeImage`: writing the data URL as text
- * would paste the base64 string instead of the picture.
- */
-function writeImage(dataUrl: string): void {
-  clipboard.writeImage(nativeImage.createFromDataURL(dataUrl));
-}
-
 const IPC_EVENT_BINDING = {
   [CLIPBOARD_CHANNEL.READ_TEXT]: readText,
-  [CLIPBOARD_CHANNEL.WRITE_IMAGE]: writeImage,
 } as const;
 
 export function bindIpcMainClipboard(ipcMain: Electron.IpcMain): void {
   for (const [channel, handler] of Object.entries(IPC_EVENT_BINDING)) {
-    ipcMain.handle(channel, (event, ...args: unknown[]) =>
-      // the first argument is the event, which no handler takes
-      // @ts-expect-error issue with strict type in tsconfig, but works at runtime
-      handler(...args)
-    );
+    ipcMain.handle(channel, () => handler());
   }
 }

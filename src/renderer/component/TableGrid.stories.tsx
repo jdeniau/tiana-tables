@@ -268,10 +268,7 @@ export const WithFilterContextMenu: Story = {
     (Story) => {
       // the real clipboard is read through the main process, which Storybook
       // has none of
-      window.clipboard = {
-        readText: async () => 'lorem-2',
-        writeImage: async () => {},
-      };
+      window.clipboard = { readText: async () => 'lorem-2' };
 
       return <Story />;
     },

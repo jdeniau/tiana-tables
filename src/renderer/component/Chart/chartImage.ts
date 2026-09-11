@@ -1,10 +1,29 @@
+/**
+ * `FileSystemFileHandle` and its writable stream are in TypeScript's DOM
+ * library, but the picker that hands one over is not — it is specified by the
+ * WICG rather than by the WHATWG. Chromium has had it for years, and an
+ * Electron renderer is Chromium: declaring the one call we make is lighter
+ * than pulling `@types/wicg-file-system-access` in.
+ */
+declare global {
+  interface Window {
+    showSaveFilePicker(options?: {
+      suggestedName?: string;
+      types?: Array<{
+        description?: string;
+        accept: Record<string, Array<string>>;
+      }>;
+    }): Promise<FileSystemFileHandle>;
+  }
+}
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /** rendering at twice the on-screen size keeps the PNG readable once pasted */
 const SCALE = 2;
 
 /**
- * A PNG of a nivo chart, as a data URL.
+ * A PNG of a nivo chart.
  *
  * nivo has no export of its own: it renders a plain `<svg>`, and getting an
  * image out of it is serializing that node, loading it as an `<img>` — a data
@@ -14,10 +33,10 @@ const SCALE = 2;
  * which holds here: nivo's theme is applied as inline attributes, and the
  * tooltips are HTML siblings of the `<svg>` rather than part of it.
  */
-export async function chartToPngDataUrl(
+export async function chartToPngBlob(
   svg: SVGSVGElement,
   background: string
-): Promise<string> {
+): Promise<Blob> {
   const { width, height } = svg.getBoundingClientRect();
 
   const clone = svg.cloneNode(true) as SVGSVGElement;
@@ -51,5 +70,13 @@ export async function chartToPngDataUrl(
   context.scale(SCALE, SCALE);
   context.drawImage(image, 0, 0, width, height);
 
-  return canvas.toDataURL('image/png');
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, 'image/png')
+  );
+
+  if (!blob) {
+    throw new Error('Could not encode the chart as a PNG.');
+  }
+
+  return blob;
 }
