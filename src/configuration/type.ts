@@ -31,7 +31,13 @@ type TableConfig = {
 
   /** the column each column is displayed after, see `DisplayAfterByColumn` */
   displayAfterByColumn?: DisplayAfterByColumn;
+
+  /** the width a column was dragged to, by column name */
+  columnWidthByColumn?: ColumnWidthByColumn;
 };
+
+/** The width, in pixels, of each column the user resized. */
+export type ColumnWidthByColumn = Record<string, number>;
 
 export type DatabaseConfig = {
   activeTable: string;

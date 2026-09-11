@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import type { DisplayAfterByColumn } from '../../../configuration/columnOrder';
+import type { ColumnWidthByColumn } from '../../../configuration/type';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
 import { TableLayout } from './TableLayout';
@@ -9,6 +10,7 @@ type Props = {
   where?: string;
   filterHistory: Array<string>;
   displayAfterByColumn: DisplayAfterByColumn;
+  columnWidths: ColumnWidthByColumn;
 };
 
 function TableLayoutPageContent({
@@ -16,6 +18,7 @@ function TableLayoutPageContent({
   where,
   filterHistory,
   displayAfterByColumn,
+  columnWidths,
 }: Props) {
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
@@ -28,12 +31,14 @@ function TableLayoutPageContent({
   return (
     <TableLayout
       key={`${currentConnectionSlug}|${database}|${tableName}`}
+      connectionSlug={currentConnectionSlug}
       tableName={tableName}
       database={database}
       primaryKeys={primaryKeys}
       where={where}
       filterHistory={filterHistory}
       displayAfterByColumn={displayAfterByColumn}
+      columnWidths={columnWidths}
     />
   );
 }

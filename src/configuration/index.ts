@@ -326,6 +326,45 @@ export function setColumnDisplayAfter(
   writeConfiguration(config);
 }
 
+/** The width a column was dragged to. */
+export function setColumnWidth(
+  connectionSlug: string,
+  database: string,
+  tableName: string,
+  columnName: string,
+  width: number
+): void {
+  const config = getConfiguration();
+
+  if (!config.connections[connectionSlug]) {
+    return;
+  }
+
+  const connection = ensureConnectionAppStateExist(
+    config.connections[connectionSlug]
+  );
+
+  const newConfig = ensureConnectionAppStateIsCorrect(
+    connection.appState.configByDatabase[database]
+  );
+
+  const table = newConfig.tables[tableName] ?? {};
+
+  newConfig.tables[tableName] = {
+    ...table,
+    columnWidthByColumn: {
+      ...table.columnWidthByColumn,
+      [columnName]: width,
+    },
+  };
+
+  connection.appState.configByDatabase[database] = {
+    ...newConfig,
+  };
+
+  writeConfiguration(config);
+}
+
 export function setPanelSize(panel: PANEL, size: string): Configuration {
   const config = getConfiguration();
 
@@ -406,6 +445,7 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE]: setActiveTable,
   [CONFIGURATION_CHANNEL.SET_TABLE_FILTER]: setTableFilter,
   [CONFIGURATION_CHANNEL.SET_COLUMN_DISPLAY_AFTER]: setColumnDisplayAfter,
+  [CONFIGURATION_CHANNEL.SET_COLUMN_WIDTH]: setColumnWidth,
   [CONFIGURATION_CHANNEL.SET_PANEL_SIZE]: setPanelSize,
 } as const;
 

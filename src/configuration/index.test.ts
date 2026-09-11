@@ -14,6 +14,7 @@ import {
   setActiveDatabase,
   setActiveTable,
   setColumnDisplayAfter,
+  setColumnWidth,
   setPanelSize,
   setTableFilter,
   testables,
@@ -746,6 +747,56 @@ describe('setColumnDisplayAfter', () => {
 
     expect(writtenTableConfig('sometable')).toEqual({
       displayAfterByColumn: { lastname: 'firstname' },
+    });
+  });
+});
+
+describe('setColumnWidth', () => {
+  test('records the width a column was dragged to', () => {
+    mockExistingConfig();
+
+    setColumnWidth('prod', 'db', 'sometable', 'lastname', 320);
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      columnWidthByColumn: { lastname: 320 },
+    });
+  });
+
+  test('adds to what was already recorded, and replaces its own', () => {
+    mockExistingConfig();
+
+    setColumnWidth('prod', 'db', 'sometable', 'lastname', 320);
+    setColumnWidth('prod', 'db', 'sometable', 'email', 240);
+    setColumnWidth('prod', 'db', 'sometable', 'lastname', 180);
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      columnWidthByColumn: { lastname: 180, email: 240 },
+    });
+  });
+
+  test('leaves the filter and the column order of the table alone', () => {
+    mockExistingConfig();
+
+    setTableFilter('prod', 'db', 'sometable', 'id = 1');
+    setColumnDisplayAfter('prod', 'db', 'sometable', 'lastname', 'firstname');
+    setColumnWidth('prod', 'db', 'sometable', 'lastname', 320);
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      currentFilter: 'id = 1',
+      filterHistory: ['id = 1'],
+      displayAfterByColumn: { lastname: 'firstname' },
+      columnWidthByColumn: { lastname: 320 },
+    });
+  });
+
+  test('leaves the other tables alone', () => {
+    mockExistingConfig();
+
+    setColumnWidth('prod', 'db', 'sometable', 'lastname', 320);
+    setColumnWidth('prod', 'db', 'othertable', 'email', 240);
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      columnWidthByColumn: { lastname: 320 },
     });
   });
 });

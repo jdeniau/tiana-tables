@@ -3,12 +3,15 @@ import {
   ReactNode,
   memo,
   useCallback,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {
   columnOrderingFeature,
   columnPinningFeature,
+  columnResizingFeature,
   columnSizingFeature,
   createColumnHelper,
   tableFeatures,
@@ -20,6 +23,7 @@ import { Empty } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
+import type { ColumnWidthByColumn } from '../../configuration/type';
 import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
@@ -27,6 +31,7 @@ import { isJsonColumn } from '../../sql/columnEditing';
 import type { ColumnDetail } from '../../sql/types';
 import type { PrimaryKeyPart } from '../../sql/updateCell';
 import {
+  accent,
   background,
   commentForeground,
   fontSize,
@@ -51,10 +56,21 @@ const features = tableFeatures({
   // on the edge of the pinned region
   columnOrderingFeature,
   columnPinningFeature,
+  columnResizingFeature,
   columnSizingFeature,
 });
 
 const ROW_HEIGHT = parseInt(size.row, 10);
+
+// A width reaches the cells as a custom property on the table, written
+// imperatively rather than rendered — TanStack's own recipe for resizing a
+// large grid (`examples/react/column-resizing-performant`). With the selector
+// below, a drag costs no React render at all.
+const widthVar = (index: number): string => `--tg-w-${index}`;
+const leftVar = (index: number): string => `--tg-l-${index}`;
+
+/** subscribes the grid to no table state: the widths reach the DOM on their own */
+const NO_TABLE_STATE = (): Record<string, never> => ({});
 
 const EMPTY_DATA: RowDataPacket[] = [];
 
@@ -81,6 +97,15 @@ interface TableGridProps<R extends RowDataPacket> {
   onFilterChange?: (where: string) => void;
   /** columns of the caller's own, holding no value of the row */
   extraColumns?: Array<ExtraColumn<R>>;
+
+  /** the widths the columns were dragged to before, by column name */
+  columnWidths?: ColumnWidthByColumn;
+
+  /**
+   * Called with the width a column was dragged to, once the drag ends. Every
+   * grid resizes; only the one given this remembers it.
+   */
+  onColumnResized?: (columnName: string, width: number) => void;
 }
 
 /**
@@ -145,7 +170,12 @@ function TableGrid<Row extends RowDataPacket>({
   onValueUpdated,
   onFilterChange,
   extraColumns = NO_EXTRA_COLUMNS,
+  columnWidths,
+  onColumnResized,
 }: TableGridProps<Row>): ReactElement {
+  // the table element the column widths are written on
+  const tableRef = useRef<HTMLTableElement>(null);
+
   // store the scroll element in a state (not a ref): the virtualizer reads it
   // in a layout effect that runs before the parent ref is attached, so a ref
   // would stay null until an unrelated re-render happens
@@ -265,6 +295,9 @@ function TableGrid<Row extends RowDataPacket>({
       features,
       columns,
       data: result ?? (EMPTY_DATA as Row[]),
+      // the columns dragged before; the others open at the width their type gives them
+      initialState: { columnSizing: columnWidths ?? {} },
+      columnResizeMode: 'onChange' as const,
       state: { columnPinning },
       onColumnPinningChange: () => undefined,
       ...(primaryKeys && primaryKeys.length > 0
@@ -274,7 +307,7 @@ function TableGrid<Row extends RowDataPacket>({
           }
         : {}),
     },
-    (state) => state
+    NO_TABLE_STATE
   );
 
   // everything the body needs to render a cell, resolved once per column
@@ -294,8 +327,8 @@ function TableGrid<Row extends RowDataPacket>({
           name: field?.name ?? column.id,
           tableName: field?.table,
           type: field?.type,
-          width: column.getSize(),
-          pinnedLeft: isPinned === 'start' ? column.getStart('start') : null,
+          width: `var(${widthVar(index)})`,
+          pinnedLeft: isPinned === 'start' ? `var(${leftVar(index)})` : null,
           isLastPinned: isPinned === 'start' && column.getIsLastColumn('start'),
           numeric: isNumericType(field?.type),
           hasForeignKey: foreignKey !== null,
@@ -307,18 +340,67 @@ function TableGrid<Row extends RowDataPacket>({
           render: extra?.render as ColumnMeta['render'],
         };
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- table is stable, columns/columnPinning drive its column state
-    [table, columns, columnPinning, columnSources, foreignKeys, allColumns]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `table` is a new object on every state change, and a width no longer travels through here: only these drive a cell
+    [columns, columnPinning, columnSources, foreignKeys, allColumns]
   );
+
+  // the width of every column, and the offset of the pinned ones, rewritten on
+  // the table itself whenever a drag commits a size
+  useLayoutEffect(() => {
+    const element = tableRef.current;
+
+    if (!element) {
+      return undefined;
+    }
+
+    const writeWidths = (): void => {
+      table.getAllLeafColumns().forEach((column, index) => {
+        element.style.setProperty(widthVar(index), `${column.getSize()}px`);
+
+        if (column.getIsPinned() === 'start') {
+          element.style.setProperty(
+            leftVar(index),
+            `${column.getStart('start')}px`
+          );
+        }
+      });
+    };
+
+    writeWidths();
+
+    const sizes = table.atoms.columnSizing.subscribe(writeWidths);
+
+    // `columnResizing` names the column being dragged, and drops it on
+    // release: that transition is the end of the drag, and the width the user
+    // settled on is the one to remember.
+    let dragged: string | false = false;
+
+    const drags = table.atoms.columnResizing.subscribe(
+      ({ isResizingColumn }) => {
+        const column = dragged ? table.getColumn(dragged) : undefined;
+
+        if (column && !isResizingColumn) {
+          onColumnResized?.(column.id, column.getSize());
+        }
+
+        dragged = isResizingColumn;
+      }
+    );
+
+    return () => {
+      sizes.unsubscribe();
+      drags.unsubscribe();
+    };
+  }, [table, columns, columnPinning, onColumnResized]);
 
   return (
     <Wrapper>
       <ScrollContainer ref={setScrollElement}>
-        <StyledTable>
+        <StyledTable ref={tableRef}>
           <StyledThead>
             {table.getHeaderGroups().map((headerGroup) => (
               <HeaderRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map((header, index) => {
                   const isPinned = header.column.getIsPinned();
 
                   return (
@@ -330,16 +412,23 @@ function TableGrid<Row extends RowDataPacket>({
                         undefined
                       }
                       style={{
-                        width: header.getSize(),
+                        width: `var(${widthVar(index)})`,
                         left:
                           isPinned === 'start'
-                            ? header.column.getStart('start')
+                            ? `var(${leftVar(index)})`
                             : undefined,
                         position: isPinned ? 'sticky' : undefined,
                         zIndex: isPinned ? 3 : undefined,
                       }}
                     >
                       <table.FlexRender header={header} />
+
+                      {header.column.getCanResize() && (
+                        <ResizeHandle
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                        />
+                      )}
                     </HeaderCell>
                   );
                 })}
@@ -392,8 +481,10 @@ export interface ColumnMeta {
   name: string;
   tableName: string | undefined;
   type: number | undefined;
-  width: number;
-  pinnedLeft: number | null;
+  /** `var(--tg-w-N)`, the property the table holds the width in */
+  width: string;
+  /** `var(--tg-l-N)` for a pinned column, `null` for the others */
+  pinnedLeft: string | null;
   isLastPinned: boolean;
   /** numbers are set flush right, as in a ledger */
   numeric: boolean;
@@ -415,7 +506,7 @@ export interface ColumnMeta {
 type ShowCellDetail = (detail: CellDetail, cell: HTMLTableCellElement) => void;
 
 interface TableBodyProps<Row extends RowDataPacket> {
-  table: ReactTable<typeof features, Row>;
+  table: ReactTable<typeof features, Row, ReturnType<typeof NO_TABLE_STATE>>;
   columnsMeta: Array<ColumnMeta>;
   rowsAsArray: boolean;
   primaryKeys: Array<string> | undefined;
@@ -708,6 +799,7 @@ const HeaderCell = styled.th`
   display: flex;
   align-items: center;
   overflow: hidden;
+  position: relative;
   flex-shrink: 0;
   box-sizing: border-box;
   padding: 0 ${space.md};
@@ -719,9 +811,29 @@ const HeaderCell = styled.th`
   white-space: nowrap;
   color: ${commentForeground};
   background: ${background};
+  border-inline-end: 1px solid ${selection};
 
   &[data-last-pinned] {
-    border-inline-end: 1px solid ${commentForeground};
+    border-inline-end-color: ${commentForeground};
+  }
+`;
+
+// the rule between two column heads is what one grabs to resize: the zone is
+// wider than the line it draws, and the line takes the accent under the cursor
+const ResizeHandle = styled.div`
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: ${space.sm};
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  border-inline-end: 1px solid transparent;
+
+  &:hover,
+  &:active {
+    border-inline-end-color: ${accent};
   }
 `;
 
