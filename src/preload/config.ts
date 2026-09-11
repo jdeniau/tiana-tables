@@ -23,12 +23,13 @@ interface Config {
     tableName: string
   ): Promise<void>;
 
+  /** stores the filter a table is now showing, and answers its new history */
   setTableFilter(
     connectionSlug: string,
     database: string,
     tableName: string,
     filter: string
-  ): Promise<void>;
+  ): Promise<Array<string>>;
 
   setColumnDisplayAfter(
     connectionSlug: string,

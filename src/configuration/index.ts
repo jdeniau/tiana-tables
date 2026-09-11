@@ -14,6 +14,7 @@ import {
   createConfigurationFolderIfNotExists,
   getConfigurationPath,
 } from './filePaths';
+import { pushFilter } from './filterHistory';
 import { DEFAULT_LOCALE } from './locale';
 import { PANEL } from './panels';
 import { DEFAULT_THEME } from './themes';
@@ -240,16 +241,17 @@ export function setActiveTable(
   writeConfiguration(config);
 }
 
+/** Stores the filter a table is now showing, and returns its new history. */
 export function setTableFilter(
   connectionSlug: string,
   database: string,
   tableName: string,
   filter: string
-): void {
+): Array<string> {
   const config = getConfiguration();
 
   if (!config.connections[connectionSlug]) {
-    return;
+    return [];
   }
 
   const connection = ensureConnectionAppStateExist(
@@ -260,10 +262,16 @@ export function setTableFilter(
     connection.appState.configByDatabase[database]
   );
 
+  const filterHistory = pushFilter(
+    newConfig.tables[tableName]?.filterHistory,
+    filter
+  );
+
   // merged, not replaced: the table holds more than its filter
   newConfig.tables[tableName] = {
     ...newConfig.tables[tableName],
     currentFilter: filter,
+    filterHistory,
   };
 
   connection.appState.configByDatabase[database] = {
@@ -271,6 +279,8 @@ export function setTableFilter(
   };
 
   writeConfiguration(config);
+
+  return filterHistory;
 }
 
 /** `null` puts the column back in the place the database gives it. */

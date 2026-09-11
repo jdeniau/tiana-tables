@@ -7,12 +7,14 @@ import { TableLayout } from './TableLayout';
 type Props = {
   primaryKeys: Array<string>;
   where?: string;
+  filterHistory: Array<string>;
   displayAfterByColumn: DisplayAfterByColumn;
 };
 
 function TableLayoutPageContent({
   primaryKeys,
   where,
+  filterHistory,
   displayAfterByColumn,
 }: Props) {
   const { currentConnectionSlug } = useConnectionContext();
@@ -30,6 +32,7 @@ function TableLayoutPageContent({
       database={database}
       primaryKeys={primaryKeys}
       where={where}
+      filterHistory={filterHistory}
       displayAfterByColumn={displayAfterByColumn}
     />
   );

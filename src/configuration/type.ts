@@ -21,6 +21,14 @@ type PanelSizes = Partial<Record<PANEL, string>>;
 
 type TableConfig = {
   currentFilter?: string;
+
+  /**
+   * The filters this table was given, most recent first. It is `currentFilter`
+   * at its head, but only until the filter is cleared: an empty clause is the
+   * state of the table, not a filter worth offering again.
+   */
+  filterHistory?: Array<string>;
+
   /** the column each column is displayed after, see `DisplayAfterByColumn` */
   displayAfterByColumn?: DisplayAfterByColumn;
 };

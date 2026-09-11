@@ -28,6 +28,10 @@ interface TableNameProps {
   database: string;
   primaryKeys: Array<string>;
   where?: string;
+
+  /** the filters this table was given, most recent first */
+  filterHistory: Array<string>;
+
   /** set on the structure page */
   displayAfterByColumn: DisplayAfterByColumn;
 }
@@ -38,6 +42,7 @@ export function TableLayout({
   database,
   primaryKeys,
   where,
+  filterHistory,
   displayAfterByColumn,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
@@ -128,7 +133,11 @@ export function TableLayout({
   return (
     <Splitter orientation="vertical" onResizeEnd={onResizeEnd}>
       <Splitter.Panel {...panelProps}>
-        <WhereFilter defaultValue={where ?? ''} tableName={tableName} />
+        <WhereFilter
+          defaultValue={where ?? ''}
+          tableName={tableName}
+          history={filterHistory}
+        />
       </Splitter.Panel>
 
       <Splitter.Panel>
