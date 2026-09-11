@@ -30,6 +30,14 @@ interface Config {
     filter: string
   ): Promise<void>;
 
+  setColumnDisplayAfter(
+    connectionSlug: string,
+    database: string,
+    tableName: string,
+    columnName: string,
+    displayAfter: string | null
+  ): Promise<void>;
+
   setPanelSize(panel: PANEL, size: string): Promise<Configuration>;
 
   editConnection(
@@ -46,6 +54,9 @@ export const config: Config = {
   setActiveDatabase: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE),
   setActiveTable: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE),
   setTableFilter: bindChannel(CONFIGURATION_CHANNEL.SET_TABLE_FILTER),
+  setColumnDisplayAfter: bindChannel(
+    CONFIGURATION_CHANNEL.SET_COLUMN_DISPLAY_AFTER
+  ),
   setPanelSize: bindChannel(CONFIGURATION_CHANNEL.SET_PANEL_SIZE),
   editConnection: bindChannel(CONFIGURATION_CHANNEL.EDIT_CONNECTION),
 };

@@ -1,5 +1,6 @@
 import { WindowState } from '../main-process/windowState';
 import { ConnectionObject } from '../sql/types';
+import { DisplayAfterByColumn } from './columnOrder';
 import { PANEL } from './panels';
 
 export type Configuration = {
@@ -20,6 +21,8 @@ type PanelSizes = Partial<Record<PANEL, string>>;
 
 type TableConfig = {
   currentFilter?: string;
+  /** the column each column is displayed after, see `DisplayAfterByColumn` */
+  displayAfterByColumn?: DisplayAfterByColumn;
 };
 
 export type DatabaseConfig = {

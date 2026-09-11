@@ -127,6 +127,8 @@ export default {
   'table.filters.title': 'Filters',
   'table.rows.count': '{count, plural, one {# row} other {# rows}}',
   'table.rows.loadMore': 'Load more…',
+  'table.structure.displayAfter': 'Displays after',
+  'table.structure.displayAfter.none': 'Database order',
   'table.tab.data': 'Data',
   'table.tab.structure': 'Structure',
   'table.view.label': 'Table view',

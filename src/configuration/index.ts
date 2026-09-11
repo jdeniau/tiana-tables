@@ -260,8 +260,53 @@ export function setTableFilter(
     connection.appState.configByDatabase[database]
   );
 
+  // merged, not replaced: the table holds more than its filter
   newConfig.tables[tableName] = {
+    ...newConfig.tables[tableName],
     currentFilter: filter,
+  };
+
+  connection.appState.configByDatabase[database] = {
+    ...newConfig,
+  };
+
+  writeConfiguration(config);
+}
+
+/** `null` puts the column back in the place the database gives it. */
+export function setColumnDisplayAfter(
+  connectionSlug: string,
+  database: string,
+  tableName: string,
+  columnName: string,
+  displayAfter: string | null
+): void {
+  const config = getConfiguration();
+
+  if (!config.connections[connectionSlug]) {
+    return;
+  }
+
+  const connection = ensureConnectionAppStateExist(
+    config.connections[connectionSlug]
+  );
+
+  const newConfig = ensureConnectionAppStateIsCorrect(
+    connection.appState.configByDatabase[database]
+  );
+
+  const table = newConfig.tables[tableName] ?? {};
+  const displayAfterByColumn = { ...table.displayAfterByColumn };
+
+  if (displayAfter) {
+    displayAfterByColumn[columnName] = displayAfter;
+  } else {
+    delete displayAfterByColumn[columnName];
+  }
+
+  newConfig.tables[tableName] = {
+    ...table,
+    displayAfterByColumn,
   };
 
   connection.appState.configByDatabase[database] = {
@@ -350,6 +395,7 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE]: setActiveDatabase,
   [CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE]: setActiveTable,
   [CONFIGURATION_CHANNEL.SET_TABLE_FILTER]: setTableFilter,
+  [CONFIGURATION_CHANNEL.SET_COLUMN_DISPLAY_AFTER]: setColumnDisplayAfter,
   [CONFIGURATION_CHANNEL.SET_PANEL_SIZE]: setPanelSize,
 } as const;
 

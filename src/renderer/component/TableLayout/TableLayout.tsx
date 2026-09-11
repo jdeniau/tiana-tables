@@ -1,7 +1,11 @@
-import { ReactElement, useCallback, useEffect, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Splitter } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { useNavigate } from 'react-router-dom';
+import {
+  DisplayAfterByColumn,
+  applyColumnOrder,
+} from '../../../configuration/columnOrder';
 import { PANEL } from '../../../configuration/panels';
 import { useTranslation } from '../../../i18n';
 import { escapeIdentifier } from '../../../sql/escapeIdentifier';
@@ -24,6 +28,8 @@ interface TableNameProps {
   database: string;
   primaryKeys: Array<string>;
   where?: string;
+  /** set on the structure page */
+  displayAfterByColumn: DisplayAfterByColumn;
 }
 const DEFAULT_LIMIT = 100;
 
@@ -32,6 +38,7 @@ export function TableLayout({
   database,
   primaryKeys,
   where,
+  displayAfterByColumn,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -70,6 +77,20 @@ export function TableLayout({
   useEffect(() => {
     fetchTableData(currentOffset);
   }, [fetchTableData, currentOffset]);
+
+  // the query stays a `SELECT *`: ordering here means a column added to or dropped from the table needs no new query to be placed
+  const orderedFields = useMemo(() => {
+    if (!fields) {
+      return null;
+    }
+
+    const byName = new Map(fields.map((field) => [field.name, field]));
+
+    return applyColumnOrder(
+      fields.map((field) => field.name),
+      displayAfterByColumn
+    ).flatMap((name) => byName.get(name) ?? []);
+  }, [fields, displayAfterByColumn]);
 
   // a written cell is patched in place rather than re-fetched: the value comes
   // from the server (see `updateCell`), so the row is as fresh as a reload
@@ -130,7 +151,7 @@ export function TableLayout({
               error.message
             ) : (
               <TableGrid
-                fields={fields}
+                fields={orderedFields}
                 result={result}
                 primaryKeys={primaryKeys}
                 onValueUpdated={handleValueUpdated}
