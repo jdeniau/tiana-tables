@@ -26,5 +26,9 @@
       }
     ]
   },
-  "enabledMcpjsonServers": ["antd"]
+  "enabledMcpjsonServers": ["antd"],
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  }
 }
