@@ -13,6 +13,7 @@ import {
   getConfiguration,
   setActiveDatabase,
   setActiveTable,
+  setColumnDisplayAfter,
   setPanelSize,
   setTableFilter,
   testables,
@@ -590,6 +591,18 @@ describe('set connection appState', async () => {
 });
 
 describe('setTableFilter', () => {
+  test('leaves the column order of the table alone', () => {
+    mockExistingConfig();
+
+    setColumnDisplayAfter('prod', 'db', 'sometable', 'lastname', 'firstname');
+    setTableFilter('prod', 'db', 'sometable', 'id = 1');
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      currentFilter: 'id = 1',
+      displayAfterByColumn: { lastname: 'firstname' },
+    });
+  });
+
   test('with basic configuration', async () => {
     mockExistingConfig();
 
@@ -641,6 +654,74 @@ describe('setTableFilter', () => {
       'utf-8',
       expect.any(Function)
     );
+  });
+});
+
+/** the config of one table of `db`, as the last write left it on disk */
+function writtenTableConfig(tableName: string) {
+  const written = JSON.parse(
+    mockWriteFile.mock.calls.at(-1)?.[1] as string
+  ) as Configuration;
+
+  return written.connections.prod.appState?.configByDatabase.db.tables[
+    tableName
+  ];
+}
+
+describe('setColumnDisplayAfter', () => {
+  test('records the column a column is displayed after', () => {
+    mockExistingConfig();
+
+    setColumnDisplayAfter('prod', 'db', 'sometable', 'lastname', 'firstname');
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      displayAfterByColumn: { lastname: 'firstname' },
+    });
+  });
+
+  test('adds to what was already recorded', () => {
+    mockExistingConfig();
+
+    setColumnDisplayAfter('prod', 'db', 'sometable', 'lastname', 'firstname');
+    setColumnDisplayAfter('prod', 'db', 'sometable', 'email', 'id');
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      displayAfterByColumn: { lastname: 'firstname', email: 'id' },
+    });
+  });
+
+  test('forgets a column put back in its place', () => {
+    mockExistingConfig();
+
+    setColumnDisplayAfter('prod', 'db', 'sometable', 'lastname', 'firstname');
+    setColumnDisplayAfter('prod', 'db', 'sometable', 'lastname', null);
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      displayAfterByColumn: {},
+    });
+  });
+
+  test('leaves the filter of the table alone', () => {
+    mockExistingConfig();
+
+    setTableFilter('prod', 'db', 'sometable', 'id = 1');
+    setColumnDisplayAfter('prod', 'db', 'sometable', 'lastname', 'firstname');
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      currentFilter: 'id = 1',
+      displayAfterByColumn: { lastname: 'firstname' },
+    });
+  });
+
+  test('leaves the other tables alone', () => {
+    mockExistingConfig();
+
+    setColumnDisplayAfter('prod', 'db', 'sometable', 'lastname', 'firstname');
+    setColumnDisplayAfter('prod', 'db', 'othertable', 'email', 'id');
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      displayAfterByColumn: { lastname: 'firstname' },
+    });
   });
 });
 

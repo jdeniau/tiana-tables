@@ -1,4 +1,11 @@
-import { ReactElement, memo, useCallback, useMemo, useState } from 'react';
+import {
+  ReactElement,
+  ReactNode,
+  memo,
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 import {
   columnOrderingFeature,
   columnPinningFeature,
@@ -72,7 +79,29 @@ interface TableGridProps<R extends RowDataPacket> {
    * query result has no filter to feed.
    */
   onFilterChange?: (where: string) => void;
+  /** columns of the caller's own, holding no value of the row */
+  extraColumns?: Array<ExtraColumn<R>>;
 }
+
+/**
+ * A column the caller renders itself.
+ * `render` runs on every mounted cell, so a rich control belongs in a grid of few rows — see the performance note below.
+ */
+export interface ExtraColumn<Row extends RowDataPacket> {
+  id: string;
+  header: string;
+  size: number;
+  /** the column of the result it follows; last when absent or unknown */
+  after?: string;
+  render: (row: Row) => ReactNode;
+}
+
+const NO_EXTRA_COLUMNS: Array<never> = [];
+
+/** `fieldIndex` indexes `fields`, not the columns on screen. */
+type ColumnSource<Row extends RowDataPacket> =
+  | { field: FieldPacket; fieldIndex: number; extra?: undefined }
+  | { field?: undefined; fieldIndex: -1; extra: ExtraColumn<Row> };
 
 /**
  * What identifies the row of a cell, or `null` when no primary key does.
@@ -115,6 +144,7 @@ function TableGrid<Row extends RowDataPacket>({
   rowsAsArray = false,
   onValueUpdated,
   onFilterChange,
+  extraColumns = NO_EXTRA_COLUMNS,
 }: TableGridProps<Row>): ReactElement {
   // store the scroll element in a state (not a ref): the virtualizer reads it
   // in a layout effect that runs before the parent ref is attached, so a ref
@@ -176,28 +206,53 @@ function TableGrid<Row extends RowDataPacket>({
     [database, flashCell, onValueUpdated]
   );
 
+  // both the table and `columnsMeta` are built from this one list, so the two always agree on what the nth column is
+  const columnSources = useMemo((): Array<ColumnSource<Row>> => {
+    const sources: Array<ColumnSource<Row>> = (fields ?? []).map(
+      (field, fieldIndex) => ({ field, fieldIndex })
+    );
+
+    for (const extra of extraColumns) {
+      const anchor = extra.after
+        ? sources.findIndex((source) => source.field?.name === extra.after)
+        : -1;
+
+      sources.splice(anchor < 0 ? sources.length : anchor + 1, 0, {
+        fieldIndex: -1,
+        extra,
+      });
+    }
+
+    return sources;
+  }, [fields, extraColumns]);
+
   const columns = useMemo(() => {
     const columnHelper = createColumnHelper<typeof features, Row>();
 
     return columnHelper.columns(
-      (fields ?? []).map((field, index) =>
-        columnHelper.accessor(
-          (row: Row) =>
-            rowsAsArray
-              ? (row as unknown as Array<unknown>)[index]
-              : row[field.name],
-          {
-            // raw SQL results can contain duplicated column names: suffix with
-            // the index to keep ids unique (browsing mode keeps plain names so
-            // that column pinning can match primary key names)
-            id: rowsAsArray ? `${index}:${field.name}` : field.name,
-            header: field.name,
-            size: getColumnWidth(field.type),
-          }
-        )
+      columnSources.map(({ field, fieldIndex, extra }) =>
+        extra
+          ? columnHelper.display({
+              id: extra.id,
+              header: extra.header,
+              size: extra.size,
+            })
+          : columnHelper.accessor(
+              (row: Row) =>
+                rowsAsArray
+                  ? (row as unknown as Array<unknown>)[fieldIndex]
+                  : row[field.name],
+              {
+                // raw SQL results can contain duplicated column names: suffix with the index to keep ids unique
+                // (browsing mode keeps plain names so that column pinning can match primary key names)
+                id: rowsAsArray ? `${fieldIndex}:${field.name}` : field.name,
+                header: field.name,
+                size: getColumnWidth(field.type),
+              }
+            )
       )
     );
-  }, [fields, rowsAsArray]);
+  }, [columnSources, rowsAsArray]);
 
   // pin primary key columns to the left, like the previous `fixed: 'left'`
   const columnPinning = useMemo(
@@ -227,7 +282,7 @@ function TableGrid<Row extends RowDataPacket>({
   const columnsMeta: Array<ColumnMeta> = useMemo(
     () =>
       table.getAllLeafColumns().map((column, index) => {
-        const field = (fields ?? [])[index];
+        const { field, fieldIndex, extra } = columnSources[index];
         const isPinned = column.getIsPinned();
         const foreignKey = field
           ? foreignKeys.getForeignKey(field.table ?? '', field.name)
@@ -235,7 +290,7 @@ function TableGrid<Row extends RowDataPacket>({
 
         return {
           id: column.id,
-          fieldIndex: index,
+          fieldIndex,
           name: field?.name ?? column.id,
           tableName: field?.table,
           type: field?.type,
@@ -249,10 +304,11 @@ function TableGrid<Row extends RowDataPacket>({
           detail: field
             ? allColumns.getColumn(field.table ?? '', field.name)
             : undefined,
+          render: extra?.render as ColumnMeta['render'],
         };
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- table is stable, columns/columnPinning drive its column state
-    [table, columns, columnPinning, fields, foreignKeys, allColumns]
+    [table, columns, columnPinning, columnSources, foreignKeys, allColumns]
   );
 
   return (
@@ -351,6 +407,8 @@ export interface ColumnMeta {
    * query, or a table of another schema.
    */
   detail: ColumnDetail | undefined;
+  /** what an extra column renders, `undefined` for a column of the result */
+  render?: (row: RowDataPacket) => ReactNode;
 }
 
 /** opens the detail modal on a cell, from the `<td>` that was double-clicked */
@@ -443,6 +501,19 @@ function BodyRowInner<Row extends RowDataPacket>({
         ]
           .filter(Boolean)
           .join(' ');
+
+        // no value, so no detail modal and no filter menu
+        if (column.render) {
+          return (
+            <td
+              key={column.id}
+              className={className}
+              style={{ width: column.width }}
+            >
+              {column.render(original)}
+            </td>
+          );
+        }
 
         return (
           <td

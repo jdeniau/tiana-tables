@@ -1,5 +1,6 @@
 import { LoaderFunctionArgs, Params, useLoaderData } from 'react-router';
 import invariant from 'tiny-invariant';
+import type { DisplayAfterByColumn } from '../../configuration/columnOrder';
 import TableLayout from '../component/TableLayout';
 
 interface RouteParams extends LoaderFunctionArgs {
@@ -23,10 +24,14 @@ export async function loader({ params, request }: RouteParams) {
 
   const configuration = await window.config.getConfiguration();
 
-  const storedFilter =
+  const tableConfig =
     configuration.connections[connectionSlug]?.appState?.configByDatabase?.[
       databaseName
-    ]?.tables[tableName]?.currentFilter || '';
+    ]?.tables[tableName];
+
+  const storedFilter = tableConfig?.currentFilter || '';
+  const displayAfterByColumn: DisplayAfterByColumn =
+    tableConfig?.displayAfterByColumn ?? {};
 
   // An empty `where` param is a filter the user just cleared, not an absent
   // one: only fall back to the stored filter when the param is not there.
@@ -38,19 +43,20 @@ export async function loader({ params, request }: RouteParams) {
   return {
     primaryKeys,
     whereFilter: where,
+    displayAfterByColumn,
   };
 }
 
 export default function TableNamePage() {
-  const { primaryKeys, whereFilter } = useLoaderData() as Awaited<
-    ReturnType<typeof loader>
-  >;
+  const { primaryKeys, whereFilter, displayAfterByColumn } =
+    useLoaderData() as Awaited<ReturnType<typeof loader>>;
 
   return (
     <TableLayout
       key={whereFilter}
       primaryKeys={primaryKeys}
       where={whereFilter}
+      displayAfterByColumn={displayAfterByColumn}
     />
   );
 }
