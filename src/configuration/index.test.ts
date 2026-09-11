@@ -599,6 +599,7 @@ describe('setTableFilter', () => {
 
     expect(writtenTableConfig('sometable')).toEqual({
       currentFilter: 'id = 1',
+      filterHistory: ['id = 1'],
       displayAfterByColumn: { lastname: 'firstname' },
     });
   });
@@ -732,6 +733,7 @@ describe('setColumnDisplayAfter', () => {
 
     expect(writtenTableConfig('sometable')).toEqual({
       currentFilter: 'id = 1',
+      filterHistory: ['id = 1'],
       displayAfterByColumn: { lastname: 'firstname' },
     });
   });

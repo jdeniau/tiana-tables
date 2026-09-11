@@ -10,6 +10,7 @@ Rules learned from past mistakes and audits. Review this file at the start of ea
 ## Git / PRs
 
 - **No "Generated with Claude" watermark.** The user does not want the `🤖 Generated with Claude Code` footer (or any similar attribution) in PR descriptions, nor `Co-Authored-By: Claude` trailers in commit messages. Omit them even though the default tooling instructions ask for them.
+- **A PR description is not source code: never hard-wrap it at 80 columns.** Corrected by the user (2026-09-11) on #200, whose body I had wrapped by hand like a commit message: « arrête avec les retours chariots à 80 caractères dans la description de PR ». GitHub reflows Markdown itself, so the hand-made breaks only show up as a ragged column in the editor and in any window narrower or wider than mine. One paragraph is one line, however long; the blank line between paragraphs is the only break. A **commit message** keeps its 72-column wrap — git does not reflow, and `git log` is a terminal.
 
 ## Documentation
 
