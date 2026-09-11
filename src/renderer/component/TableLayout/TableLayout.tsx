@@ -7,6 +7,7 @@ import {
   applyColumnOrder,
 } from '../../../configuration/columnOrder';
 import { PANEL } from '../../../configuration/panels';
+import type { ColumnWidthByColumn } from '../../../configuration/type';
 import { useTranslation } from '../../../i18n';
 import { escapeIdentifier } from '../../../sql/escapeIdentifier';
 import { usePanelSize } from '../../hooks/usePanelSize';
@@ -24,6 +25,7 @@ import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
 
 interface TableNameProps {
+  connectionSlug: string;
   tableName: string;
   database: string;
   primaryKeys: Array<string>;
@@ -34,16 +36,21 @@ interface TableNameProps {
 
   /** set on the structure page */
   displayAfterByColumn: DisplayAfterByColumn;
+
+  /** the widths the columns of this table were dragged to */
+  columnWidths: ColumnWidthByColumn;
 }
 const DEFAULT_LIMIT = 100;
 
 export function TableLayout({
+  connectionSlug,
   tableName,
   database,
   primaryKeys,
   where,
   filterHistory,
   displayAfterByColumn,
+  columnWidths,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -118,6 +125,21 @@ export function TableLayout({
     []
   );
 
+  // written, then read back by the loader on the next visit, rather than
+  // mirrored in a state that the next table would leave stale
+  const handleColumnResized = useCallback(
+    (columnName: string, width: number) => {
+      window.config.setColumnWidth(
+        connectionSlug,
+        database,
+        tableName,
+        columnName,
+        width
+      );
+    },
+    [connectionSlug, database, tableName]
+  );
+
   // the filter built by the grid's context menu replaces the current one, and
   // takes the same route as the filter form: the loader reads `?where`, saves it
   // and remounts this layout, so the editor reopens on the clause
@@ -165,6 +187,8 @@ export function TableLayout({
                 primaryKeys={primaryKeys}
                 onValueUpdated={handleValueUpdated}
                 onFilterChange={handleFilterChange}
+                columnWidths={columnWidths}
+                onColumnResized={handleColumnResized}
               />
             )}
           </RegionBody>

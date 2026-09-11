@@ -39,6 +39,15 @@ interface Config {
     displayAfter: string | null
   ): Promise<void>;
 
+  /** stores the width a column was dragged to, on a table page only */
+  setColumnWidth(
+    connectionSlug: string,
+    database: string,
+    tableName: string,
+    columnName: string,
+    width: number
+  ): Promise<void>;
+
   setPanelSize(panel: PANEL, size: string): Promise<Configuration>;
 
   editConnection(
@@ -58,6 +67,7 @@ export const config: Config = {
   setColumnDisplayAfter: bindChannel(
     CONFIGURATION_CHANNEL.SET_COLUMN_DISPLAY_AFTER
   ),
+  setColumnWidth: bindChannel(CONFIGURATION_CHANNEL.SET_COLUMN_WIDTH),
   setPanelSize: bindChannel(CONFIGURATION_CHANNEL.SET_PANEL_SIZE),
   editConnection: bindChannel(CONFIGURATION_CHANNEL.EDIT_CONNECTION),
 };

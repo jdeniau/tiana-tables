@@ -1,6 +1,7 @@
 import { LoaderFunctionArgs, Params, useLoaderData } from 'react-router';
 import invariant from 'tiny-invariant';
 import type { DisplayAfterByColumn } from '../../configuration/columnOrder';
+import type { ColumnWidthByColumn } from '../../configuration/type';
 import TableLayout from '../component/TableLayout';
 
 interface RouteParams extends LoaderFunctionArgs {
@@ -32,6 +33,8 @@ export async function loader({ params, request }: RouteParams) {
   const storedFilter = tableConfig?.currentFilter || '';
   const displayAfterByColumn: DisplayAfterByColumn =
     tableConfig?.displayAfterByColumn ?? {};
+  const columnWidthByColumn: ColumnWidthByColumn =
+    tableConfig?.columnWidthByColumn ?? {};
 
   // An empty `where` param is a filter the user just cleared, not an absent
   // one: only fall back to the stored filter when the param is not there.
@@ -57,12 +60,18 @@ export async function loader({ params, request }: RouteParams) {
     whereFilter: where,
     filterHistory,
     displayAfterByColumn,
+    columnWidthByColumn,
   };
 }
 
 export default function TableNamePage() {
-  const { primaryKeys, whereFilter, filterHistory, displayAfterByColumn } =
-    useLoaderData() as Awaited<ReturnType<typeof loader>>;
+  const {
+    primaryKeys,
+    whereFilter,
+    filterHistory,
+    displayAfterByColumn,
+    columnWidthByColumn,
+  } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
 
   return (
     <TableLayout
@@ -71,6 +80,7 @@ export default function TableNamePage() {
       where={whereFilter}
       filterHistory={filterHistory}
       displayAfterByColumn={displayAfterByColumn}
+      columnWidths={columnWidthByColumn}
     />
   );
 }
