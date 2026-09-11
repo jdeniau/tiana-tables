@@ -26,11 +26,19 @@ const ROWS = Array.from({ length: 30 }, (_, index) => [
 const meta: Meta<typeof ChartPanel> = {
   component: ChartPanel,
   decorators: [
-    (Story) => (
-      <div style={{ height: '80vh' }}>
-        <Story />
-      </div>
-    ),
+    (Story) => {
+      // the clipboard goes through the main process, which Storybook has none of
+      window.clipboard = {
+        readText: async () => '',
+        writeImage: async (dataUrl) => console.info(dataUrl),
+      };
+
+      return (
+        <div style={{ height: '80vh' }}>
+          <Story />
+        </div>
+      );
+    },
   ],
   args: {
     result: ROWS,

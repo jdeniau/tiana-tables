@@ -1,11 +1,12 @@
-import { ReactElement, useMemo, useState } from 'react';
+import { ReactElement, useMemo, useRef, useState } from 'react';
+import { CheckOutlined, CopyOutlined, DownloadOutlined } from '@ant-design/icons';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
-import { Alert, Select, Space } from 'antd';
+import { Alert, Button, Select, Space } from 'antd';
 import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { styled, useTheme } from 'styled-components';
 import { useTranslation } from '../../../i18n';
-import { space } from '../../theme';
+import { background, space } from '../../theme';
 import { fill } from '../Style/fill';
 import {
   ChartConfig,
@@ -13,6 +14,7 @@ import {
   defaultChartConfig,
   numericFieldIndexes,
 } from './chartConfig';
+import { chartToPngDataUrl } from './chartImage';
 import { buildChartTheme } from './chartTheme';
 import { MAX_POINTS, toBarData, toLineSeries } from './toSeries';
 
@@ -81,11 +83,46 @@ function ChartPanel({
 }: ChartPanelProps): ReactElement | null {
   const { t } = useTranslation();
   const theme = useTheme();
+  const chartAreaRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
   const [config, setConfig] = useState<ChartConfig | null>(() =>
     defaultChartConfig(fields)
   );
 
   const chartTheme = useMemo(() => buildChartTheme(theme), [theme]);
+
+  async function exportPng(): Promise<string | null> {
+    const svg = chartAreaRef.current?.querySelector('svg');
+
+    return svg ? chartToPngDataUrl(svg, background({ theme })) : null;
+  }
+
+  async function copyImage(): Promise<void> {
+    const dataUrl = await exportPng();
+
+    if (!dataUrl) {
+      return;
+    }
+
+    await window.clipboard.writeImage(dataUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function downloadImage(): Promise<void> {
+    const dataUrl = await exportPng();
+
+    if (!dataUrl) {
+      return;
+    }
+
+    // a data URL on a download link is all Electron needs to open its own save
+    // dialog — no IPC, no temporary file
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = 'chart.png';
+    link.click();
+  }
 
   const columnOptions = useMemo(
     () =>
@@ -156,6 +193,16 @@ function ChartPanel({
           placeholder={t('chart.axis.y')}
           style={{ minWidth: 220 }}
         />
+
+        <Button
+          icon={copied ? <CheckOutlined /> : <CopyOutlined />}
+          onClick={copyImage}
+        >
+          {copied ? t('chart.export.copied') : t('chart.export.copy')}
+        </Button>
+        <Button icon={<DownloadOutlined />} onClick={downloadImage}>
+          {t('chart.export.download')}
+        </Button>
       </Space>
 
       {rendered.isTruncated && (
@@ -166,7 +213,7 @@ function ChartPanel({
         />
       )}
 
-      <ChartArea>
+      <ChartArea ref={chartAreaRef}>
         {rendered.kind === 'line' ? (
           <ResponsiveLine
             data={rendered.series}
