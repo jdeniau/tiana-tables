@@ -16,7 +16,13 @@ import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import PathBar from '../component/PathBar';
 import SettingsMenu from '../component/SettingsMenu';
 import { TabStrip, TabStripLink } from '../component/Style/TabStrip';
-import { Brand, TitleBar, TitleGroup } from '../component/Style/TitleBar';
+import {
+  Brand,
+  BrandGroup,
+  TitleBar,
+  TitleGroup,
+} from '../component/Style/TitleBar';
+import UpdateDot from '../component/UpdateDot';
 import useEffectOnce from '../hooks/useEffectOnce';
 import useUpdateStatus from '../hooks/useUpdateStatus';
 import { background } from '../theme';
@@ -82,11 +88,11 @@ function AppTitleBar() {
   return (
     <TitleBar $tint={tint}>
       <TitleGroup>
-        <Brand to="/">Tiana Tables</Brand>
-        <SettingsMenu
-          version={packageJson.version}
-          updateStatus={updateStatus}
-        />
+        <BrandGroup>
+          <Brand to="/">Tiana Tables</Brand>
+          <UpdateDot updateStatus={updateStatus} />
+        </BrandGroup>
+        <SettingsMenu version={packageJson.version} />
         <ConnectionNav />
       </TitleGroup>
 
