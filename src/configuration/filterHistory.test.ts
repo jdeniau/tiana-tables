@@ -24,8 +24,8 @@ describe('pushFilter', () => {
     expect(pushFilter([], filter)).toEqual([filter]);
   });
 
-  test('the blank the editor leaves at either end is not a difference', () => {
-    expect(pushFilter(['id = 1'], 'id = 1\n')).toEqual(['id = 1\n']);
+  test('an entry is the clause, without the blank left around it', () => {
+    expect(pushFilter(['id = 1'], '  id = 1\n')).toEqual(['id = 1']);
   });
 
   test('an empty filter is not one: the history is left alone', () => {
