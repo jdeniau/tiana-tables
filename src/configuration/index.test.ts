@@ -640,6 +640,7 @@ describe('setTableFilter', () => {
                     tables: {
                       sometable: {
                         currentFilter: 'id = 1',
+                        filterHistory: ['id = 1'],
                       },
                     },
                   },
@@ -654,6 +655,28 @@ describe('setTableFilter', () => {
       'utf-8',
       expect.any(Function)
     );
+  });
+
+  test('accumulates the filters used, most recent first', () => {
+    mockExistingConfig();
+
+    setTableFilter('prod', 'db', 'sometable', 'id = 1');
+    setTableFilter('prod', 'db', 'sometable', 'id = 2');
+    setTableFilter('prod', 'db', 'sometable', 'id = 1');
+
+    // clearing the filter is a state of the table, not a filter to remember
+    const history = setTableFilter('prod', 'db', 'sometable', '');
+
+    expect(history).toEqual(['id = 1', 'id = 2']);
+
+    const written = JSON.parse(String(mockWriteFile.mock.lastCall?.[1]));
+
+    expect(
+      written.connections.prod.appState.configByDatabase.db.tables.sometable
+    ).toEqual({
+      currentFilter: '',
+      filterHistory: ['id = 1', 'id = 2'],
+    });
   });
 });
 

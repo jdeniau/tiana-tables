@@ -38,17 +38,25 @@ export async function loader({ params, request }: RouteParams) {
   const whereParam = new URL(request.url).searchParams.get('where');
   const where = whereParam ?? storedFilter;
 
-  window.config.setTableFilter(connectionSlug, databaseName, tableName, where);
+  // the write answers the history it just pushed the filter into, so the page
+  // and the file never hold two versions of it
+  const filterHistory = await window.config.setTableFilter(
+    connectionSlug,
+    databaseName,
+    tableName,
+    where
+  );
 
   return {
     primaryKeys,
     whereFilter: where,
+    filterHistory,
     displayAfterByColumn,
   };
 }
 
 export default function TableNamePage() {
-  const { primaryKeys, whereFilter, displayAfterByColumn } =
+  const { primaryKeys, whereFilter, filterHistory, displayAfterByColumn } =
     useLoaderData() as Awaited<ReturnType<typeof loader>>;
 
   return (
@@ -56,6 +64,7 @@ export default function TableNamePage() {
       key={whereFilter}
       primaryKeys={primaryKeys}
       where={whereFilter}
+      filterHistory={filterHistory}
       displayAfterByColumn={displayAfterByColumn}
     />
   );

@@ -124,6 +124,7 @@ export default {
   'table.contextMenu.filter.clipboard': 'Clipboard',
   'table.contextMenu.filter.freeText': '…',
   'table.contextMenu.filter.freeText.title': 'Filter on a value',
+  'table.filters.history': 'Filters used before',
   'table.filters.title': 'Filters',
   'table.rows.count': '{count, plural, one {# row} other {# rows}}',
   'table.rows.loadMore': 'Load more…',

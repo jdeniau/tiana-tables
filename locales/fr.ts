@@ -130,6 +130,7 @@ const fr: Translation = {
   'table.contextMenu.filter.clipboard': 'Presse-papier',
   'table.contextMenu.filter.freeText': '…',
   'table.contextMenu.filter.freeText.title': 'Filtrer sur une valeur',
+  'table.filters.history': 'Filtres déjà utilisés',
   'table.filters.title': 'Filtres',
   'table.rows.count': '{count, plural, one {# ligne} other {# lignes}}',
   'table.rows.loadMore': 'Charger plus…',

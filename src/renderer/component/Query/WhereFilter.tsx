@@ -4,9 +4,9 @@ import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import { escapeIdentifier } from '../../../sql/escapeIdentifier';
 import { RawSqlEditor } from '../MonacoEditor/RawSqlEditor';
-import { ActionButton } from '../Style/ActionButton';
 import { Region, RegionBody, RegionHeader, RegionName } from '../Style/Region';
 import { fill } from '../Style/fill';
+import { FilterButton } from './FilterButton';
 
 // the router's Form is a block between the panel and the region
 const FillForm = styled(Form)`
@@ -16,10 +16,16 @@ const FillForm = styled(Form)`
 interface Props {
   defaultValue: string;
   tableName: string;
+  /** the filters this table was given, most recent first */
+  history: Array<string>;
 }
 
 /** The filters region of a table page: the body of a `WHERE`, and its button. */
-function WhereFilter({ defaultValue, tableName }: Props): ReactElement {
+function WhereFilter({
+  defaultValue,
+  tableName,
+  history,
+}: Props): ReactElement {
   const { t } = useTranslation();
   const [where, setWhere] = useState<string>(defaultValue);
   const ref = useRef<HTMLFormElement>(null);
@@ -37,7 +43,7 @@ function WhereFilter({ defaultValue, tableName }: Props): ReactElement {
         <RegionHeader>
           <RegionName>{t('table.filters.title')}</RegionName>
 
-          <ActionButton htmlType="submit">{t('filter')}</ActionButton>
+          <FilterButton history={history} current={defaultValue} />
         </RegionHeader>
 
         <RegionBody>
