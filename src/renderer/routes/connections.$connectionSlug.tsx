@@ -6,7 +6,6 @@ import {
   Params,
   redirect,
   useLoaderData,
-  useParams,
 } from 'react-router-dom';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
@@ -15,6 +14,7 @@ import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseListContextProvider } from '../../contexts/DatabaseListContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
+import { OpenTablesContextProvider } from '../../contexts/OpenTablesContext';
 import { TableListContextProvider } from '../../contexts/TableListContext';
 import { useTranslation } from '../../i18n';
 import DatabaseSelector from '../component/DatabaseSelector';
@@ -22,6 +22,8 @@ import { KeyboardShortcut } from '../component/KeyboardShortcut';
 import { RegionBody, RegionFoot } from '../component/Style/Region';
 import { fill } from '../component/Style/fill';
 import TableList from '../component/TableList';
+import TableTabs from '../component/TableTabs';
+import { pruneOpenTables } from '../component/tableTabs';
 import { usePanelSize } from '../hooks/usePanelSize';
 import { commentForeground, fontSize, space } from '../theme';
 import NavigateModalContextProvider, {
@@ -84,9 +86,11 @@ export async function loader({ params, request }: RouteParams) {
   const { activeDatabase: configDatabase, configByDatabase } =
     configuration.connections[connectionSlug]?.appState || {};
 
-  const openedTable = configDatabase
-    ? configByDatabase?.[configDatabase]?.activeTable
+  const databaseConfig = configDatabase
+    ? configByDatabase?.[configDatabase]
     : undefined;
+
+  const openedTable = databaseConfig?.activeTable;
 
   if (!databaseList || !databaseList[0]) {
     // TODO handle the case where there is no table in the databbase
@@ -130,19 +134,32 @@ export async function loader({ params, request }: RouteParams) {
   const [allColumns] = await window.sql.getAllColumns(activeDatabase);
 
   return {
+    connectionSlug,
     databaseList,
     tableStatusList,
     keyColumnUsageRows,
     allColumns,
+    activeDatabase,
+
+    openTables: pruneOpenTables(
+      databaseConfig?.openTables ?? [],
+      tableStatusList.map(({ Name }) => Name)
+    ),
   };
 }
 
 export default function ConnectionDetailPage() {
   const { t } = useTranslation();
-  const { databaseList, tableStatusList, keyColumnUsageRows, allColumns } =
-    useLoaderData() as Exclude<Awaited<ReturnType<typeof loader>>, Response>;
+  const {
+    connectionSlug,
+    databaseList,
+    tableStatusList,
+    keyColumnUsageRows,
+    allColumns,
+    activeDatabase,
+    openTables,
+  } = useLoaderData() as Exclude<Awaited<ReturnType<typeof loader>>, Response>;
   const { addConnectionToList } = useConnectionContext();
-  const { connectionSlug } = useParams();
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.TABLE_LIST);
 
   useEffect(() => {
@@ -156,31 +173,42 @@ export default function ConnectionDetailPage() {
       <TableListContextProvider tableList={tableStatusList}>
         <ForeignKeysContextProvider keyColumnUsageRows={keyColumnUsageRows}>
           <AllColumnsContextProvider allColumns={allColumns}>
-            <NavigateModalContextProvider>
-              <Splitter onResizeEnd={onResizeEnd}>
-                <Splitter.Panel {...panelProps}>
-                  <Sider>
-                    <SiderHead>
-                      <DatabaseSelector databaseList={databaseList} />
-                    </SiderHead>
-                    <SiderTools>
-                      <OpenNavigateModalButton />
-                    </SiderTools>
-                    <RegionBody>
-                      <TableList tableStatusList={tableStatusList} />
-                    </RegionBody>
-                    <RegionFoot>
-                      {t('tableList.count', { count: tableStatusList.length })}
-                    </RegionFoot>
-                  </Sider>
-                </Splitter.Panel>
-                <Splitter.Panel>
-                  <Content>
-                    <Outlet />
-                  </Content>
-                </Splitter.Panel>
-              </Splitter>
-            </NavigateModalContextProvider>
+            <OpenTablesContextProvider
+              // the open tables are the database's: another database is another run
+              key={activeDatabase}
+              connectionSlug={connectionSlug}
+              database={activeDatabase}
+              openTables={openTables}
+            >
+              <NavigateModalContextProvider>
+                <Splitter onResizeEnd={onResizeEnd}>
+                  <Splitter.Panel {...panelProps}>
+                    <Sider>
+                      <SiderHead>
+                        <DatabaseSelector databaseList={databaseList} />
+                      </SiderHead>
+                      <SiderTools>
+                        <OpenNavigateModalButton />
+                      </SiderTools>
+                      <RegionBody>
+                        <TableList tableStatusList={tableStatusList} />
+                      </RegionBody>
+                      <RegionFoot>
+                        {t('tableList.count', {
+                          count: tableStatusList.length,
+                        })}
+                      </RegionFoot>
+                    </Sider>
+                  </Splitter.Panel>
+                  <Splitter.Panel>
+                    <Content>
+                      <TableTabs />
+                      <Outlet />
+                    </Content>
+                  </Splitter.Panel>
+                </Splitter>
+              </NavigateModalContextProvider>
+            </OpenTablesContextProvider>
           </AllColumnsContextProvider>
         </ForeignKeysContextProvider>
       </TableListContextProvider>

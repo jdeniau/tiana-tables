@@ -219,10 +219,11 @@ export function setActiveDatabase(connectionSlug: string, database: string) {
   writeConfiguration(config);
 }
 
+/** Stores the table the database opens on; `null` clears it, so the database page redirects nowhere. */
 export function setActiveTable(
   connectionSlug: string,
   database: string,
-  tableName: string
+  tableName: string | null
 ): void {
   const config = getConfiguration();
 
@@ -240,7 +241,35 @@ export function setActiveTable(
 
   connection.appState.configByDatabase[database] = {
     ...newConfig,
-    activeTable: tableName,
+    activeTable: tableName ?? '',
+  };
+
+  writeConfiguration(config);
+}
+
+/** Stores the tables kept open as tabs, in their order — the whole run at once. */
+export function setOpenTables(
+  connectionSlug: string,
+  database: string,
+  openTables: Array<string>
+): void {
+  const config = getConfiguration();
+
+  if (!config.connections[connectionSlug]) {
+    return;
+  }
+
+  const connection = ensureConnectionAppStateExist(
+    config.connections[connectionSlug]
+  );
+
+  const newConfig = ensureConnectionAppStateIsCorrect(
+    connection.appState.configByDatabase[database]
+  );
+
+  connection.appState.configByDatabase[database] = {
+    ...newConfig,
+    openTables,
   };
 
   writeConfiguration(config);
@@ -448,6 +477,7 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.CHANGE_LANGUAGE]: changeLanguage,
   [CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE]: setActiveDatabase,
   [CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE]: setActiveTable,
+  [CONFIGURATION_CHANNEL.SET_OPEN_TABLES]: setOpenTables,
   [CONFIGURATION_CHANNEL.SET_TABLE_FILTER]: setTableFilter,
   [CONFIGURATION_CHANNEL.SET_COLUMN_DISPLAY_AFTER]: setColumnDisplayAfter,
   [CONFIGURATION_CHANNEL.SET_COLUMN_WIDTH]: setColumnWidth,
