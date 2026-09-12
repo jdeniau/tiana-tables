@@ -24,7 +24,7 @@ import {
   EncryptedConfiguration,
   EncryptedConnectionObject,
 } from './type';
-import { slugify } from './utils';
+import { uniqueSlug } from './utils';
 
 const configurationPath = getConfigurationPath();
 
@@ -144,7 +144,7 @@ export function addConnectionToConfig(
     config.connections = {};
   }
 
-  const slug = slugify(connection.name);
+  const slug = uniqueSlug(connection.name, Object.keys(config.connections));
 
   config.connections[slug] = { ...connection, slug };
 
@@ -163,7 +163,12 @@ export function editConnection(
     config.connections = {};
   }
 
-  const newSlug = slugify(connection.name);
+  // the connection being edited does not collide with itself: renaming it back
+  // to the name it already has must keep its slug, suffix included
+  const newSlug = uniqueSlug(
+    connection.name,
+    Object.keys(config.connections).filter((slug) => slug !== oldSlug)
+  );
 
   if (oldSlug !== newSlug) {
     // if slugname change, replace the old connection by the new one
