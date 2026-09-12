@@ -278,6 +278,26 @@ describe('add connection to config', () => {
 
     expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
+
+  test('a name that slugifies like an existing one is suffixed', async () => {
+    mockExistingConfig();
+
+    const configuration = await addConnectionToConfig({
+      name: 'LOCAL',
+      host: 'elsewhere',
+      user: 'root',
+      port: 3306,
+      password: 'password',
+    });
+
+    // the connection already there is untouched
+    expect(configuration.connections.local.host).toBe('localhost');
+    expect(configuration.connections['local-2']).toMatchObject({
+      name: 'LOCAL',
+      host: 'elsewhere',
+      slug: 'local-2',
+    });
+  });
 });
 
 describe('set theme', () => {
@@ -801,6 +821,31 @@ describe('setColumnWidth', () => {
   });
 });
 
+/** two names that slugify the same, as they end up stored */
+const twoNamesOneSlug = {
+  version: 1,
+  theme: DEFAULT_THEME.name,
+  locale: DEFAULT_LOCALE,
+  connections: {
+    'docker-dev': {
+      name: 'docker (dev)',
+      host: 'localhost',
+      user: 'root',
+      port: 13306,
+      password: Buffer.from('encrypted-password').toString('base64'),
+      slug: 'docker-dev',
+    },
+    'docker-dev-2': {
+      name: 'Docker-Dev',
+      host: 'localhost',
+      user: 'root',
+      port: 13307,
+      password: Buffer.from('encrypted-password').toString('base64'),
+      slug: 'docker-dev-2',
+    },
+  },
+} satisfies Configuration;
+
 describe('edit', () => {
   test('edit connexion', () => {
     mockExistingConfig();
@@ -905,6 +950,44 @@ describe('edit', () => {
     );
 
     expect(mockReadFileSync).toHaveBeenCalledOnce();
+  });
+
+  test('renaming onto the name of another connection suffixes the slug', () => {
+    mockExistingConfig();
+
+    const configuration = editConnection('prod', {
+      name: 'Local',
+      host: 'prod',
+      user: 'root',
+      port: 3306,
+      password: 'password',
+    });
+
+    // the connection that already held `local` is still there
+    expect(configuration.connections.local.name).toBe('local');
+    expect(configuration.connections.prod).toBeUndefined();
+    expect(configuration.connections['local-2']).toMatchObject({
+      name: 'Local',
+      slug: 'local-2',
+    });
+  });
+
+  test('a suffixed connection edited without a rename keeps its slug', () => {
+    mockExistingConfig(twoNamesOneSlug);
+
+    const configuration = editConnection('docker-dev-2', {
+      name: 'Docker-Dev',
+      host: 'localhost',
+      user: 'root',
+      port: 13308,
+      password: 'password',
+    });
+
+    expect(Object.keys(configuration.connections)).toEqual([
+      'docker-dev',
+      'docker-dev-2',
+    ]);
+    expect(configuration.connections['docker-dev-2'].port).toBe(13308);
   });
 });
 
