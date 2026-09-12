@@ -10,7 +10,8 @@ import { loader } from './connections.$connectionSlug';
 
 function setConfiguration(
   connectionSlug: string | undefined,
-  activeDatabase: string | undefined
+  activeDatabase: string | undefined,
+  openTables?: Array<string>
 ): void {
   const config: Configuration = {
     version: 1,
@@ -29,7 +30,11 @@ function setConfiguration(
       password: '',
       appState: {
         activeDatabase: activeDatabase,
-        configByDatabase: {},
+        configByDatabase: openTables
+          ? {
+              [activeDatabase]: { activeTable: '', openTables, tables: {} },
+            }
+          : {},
       },
     };
   }
@@ -151,6 +156,9 @@ describe('loader', () => {
         ),
       })
     ).toEqual({
+      connectionSlug: 'connectionSlug',
+      activeDatabase: 'databaseName2',
+      openTables: [],
       databaseList: [
         { Database: 'databaseName1' },
         { Database: 'databaseName2' },
@@ -170,6 +178,25 @@ describe('loader', () => {
         },
       ],
     });
+  });
+
+  test('drops the memorised tables the database no longer has', async () => {
+    const params = { connectionSlug: 'connectionSlug' };
+
+    setConfiguration('connectionSlug', 'databaseName2', [
+      'table2',
+      'dropped',
+      'table1',
+    ]);
+
+    const result = await loader({
+      params,
+      request: new Request(
+        'http://localhost/connections/connectionSlug/databaseName2'
+      ),
+    });
+
+    expect(result).toMatchObject({ openTables: ['table2', 'table1'] });
   });
 
   // On this path the loader does not redirect, so it queries the database

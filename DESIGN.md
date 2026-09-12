@@ -78,8 +78,17 @@ Three or more items must degrade evenly: every item gets
 `flex: 0 1 auto; min-width: 44px; overflow: hidden; text-overflow: ellipsis`.
 If only the last item can shrink, it collapses to a bare separator.
 
-Beyond 4–5 statements the strip needs a real answer: horizontal scroll, or an
-overflow menu. Undecided.
+Beyond 4–5 items the strip scrolls horizontally, with no scrollbar of its own
+and the active item scrolled into view. **A vertical wheel over the run scrolls
+it sideways** — a mouse has no other wheel, and the platform scrollbar is not an
+option here: Chromium draws it with rounded corners and arrow buttons, and it
+takes a third of a 32px row. The item clipped at the edge is the sign that there
+is more. The floor comes first: items shrink
+evenly until they reach it, and only then does the run overflow. It is 44px for
+a bare item, 96px for one carrying a close button — at 44px such a tab is its
+padding and its cross, with a single character between them. Decided on the
+table tabs (2026-09-12), where a run outgrows its bar as a matter of course; the
+statement tabs follow the same rule.
 
 ## Element heights
 
@@ -212,6 +221,16 @@ Ship it with a Storybook story — the repo already has Storybook.
   then row count and the Data/Chart switch. The grid starts flush at the region
   edge: 11px uppercase column heads over a `base03` rule, 26px rows, numbers
   right-aligned in `base09` with `base02` cell separators.
+- **Table tabs** — a 32px row over the whole content panel, under the title bar
+  and right of the sidebar, with a `base03` rule under it. The open tables as a
+  run: the active one carries the pip, the temporary one is in italics, each
+  carries a `×` shown on hover and on the active tab. It belongs to the
+  workspace rather than to the table below it, so it stays in place between Data
+  and Structure; with no tab open there is no row at all.
+  - A single click on a table opens it **temporarily** — one such tab at a time,
+    the next single click replaces it. A double click **memorises** it: it is
+    written to the configuration and stays until it is closed. The temporary tab
+    is always last, so memorising it moves nothing.
 - **Table view** — the same two-region split as the SQL page, so the two screens
   read as siblings. Filters on top, data below. Table name, its count and the
   Data/Structure switch in the region header — the same framed, filled control
