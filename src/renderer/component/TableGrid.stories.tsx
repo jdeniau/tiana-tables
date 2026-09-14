@@ -143,6 +143,9 @@ const meta: Meta<typeof TableGrid> = {
           addConnectionToList: async (connectionName) => {
             action('addConnectionToList')(connectionName);
           },
+          closeConnection: (connectionName) => {
+            action('closeConnection')(connectionName);
+          },
         }}
       >
         <DatabaseContext.Provider

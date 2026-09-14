@@ -1,4 +1,4 @@
-import { ReactElement } from 'react';
+import { MouseEvent, ReactElement } from 'react';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
@@ -10,9 +10,25 @@ import { TabStrip, TabStripLink } from '../Style/TabStrip';
  * the last item opens the form for a new one.
  */
 export default function Nav(): ReactElement | null {
-  const { connectionSlugList, currentConnectionSlug } = useConnectionContext();
+  const { connectionSlugList, currentConnectionSlug, closeConnection } =
+    useConnectionContext();
   const { configuration } = useConfiguration();
   const { t } = useTranslation();
+
+  /** Middle click closes the connection, the way it closes a browser tab. */
+  function handleAuxClick(
+    event: MouseEvent<HTMLAnchorElement>,
+    connectionSlug: string
+  ): void {
+    if (event.button !== 1) {
+      return;
+    }
+
+    // Without this, Chromium asks for a window of its own for the link.
+    event.preventDefault();
+
+    closeConnection(connectionSlug);
+  }
 
   if (!connectionSlugList.length) {
     return null;
@@ -28,6 +44,9 @@ export default function Nav(): ReactElement | null {
           <TabStripLink
             key={connectionSlug}
             active={connectionSlug === currentConnectionSlug}
+            onAuxClick={(event) => {
+              handleAuxClick(event, connectionSlug);
+            }}
             title={connectionName}
             to={`/connections/${connectionSlug}`}
           >

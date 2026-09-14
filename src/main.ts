@@ -1,4 +1,4 @@
-import { BrowserWindow, Menu, app, ipcMain, session } from 'electron';
+import { BrowserWindow, Menu, app, ipcMain, session, shell } from 'electron';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import log from 'electron-log/main';
@@ -26,6 +26,11 @@ import connectionStackInstance from './sql';
 const isMac = isMacPlatform();
 const isDev = isDevApp();
 const startupStart = performance.now();
+
+// Where the renderer is served from: the Vite dev server in development, a local file in a build.
+const appOrigin = MAIN_WINDOW_VITE_DEV_SERVER_URL
+  ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).origin
+  : 'file://';
 
 function logStartupMilestone(name: string): void {
   log.info(
@@ -62,6 +67,15 @@ const createWindow = () => {
   logStartupMilestone('main-window-created');
 
   Menu.setApplicationMenu(createMenu(mainWindow));
+
+  // A middle click on a link would otherwise pop a second window, empty for want of our preload.
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (!url.startsWith(appOrigin) && /^https?:\/\//.test(url)) {
+      shell.openExternal(url);
+    }
+
+    return { action: 'deny' };
+  });
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {

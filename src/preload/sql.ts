@@ -25,6 +25,7 @@ interface Sql {
    * text: they travel as bound parameters.
    */
   updateCell(request: UpdateCellRequest): Promise<UpdateCellOutcome>;
+  closeConnection(connectionSlug: string): Promise<void>;
   closeAllConnections(): Promise<void>;
   connectionNameChanged(
     connectionSlug: string | undefined,
@@ -87,6 +88,8 @@ export const sql: Sql = {
 
   showTableStatus: async (databaseName) =>
     doInvokeQuery(SQL_CHANNEL.SHOW_TABLE_STATUS, databaseName),
+
+  closeConnection: bindChannel(SQL_CHANNEL.CLOSE),
 
   closeAllConnections: bindChannel(SQL_CHANNEL.CLOSE_ALL),
 
