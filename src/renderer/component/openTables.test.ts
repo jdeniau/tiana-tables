@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildTableTabs, pruneOpenTables, tableAfterClose } from './tableTabs';
+import { buildTableTabs, pruneOpenTables, tableAfterClose } from './openTables';
 
 describe('buildTableTabs', () => {
   test('lists the memorised tables in their order', () => {
