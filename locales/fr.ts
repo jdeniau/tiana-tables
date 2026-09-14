@@ -144,6 +144,7 @@ const fr: Translation = {
   'table.view.label': 'Vue de la table',
   'tableList.count': '{count, plural, one {# table} other {# tables}}',
   'tableList.navigate': 'Aller à une table…',
+  'tableTabs.close': "Fermer l'onglet",
   'theme.group.dark': 'Sombres',
   'theme.group.light': 'Clairs',
   'theme.switch.label': 'Thème',

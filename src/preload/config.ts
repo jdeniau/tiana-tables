@@ -17,10 +17,18 @@ interface Config {
 
   setActiveDatabase(connectionSlug: string, value: string): Promise<void>;
 
+  /** `null` clears it: the last tab of the database was closed */
   setActiveTable(
     connectionSlug: string,
     database: string,
-    tableName: string
+    tableName: string | null
+  ): Promise<void>;
+
+  /** stores the tables kept open as tabs, in their order */
+  setOpenTables(
+    connectionSlug: string,
+    database: string,
+    openTables: Array<string>
   ): Promise<void>;
 
   /** stores the filter a table is now showing, and answers its new history */
@@ -63,6 +71,7 @@ export const config: Config = {
   changeLanguage: bindChannel(CONFIGURATION_CHANNEL.CHANGE_LANGUAGE),
   setActiveDatabase: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE),
   setActiveTable: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE),
+  setOpenTables: bindChannel(CONFIGURATION_CHANNEL.SET_OPEN_TABLES),
   setTableFilter: bindChannel(CONFIGURATION_CHANNEL.SET_TABLE_FILTER),
   setColumnDisplayAfter: bindChannel(
     CONFIGURATION_CHANNEL.SET_COLUMN_DISPLAY_AFTER

@@ -15,6 +15,7 @@ import {
   setActiveTable,
   setColumnDisplayAfter,
   setColumnWidth,
+  setOpenTables,
   setPanelSize,
   setTableFilter,
   testables,
@@ -548,6 +549,34 @@ describe('set connection appState', async () => {
       'utf-8',
       expect.any(Function)
     );
+  });
+
+  test('existing file, memorise tabs then close the last one', async () => {
+    mockExistingConfig();
+
+    await setActiveDatabase('prod', 'db');
+    await setOpenTables('prod', 'db', ['users', 'orders']);
+    await setActiveTable('prod', 'db', 'orders');
+
+    expect(
+      getConfiguration().connections.prod?.appState?.configByDatabase.db
+    ).toEqual({
+      activeTable: 'orders',
+      openTables: ['users', 'orders'],
+      tables: {},
+    });
+
+    // the last tab was closed: the database page has nothing to reopen
+    await setOpenTables('prod', 'db', []);
+    await setActiveTable('prod', 'db', null);
+
+    expect(
+      getConfiguration().connections.prod?.appState?.configByDatabase.db
+    ).toEqual({
+      activeTable: '',
+      openTables: [],
+      tables: {},
+    });
   });
 
   test('setActiveTable with appState but no configByDatabase', async () => {

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { openTablesDecorator } from '../../../.storybook/decorators/openTablesDecorator';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { ShowTableStatus } from '../../sql/types';
 import { RegionBody } from './Style/Region';
@@ -35,7 +36,7 @@ const TABLES = ['foo', 'bar', 'baz'].map((Name) =>
 );
 
 export const Primary: Story = {
-  decorators: [reactRouterDecorator],
+  decorators: [openTablesDecorator([]), reactRouterDecorator],
   args: { tableStatusList: TABLES },
 };
 
@@ -43,6 +44,7 @@ export const Primary: Story = {
 export const Selected: Story = {
   args: { tableStatusList: TABLES },
   decorators: [
+    openTablesDecorator([]),
     (Story) => (
       <MemoryRouter initialEntries={['/connections/test/shop/tables/bar']}>
         <Routes>

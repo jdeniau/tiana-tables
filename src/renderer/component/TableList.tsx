@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
+import { useOpenTablesContext } from '../../contexts/OpenTablesContext';
 import { ShowTableStatus } from '../../sql/types';
 import { accent, size, space } from '../theme';
 
@@ -36,6 +37,7 @@ export default function TableList({
 }: Props): ReactElement | null {
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
+  const { memoriseTable } = useOpenTablesContext();
   const { tableName } = useParams();
 
   const items: MenuItem[] = useMemo(
@@ -43,16 +45,18 @@ export default function TableList({
       tableStatusList?.map((rowDataPacket: ShowTableStatus) => ({
         key: rowDataPacket.Name,
         label: (
+          // the second click of a double memorises the table; the first navigated to the same place, so there is nothing to undo
           <TableLink
             $selected={rowDataPacket.Name === tableName}
             to={`/connections/${currentConnectionSlug}/${database}/tables/${rowDataPacket.Name}`}
+            onDoubleClick={() => memoriseTable(rowDataPacket.Name)}
           >
             {rowDataPacket.Name}
           </TableLink>
         ),
         title: rowDataPacket.Name,
       })),
-    [currentConnectionSlug, database, tableStatusList, tableName]
+    [currentConnectionSlug, database, memoriseTable, tableStatusList, tableName]
   );
 
   if (!tableStatusList) {

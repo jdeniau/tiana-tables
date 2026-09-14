@@ -138,6 +138,7 @@ export default {
   'table.view.label': 'Table view',
   'tableList.count': '{count, plural, one {# table} other {# tables}}',
   'tableList.navigate': 'Go to table…',
+  'tableTabs.close': 'Close tab',
   'theme.group.dark': 'Dark',
   'theme.group.light': 'Light',
   'theme.switch.label': 'Theme',
