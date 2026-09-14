@@ -9,6 +9,7 @@ import {
   DatabaseContext,
   DatabaseContextProps,
 } from '../../../contexts/DatabaseContext';
+import { closeConnectionTarget } from './closeConnectionTarget';
 
 interface Props {
   children: ReactNode;
@@ -41,6 +42,33 @@ function ConnectionStack({ children }: Props) {
     );
   }, []);
 
+  const closeConnection = useCallback(
+    (connectionSlug: string) => {
+      const target = closeConnectionTarget(
+        connectionSlugList,
+        connectionSlug,
+        currentConnectionSlug ?? null
+      );
+
+      if (target) {
+        // Leave the route of the closed connection: the page effect would put the slug straight back.
+        navigate(target);
+
+        if (target === '/connect') {
+          // No loader announces the connection list, and the menu would keep reopening the connection we just closed.
+          window.sql.connectionNameChanged(undefined, undefined);
+        }
+      }
+
+      setConnectionNameList((prev) =>
+        prev.filter((slug) => slug !== connectionSlug)
+      );
+
+      window.sql.closeConnection(connectionSlug);
+    },
+    [connectionSlugList, currentConnectionSlug, navigate]
+  );
+
   const handleSetDatabase = useCallback(
     (database: string) => {
       invariant(currentConnectionSlug, 'Connection slug is required');
@@ -55,8 +83,14 @@ function ConnectionStack({ children }: Props) {
       connectionSlugList,
       currentConnectionSlug: currentConnectionSlug ?? null,
       addConnectionToList,
+      closeConnection,
     }),
-    [connectionSlugList, currentConnectionSlug, addConnectionToList]
+    [
+      connectionSlugList,
+      currentConnectionSlug,
+      addConnectionToList,
+      closeConnection,
+    ]
   );
 
   const databateContextValue = useMemo(

@@ -72,6 +72,7 @@ class ConnectionStack {
     [SQL_CHANNEL.UPDATE_CELL]: this.updateCell,
     [SQL_CHANNEL.SHOW_DATABASES]: this.showDatabases,
     [SQL_CHANNEL.SHOW_TABLE_STATUS]: this.showTableStatus,
+    [SQL_CHANNEL.CLOSE]: this.closeConnection,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
 
@@ -393,6 +394,25 @@ class ConnectionStack {
 
     this.#currentConnectionSlug = connectionSlug;
     this.#databaseName = databaseName;
+  }
+
+  /** Close one connection, leaving the others open. Unknown slug: nothing to do. */
+  async closeConnection(connectionSlug: string): Promise<void> {
+    const connectionPromise = this.#connections.get(connectionSlug);
+
+    if (!connectionPromise) {
+      return;
+    }
+
+    this.#connections.delete(connectionSlug);
+
+    try {
+      const connection = await connectionPromise;
+
+      await connection.end();
+    } catch {
+      // an attempt that never opened a socket has nothing to close
+    }
   }
 
   async closeAllConnections(): Promise<void> {

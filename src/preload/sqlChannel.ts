@@ -7,6 +7,7 @@ export enum SQL_CHANNEL {
   GET_PRIMARY_KEYS = 'sql:getPrimaryKeys',
   SHOW_DATABASES = 'sql:showDatabases',
   SHOW_TABLE_STATUS = 'sql:showTableStatus',
+  CLOSE = 'sql:close',
   CLOSE_ALL = 'sql:closeAll',
   ON_CONNECTION_CHANGED = 'sql:onConnectionChanged',
 }

@@ -16,6 +16,9 @@ const meta: Meta<typeof Cell> = {
           addConnectionToList: async (connectionName) => {
             action('addConnectionToList')(connectionName);
           },
+          closeConnection: (connectionName) => {
+            action('closeConnection')(connectionName);
+          },
         }}
       >
         <DatabaseContext.Provider

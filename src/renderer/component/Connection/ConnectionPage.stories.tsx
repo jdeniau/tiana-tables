@@ -27,6 +27,9 @@ const meta: Meta<typeof ConnectionPage> = {
           addConnectionToList: async (connectionName) => {
             action('addConnectionToList')(connectionName);
           },
+          closeConnection: (connectionName) => {
+            action('closeConnection')(connectionName);
+          },
         }}
       >
         <Story />

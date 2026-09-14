@@ -1,3 +1,4 @@
+import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Layout } from 'antd';
 import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
@@ -27,6 +28,9 @@ const meta: Meta<typeof Nav> = {
           currentConnectionSlug: 'production',
           connectionSlugList: ['test', 'production', 'staging', 'development'],
           addConnectionToList: () => {},
+          closeConnection: (connectionSlug) => {
+            action('closeConnection')(connectionSlug);
+          },
         }}
       >
         <Story />
