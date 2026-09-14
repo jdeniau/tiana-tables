@@ -12,7 +12,7 @@ import {
   TableTab,
   buildTableTabs,
   tableAfterClose,
-} from '../renderer/component/tableTabs';
+} from '../renderer/component/openTables';
 
 type OpenTablesContextProps = {
   /** the strip, memorised tables first, the temporary one last */

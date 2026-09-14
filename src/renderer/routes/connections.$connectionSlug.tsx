@@ -23,7 +23,7 @@ import { RegionBody, RegionFoot } from '../component/Style/Region';
 import { fill } from '../component/Style/fill';
 import TableList from '../component/TableList';
 import TableTabs from '../component/TableTabs';
-import { pruneOpenTables } from '../component/tableTabs';
+import { pruneOpenTables } from '../component/openTables';
 import { usePanelSize } from '../hooks/usePanelSize';
 import { commentForeground, fontSize, space } from '../theme';
 import NavigateModalContextProvider, {
