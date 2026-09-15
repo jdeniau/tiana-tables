@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_LOCALE } from '../../configuration/locale';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { Configuration } from '../../configuration/type';
+import { DatabaseEngine } from '../../sql/engine';
 import { loader } from './connections.$connectionSlug.$databaseName.$tableName';
 
 const params = {
@@ -21,6 +22,7 @@ function setStoredFilter(currentFilter: string): void {
     connections: {
       connectionSlug: {
         name: 'connectionSlug',
+        engine: DatabaseEngine.MySQL,
         slug: 'connectionSlug',
         host: 'localhost',
         port: 3306,
