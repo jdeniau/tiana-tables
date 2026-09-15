@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from '@storybook/test';
 import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
 import { testables } from '../../../contexts/ConfigurationContext';
+import { DatabaseEngine } from '../../../sql/engine';
 import { Centered } from '../Style/Region';
 import ConnectionForm from './ConnectionForm';
 
@@ -87,6 +88,7 @@ export const Create: Story = {
     expect(addConnectionToConfig).toHaveBeenCalledWith({
       host: 'my.database.com',
       name: 'some personnal name',
+      engine: DatabaseEngine.MySQL,
       password: '',
       port: 3306,
       user: 'root',
@@ -98,6 +100,7 @@ export const Edit: Story = {
   args: {
     connection: {
       name: 'test',
+      engine: DatabaseEngine.MySQL,
       slug: 'test',
       host: 'localhost',
       port: 3307,

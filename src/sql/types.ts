@@ -5,6 +5,7 @@ import {
   RowDataPacket,
 } from 'mysql2/promise';
 import { ConnectionColor } from '../configuration/connectionColor';
+import { DatabaseEngine } from './engine';
 
 export type QueryReturnType =
   | ResultSetHeader
@@ -18,12 +19,13 @@ export type QueryResult<T extends QueryReturnType = QueryReturnType> = Promise<
 >;
 
 /**
- * Represet a connection object that is stored in the configuration file.
+ * Represent a connection object that is stored in the configuration file.
  * It is also used to connect to the database.
  */
 export type ConnectionObject = {
   name: string;
   slug: string;
+  engine: DatabaseEngine;
   host: string;
   port: number;
   user: string;

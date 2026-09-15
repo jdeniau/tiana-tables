@@ -5,6 +5,7 @@ import type { EncryptedConnectionObject } from '../../../configuration/type';
 import { uniqueSlug } from '../../../configuration/utils';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
+import { DatabaseEngine } from '../../../sql/engine';
 import type { ConnectionObjectWithoutSlug } from '../../../sql/types';
 import { space } from '../../theme';
 import { ActionButton } from '../Style/ActionButton';
@@ -39,6 +40,7 @@ const PORT = { ...ITEM, width: 96 } as const;
 function ConnectionForm({ connection }: Props) {
   const initialValues: ConnectionObjectWithoutSlug = {
     name: connection?.name ?? '',
+    engine: connection?.engine ?? DatabaseEngine.MySQL,
     host: connection?.host ?? 'localhost',
     port: connection?.port ?? 3306,
     user: connection?.user ?? 'root',

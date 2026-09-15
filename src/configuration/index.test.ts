@@ -1,6 +1,7 @@
 import { dialog, safeStorage } from 'electron';
 import { existsSync, readFileSync, writeFile } from 'node:fs';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { DatabaseEngine } from '../sql/engine';
 import { DEFAULT_LOCALE } from './locale';
 import { PANEL } from './panels';
 import { DEFAULT_THEME } from './themes';
@@ -82,6 +83,7 @@ function mockExistingConfig(
     locale: DEFAULT_LOCALE,
 
     connections: {
+      // @ts-expect-error -- a configuration file names no engine, `loadConfiguration` decides it
       local: {
         name: 'local',
         host: 'localhost',
@@ -90,6 +92,7 @@ function mockExistingConfig(
         password: Buffer.from('encrypted-password').toString('base64'),
         slug: 'local',
       },
+      // @ts-expect-error -- a configuration file names no engine, `loadConfiguration` decides it
       prod: {
         name: 'prod',
         host: 'prod',
@@ -153,6 +156,7 @@ describe('read configuration from file', () => {
     mockExistingConfig();
 
     // the passwords come back as the file holds them: decrypting is the job of whoever opens a connection
+    // the engine is the one thing added on the way in: no file names one yet
     expect(getConfiguration()).toStrictEqual({
       version: 1,
       theme: DEFAULT_THEME.name,
@@ -165,6 +169,7 @@ describe('read configuration from file', () => {
           port: 3306,
           password: Buffer.from('encrypted-password').toString('base64'),
           slug: 'local',
+          engine: DatabaseEngine.MySQL,
         },
         prod: {
           name: 'prod',
@@ -173,6 +178,7 @@ describe('read configuration from file', () => {
           port: 3306,
           password: Buffer.from('encrypted-password').toString('base64'),
           slug: 'prod',
+          engine: DatabaseEngine.MySQL,
         },
       },
     });
@@ -184,6 +190,7 @@ describe('add connection to config', () => {
     mockExistsSync.mockReturnValue(false);
     await addConnectionToConfig({
       name: 'local',
+      engine: DatabaseEngine.MySQL,
       host: 'localhost',
       user: 'root',
       port: 3306,
@@ -200,6 +207,7 @@ describe('add connection to config', () => {
           connections: {
             local: {
               name: 'local',
+              engine: DatabaseEngine.MySQL,
               host: 'localhost',
               user: 'root',
               port: 3306,
@@ -242,6 +250,7 @@ describe('add connection to config', () => {
 
     await addConnectionToConfig({
       name: 'test',
+      engine: DatabaseEngine.MySQL,
       host: 'test',
       port: 3306,
       user: 'root',
@@ -260,6 +269,7 @@ describe('add connection to config', () => {
               user: 'root',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              engine: DatabaseEngine.MySQL,
             },
             prod: {
               name: 'prod',
@@ -267,9 +277,11 @@ describe('add connection to config', () => {
               user: 'root',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              engine: DatabaseEngine.MySQL,
             },
             test: {
               name: 'test',
+              engine: DatabaseEngine.MySQL,
               host: 'test',
               port: 3306,
               user: 'root',
@@ -293,6 +305,7 @@ describe('add connection to config', () => {
 
     const configuration = await addConnectionToConfig({
       name: 'LOCAL',
+      engine: DatabaseEngine.MySQL,
       host: 'elsewhere',
       user: 'root',
       port: 3306,
@@ -367,12 +380,14 @@ describe('set theme', () => {
               host: 'localhost',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              engine: DatabaseEngine.MySQL,
             },
             prod: {
               name: 'prod',
               host: 'prod',
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
+              engine: DatabaseEngine.MySQL,
             },
           },
           theme: 'test',
@@ -440,6 +455,7 @@ describe('set connection appState', async () => {
       locale: DEFAULT_LOCALE,
 
       connections: {
+        // @ts-expect-error -- a configuration file names no engine, `loadConfiguration` decides it
         local: {
           name: 'local',
           host: 'localhost',
@@ -448,6 +464,7 @@ describe('set connection appState', async () => {
           password: Buffer.from('encrypted-password').toString('base64'),
           slug: 'local',
         },
+        // @ts-expect-error -- a configuration file names no engine, `loadConfiguration` decides it
         prod: {
           name: 'prod',
           host: 'prod',
@@ -480,6 +497,7 @@ describe('set connection appState', async () => {
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
               slug: 'local',
+              engine: DatabaseEngine.MySQL,
             },
             prod: {
               name: 'prod',
@@ -492,6 +510,7 @@ describe('set connection appState', async () => {
                 activeDatabase: 'db',
                 configByDatabase: {},
               },
+              engine: DatabaseEngine.MySQL,
             },
           },
         },
@@ -527,6 +546,7 @@ describe('set connection appState', async () => {
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
               slug: 'local',
+              engine: DatabaseEngine.MySQL,
             },
             prod: {
               name: 'prod',
@@ -535,6 +555,7 @@ describe('set connection appState', async () => {
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
               slug: 'prod',
+              engine: DatabaseEngine.MySQL,
               appState: {
                 activeDatabase: 'db',
                 configByDatabase: {
@@ -636,6 +657,7 @@ describe('set connection appState', async () => {
                   },
                 },
               },
+              engine: DatabaseEngine.MySQL,
             },
           },
         },
@@ -683,6 +705,7 @@ describe('setTableFilter', () => {
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
               slug: 'local',
+              engine: DatabaseEngine.MySQL,
             },
             prod: {
               name: 'prod',
@@ -691,6 +714,7 @@ describe('setTableFilter', () => {
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
               slug: 'prod',
+              engine: DatabaseEngine.MySQL,
               appState: {
                 activeDatabase: '',
                 configByDatabase: {
@@ -864,6 +888,7 @@ const twoNamesOneSlug = {
   theme: DEFAULT_THEME.name,
   locale: DEFAULT_LOCALE,
   connections: {
+    // @ts-expect-error -- a configuration file names no engine, `loadConfiguration` decides it
     'docker-dev': {
       name: 'docker (dev)',
       host: 'localhost',
@@ -872,6 +897,7 @@ const twoNamesOneSlug = {
       password: Buffer.from('encrypted-password').toString('base64'),
       slug: 'docker-dev',
     },
+    // @ts-expect-error -- a configuration file names no engine, `loadConfiguration` decides it
     'docker-dev-2': {
       name: 'Docker-Dev',
       host: 'localhost',
@@ -889,6 +915,7 @@ describe('edit', () => {
 
     const configuration = await editConnection('prod', {
       name: 'prod',
+      engine: DatabaseEngine.MySQL,
       host: 'prod2',
       user: 'root2',
       port: 3306,
@@ -912,9 +939,11 @@ describe('edit', () => {
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
               slug: 'local',
+              engine: DatabaseEngine.MySQL,
             },
             prod: {
               name: 'prod',
+              engine: DatabaseEngine.MySQL,
               host: 'prod2',
               user: 'root2',
               port: 3306,
@@ -938,6 +967,7 @@ describe('edit', () => {
 
     const configuration = await editConnection('local', {
       name: 'my new local connection',
+      engine: DatabaseEngine.MySQL,
       host: 'local2',
       user: 'root2',
       port: 3306,
@@ -968,9 +998,11 @@ describe('edit', () => {
               port: 3306,
               password: Buffer.from('encrypted-password').toString('base64'),
               slug: 'prod',
+              engine: DatabaseEngine.MySQL,
             },
             'my-new-local-connection': {
               name: 'my new local connection',
+              engine: DatabaseEngine.MySQL,
               host: 'local2',
               user: 'root2',
               port: 3306,
@@ -994,6 +1026,7 @@ describe('edit', () => {
 
     const configuration = await editConnection('prod', {
       name: 'Local',
+      engine: DatabaseEngine.MySQL,
       host: 'prod',
       user: 'root',
       port: 3306,
@@ -1010,10 +1043,12 @@ describe('edit', () => {
   });
 
   test('a suffixed connection edited without a rename keeps its slug', async () => {
+    // @ts-expect-error -- a configuration file names no engine, `loadConfiguration` decides it
     mockExistingConfig(twoNamesOneSlug);
 
     const configuration = await editConnection('docker-dev-2', {
       name: 'Docker-Dev',
+      engine: DatabaseEngine.MySQL,
       host: 'localhost',
       user: 'root',
       port: 13308,
@@ -1121,6 +1156,7 @@ describe('stored passwords', () => {
 
     await addConnectionToConfig({
       name: 'local',
+      engine: DatabaseEngine.MySQL,
       host: 'localhost',
       user: 'root',
       port: 3306,
@@ -1140,6 +1176,7 @@ describe('stored passwords', () => {
 
     await editConnection('local', {
       name: 'local',
+      engine: DatabaseEngine.MySQL,
       host: 'somewhere-else',
       user: 'root',
       port: 3306,
@@ -1163,6 +1200,7 @@ describe('stored passwords', () => {
 
     await editConnection('local', {
       name: 'local',
+      engine: DatabaseEngine.MySQL,
       host: 'somewhere-else',
       user: 'root',
       port: 3306,
@@ -1183,6 +1221,7 @@ describe('stored passwords', () => {
 
     await editConnection('local', {
       name: 'local',
+      engine: DatabaseEngine.MySQL,
       host: 'somewhere-else',
       user: 'root',
       port: 3306,
@@ -1200,6 +1239,7 @@ describe('stored passwords', () => {
 
     await editConnection('local', {
       name: 'local',
+      engine: DatabaseEngine.MySQL,
       host: 'localhost',
       user: 'root',
       port: 3306,
