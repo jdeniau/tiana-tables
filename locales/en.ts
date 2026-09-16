@@ -29,9 +29,21 @@ export default {
   'config.encryption.insecureBackend.message':
     'No system keyring was found, so your connection passwords are only obfuscated, not encrypted.',
   'config.encryption.insecureBackend.title': 'Passwords are not encrypted',
+  'config.encryption.locked.continue': 'Continue without the passwords',
+  'config.encryption.locked.detail':
+    'Storage backend: {backend}. Unlock your keyring, then restart Tiana Tables: the key is only read once per launch, so unlocking it now changes nothing until then. Your stored passwords are left untouched in the meantime.',
+  'config.encryption.locked.message':
+    'Your system keyring did not hand over its key — it is most likely locked — so the saved connection passwords cannot be read.',
+  'config.encryption.locked.restart': 'Restart',
+  'config.encryption.locked.title': 'Keyring locked',
   'config.encryption.unavailable.message':
-    'Your system refused to encrypt the connection passwords, so the configuration was not saved. Unlock your keyring, then try again.',
+    'Your system refused to encrypt the connection passwords, so the configuration was not saved. Unlock your keyring, then restart Tiana Tables.',
   'config.encryption.unavailable.title': 'Configuration not saved',
+  'config.encryption.unreadable.detail':
+    'They were encrypted with a key this machine no longer has — a keyring reset, or a configuration copied from another computer. Type them again in the connection form; until you do, the stored values are kept as they are.',
+  'config.encryption.unreadable.message':
+    'The password of these connections could not be decrypted: {connections}.',
+  'config.encryption.unreadable.title': 'Passwords could not be read',
   'chart.axis.x': 'X axis',
   'chart.axis.y': 'Series',
   'chart.export.copied': 'Copied',

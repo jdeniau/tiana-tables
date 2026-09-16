@@ -39,9 +39,28 @@ function getBaseConfig(): Configuration {
   };
 }
 
+/**
+ * The passwords we read but could not decrypt, by connection slug, as they are
+ * stored. A locked keyring makes every one of them unreadable: re-encrypting
+ * the empty string we hold in their place would overwrite the real password
+ * for good, on the next window move. They are written back untouched instead,
+ * so a locked keyring costs the session its passwords, never the file.
+ */
+const unreadablePasswords = new Map<string, string>();
+
 function encryptConnection(
-  connection: ConnectionObject
+  slug: string,
+  connection: ConnectionObject,
+  // the connection the user just submitted: what the form holds replaces the
+  // ciphertext we could not read, even when it is empty
+  editedSlug: string | null
 ): EncryptedConnectionObject {
+  const unreadable = unreadablePasswords.get(slug);
+
+  if (unreadable !== undefined && slug !== editedSlug) {
+    return { ...connection, password: unreadable };
+  }
+
   return {
     ...connection,
     password: encryptPassword(connection.password),
@@ -49,12 +68,29 @@ function encryptConnection(
 }
 
 function decryptConnection(
+  slug: string,
   connection: EncryptedConnectionObject
 ): ConnectionObject {
-  return {
-    ...connection,
-    password: decryptPassword(connection.password),
-  };
+  const password = decryptPassword(connection.password);
+
+  if (password === null) {
+    unreadablePasswords.set(slug, connection.password);
+
+    return { ...connection, password: '' };
+  }
+
+  unreadablePasswords.delete(slug);
+
+  return { ...connection, password };
+}
+
+/** The connections whose stored password could not be read back, by name. */
+export function getUnreadableConnectionNames(): Array<string> {
+  const config = getConfiguration();
+
+  return [...unreadablePasswords.keys()].map(
+    (slug) => config.connections[slug]?.name ?? slug
+  );
 }
 
 let configuration: Configuration | null = null;
@@ -85,13 +121,16 @@ function loadConfiguration(): Configuration {
     connections: Object.fromEntries(
       Object.entries(config.connections ?? {}).map(([slug, connection]) => [
         slug,
-        decryptConnection(connection),
+        decryptConnection(slug, connection),
       ])
     ),
   };
 }
 
-function writeConfiguration(config: Configuration): void {
+function writeConfiguration(
+  config: Configuration,
+  editedSlug: string | null = null
+): void {
   let encryptedConfig;
 
   try {
@@ -100,7 +139,7 @@ function writeConfiguration(config: Configuration): void {
       connections: Object.fromEntries(
         Object.entries(config.connections).map(([slug, connection]) => [
           slug,
-          encryptConnection(connection),
+          encryptConnection(slug, connection, editedSlug),
         ])
       ),
     };
@@ -118,6 +157,11 @@ function writeConfiguration(config: Configuration): void {
     );
 
     return;
+  }
+
+  if (editedSlug !== null) {
+    // it just went through `encryptPassword`, so it is readable again
+    unreadablePasswords.delete(editedSlug);
   }
 
   // create the folder of the `dataFilePath` if it does not exist
@@ -148,7 +192,7 @@ export function addConnectionToConfig(
 
   config.connections[slug] = { ...connection, slug };
 
-  writeConfiguration(config);
+  writeConfiguration(config, slug);
 
   return config;
 }
@@ -173,11 +217,12 @@ export function editConnection(
   if (oldSlug !== newSlug) {
     // if slugname change, replace the old connection by the new one
     delete config.connections[oldSlug];
+    unreadablePasswords.delete(oldSlug);
   }
 
   config.connections[newSlug] = { ...connection, slug: newSlug };
 
-  writeConfiguration(config);
+  writeConfiguration(config, newSlug);
 
   return config;
 }
@@ -498,5 +543,6 @@ export const testables = {
   getBaseConfig,
   resetConfiguration: () => {
     configuration = null;
+    unreadablePasswords.clear();
   },
 };

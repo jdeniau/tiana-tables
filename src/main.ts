@@ -7,9 +7,13 @@ import { updateElectronApp } from 'update-electron-app';
 import {
   bindIpcMain as bindIpcMainConfiguration,
   getConfiguration,
+  getUnreadableConnectionNames,
   saveWindowState,
 } from './configuration';
-import { logEncryptionStatus } from './configuration/encryption';
+import {
+  logEncryptionStatus,
+  warnKeyringIsLocked,
+} from './configuration/encryption';
 import { getLogPath } from './configuration/filePaths';
 import { bindIpcMainClipboard } from './main-process/clipboard';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
@@ -155,6 +159,11 @@ app.whenReady().then(async () => {
 
   // After `ready`: safeStorage only knows its backend once the app is ready.
   logEncryptionStatus();
+
+  // Reading the configuration is what tells a locked keyring apart from a
+  // working one: the passwords simply do not decrypt. Before the window, so
+  // that the app does not come up pretending the connections are complete.
+  await warnKeyringIsLocked(getUnreadableConnectionNames());
 
   bindIpcMainConfiguration(ipcMain);
   bindIpcMainSqlFileStorage(ipcMain);

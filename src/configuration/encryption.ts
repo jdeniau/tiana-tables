@@ -1,4 +1,4 @@
-import { dialog, safeStorage } from 'electron';
+import { app, dialog, safeStorage } from 'electron';
 import log from 'electron-log';
 import { t } from '../i18n';
 
@@ -107,16 +107,85 @@ export function encryptPassword(password: string): string {
   return safeStorage.encryptString(password).toString('base64');
 }
 
-export function decryptPassword(encryptedPassword: string): string {
+/**
+ * `null` when the stored value cannot be read back — a locked keyring, a
+ * keyring reset, a configuration copied from another machine. A single
+ * unreadable password must not make the whole configuration unloadable, and
+ * the caller keeps its ciphertext rather than replacing it with an empty one.
+ */
+export function decryptPassword(encryptedPassword: string): string | null {
+  // a connection stored without a password: nothing to decrypt, and nothing to
+  // report as unreadable either
+  if (encryptedPassword === '') {
+    return '';
+  }
+
   try {
     return safeStorage.decryptString(Buffer.from(encryptedPassword, 'base64'));
   } catch (error) {
-    // A single unreadable password — keyring reset, backend changed, config
-    // copied from another machine — must not make the whole configuration
-    // unloadable. Drop that one password, keep every other setting.
     log.error('safeStorage: could not decrypt a stored password', error);
 
-    return '';
+    return null;
+  }
+}
+
+/**
+ * A locked keyring is not reported as such: Chromium looks its key up, gets
+ * nothing back and gives up, so `isEncryptionAvailable()` simply answers
+ * `false` and no unlock is ever asked for. That answer is cached for the life
+ * of the process, hence the restart we offer — unlocking the keyring changes
+ * nothing until the next launch.
+ *
+ * Called at startup, once the app is ready, and only when a password was
+ * actually found unreadable: with no stored connection there is nothing to
+ * warn about yet.
+ */
+export async function warnKeyringIsLocked(
+  unreadableConnectionNames: Array<string>
+): Promise<void> {
+  if (unreadableConnectionNames.length === 0) {
+    return;
+  }
+
+  const { available, backend } = getEncryptionStatus();
+  const connections = unreadableConnectionNames.join(', ');
+
+  // Encryption works, yet those passwords do not decrypt: they were written
+  // with a key this machine no longer has. Nothing to unlock, they have to be
+  // typed again.
+  if (available) {
+    log.warn('safeStorage: stored passwords could not be read', connections);
+
+    void dialog.showMessageBox({
+      type: 'warning',
+      title: t('config.encryption.unreadable.title'),
+      message: t('config.encryption.unreadable.message', { connections }),
+      detail: t('config.encryption.unreadable.detail'),
+    });
+
+    return;
+  }
+
+  log.error(
+    `safeStorage: encryption is unavailable (backend "${backend}"), stored passwords cannot be read`
+  );
+
+  const { response } = await dialog.showMessageBox({
+    type: 'warning',
+    title: t('config.encryption.locked.title'),
+    message: t('config.encryption.locked.message'),
+    detail: t('config.encryption.locked.detail', { backend: String(backend) }),
+    buttons: [
+      t('config.encryption.locked.restart'),
+      t('config.encryption.locked.continue'),
+    ],
+    defaultId: 0,
+    cancelId: 1,
+  });
+
+  if (response === 0) {
+    app.relaunch();
+    app.exit(0);
   }
 }
 

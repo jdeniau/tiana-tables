@@ -32,9 +32,21 @@ const fr: Translation = {
   'config.encryption.insecureBackend.message':
     'Aucun trousseau système n’a été trouvé : vos mots de passe de connexion sont seulement obfusqués, pas chiffrés.',
   'config.encryption.insecureBackend.title': 'Mots de passe non chiffrés',
+  'config.encryption.locked.continue': 'Continuer sans les mots de passe',
+  'config.encryption.locked.detail':
+    'Backend de stockage : {backend}. Déverrouillez votre trousseau, puis redémarrez Tiana Tables : la clé n’est lue qu’une fois par lancement, le déverrouiller maintenant ne changera rien d’ici là. Vos mots de passe enregistrés restent intacts entre-temps.',
+  'config.encryption.locked.message':
+    'Votre trousseau système n’a pas donné sa clé — il est très probablement verrouillé — les mots de passe de connexion enregistrés sont donc illisibles.',
+  'config.encryption.locked.restart': 'Redémarrer',
+  'config.encryption.locked.title': 'Trousseau verrouillé',
   'config.encryption.unavailable.message':
-    'Votre système a refusé de chiffrer les mots de passe de connexion, la configuration n’a donc pas été enregistrée. Déverrouillez votre trousseau puis réessayez.',
+    'Votre système a refusé de chiffrer les mots de passe de connexion, la configuration n’a donc pas été enregistrée. Déverrouillez votre trousseau puis redémarrez Tiana Tables.',
   'config.encryption.unavailable.title': 'Configuration non enregistrée',
+  'config.encryption.unreadable.detail':
+    'Ils ont été chiffrés avec une clé que cette machine n’a plus — trousseau réinitialisé, ou configuration copiée depuis un autre ordinateur. Saisissez-les à nouveau dans le formulaire de connexion ; d’ici là, les valeurs enregistrées sont conservées telles quelles.',
+  'config.encryption.unreadable.message':
+    'Le mot de passe de ces connexions n’a pas pu être déchiffré : {connections}.',
+  'config.encryption.unreadable.title': 'Mots de passe illisibles',
   'chart.axis.x': 'Axe X',
   'chart.axis.y': 'Séries',
   'chart.export.copied': 'Copié',

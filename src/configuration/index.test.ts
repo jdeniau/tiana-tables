@@ -11,6 +11,7 @@ import {
   changeTheme,
   editConnection,
   getConfiguration,
+  getUnreadableConnectionNames,
   setActiveDatabase,
   setActiveTable,
   setColumnDisplayAfter,
@@ -1065,7 +1066,24 @@ describe('set panel size', () => {
 describe('encryption is unavailable', () => {
   afterEach(() => {
     vi.mocked(safeStorage.isEncryptionAvailable).mockReturnValue(true);
+    vi.mocked(safeStorage.decryptString).mockImplementation((b: Buffer) =>
+      b.toString().substring(10)
+    );
   });
+
+  /** what a locked keyring does: no key to encrypt with, nothing decrypts */
+  function mockLockedKeyring(): void {
+    vi.mocked(safeStorage.isEncryptionAvailable).mockReturnValue(false);
+    vi.mocked(safeStorage.decryptString).mockImplementation(() => {
+      throw new Error('Error while decrypting the ciphertext provided');
+    });
+  }
+
+  function writtenConfig(): Configuration {
+    const [, content] = vi.mocked(mockWriteFile).mock.calls[0];
+
+    return JSON.parse(String(content)) as Configuration;
+  }
 
   test('nothing is written and the user is told', async () => {
     mockExistsSync.mockReturnValue(false);
@@ -1084,5 +1102,111 @@ describe('encryption is unavailable', () => {
       'config.encryption.unavailable.title',
       'config.encryption.unavailable.message'
     );
+  });
+
+  test('a locked keyring costs the session its passwords, not the file', async () => {
+    mockExistingConfig();
+    mockLockedKeyring();
+    vi.mocked(dialog.showErrorBox).mockClear();
+
+    const stored = getConfiguration().connections;
+
+    // the session holds no password it could re-encrypt...
+    expect(stored.local.password).toBe('');
+
+    // ...so the stored ciphertext is written back as it was read, and a window
+    // move no longer wipes every password of the file
+    await changeTheme('dracula');
+
+    expect(dialog.showErrorBox).not.toHaveBeenCalled();
+    expect(writtenConfig().connections.local.password).toBe(
+      Buffer.from('encrypted-password').toString('base64')
+    );
+    expect(writtenConfig().theme).toBe('dracula');
+  });
+
+  test('the unreadable connections are the ones the startup warning names', () => {
+    mockExistingConfig();
+    mockLockedKeyring();
+
+    getConfiguration();
+
+    expect(getUnreadableConnectionNames()).toEqual(['local', 'prod']);
+  });
+
+  test('every password read back leaves nothing to warn about', () => {
+    mockExistingConfig();
+
+    getConfiguration();
+
+    expect(getUnreadableConnectionNames()).toEqual([]);
+  });
+
+  test('a single unreadable password is kept while the others are re-encrypted', async () => {
+    mockExistingConfig({
+      version: 1,
+      theme: DEFAULT_THEME.name,
+      locale: DEFAULT_LOCALE,
+      connections: {
+        local: {
+          name: 'local',
+          host: 'localhost',
+          user: 'root',
+          port: 3306,
+          password: Buffer.from('encrypted-password').toString('base64'),
+          slug: 'local',
+        },
+        prod: {
+          name: 'prod',
+          host: 'prod',
+          user: 'root',
+          port: 3306,
+          // encrypted with a key this machine no longer has
+          password: Buffer.from('unreadable').toString('base64'),
+          slug: 'prod',
+        },
+      },
+    });
+    vi.mocked(safeStorage.decryptString).mockImplementation((b: Buffer) => {
+      if (b.toString() === 'unreadable') {
+        throw new Error('Error while decrypting the ciphertext provided');
+      }
+
+      return b.toString().substring(10);
+    });
+
+    getConfiguration();
+
+    await changeTheme('dracula');
+
+    const connections = writtenConfig().connections;
+
+    expect(connections.prod.password).toBe(
+      Buffer.from('unreadable').toString('base64')
+    );
+    expect(connections.local.password).toBe(
+      Buffer.from('encrypted-password').toString('base64')
+    );
+  });
+
+  test('editing a connection replaces the password we could not read', async () => {
+    mockExistingConfig();
+    mockLockedKeyring();
+
+    getConfiguration();
+    vi.mocked(safeStorage.isEncryptionAvailable).mockReturnValue(true);
+
+    await editConnection('local', {
+      name: 'local',
+      host: 'localhost',
+      user: 'root',
+      port: 3306,
+      password: 'new-password',
+    });
+
+    expect(writtenConfig().connections.local.password).toBe(
+      Buffer.from('encrypted-new-password').toString('base64')
+    );
+    expect(getUnreadableConnectionNames()).toEqual(['prod']);
   });
 });
