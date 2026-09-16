@@ -1189,6 +1189,49 @@ describe('encryption is unavailable', () => {
     expect(writtenConnections.local.password).toBe(STORED_CIPHERTEXT);
   });
 
+  test('a refused write leaves nothing behind in memory', async () => {
+    await mockExistingConfig();
+    mockLockedKeyring();
+
+    await editConnection('local', {
+      name: 'local',
+      host: 'somewhere-else',
+      user: 'root',
+      port: 3306,
+      password: 'password',
+    });
+
+    expect(mockWriteFile).not.toHaveBeenCalled();
+
+    // the edit was refused, so it must not ride along the next unrelated write
+    expect(getConfiguration().connections.local.host).toBe('localhost');
+
+    await changeTheme('dracula');
+
+    expect(writtenConfig().connections.local.host).toBe('localhost');
+  });
+
+  test('a refused rename keeps the ciphertext of the connection it renamed', async () => {
+    await mockExistingConfig();
+    mockLockedKeyring();
+
+    await editConnection('local', {
+      name: 'renamed',
+      host: 'localhost',
+      user: 'root',
+      port: 3306,
+      password: 'password',
+    });
+
+    vi.mocked(dialog.showErrorBox).mockClear();
+
+    // without its ciphertext the connection would need encrypting again, and fail again, at every write of the session
+    await changeTheme('dracula');
+
+    expect(dialog.showErrorBox).not.toHaveBeenCalled();
+    expect(writtenConfig().connections.local.password).toBe(STORED_CIPHERTEXT);
+  });
+
   test('editing a connection replaces the password we could not read', async () => {
     mockExistingConfig();
     mockLockedKeyring();

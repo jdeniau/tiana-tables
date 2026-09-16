@@ -141,7 +141,7 @@ export async function warnKeyringIsLocked(
   if (available) {
     log.warn('safeStorage: stored passwords could not be read', connections);
 
-    void dialog.showMessageBox({
+    await dialog.showMessageBox({
       type: 'warning',
       title: t('config.encryption.unreadable.title'),
       message: t('config.encryption.unreadable.message', { connections }),

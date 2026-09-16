@@ -120,10 +120,11 @@ function loadConfiguration(): Configuration {
   };
 }
 
+/** `false` when the passwords could not be encrypted: nothing was written, and the configuration in memory is back to what the file holds. */
 function writeConfiguration(
   config: Configuration,
   editedSlug: string | null = null
-): void {
+): boolean {
   let encryptedConfig;
 
   try {
@@ -149,7 +150,10 @@ function writeConfiguration(
       t('config.encryption.unavailable.message')
     );
 
-    return;
+    // the caller mutated the configuration before asking for this write: read the file back, or the change it was told was lost would reach the disk on the next unrelated write
+    configuration = loadConfiguration();
+
+    return false;
   }
 
   if (editedSlug !== null) {
@@ -170,6 +174,8 @@ function writeConfiguration(
       }
     }
   );
+
+  return true;
 }
 
 export function addConnectionToConfig(
@@ -187,7 +193,7 @@ export function addConnectionToConfig(
 
   writeConfiguration(config, slug);
 
-  return config;
+  return getConfiguration();
 }
 
 export function editConnection(
@@ -210,14 +216,15 @@ export function editConnection(
   if (oldSlug !== newSlug) {
     // if slugname change, replace the old connection by the new one
     delete config.connections[oldSlug];
-    unreadablePasswords.delete(oldSlug);
   }
 
   config.connections[newSlug] = { ...connection, slug: newSlug };
 
-  writeConfiguration(config, newSlug);
+  if (writeConfiguration(config, newSlug) && oldSlug !== newSlug) {
+    unreadablePasswords.delete(oldSlug);
+  }
 
-  return config;
+  return getConfiguration();
 }
 
 export function changeTheme(theme: string): void {
