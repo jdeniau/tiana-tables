@@ -114,7 +114,7 @@ Translation files are in `locales/` (`en.ts`, `fr.ts`). English (`en.ts`) is the
 
 | Library                    | Purpose                                                      |
 | -------------------------- | ------------------------------------------------------------ |
-| Electron 41                | Desktop shell                                                |
+| Electron 44                | Desktop shell                                                |
 | React 19 + React Router 6  | UI framework and routing                                     |
 | Ant Design 6               | UI component library (except the data grid)                  |
 | TanStack Table 9 + Virtual | Data grid (`TableGrid`): headless table + row virtualization |
@@ -185,6 +185,12 @@ quirks — live in the `sql-editor` skill.
 - **In the renderer, import `Types` from `mysql` (v2), not `mysql2`** — `mysql2` is a CommonJS package and fails when imported in the renderer (see `src/renderer/component/Cell.tsx`).
 - **React Router stays on v6.** A migration to React Router 7 (PR #132) was partially reverted (PR #142); `react-router.config.ts.bak` at the root is a leftover of that attempt.
 - **`TableGrid` uses TanStack Table v9 — its API differs from v8 tutorials.** Features are imported explicitly and passed to `useTable({ features, ... })`, headers render via `<table.FlexRender />`. Work from the official `examples/react/` in the TanStack repo, not from blog posts. The scroll element is stored in a state (not a ref) because the virtualizer reads it in a layout effect that runs before the parent ref attaches. **The `table` object `useTable` returns is a new object on every state change** — the core instance is stable, the React wrapper is rebuilt with `state` — so it must never sit in a `useMemo`/`memo` dependency list: anything derived per column that way is rebuilt on every frame of a resize drag.
+- **The Electron binary is not downloaded by `yarn install` any more.** Since
+  Electron 42 the package has no `postinstall` script (npm supply-chain
+  hardening): the binary is fetched the first time the `electron` bin runs, or
+  by the `install-electron` script. `start`, `package`, `make` and `publish`
+  chain it themselves, so a fresh clone only needs `yarn install`; a script
+  calling `electron-forge` directly has to run `yarn install-electron` first.
 - **The RPM build carries two local `yarn patch`es** (`.yarn/patches/`, applied by `yarn install`; `electron-installer-redhat` is forced to 4.0.0 through `resolutions`, forge still asking for `^3.2.0`).
   - `electron-installer-redhat`, two lines of `resources/spec.ejs`: `%global _build_id_links none`, without which the `/usr/lib/.build-id/` symlinks of our package collide with those of every other Electron app (Slack, Discord…) and dnf refuses to install ([forge#3594](https://github.com/electron/forge/issues/3594)); and `cp -r %{_topdir}/BUILD/usr/*`, without which the build fails outright on rpm ≥ 4.20, i.e. Fedora 41+ ([installer-redhat#343](https://github.com/electron-userland/electron-installer-redhat/issues/343)). `%{_builddir}` is **not** the second fix — since rpm 4.20 it expands to the per-package subdirectory the installer never writes into, which is why the open upstream PRs #344 and #347 do not work; measured on rpm 4.18.2, 4.20.1 and 6.0.2, `_topdir` is the only anchor that holds on all three.
   - `@electron-forge/maker-rpm`, one line of `dist/MakerRpm.js`: `electron-installer-redhat` is ESM since 4.0.0, so forge's CJS `require()` hands back the module namespace (`{ default, Installer }`) instead of the installer function. The patch reads `.default` when it is there, which keeps working with 3.x. Forge only drops the `require()` in its own ESM rewrite (8.x, alpha).
