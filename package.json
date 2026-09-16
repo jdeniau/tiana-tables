@@ -16,10 +16,10 @@
     "url": "https://github.com/jdeniau/tiana-tables"
   },
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
+    "start": "install-electron && electron-forge start",
+    "package": "install-electron && electron-forge package",
+    "make": "install-electron && electron-forge make",
+    "publish": "install-electron && electron-forge publish",
     "lint": "yarn lint:types && yarn lint:eslint",
     "lint:eslint": "eslint --quiet .",
     "lint:types": "tsc --noEmit",
@@ -97,7 +97,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "chromatic": "^11.29.0",
-    "electron": "^41.5.2",
+    "electron": "^44.4.1",
     "electron-devtools-installer": "^4.0.0",
     "eslint": "^10.3.0",
     "eslint-import-resolver-typescript": "^4.4.4",
