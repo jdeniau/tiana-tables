@@ -160,9 +160,7 @@ app.whenReady().then(async () => {
   // After `ready`: safeStorage only knows its backend once the app is ready.
   logEncryptionStatus();
 
-  // Reading the configuration is what tells a locked keyring apart from a
-  // working one: the passwords simply do not decrypt. Before the window, so
-  // that the app does not come up pretending the connections are complete.
+  // before the window, so the app does not come up pretending its connections are complete
   await warnKeyringIsLocked(getUnreadableConnectionNames());
 
   bindIpcMainConfiguration(ipcMain);

@@ -39,20 +39,13 @@ function getBaseConfig(): Configuration {
   };
 }
 
-/**
- * The passwords we read but could not decrypt, by connection slug, as they are
- * stored. A locked keyring makes every one of them unreadable: re-encrypting
- * the empty string we hold in their place would overwrite the real password
- * for good, on the next window move. They are written back untouched instead,
- * so a locked keyring costs the session its passwords, never the file.
- */
+/** The ciphertext of every password we could not decrypt, by slug: written back untouched, so a failed read never overwrites what is stored. */
 const unreadablePasswords = new Map<string, string>();
 
 function encryptConnection(
   slug: string,
   connection: ConnectionObject,
-  // the connection the user just submitted: what the form holds replaces the
-  // ciphertext we could not read, even when it is empty
+  // the connection the user just submitted: what the form holds wins over the ciphertext we kept, even when it is empty
   editedSlug: string | null
 ): EncryptedConnectionObject {
   const unreadable = unreadablePasswords.get(slug);

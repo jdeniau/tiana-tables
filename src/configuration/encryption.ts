@@ -107,15 +107,9 @@ export function encryptPassword(password: string): string {
   return safeStorage.encryptString(password).toString('base64');
 }
 
-/**
- * `null` when the stored value cannot be read back — a locked keyring, a
- * keyring reset, a configuration copied from another machine. A single
- * unreadable password must not make the whole configuration unloadable, and
- * the caller keeps its ciphertext rather than replacing it with an empty one.
- */
+/** `null` when the ciphertext cannot be read back — a connection stored without a password decrypts to `''`, never to `null`. */
 export function decryptPassword(encryptedPassword: string): string | null {
-  // a connection stored without a password: nothing to decrypt, and nothing to
-  // report as unreadable either
+  // safeStorage rejects the empty buffer, and an empty password is not an unreadable one
   if (encryptedPassword === '') {
     return '';
   }
@@ -130,15 +124,8 @@ export function decryptPassword(encryptedPassword: string): string | null {
 }
 
 /**
- * A locked keyring is not reported as such: Chromium looks its key up, gets
- * nothing back and gives up, so `isEncryptionAvailable()` simply answers
- * `false` and no unlock is ever asked for. That answer is cached for the life
- * of the process, hence the restart we offer — unlocking the keyring changes
- * nothing until the next launch.
- *
- * Called at startup, once the app is ready, and only when a password was
- * actually found unreadable: with no stored connection there is nothing to
- * warn about yet.
+ * Takes the connections whose stored password did not decrypt, and tells the two accidents apart: a key out of reach, or a key gone for good.
+ * Only a restart can pick a locked keyring back up — safeStorage reads it once and caches that answer for the life of the process.
  */
 export async function warnKeyringIsLocked(
   unreadableConnectionNames: Array<string>
@@ -150,9 +137,7 @@ export async function warnKeyringIsLocked(
   const { available, backend } = getEncryptionStatus();
   const connections = unreadableConnectionNames.join(', ');
 
-  // Encryption works, yet those passwords do not decrypt: they were written
-  // with a key this machine no longer has. Nothing to unlock, they have to be
-  // typed again.
+  // encryption works, so the key is not locked away: it is gone, and those passwords have to be typed again
   if (available) {
     log.warn('safeStorage: stored passwords could not be read', connections);
 

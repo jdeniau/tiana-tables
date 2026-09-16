@@ -1071,7 +1071,10 @@ describe('encryption is unavailable', () => {
     );
   });
 
-  /** what a locked keyring does: no key to encrypt with, nothing decrypts */
+  const STORED_CIPHERTEXT =
+    Buffer.from('encrypted-password').toString('base64');
+
+  /** a locked keyring: no key to encrypt with, and nothing decrypts */
   function mockLockedKeyring(): void {
     vi.mocked(safeStorage.isEncryptionAvailable).mockReturnValue(false);
     vi.mocked(safeStorage.decryptString).mockImplementation(() => {
@@ -1079,6 +1082,7 @@ describe('encryption is unavailable', () => {
     });
   }
 
+  /** the configuration as the first write left it on disk */
   function writtenConfig(): Configuration {
     const [, content] = vi.mocked(mockWriteFile).mock.calls[0];
 
@@ -1109,19 +1113,16 @@ describe('encryption is unavailable', () => {
     mockLockedKeyring();
     vi.mocked(dialog.showErrorBox).mockClear();
 
-    const stored = getConfiguration().connections;
+    // in memory the session holds no password
+    expect(getConfiguration().connections.local.password).toBe('');
 
-    // the session holds no password it could re-encrypt...
-    expect(stored.local.password).toBe('');
-
-    // ...so the stored ciphertext is written back as it was read, and a window
-    // move no longer wipes every password of the file
+    // on disk the ciphertext is untouched, where re-encrypting that empty string would have wiped it
     await changeTheme('dracula');
 
+    const writtenConnections = writtenConfig().connections;
+
     expect(dialog.showErrorBox).not.toHaveBeenCalled();
-    expect(writtenConfig().connections.local.password).toBe(
-      Buffer.from('encrypted-password').toString('base64')
-    );
+    expect(writtenConnections.local.password).toBe(STORED_CIPHERTEXT);
     expect(writtenConfig().theme).toBe('dracula');
   });
 
@@ -1179,14 +1180,13 @@ describe('encryption is unavailable', () => {
 
     await changeTheme('dracula');
 
-    const connections = writtenConfig().connections;
+    const writtenConnections = writtenConfig().connections;
 
-    expect(connections.prod.password).toBe(
+    // the one that did not decrypt keeps its stored ciphertext, the other is re-encrypted
+    expect(writtenConnections.prod.password).toBe(
       Buffer.from('unreadable').toString('base64')
     );
-    expect(connections.local.password).toBe(
-      Buffer.from('encrypted-password').toString('base64')
-    );
+    expect(writtenConnections.local.password).toBe(STORED_CIPHERTEXT);
   });
 
   test('editing a connection replaces the password we could not read', async () => {
