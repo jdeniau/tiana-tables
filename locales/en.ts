@@ -30,7 +30,7 @@ export default {
     'No system keyring was found, so your connection passwords are only obfuscated, not encrypted.',
   'config.encryption.insecureBackend.title': 'Passwords are not encrypted',
   'config.encryption.unavailable.message':
-    'Your system refused to encrypt the connection passwords, so the configuration was not saved. Unlock your keyring, then try again.',
+    'Your system refused to encrypt the connection passwords, so the configuration was not saved. Unlock your keyring, then restart Tiana Tables.',
   'config.encryption.unavailable.title': 'Configuration not saved',
   'chart.axis.x': 'X axis',
   'chart.axis.y': 'Series',
@@ -60,6 +60,8 @@ export default {
     ' refused {The server refused the connection. Check that it is running, and that the port is the right one.}' +
     ' unknownHost {This host name could not be resolved.}' +
     ' accessDenied {The server rejected these credentials.}' +
+    ' keyringLocked {Your keyring is locked, so the saved password could not be read. Unlock it, then retry.}' +
+    ' passwordUnreadable {The saved password was encrypted with a key this machine no longer has. Type it again in the connection form.}' +
     ' other {The connection could not be opened.}}',
   'connection.failed.retry': 'Retry',
   'connection.failed.target': 'Connecting to {host}:{port} failed',
@@ -73,6 +75,8 @@ export default {
   'connection.form.host.label': 'Host',
   'connection.form.name.label': 'Name',
   'connection.form.password.label': 'Password',
+  'connection.form.password.placeholder':
+    'Leave empty to keep the saved password',
   'connection.form.port.label': 'Port',
   'connection.form.title.create': 'New connection',
   'connection.form.title.edit': 'Edit {name}',

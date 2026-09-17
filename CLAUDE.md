@@ -104,7 +104,40 @@ mono everywhere except region names in the condensed display face, the accent
 
 ### Configuration & Encryption
 
-Connection credentials are encrypted with Electron's `safeStorage` API and stored in the user's home directory. Config loading/saving lives in `src/configuration/index.ts`.
+Connection credentials are encrypted with Electron's `safeStorage` API and stored in the user's home directory. Config loading/saving lives in `src/configuration/index.ts`, the safeStorage calls in `src/configuration/encryption.ts`.
+
+**The asynchronous safeStorage API is the one to use** (`encryptStringAsync` /
+`decryptStringAsync` / `isAsyncEncryptionAvailable`): it runs on
+`os_crypt_async`, whose Linux providers probe D-Bus and **ask to unlock a locked
+keyring**, where the synchronous API silently answers "unavailable" for the rest
+of the process — and that synchronous API disappears in Electron 46.
+
+**The configuration holds the ciphertext from end to end**, in memory as on
+disk. It is decrypted in exactly one place, `#connect` in `src/sql/index.ts`,
+which is both the only consumer and the moment asking the user to unlock makes
+sense. Three things follow, and they are why the module stays small:
+
+- loading and writing the configuration never encrypt, so they cannot fail and
+  stay synchronous: a window move writes the file as it is, and an unreadable
+  password can never be overwritten by an empty one;
+- only `addConnectionToConfig` and `editConnection` encrypt, so they are the
+  only asynchronous setters, and the only writes that report a keyring failure.
+  Nothing is mutated before the password is encrypted, so a refused write leaves
+  the configuration exactly as the file holds it;
+- an empty password field on an edit means "leave it as it is": the stored
+  ciphertext is kept, which is also why the form never receives a password.
+
+A keyring that is **locked** is told apart from a key that is **gone**
+(`decryptStringAsync` rejecting as "temporarily unavailable" vs anything else)
+and they reach the user as two `ConnectionFailure` reasons: the first is worth
+the Retry the connection-failed page already offers, the second asks for the
+password to be typed again.
+
+`getSelectedStorageBackend()` still describes the legacy desktop-environment
+detection, not the provider the async API picked, so the "your passwords are
+only obfuscated" warning can be pessimistic where D-Bus finds a keyring that
+detection misses. Left as is: warning too much beats staying silent, and
+Electron exposes nothing more precise today.
 
 ### Translations
 

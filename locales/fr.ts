@@ -33,7 +33,7 @@ const fr: Translation = {
     'Aucun trousseau système n’a été trouvé : vos mots de passe de connexion sont seulement obfusqués, pas chiffrés.',
   'config.encryption.insecureBackend.title': 'Mots de passe non chiffrés',
   'config.encryption.unavailable.message':
-    'Votre système a refusé de chiffrer les mots de passe de connexion, la configuration n’a donc pas été enregistrée. Déverrouillez votre trousseau puis réessayez.',
+    'Votre système a refusé de chiffrer les mots de passe de connexion, la configuration n’a donc pas été enregistrée. Déverrouillez votre trousseau puis redémarrez Tiana Tables.',
   'config.encryption.unavailable.title': 'Configuration non enregistrée',
   'chart.axis.x': 'Axe X',
   'chart.axis.y': 'Séries',
@@ -64,6 +64,8 @@ const fr: Translation = {
     " refused {Le serveur a refusé la connexion. Vérifiez qu'il tourne, et que le port est le bon.}" +
     " unknownHost {Ce nom d'hôte n'a pas pu être résolu.}" +
     ' accessDenied {Le serveur a rejeté ces identifiants.}' +
+    ' keyringLocked {Votre trousseau est verrouillé, le mot de passe enregistré n’a donc pas pu être lu. Déverrouillez-le, puis réessayez.}' +
+    ' passwordUnreadable {Le mot de passe enregistré a été chiffré avec une clé que cette machine n’a plus. Saisissez-le à nouveau dans le formulaire de connexion.}' +
     " other {La connexion n'a pas pu être ouverte.}}",
   'connection.failed.retry': 'Réessayer',
   'connection.failed.target': 'La connexion à {host}:{port} a échoué',
@@ -77,6 +79,8 @@ const fr: Translation = {
   'connection.form.host.label': 'Hôte',
   'connection.form.name.label': 'Nom',
   'connection.form.password.label': 'Mot de passe',
+  'connection.form.password.placeholder':
+    'Laissez vide pour conserver le mot de passe enregistré',
   'connection.form.port.label': 'Port',
   'connection.form.title.create': 'Nouvelle connexion',
   'connection.form.title.edit': 'Modifier {name}',

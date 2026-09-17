@@ -11,6 +11,7 @@ import {
 } from './configuration';
 import { logEncryptionStatus } from './configuration/encryption';
 import { getLogPath } from './configuration/filePaths';
+import { changeLanguage } from './i18n';
 import { bindIpcMainClipboard } from './main-process/clipboard';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
 import {
@@ -153,8 +154,11 @@ app.whenReady().then(async () => {
     });
   });
 
-  // After `ready`: safeStorage only knows its backend once the app is ready.
-  logEncryptionStatus();
+  // After `ready`: safeStorage only initializes its encryptor once the app is.
+  await logEncryptionStatus();
+
+  // the main process has its own i18next instance, and only the renderer ever switched it: its dialogs would all be in the fallback language
+  await changeLanguage(getConfiguration().locale);
 
   bindIpcMainConfiguration(ipcMain);
   bindIpcMainSqlFileStorage(ipcMain);

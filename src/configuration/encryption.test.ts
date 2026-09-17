@@ -11,9 +11,16 @@ import {
 
 vi.mock('electron', () => ({
   safeStorage: {
-    encryptString: vi.fn((s: string) => Buffer.from(`encrypted-${s}`)),
-    decryptString: vi.fn((b: Buffer) => b.toString().substring(10)),
-    isEncryptionAvailable: vi.fn(() => true),
+    encryptStringAsync: vi.fn((s: string) =>
+      Promise.resolve(Buffer.from(`encrypted-${s}`))
+    ),
+    decryptStringAsync: vi.fn((b: Buffer) =>
+      Promise.resolve({
+        result: b.toString().substring(10),
+        shouldReEncrypt: false,
+      })
+    ),
+    isAsyncEncryptionAvailable: vi.fn(() => Promise.resolve(true)),
     getSelectedStorageBackend: vi.fn(() => 'gnome_libsecret'),
   },
   dialog: {
@@ -34,11 +41,14 @@ vi.mock('electron-log', () => ({
   },
 }));
 
-const mockIsEncryptionAvailable = vi.mocked(safeStorage.isEncryptionAvailable);
+const mockIsAsyncEncryptionAvailable = vi.mocked(
+  safeStorage.isAsyncEncryptionAvailable
+);
 const mockGetSelectedStorageBackend = vi.mocked(
   safeStorage.getSelectedStorageBackend
 );
-const mockDecryptString = vi.mocked(safeStorage.decryptString);
+const mockEncryptStringAsync = vi.mocked(safeStorage.encryptStringAsync);
+const mockDecryptStringAsync = vi.mocked(safeStorage.decryptStringAsync);
 const mockShowMessageBox = vi.mocked(dialog.showMessageBox);
 
 const realPlatform = process.platform;
@@ -52,8 +62,18 @@ function mockPlatform(platform: NodeJS.Platform): void {
 
 beforeEach(() => {
   mockPlatform('linux');
-  mockIsEncryptionAvailable.mockReturnValue(true);
+  mockIsAsyncEncryptionAvailable.mockResolvedValue(true);
   mockGetSelectedStorageBackend.mockReturnValue('gnome_libsecret');
+  // `clearAllMocks` forgets the calls, not the implementations: every test starts from a keyring that answers
+  mockEncryptStringAsync.mockImplementation((plain: string) =>
+    Promise.resolve(Buffer.from(`encrypted-${plain}`))
+  );
+  mockDecryptStringAsync.mockImplementation((encrypted: Buffer) =>
+    Promise.resolve({
+      result: encrypted.toString().substring(10),
+      shouldReEncrypt: false,
+    })
+  );
   testables.resetInsecureBackendWarning();
 });
 
@@ -65,17 +85,15 @@ afterEach(() => {
 describe('getEncryptionStatus', () => {
   test('a real keyring is secure', () => {
     expect(getEncryptionStatus()).toEqual({
-      available: true,
       backend: 'gnome_libsecret',
       isSecure: true,
     });
   });
 
-  test('basic_text is available but NOT secure', () => {
+  test('basic_text is NOT secure', () => {
     mockGetSelectedStorageBackend.mockReturnValue('basic_text');
 
     expect(getEncryptionStatus()).toEqual({
-      available: true,
       backend: 'basic_text',
       isSecure: false,
     });
@@ -87,49 +105,34 @@ describe('getEncryptionStatus', () => {
     expect(getEncryptionStatus().isSecure).toBe(false);
   });
 
-  test('unavailable encryption is never secure', () => {
-    mockIsEncryptionAvailable.mockReturnValue(false);
-
-    expect(getEncryptionStatus()).toEqual({
-      available: false,
-      backend: 'gnome_libsecret',
-      isSecure: false,
-    });
-  });
-
   test('the Linux-only backend is not read on macOS', () => {
     mockPlatform('darwin');
 
-    expect(getEncryptionStatus()).toEqual({
-      available: true,
-      backend: null,
-      isSecure: true,
-    });
+    expect(getEncryptionStatus()).toEqual({ backend: null, isSecure: true });
     expect(mockGetSelectedStorageBackend).not.toHaveBeenCalled();
   });
 });
 
 describe('encryptPassword', () => {
-  test('encrypts when the keyring answers', () => {
-    expect(encryptPassword('password')).toBe(
+  test('encrypts when the keyring answers', async () => {
+    expect(await encryptPassword('password')).toBe(
       Buffer.from('encrypted-password').toString('base64')
     );
   });
 
-  test('throws instead of storing an unprotected password', () => {
-    mockIsEncryptionAvailable.mockReturnValue(false);
+  test('a keyring that refuses throws instead of storing an unprotected password', async () => {
+    mockEncryptStringAsync.mockRejectedValue(new Error('no encryptor'));
 
-    expect(() => encryptPassword('password')).toThrow(
+    await expect(encryptPassword('password')).rejects.toThrow(
       EncryptionUnavailableError
     );
-    expect(safeStorage.encryptString).not.toHaveBeenCalled();
   });
 
-  test('warns once when the backend only obfuscates', () => {
+  test('warns once when the backend only obfuscates', async () => {
     mockGetSelectedStorageBackend.mockReturnValue('basic_text');
 
-    encryptPassword('password');
-    encryptPassword('another');
+    await encryptPassword('password');
+    await encryptPassword('another');
 
     expect(mockShowMessageBox).toHaveBeenCalledOnce();
     expect(mockShowMessageBox).toHaveBeenCalledWith(
@@ -140,35 +143,55 @@ describe('encryptPassword', () => {
     );
   });
 
-  test('does not warn on a real keyring', () => {
-    encryptPassword('password');
+  test('does not warn on a real keyring', async () => {
+    await encryptPassword('password');
 
     expect(mockShowMessageBox).not.toHaveBeenCalled();
   });
 });
 
 describe('decryptPassword', () => {
-  test('decrypts a stored password', () => {
+  test('decrypts a stored password', async () => {
     expect(
-      decryptPassword(Buffer.from('encrypted-password').toString('base64'))
-    ).toBe('password');
+      await decryptPassword(
+        Buffer.from('encrypted-password').toString('base64')
+      )
+    ).toEqual({ status: 'ok', password: 'password' });
   });
 
-  test('an unreadable password does not break the whole configuration', () => {
-    mockDecryptString.mockImplementation(() => {
-      throw new Error('Error while decrypting the ciphertext provided');
-    });
+  test('a connection stored without a password is not unreadable', async () => {
+    expect(await decryptPassword('')).toEqual({ status: 'ok', password: '' });
+    expect(mockDecryptStringAsync).not.toHaveBeenCalled();
+  });
 
-    expect(decryptPassword('not-a-valid-ciphertext')).toBe('');
+  test('a locked keyring is worth retrying, and says so', async () => {
+    // the only signal Electron gives: the message it builds for the `temporarily_unavailable` flag
+    mockDecryptStringAsync.mockRejectedValue(
+      new Error('OSCrypt is temporarily unavailable')
+    );
+
+    expect(await decryptPassword('some-ciphertext')).toEqual({
+      status: 'locked',
+    });
+  });
+
+  test('any other refusal is a key we will never get back', async () => {
+    mockDecryptStringAsync.mockRejectedValue(
+      new Error('Error while decrypting the ciphertext provided')
+    );
+
+    expect(await decryptPassword('some-ciphertext')).toEqual({
+      status: 'unreadable',
+    });
   });
 });
 
 describe('logEncryptionStatus', () => {
-  test('runs on every backend without throwing', () => {
+  test('runs on every backend without throwing', async () => {
     mockGetSelectedStorageBackend.mockReturnValue('basic_text');
-    expect(() => logEncryptionStatus()).not.toThrow();
+    await expect(logEncryptionStatus()).resolves.toBeUndefined();
 
-    mockIsEncryptionAvailable.mockReturnValue(false);
-    expect(() => logEncryptionStatus()).not.toThrow();
+    mockIsAsyncEncryptionAvailable.mockResolvedValue(false);
+    await expect(logEncryptionStatus()).resolves.toBeUndefined();
   });
 });

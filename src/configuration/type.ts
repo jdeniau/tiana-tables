@@ -54,11 +54,11 @@ type ConnectionAppState = {
   configByDatabase: Record<string, DatabaseConfig>;
 };
 
+/**
+ * A connection as the configuration file holds it, password included: the ciphertext stays one from end to end, in memory as on disk.
+ * It is read back only when a connection is opened, so a keyring that cannot open it costs that connection and never the file.
+ */
 export type EncryptedConnectionObject = {
   password: string;
   appState?: ConnectionAppState;
 } & Omit<ConnectionObject, 'password'>;
-
-export type EncryptedConfiguration = {
-  connections: Record<string, EncryptedConnectionObject>;
-} & Omit<Configuration, 'connections'>;

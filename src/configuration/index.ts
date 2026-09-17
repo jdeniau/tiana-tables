@@ -4,12 +4,8 @@ import log from 'electron-log';
 import { t } from '../i18n';
 import { WindowState } from '../main-process/windowState';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
-import { ConnectionObject, ConnectionObjectWithoutSlug } from '../sql/types';
-import {
-  EncryptionUnavailableError,
-  decryptPassword,
-  encryptPassword,
-} from './encryption';
+import { ConnectionObjectWithoutSlug } from '../sql/types';
+import { EncryptionUnavailableError, encryptPassword } from './encryption';
 import {
   createConfigurationFolderIfNotExists,
   getConfigurationPath,
@@ -21,7 +17,6 @@ import { DEFAULT_THEME } from './themes';
 import {
   Configuration,
   DatabaseConfig,
-  EncryptedConfiguration,
   EncryptedConnectionObject,
 } from './type';
 import { uniqueSlug } from './utils';
@@ -39,22 +34,46 @@ function getBaseConfig(): Configuration {
   };
 }
 
-function encryptConnection(
-  connection: ConnectionObject
-): EncryptedConnectionObject {
-  return {
-    ...connection,
-    password: encryptPassword(connection.password),
-  };
-}
+/**
+ * The connection as it is stored, password encrypted.
+ * `null` when the OS refused to encrypt: the user has been told, and nothing must be written.
+ * An empty password field on an edit keeps the stored ciphertext, so changing a port does not ask for the password again.
+ */
+async function encryptSubmittedConnection(
+  connection: ConnectionObjectWithoutSlug,
+  slug: string,
+  stored: EncryptedConnectionObject | undefined
+): Promise<EncryptedConnectionObject | null> {
+  if (connection.password === '' && stored) {
+    return {
+      ...connection,
+      slug,
+      password: stored.password,
+      appState: stored.appState,
+    };
+  }
 
-function decryptConnection(
-  connection: EncryptedConnectionObject
-): ConnectionObject {
-  return {
-    ...connection,
-    password: decryptPassword(connection.password),
-  };
+  try {
+    return {
+      ...connection,
+      slug,
+      password: await encryptPassword(connection.password),
+      appState: stored?.appState,
+    };
+  } catch (error) {
+    if (!(error instanceof EncryptionUnavailableError)) {
+      throw error;
+    }
+
+    // writing the password unprotected would be worse than not writing at all: keep the previous file, and tell the user why nothing was saved
+    log.error('Configuration not saved:', error);
+    dialog.showErrorBox(
+      t('config.encryption.unavailable.title'),
+      t('config.encryption.unavailable.message')
+    );
+
+    return null;
+  }
 }
 
 let configuration: Configuration | null = null;
@@ -78,54 +97,19 @@ function loadConfiguration(): Configuration {
     return getBaseConfig();
   }
 
-  const config = JSON.parse(dataString) as EncryptedConfiguration;
+  // the passwords stay as they are stored: they are decrypted when a connection is opened, never on the way in or out of the file
+  const config = JSON.parse(dataString) as Configuration;
 
-  return {
-    ...config,
-    connections: Object.fromEntries(
-      Object.entries(config.connections ?? {}).map(([slug, connection]) => [
-        slug,
-        decryptConnection(connection),
-      ])
-    ),
-  };
+  return { ...config, connections: config.connections ?? {} };
 }
 
 function writeConfiguration(config: Configuration): void {
-  let encryptedConfig;
-
-  try {
-    encryptedConfig = {
-      ...config,
-      connections: Object.fromEntries(
-        Object.entries(config.connections).map(([slug, connection]) => [
-          slug,
-          encryptConnection(connection),
-        ])
-      ),
-    };
-  } catch (error) {
-    if (!(error instanceof EncryptionUnavailableError)) {
-      throw error;
-    }
-
-    // Writing the passwords unprotected would be worse than not writing at
-    // all: keep the previous file, and tell the user why nothing was saved.
-    log.error('Configuration not saved:', error);
-    dialog.showErrorBox(
-      t('config.encryption.unavailable.title'),
-      t('config.encryption.unavailable.message')
-    );
-
-    return;
-  }
-
   // create the folder of the `dataFilePath` if it does not exist
   createConfigurationFolderIfNotExists();
 
   writeFile(
     configurationPath,
-    JSON.stringify(encryptedConfig, null, 2),
+    JSON.stringify(config, null, 2),
     'utf-8',
     (err) => {
       if (err) {
@@ -135,9 +119,9 @@ function writeConfiguration(config: Configuration): void {
   );
 }
 
-export function addConnectionToConfig(
+export async function addConnectionToConfig(
   connection: ConnectionObjectWithoutSlug
-): Configuration {
+): Promise<Configuration> {
   const config = getConfiguration();
 
   if (!config.connections) {
@@ -145,18 +129,28 @@ export function addConnectionToConfig(
   }
 
   const slug = uniqueSlug(connection.name, Object.keys(config.connections));
+  const encrypted = await encryptSubmittedConnection(
+    connection,
+    slug,
+    undefined
+  );
 
-  config.connections[slug] = { ...connection, slug };
+  // nothing is mutated before the password is encrypted, so a refused write leaves the configuration exactly as the file holds it
+  if (!encrypted) {
+    return config;
+  }
+
+  config.connections[slug] = encrypted;
 
   writeConfiguration(config);
 
   return config;
 }
 
-export function editConnection(
+export async function editConnection(
   oldSlug: string,
   connection: ConnectionObjectWithoutSlug
-): Configuration {
+): Promise<Configuration> {
   const config = getConfiguration();
 
   if (!config.connections) {
@@ -170,12 +164,22 @@ export function editConnection(
     Object.keys(config.connections).filter((slug) => slug !== oldSlug)
   );
 
+  const encrypted = await encryptSubmittedConnection(
+    connection,
+    newSlug,
+    config.connections[oldSlug]
+  );
+
+  if (!encrypted) {
+    return config;
+  }
+
   if (oldSlug !== newSlug) {
     // if slugname change, replace the old connection by the new one
     delete config.connections[oldSlug];
   }
 
-  config.connections[newSlug] = { ...connection, slug: newSlug };
+  config.connections[newSlug] = encrypted;
 
   writeConfiguration(config);
 
