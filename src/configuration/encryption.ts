@@ -1,4 +1,4 @@
-import { app, dialog, safeStorage } from 'electron';
+import { dialog, safeStorage } from 'electron';
 import log from 'electron-log';
 import { t } from '../i18n';
 
@@ -120,57 +120,6 @@ export function decryptPassword(encryptedPassword: string): string | null {
     log.error('safeStorage: could not decrypt a stored password', error);
 
     return null;
-  }
-}
-
-/**
- * Takes the connections whose stored password did not decrypt, and tells the two accidents apart: a key out of reach, or a key gone for good.
- * Only a restart can pick a locked keyring back up — safeStorage reads it once and caches that answer for the life of the process.
- */
-export async function warnKeyringIsLocked(
-  unreadableConnectionNames: Array<string>
-): Promise<void> {
-  if (unreadableConnectionNames.length === 0) {
-    return;
-  }
-
-  const { available, backend } = getEncryptionStatus();
-  const connections = unreadableConnectionNames.join(', ');
-
-  // encryption works, so the key is not locked away: it is gone, and those passwords have to be typed again
-  if (available) {
-    log.warn('safeStorage: stored passwords could not be read', connections);
-
-    await dialog.showMessageBox({
-      type: 'warning',
-      title: t('config.encryption.unreadable.title'),
-      message: t('config.encryption.unreadable.message', { connections }),
-      detail: t('config.encryption.unreadable.detail'),
-    });
-
-    return;
-  }
-
-  log.error(
-    `safeStorage: encryption is unavailable (backend "${backend}"), stored passwords cannot be read`
-  );
-
-  const { response } = await dialog.showMessageBox({
-    type: 'warning',
-    title: t('config.encryption.locked.title'),
-    message: t('config.encryption.locked.message'),
-    detail: t('config.encryption.locked.detail', { backend: String(backend) }),
-    buttons: [
-      t('config.encryption.locked.restart'),
-      t('config.encryption.locked.continue'),
-    ],
-    defaultId: 0,
-    cancelId: 1,
-  });
-
-  if (response === 0) {
-    app.relaunch();
-    app.exit(0);
   }
 }
 

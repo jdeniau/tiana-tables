@@ -15,6 +15,12 @@ vi.mock('../configuration', () => ({
   getConfiguration: () => ({ connections: mocks.connections }),
 }));
 
+// the configuration holds the ciphertext: `safeStorage` is the real thing here, and there is no keyring behind it
+vi.mock('../configuration/encryption', () => ({
+  decryptPassword: (stored: string) =>
+    stored === 'unreadable' ? null : stored.replace(/^encrypted-/, ''),
+}));
+
 vi.mock('mysql2/promise', () => ({
   createConnection: mocks.createConnection,
 }));
@@ -168,7 +174,7 @@ describe('opening a connection', () => {
         host: 'db.example.org',
         port: 3306,
         user: 'root',
-        password: 'secret',
+        password: 'encrypted-secret',
         appState: { activeDatabase: 'some-database' },
       },
     };
@@ -193,6 +199,36 @@ describe('opening a connection', () => {
     expect(mocks.createConnection).toHaveBeenCalledWith(
       expect.not.objectContaining({ appState: expect.anything() })
     );
+  });
+
+  test('the stored password is decrypted on its way to the driver', async () => {
+    mocks.createConnection.mockResolvedValue(fakeConnection());
+
+    await connectionStack.showDatabases();
+
+    expect(mocks.createConnection).toHaveBeenCalledWith(
+      expect.objectContaining({ password: 'secret' })
+    );
+  });
+
+  test('a password that does not decrypt fails the connection, and names why', async () => {
+    mocks.createConnection.mockResolvedValue(fakeConnection());
+    mocks.connections['my-connection'] = {
+      ...(mocks.connections['my-connection'] as object),
+      password: 'unreadable',
+    };
+
+    const { result, error } = await connectionStack.showDatabases();
+
+    expect(result).toBeUndefined();
+    expect(error).toMatchObject({
+      detail: {
+        kind: 'connection',
+        reason: ConnectionFailure.passwordUnreadable,
+      },
+    });
+    // the driver is never even called with a password we could not read
+    expect(mocks.createConnection).not.toHaveBeenCalled();
   });
 
   test('queries racing for the same connection share one handshake', async () => {

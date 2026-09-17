@@ -2,12 +2,14 @@ import log from 'electron-log';
 import type { Connection, ResultSetHeader } from 'mysql2/promise';
 import invariant from 'tiny-invariant';
 import { getConfiguration } from '../configuration';
+import { decryptPassword } from '../configuration/encryption';
+import { EncryptedConnectionObject } from '../configuration/type';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import {
   buildReadCellQuery,
   buildUpdateCellQuery,
 } from './buildUpdateCellQuery';
-import { asConnectionError } from './connectionError';
+import { PASSWORD_UNREADABLE, asConnectionError } from './connectionError';
 import {
   QueryResultOrError,
   ResultOrError,
@@ -17,7 +19,6 @@ import { escapeIdentifier } from './escapeIdentifier';
 import {
   ColumnDetail,
   ColumnDetailResult,
-  ConnectionObject,
   KeyColumnUsageRow,
   QueryReturnType,
   ShowDatabasesResult,
@@ -456,8 +457,18 @@ class ConnectionStack {
     return await connection;
   }
 
-  async #connect(params: ConnectionObject): Promise<Connection> {
-    const { slug, name: _name, color: _color, host, port, ...rest } = params;
+  async #connect(
+    params: Omit<EncryptedConnectionObject, 'appState'>
+  ): Promise<Connection> {
+    const {
+      slug,
+      name: _name,
+      color: _color,
+      host,
+      port,
+      password,
+      ...rest
+    } = params;
 
     log.debug(`Open connection to "${slug}"`);
 
@@ -466,6 +477,16 @@ class ConnectionStack {
     const { createConnection } = await import('mysql2/promise');
 
     try {
+      // the only place the stored password is read back: the configuration holds the ciphertext from end to end, so a keyring that cannot open it costs this connection and never the file
+      const decryptedPassword = decryptPassword(password);
+
+      if (decryptedPassword === null) {
+        throw Object.assign(
+          new Error(`Could not decrypt the password of "${slug}"`),
+          { code: PASSWORD_UNREADABLE }
+        );
+      }
+
       // `createConnection` already resolves on the `connect` event and rejects
       // on `error`, so there is nothing left to await afterwards.
       // TODO use a connection pool instead ? https://github.com/mysqljs/mysql?tab=readme-ov-file#establishing-connections
@@ -473,6 +494,7 @@ class ConnectionStack {
         ...rest,
         host,
         port,
+        password: decryptedPassword,
         connectTimeout: CONNECT_TIMEOUT_MS,
       });
 

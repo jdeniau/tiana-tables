@@ -1,13 +1,11 @@
 import { Button, Flex, Form, Input } from 'antd';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router';
+import type { EncryptedConnectionObject } from '../../../configuration/type';
 import { uniqueSlug } from '../../../configuration/utils';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
-import type {
-  ConnectionObject,
-  ConnectionObjectWithoutSlug,
-} from '../../../sql/types';
+import type { ConnectionObjectWithoutSlug } from '../../../sql/types';
 import { space } from '../../theme';
 import { ActionButton } from '../Style/ActionButton';
 import {
@@ -18,11 +16,11 @@ import {
 } from '../Style/Region';
 import ConnectionColorField from './ConnectionColorField';
 
-type Props = { connection?: ConnectionObject };
+type Props = { connection?: EncryptedConnectionObject };
 
 function getSubmitButtonLabel(
   t: TFunction,
-  connection: ConnectionObject | undefined
+  connection: EncryptedConnectionObject | undefined
 ): string {
   if (connection) {
     return t('save');
@@ -39,11 +37,13 @@ const ITEM = { marginBottom: 0 } as const;
 const PORT = { ...ITEM, width: 96 } as const;
 
 function ConnectionForm({ connection }: Props) {
-  const initialValues: ConnectionObjectWithoutSlug = connection ?? {
-    name: '',
-    host: 'localhost',
-    port: 3306,
-    user: 'root',
+  const initialValues: ConnectionObjectWithoutSlug = {
+    name: connection?.name ?? '',
+    host: connection?.host ?? 'localhost',
+    port: connection?.port ?? 3306,
+    user: connection?.user ?? 'root',
+    color: connection?.color,
+    // the stored password is a ciphertext the renderer never sees in clear: left empty, it is kept as it is
     password: '',
   };
 
@@ -154,7 +154,14 @@ function ConnectionForm({ connection }: Props) {
                 label={t('connection.form.password.label')}
                 style={ITEM}
               >
-                <Input type="password" />
+                <Input
+                  type="password"
+                  placeholder={
+                    connection
+                      ? t('connection.form.password.placeholder')
+                      : undefined
+                  }
+                />
               </Form.Item>
             </Flex>
 

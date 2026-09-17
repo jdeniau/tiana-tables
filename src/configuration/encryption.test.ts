@@ -1,4 +1,4 @@
-import { app, dialog, safeStorage } from 'electron';
+import { dialog, safeStorage } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   EncryptionUnavailableError,
@@ -7,7 +7,6 @@ import {
   getEncryptionStatus,
   logEncryptionStatus,
   testables,
-  warnKeyringIsLocked,
 } from './encryption';
 
 vi.mock('electron', () => ({
@@ -20,10 +19,6 @@ vi.mock('electron', () => ({
   dialog: {
     showErrorBox: vi.fn(),
     showMessageBox: vi.fn(() => Promise.resolve({ response: 0 })),
-  },
-  app: {
-    relaunch: vi.fn(),
-    exit: vi.fn(),
   },
 }));
 
@@ -170,52 +165,6 @@ describe('decryptPassword', () => {
     });
 
     expect(decryptPassword('not-a-valid-ciphertext')).toBeNull();
-  });
-});
-
-describe('warnKeyringIsLocked', () => {
-  test('says nothing when every password was read', async () => {
-    await warnKeyringIsLocked([]);
-
-    expect(mockShowMessageBox).not.toHaveBeenCalled();
-  });
-
-  test('offers to restart when encryption is unavailable', async () => {
-    mockIsEncryptionAvailable.mockReturnValue(false);
-    mockShowMessageBox.mockResolvedValue({
-      response: 0,
-      checkboxChecked: false,
-    });
-
-    await warnKeyringIsLocked(['local']);
-
-    expect(mockShowMessageBox).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'config.encryption.locked.title' })
-    );
-    expect(app.relaunch).toHaveBeenCalledOnce();
-    expect(app.exit).toHaveBeenCalledWith(0);
-  });
-
-  test('the second button keeps the app running', async () => {
-    mockIsEncryptionAvailable.mockReturnValue(false);
-    mockShowMessageBox.mockResolvedValue({
-      response: 1,
-      checkboxChecked: false,
-    });
-
-    await warnKeyringIsLocked(['local']);
-
-    expect(app.relaunch).not.toHaveBeenCalled();
-    expect(app.exit).not.toHaveBeenCalled();
-  });
-
-  test('a working keyring that cannot read a password is another message', async () => {
-    await warnKeyringIsLocked(['local', 'prod']);
-
-    expect(mockShowMessageBox).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'config.encryption.unreadable.title' })
-    );
-    expect(app.relaunch).not.toHaveBeenCalled();
   });
 });
 

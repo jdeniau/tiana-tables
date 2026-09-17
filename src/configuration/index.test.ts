@@ -11,7 +11,6 @@ import {
   changeTheme,
   editConnection,
   getConfiguration,
-  getUnreadableConnectionNames,
   setActiveDatabase,
   setActiveTable,
   setColumnDisplayAfter,
@@ -146,6 +145,7 @@ describe('read configuration from file', () => {
   test('existing file with connexions', () => {
     mockExistingConfig();
 
+    // the passwords come back as the file holds them: decrypting is the job of whoever opens a connection
     expect(getConfiguration()).toStrictEqual({
       version: 1,
       theme: DEFAULT_THEME.name,
@@ -156,7 +156,7 @@ describe('read configuration from file', () => {
           host: 'localhost',
           user: 'root',
           port: 3306,
-          password: 'password',
+          password: Buffer.from('encrypted-password').toString('base64'),
           slug: 'local',
         },
         prod: {
@@ -164,7 +164,7 @@ describe('read configuration from file', () => {
           host: 'prod',
           user: 'root',
           port: 3306,
-          password: 'password',
+          password: Buffer.from('encrypted-password').toString('base64'),
           slug: 'prod',
         },
       },
@@ -1063,12 +1063,9 @@ describe('set panel size', () => {
   });
 });
 
-describe('encryption is unavailable', () => {
+describe('stored passwords', () => {
   afterEach(() => {
     vi.mocked(safeStorage.isEncryptionAvailable).mockReturnValue(true);
-    vi.mocked(safeStorage.decryptString).mockImplementation((b: Buffer) =>
-      b.toString().substring(10)
-    );
   });
 
   const STORED_CIPHERTEXT =
@@ -1089,7 +1086,28 @@ describe('encryption is unavailable', () => {
     return JSON.parse(String(content)) as Configuration;
   }
 
-  test('nothing is written and the user is told', async () => {
+  test('the configuration holds the ciphertext, and never decrypts it', () => {
+    mockExistingConfig();
+
+    expect(getConfiguration().connections.local.password).toBe(
+      STORED_CIPHERTEXT
+    );
+    expect(safeStorage.decryptString).not.toHaveBeenCalled();
+  });
+
+  test('a locked keyring leaves the file exactly as it is', async () => {
+    mockExistingConfig();
+    mockLockedKeyring();
+
+    // a window move, a theme change: writes that have nothing to do with a password
+    await changeTheme('dracula');
+
+    expect(dialog.showErrorBox).not.toHaveBeenCalled();
+    expect(writtenConfig().theme).toBe('dracula');
+    expect(writtenConfig().connections.local.password).toBe(STORED_CIPHERTEXT);
+  });
+
+  test('adding a connection is the write that needs to encrypt, and says so', async () => {
     mockExistsSync.mockReturnValue(false);
     vi.mocked(safeStorage.isEncryptionAvailable).mockReturnValue(false);
 
@@ -1108,89 +1126,8 @@ describe('encryption is unavailable', () => {
     );
   });
 
-  test('a locked keyring costs the session its passwords, not the file', async () => {
-    mockExistingConfig();
-    mockLockedKeyring();
-    vi.mocked(dialog.showErrorBox).mockClear();
-
-    // in memory the session holds no password
-    expect(getConfiguration().connections.local.password).toBe('');
-
-    // on disk the ciphertext is untouched, where re-encrypting that empty string would have wiped it
-    await changeTheme('dracula');
-
-    const writtenConnections = writtenConfig().connections;
-
-    expect(dialog.showErrorBox).not.toHaveBeenCalled();
-    expect(writtenConnections.local.password).toBe(STORED_CIPHERTEXT);
-    expect(writtenConfig().theme).toBe('dracula');
-  });
-
-  test('the unreadable connections are the ones the startup warning names', () => {
-    mockExistingConfig();
-    mockLockedKeyring();
-
-    getConfiguration();
-
-    expect(getUnreadableConnectionNames()).toEqual(['local', 'prod']);
-  });
-
-  test('every password read back leaves nothing to warn about', () => {
-    mockExistingConfig();
-
-    getConfiguration();
-
-    expect(getUnreadableConnectionNames()).toEqual([]);
-  });
-
-  test('a single unreadable password is kept while the others are re-encrypted', async () => {
-    mockExistingConfig({
-      version: 1,
-      theme: DEFAULT_THEME.name,
-      locale: DEFAULT_LOCALE,
-      connections: {
-        local: {
-          name: 'local',
-          host: 'localhost',
-          user: 'root',
-          port: 3306,
-          password: Buffer.from('encrypted-password').toString('base64'),
-          slug: 'local',
-        },
-        prod: {
-          name: 'prod',
-          host: 'prod',
-          user: 'root',
-          port: 3306,
-          // encrypted with a key this machine no longer has
-          password: Buffer.from('unreadable').toString('base64'),
-          slug: 'prod',
-        },
-      },
-    });
-    vi.mocked(safeStorage.decryptString).mockImplementation((b: Buffer) => {
-      if (b.toString() === 'unreadable') {
-        throw new Error('Error while decrypting the ciphertext provided');
-      }
-
-      return b.toString().substring(10);
-    });
-
-    getConfiguration();
-
-    await changeTheme('dracula');
-
-    const writtenConnections = writtenConfig().connections;
-
-    // the one that did not decrypt keeps its stored ciphertext, the other is re-encrypted
-    expect(writtenConnections.prod.password).toBe(
-      Buffer.from('unreadable').toString('base64')
-    );
-    expect(writtenConnections.local.password).toBe(STORED_CIPHERTEXT);
-  });
-
   test('a refused write leaves nothing behind in memory', async () => {
-    await mockExistingConfig();
+    mockExistingConfig();
     mockLockedKeyring();
 
     await editConnection('local', {
@@ -1211,33 +1148,47 @@ describe('encryption is unavailable', () => {
     expect(writtenConfig().connections.local.host).toBe('localhost');
   });
 
-  test('a refused rename keeps the ciphertext of the connection it renamed', async () => {
-    await mockExistingConfig();
-    mockLockedKeyring();
+  test('an empty password field keeps the stored ciphertext', async () => {
+    mockExistingConfig();
+    // the electron mock is shared by the whole file and never reset
+    vi.mocked(safeStorage.encryptString).mockClear();
 
     await editConnection('local', {
-      name: 'renamed',
-      host: 'localhost',
+      name: 'local',
+      host: 'somewhere-else',
       user: 'root',
       port: 3306,
-      password: 'password',
+      password: '',
     });
 
-    vi.mocked(dialog.showErrorBox).mockClear();
+    const written = writtenConfig().connections.local;
 
-    // without its ciphertext the connection would need encrypting again, and fail again, at every write of the session
-    await changeTheme('dracula');
-
-    expect(dialog.showErrorBox).not.toHaveBeenCalled();
-    expect(writtenConfig().connections.local.password).toBe(STORED_CIPHERTEXT);
+    expect(written.host).toBe('somewhere-else');
+    expect(written.password).toBe(STORED_CIPHERTEXT);
+    expect(safeStorage.encryptString).not.toHaveBeenCalled();
   });
 
-  test('editing a connection replaces the password we could not read', async () => {
+  test('editing a connection keeps the app state it had', async () => {
     mockExistingConfig();
-    mockLockedKeyring();
+    await setActiveDatabase('local', 'some-database');
+    vi.mocked(mockWriteFile).mockClear();
 
-    getConfiguration();
-    vi.mocked(safeStorage.isEncryptionAvailable).mockReturnValue(true);
+    await editConnection('local', {
+      name: 'local',
+      host: 'somewhere-else',
+      user: 'root',
+      port: 3306,
+      password: '',
+    });
+
+    // the form knows nothing of the app state, and must not drop it
+    expect(writtenConfig().connections.local.appState?.activeDatabase).toBe(
+      'some-database'
+    );
+  });
+
+  test('a password typed again is the one that gets encrypted', async () => {
+    mockExistingConfig();
 
     await editConnection('local', {
       name: 'local',
@@ -1250,6 +1201,5 @@ describe('encryption is unavailable', () => {
     expect(writtenConfig().connections.local.password).toBe(
       Buffer.from('encrypted-new-password').toString('base64')
     );
-    expect(getUnreadableConnectionNames()).toEqual(['prod']);
   });
 });

@@ -7,13 +7,9 @@ import { updateElectronApp } from 'update-electron-app';
 import {
   bindIpcMain as bindIpcMainConfiguration,
   getConfiguration,
-  getUnreadableConnectionNames,
   saveWindowState,
 } from './configuration';
-import {
-  logEncryptionStatus,
-  warnKeyringIsLocked,
-} from './configuration/encryption';
+import { logEncryptionStatus } from './configuration/encryption';
 import { getLogPath } from './configuration/filePaths';
 import { changeLanguage } from './i18n';
 import { bindIpcMainClipboard } from './main-process/clipboard';
@@ -163,9 +159,6 @@ app.whenReady().then(async () => {
 
   // the main process has its own i18next instance, and only the renderer ever switched it: its dialogs would all be in the fallback language
   await changeLanguage(getConfiguration().locale);
-
-  // before the window, so the app does not come up pretending its connections are complete
-  await warnKeyringIsLocked(getUnreadableConnectionNames());
 
   bindIpcMainConfiguration(ipcMain);
   bindIpcMainSqlFileStorage(ipcMain);

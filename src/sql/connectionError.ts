@@ -12,8 +12,12 @@ export enum ConnectionFailure {
   refused = 'refused',
   unknownHost = 'unknownHost',
   accessDenied = 'accessDenied',
+  passwordUnreadable = 'passwordUnreadable',
   other = 'other',
 }
+
+/** The `code` we give our own error when the stored password does not decrypt, so it is classified like any driver code. */
+export const PASSWORD_UNREADABLE = 'PASSWORD_UNREADABLE';
 
 /** What the renderer needs to tell the user what happened, and to what. */
 export interface ConnectionErrorData {
@@ -56,6 +60,9 @@ export function classifyConnectionError(e: unknown): ConnectionFailure {
     case 'ER_DBACCESS_DENIED_ERROR':
     case 'ER_NOT_SUPPORTED_AUTH_MODE':
       return ConnectionFailure.accessDenied;
+
+    case PASSWORD_UNREADABLE:
+      return ConnectionFailure.passwordUnreadable;
 
     default:
       return ConnectionFailure.other;

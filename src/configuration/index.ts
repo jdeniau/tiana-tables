@@ -4,12 +4,8 @@ import log from 'electron-log';
 import { t } from '../i18n';
 import { WindowState } from '../main-process/windowState';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
-import { ConnectionObject, ConnectionObjectWithoutSlug } from '../sql/types';
-import {
-  EncryptionUnavailableError,
-  decryptPassword,
-  encryptPassword,
-} from './encryption';
+import { ConnectionObjectWithoutSlug } from '../sql/types';
+import { EncryptionUnavailableError, encryptPassword } from './encryption';
 import {
   createConfigurationFolderIfNotExists,
   getConfigurationPath,
@@ -21,7 +17,6 @@ import { DEFAULT_THEME } from './themes';
 import {
   Configuration,
   DatabaseConfig,
-  EncryptedConfiguration,
   EncryptedConnectionObject,
 } from './type';
 import { uniqueSlug } from './utils';
@@ -39,51 +34,46 @@ function getBaseConfig(): Configuration {
   };
 }
 
-/** The ciphertext of every password we could not decrypt, by slug: written back untouched, so a failed read never overwrites what is stored. */
-const unreadablePasswords = new Map<string, string>();
-
-function encryptConnection(
+/**
+ * The connection as it is stored, password encrypted.
+ * `null` when the OS refused to encrypt: the user has been told, and nothing must be written.
+ * An empty password field on an edit keeps the stored ciphertext, so changing a port does not ask for the password again.
+ */
+function encryptSubmittedConnection(
+  connection: ConnectionObjectWithoutSlug,
   slug: string,
-  connection: ConnectionObject,
-  // the connection the user just submitted: what the form holds wins over the ciphertext we kept, even when it is empty
-  editedSlug: string | null
-): EncryptedConnectionObject {
-  const unreadable = unreadablePasswords.get(slug);
-
-  if (unreadable !== undefined && slug !== editedSlug) {
-    return { ...connection, password: unreadable };
+  stored: EncryptedConnectionObject | undefined
+): EncryptedConnectionObject | null {
+  if (connection.password === '' && stored) {
+    return {
+      ...connection,
+      slug,
+      password: stored.password,
+      appState: stored.appState,
+    };
   }
 
-  return {
-    ...connection,
-    password: encryptPassword(connection.password),
-  };
-}
+  try {
+    return {
+      ...connection,
+      slug,
+      password: encryptPassword(connection.password),
+      appState: stored?.appState,
+    };
+  } catch (error) {
+    if (!(error instanceof EncryptionUnavailableError)) {
+      throw error;
+    }
 
-function decryptConnection(
-  slug: string,
-  connection: EncryptedConnectionObject
-): ConnectionObject {
-  const password = decryptPassword(connection.password);
+    // writing the password unprotected would be worse than not writing at all: keep the previous file, and tell the user why nothing was saved
+    log.error('Configuration not saved:', error);
+    dialog.showErrorBox(
+      t('config.encryption.unavailable.title'),
+      t('config.encryption.unavailable.message')
+    );
 
-  if (password === null) {
-    unreadablePasswords.set(slug, connection.password);
-
-    return { ...connection, password: '' };
+    return null;
   }
-
-  unreadablePasswords.delete(slug);
-
-  return { ...connection, password };
-}
-
-/** The connections whose stored password could not be read back, by name. */
-export function getUnreadableConnectionNames(): Array<string> {
-  const config = getConfiguration();
-
-  return [...unreadablePasswords.keys()].map(
-    (slug) => config.connections[slug]?.name ?? slug
-  );
 }
 
 let configuration: Configuration | null = null;
@@ -107,66 +97,19 @@ function loadConfiguration(): Configuration {
     return getBaseConfig();
   }
 
-  const config = JSON.parse(dataString) as EncryptedConfiguration;
+  // the passwords stay as they are stored: they are decrypted when a connection is opened, never on the way in or out of the file
+  const config = JSON.parse(dataString) as Configuration;
 
-  return {
-    ...config,
-    connections: Object.fromEntries(
-      Object.entries(config.connections ?? {}).map(([slug, connection]) => [
-        slug,
-        decryptConnection(slug, connection),
-      ])
-    ),
-  };
+  return { ...config, connections: config.connections ?? {} };
 }
 
-/** `false` when the passwords could not be encrypted: nothing was written, and the configuration in memory is back to what the file holds. */
-function writeConfiguration(
-  config: Configuration,
-  editedSlug: string | null = null
-): boolean {
-  let encryptedConfig;
-
-  try {
-    encryptedConfig = {
-      ...config,
-      connections: Object.fromEntries(
-        Object.entries(config.connections).map(([slug, connection]) => [
-          slug,
-          encryptConnection(slug, connection, editedSlug),
-        ])
-      ),
-    };
-  } catch (error) {
-    if (!(error instanceof EncryptionUnavailableError)) {
-      throw error;
-    }
-
-    // Writing the passwords unprotected would be worse than not writing at
-    // all: keep the previous file, and tell the user why nothing was saved.
-    log.error('Configuration not saved:', error);
-    dialog.showErrorBox(
-      t('config.encryption.unavailable.title'),
-      t('config.encryption.unavailable.message')
-    );
-
-    // the caller mutated the configuration before asking for this write: read the file back, or the change it was told was lost would reach the disk on the next unrelated write
-    configuration = loadConfiguration();
-
-    return false;
-  }
-
-  if (editedSlug !== null) {
-    // it just went through `encryptPassword`, so it is readable again
-    unreadablePasswords.delete(editedSlug);
-  }
-
+function writeConfiguration(config: Configuration): void {
   // create the folder of the `dataFilePath` if it does not exist
   createConfigurationFolderIfNotExists();
 
   writeFile(
     configurationPath,
-    JSON.stringify(encryptedConfig, null, 2),
+    JSON.stringify(config, null, 2),
     'utf-8',
     (err) => {
       if (err) {
@@ -174,8 +117,6 @@ function writeConfiguration(
       }
     }
   );
-
-  return true;
 }
 
 export function addConnectionToConfig(
@@ -188,12 +129,18 @@ export function addConnectionToConfig(
   }
 
   const slug = uniqueSlug(connection.name, Object.keys(config.connections));
+  const encrypted = encryptSubmittedConnection(connection, slug, undefined);
 
-  config.connections[slug] = { ...connection, slug };
+  // nothing is mutated before the password is encrypted, so a refused write leaves the configuration exactly as the file holds it
+  if (!encrypted) {
+    return config;
+  }
 
-  writeConfiguration(config, slug);
+  config.connections[slug] = encrypted;
 
-  return getConfiguration();
+  writeConfiguration(config);
+
+  return config;
 }
 
 export function editConnection(
@@ -213,18 +160,26 @@ export function editConnection(
     Object.keys(config.connections).filter((slug) => slug !== oldSlug)
   );
 
+  const encrypted = encryptSubmittedConnection(
+    connection,
+    newSlug,
+    config.connections[oldSlug]
+  );
+
+  if (!encrypted) {
+    return config;
+  }
+
   if (oldSlug !== newSlug) {
     // if slugname change, replace the old connection by the new one
     delete config.connections[oldSlug];
   }
 
-  config.connections[newSlug] = { ...connection, slug: newSlug };
+  config.connections[newSlug] = encrypted;
 
-  if (writeConfiguration(config, newSlug) && oldSlug !== newSlug) {
-    unreadablePasswords.delete(oldSlug);
-  }
+  writeConfiguration(config);
 
-  return getConfiguration();
+  return config;
 }
 
 export function changeTheme(theme: string): void {
@@ -543,6 +498,5 @@ export const testables = {
   getBaseConfig,
   resetConfiguration: () => {
     configuration = null;
-    unreadablePasswords.clear();
   },
 };
