@@ -39,11 +39,11 @@ function getBaseConfig(): Configuration {
  * `null` when the OS refused to encrypt: the user has been told, and nothing must be written.
  * An empty password field on an edit keeps the stored ciphertext, so changing a port does not ask for the password again.
  */
-function encryptSubmittedConnection(
+async function encryptSubmittedConnection(
   connection: ConnectionObjectWithoutSlug,
   slug: string,
   stored: EncryptedConnectionObject | undefined
-): EncryptedConnectionObject | null {
+): Promise<EncryptedConnectionObject | null> {
   if (connection.password === '' && stored) {
     return {
       ...connection,
@@ -57,7 +57,7 @@ function encryptSubmittedConnection(
     return {
       ...connection,
       slug,
-      password: encryptPassword(connection.password),
+      password: await encryptPassword(connection.password),
       appState: stored?.appState,
     };
   } catch (error) {
@@ -119,9 +119,9 @@ function writeConfiguration(config: Configuration): void {
   );
 }
 
-export function addConnectionToConfig(
+export async function addConnectionToConfig(
   connection: ConnectionObjectWithoutSlug
-): Configuration {
+): Promise<Configuration> {
   const config = getConfiguration();
 
   if (!config.connections) {
@@ -129,7 +129,11 @@ export function addConnectionToConfig(
   }
 
   const slug = uniqueSlug(connection.name, Object.keys(config.connections));
-  const encrypted = encryptSubmittedConnection(connection, slug, undefined);
+  const encrypted = await encryptSubmittedConnection(
+    connection,
+    slug,
+    undefined
+  );
 
   // nothing is mutated before the password is encrypted, so a refused write leaves the configuration exactly as the file holds it
   if (!encrypted) {
@@ -143,10 +147,10 @@ export function addConnectionToConfig(
   return config;
 }
 
-export function editConnection(
+export async function editConnection(
   oldSlug: string,
   connection: ConnectionObjectWithoutSlug
-): Configuration {
+): Promise<Configuration> {
   const config = getConfiguration();
 
   if (!config.connections) {
@@ -160,7 +164,7 @@ export function editConnection(
     Object.keys(config.connections).filter((slug) => slug !== oldSlug)
   );
 
-  const encrypted = encryptSubmittedConnection(
+  const encrypted = await encryptSubmittedConnection(
     connection,
     newSlug,
     config.connections[oldSlug]

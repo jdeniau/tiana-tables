@@ -64,7 +64,8 @@ const fr: Translation = {
     " refused {Le serveur a refusé la connexion. Vérifiez qu'il tourne, et que le port est le bon.}" +
     " unknownHost {Ce nom d'hôte n'a pas pu être résolu.}" +
     ' accessDenied {Le serveur a rejeté ces identifiants.}' +
-    ' passwordUnreadable {Le mot de passe enregistré n’a pas pu être lu. Déverrouillez votre trousseau puis redémarrez Tiana Tables, ou saisissez-le à nouveau dans le formulaire de connexion.}' +
+    ' keyringLocked {Votre trousseau est verrouillé, le mot de passe enregistré n’a donc pas pu être lu. Déverrouillez-le, puis réessayez.}' +
+    ' passwordUnreadable {Le mot de passe enregistré a été chiffré avec une clé que cette machine n’a plus. Saisissez-le à nouveau dans le formulaire de connexion.}' +
     " other {La connexion n'a pas pu être ouverte.}}",
   'connection.failed.retry': 'Réessayer',
   'connection.failed.target': 'La connexion à {host}:{port} a échoué',

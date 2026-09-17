@@ -18,7 +18,13 @@ vi.mock('../configuration', () => ({
 // the configuration holds the ciphertext: `safeStorage` is the real thing here, and there is no keyring behind it
 vi.mock('../configuration/encryption', () => ({
   decryptPassword: (stored: string) =>
-    stored === 'unreadable' ? null : stored.replace(/^encrypted-/, ''),
+    Promise.resolve(
+      stored === 'locked-away'
+        ? { status: 'locked' }
+        : stored === 'unreadable'
+          ? { status: 'unreadable' }
+          : { status: 'ok', password: stored.replace(/^encrypted-/, '') }
+    ),
 }));
 
 vi.mock('mysql2/promise', () => ({
@@ -211,25 +217,26 @@ describe('opening a connection', () => {
     );
   });
 
-  test('a password that does not decrypt fails the connection, and names why', async () => {
-    mocks.createConnection.mockResolvedValue(fakeConnection());
-    mocks.connections['my-connection'] = {
-      ...(mocks.connections['my-connection'] as object),
-      password: 'unreadable',
-    };
+  test.each([
+    ['locked-away', ConnectionFailure.keyringLocked],
+    ['unreadable', ConnectionFailure.passwordUnreadable],
+  ])(
+    'a password stored as %s fails the connection, and names why',
+    async (stored, reason) => {
+      mocks.createConnection.mockResolvedValue(fakeConnection());
+      mocks.connections['my-connection'] = {
+        ...(mocks.connections['my-connection'] as object),
+        password: stored,
+      };
 
-    const { result, error } = await connectionStack.showDatabases();
+      const { result, error } = await connectionStack.showDatabases();
 
-    expect(result).toBeUndefined();
-    expect(error).toMatchObject({
-      detail: {
-        kind: 'connection',
-        reason: ConnectionFailure.passwordUnreadable,
-      },
-    });
-    // the driver is never even called with a password we could not read
-    expect(mocks.createConnection).not.toHaveBeenCalled();
-  });
+      expect(result).toBeUndefined();
+      expect(error).toMatchObject({ detail: { kind: 'connection', reason } });
+      // the driver is never even called with a password we could not read
+      expect(mocks.createConnection).not.toHaveBeenCalled();
+    }
+  );
 
   test('queries racing for the same connection share one handshake', async () => {
     mocks.createConnection.mockResolvedValue(fakeConnection());

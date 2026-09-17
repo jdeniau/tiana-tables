@@ -60,7 +60,8 @@ export default {
     ' refused {The server refused the connection. Check that it is running, and that the port is the right one.}' +
     ' unknownHost {This host name could not be resolved.}' +
     ' accessDenied {The server rejected these credentials.}' +
-    ' passwordUnreadable {The saved password could not be read. Unlock your keyring and restart Tiana Tables, or type it again in the connection form.}' +
+    ' keyringLocked {Your keyring is locked, so the saved password could not be read. Unlock it, then retry.}' +
+    ' passwordUnreadable {The saved password was encrypted with a key this machine no longer has. Type it again in the connection form.}' +
     ' other {The connection could not be opened.}}',
   'connection.failed.retry': 'Retry',
   'connection.failed.target': 'Connecting to {host}:{port} failed',

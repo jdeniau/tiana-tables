@@ -9,7 +9,11 @@ import {
   buildReadCellQuery,
   buildUpdateCellQuery,
 } from './buildUpdateCellQuery';
-import { PASSWORD_UNREADABLE, asConnectionError } from './connectionError';
+import {
+  KEYRING_LOCKED,
+  PASSWORD_UNREADABLE,
+  asConnectionError,
+} from './connectionError';
 import {
   QueryResultOrError,
   ResultOrError,
@@ -478,12 +482,18 @@ class ConnectionStack {
 
     try {
       // the only place the stored password is read back: the configuration holds the ciphertext from end to end, so a keyring that cannot open it costs this connection and never the file
-      const decryptedPassword = decryptPassword(password);
+      // opening a connection is also when asking the user to unlock makes sense, and the asynchronous safeStorage is the API that prompts for it
+      const decrypted = await decryptPassword(password);
 
-      if (decryptedPassword === null) {
+      if (decrypted.status !== 'ok') {
         throw Object.assign(
           new Error(`Could not decrypt the password of "${slug}"`),
-          { code: PASSWORD_UNREADABLE }
+          {
+            code:
+              decrypted.status === 'locked'
+                ? KEYRING_LOCKED
+                : PASSWORD_UNREADABLE,
+          }
         );
       }
 
@@ -494,7 +504,7 @@ class ConnectionStack {
         ...rest,
         host,
         port,
-        password: decryptedPassword,
+        password: decrypted.password,
         connectTimeout: CONNECT_TIMEOUT_MS,
       });
 

@@ -17,19 +17,17 @@ export class EncryptionUnavailableError extends Error {
 type StorageBackend = ReturnType<typeof safeStorage.getSelectedStorageBackend>;
 
 type EncryptionStatus = {
-  available: boolean;
   backend: StorageBackend | null;
   /**
-   * `basic_text` means Electron derives its key from a hardcoded password:
-   * that is obfuscation, not encryption. `unknown` means we asked before the
-   * `ready` event, so we cannot tell — treated as insecure on purpose.
+   * `basic_text` means the key is derived from a hardcoded password: that is obfuscation, not encryption.
+   * `unknown` means we asked before the `ready` event, so we cannot tell — treated as insecure on purpose.
+   * It is read from `getSelectedStorageBackend()`, which describes the legacy desktop-environment detection and not the providers the asynchronous API uses: those probe D-Bus and can find a keyring where this answers `basic_text`.
+   * So it is pessimistic, never optimistic — precise enough to warn on, not to stay silent on.
    */
   isSecure: boolean;
 };
 
 export function getEncryptionStatus(): EncryptionStatus {
-  const available = safeStorage.isEncryptionAvailable();
-
   // getSelectedStorageBackend is Linux-only
   const backend =
     process.platform === 'linux'
@@ -37,9 +35,8 @@ export function getEncryptionStatus(): EncryptionStatus {
       : null;
 
   return {
-    available,
     backend,
-    isSecure: available && backend !== 'basic_text' && backend !== 'unknown',
+    isSecure: backend !== 'basic_text' && backend !== 'unknown',
   };
 }
 
@@ -47,14 +44,15 @@ export function getEncryptionStatus(): EncryptionStatus {
  * Called once at startup, so that the log tells which backend is in use — the
  * only trace left when a password silently stops being protected.
  */
-export function logEncryptionStatus(): void {
-  const { available, backend, isSecure } = getEncryptionStatus();
+export async function logEncryptionStatus(): Promise<void> {
+  const { backend, isSecure } = getEncryptionStatus();
+  const available = await safeStorage.isAsyncEncryptionAvailable();
 
   log.info('safeStorage status:', { available, backend, isSecure });
 
   if (!available) {
     log.error(
-      'safeStorage: encryption is unavailable, connection passwords cannot be stored'
+      'safeStorage: the asynchronous encryptor never initialized, connection passwords cannot be stored'
     );
 
     return;
@@ -62,7 +60,7 @@ export function logEncryptionStatus(): void {
 
   if (!isSecure) {
     log.warn(
-      `safeStorage: backend "${backend}" derives its key from a hardcoded password. Stored passwords are obfuscated, not encrypted.`
+      `safeStorage: backend "${backend}" derives its key from a hardcoded password. Stored passwords may be obfuscated rather than encrypted.`
     );
   }
 }
@@ -97,29 +95,58 @@ function warnIfBackendIsInsecure(): void {
   });
 }
 
-export function encryptPassword(password: string): string {
-  if (!safeStorage.isEncryptionAvailable()) {
+export async function encryptPassword(password: string): Promise<string> {
+  let encrypted: Buffer;
+
+  try {
+    encrypted = await safeStorage.encryptStringAsync(password);
+  } catch (error) {
+    log.error('safeStorage: could not encrypt a password', error);
+
     throw new EncryptionUnavailableError();
   }
 
   warnIfBackendIsInsecure();
 
-  return safeStorage.encryptString(password).toString('base64');
+  return encrypted.toString('base64');
 }
 
-/** `null` when the ciphertext cannot be read back — a connection stored without a password decrypts to `''`, never to `null`. */
-export function decryptPassword(encryptedPassword: string): string | null {
+export type DecryptedPassword =
+  | { status: 'ok'; password: string }
+  /** the key exists but is out of reach for now — a locked keyring */
+  | { status: 'locked' }
+  /** the key that wrote this ciphertext is gone: no retry will read it */
+  | { status: 'unreadable' };
+
+/**
+ * The two failures are not the same accident and do not deserve the same answer, so they are told apart here rather than merged into one: a locked keyring is worth retrying, a lost key is only worth retyping.
+ * Electron gives no code to tell them apart, only the message it builds for the `temporarily_unavailable` flag of `os_crypt_async` — hence the string test.
+ * A message we fail to recognise falls back to `unreadable`, the conservative side: it asks the user rather than offering a retry that cannot succeed.
+ */
+export async function decryptPassword(
+  encryptedPassword: string
+): Promise<DecryptedPassword> {
   // safeStorage rejects the empty buffer, and an empty password is not an unreadable one
   if (encryptedPassword === '') {
-    return '';
+    return { status: 'ok', password: '' };
   }
 
   try {
-    return safeStorage.decryptString(Buffer.from(encryptedPassword, 'base64'));
+    const { result } = await safeStorage.decryptStringAsync(
+      Buffer.from(encryptedPassword, 'base64')
+    );
+
+    return { status: 'ok', password: result };
   } catch (error) {
     log.error('safeStorage: could not decrypt a stored password', error);
 
-    return null;
+    const message = error instanceof Error ? error.message : String(error);
+
+    return {
+      status: message.includes('temporarily unavailable')
+        ? 'locked'
+        : 'unreadable',
+    };
   }
 }
 
