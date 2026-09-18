@@ -28,9 +28,9 @@ const fr: Translation = {
     ' other {Lecture seule.}}',
   'cell.detail.setNull': 'Mettre à NULL',
   'config.encryption.insecureBackend.detail':
-    'Backend de stockage : {backend}. Installez un trousseau (gnome-keyring, KWallet) et redémarrez l’application pour chiffrer vos mots de passe.',
+    'La clé vient de l’application elle-même : qui lit le fichier de configuration lit les mots de passe. Démarrez ou installez un trousseau (gnome-keyring, KWallet, KeePassXC), puis redémarrez l’application pour les chiffrer.',
   'config.encryption.insecureBackend.message':
-    'Aucun trousseau système n’a été trouvé : vos mots de passe de connexion sont seulement obfusqués, pas chiffrés.',
+    'Aucun trousseau n’a répondu : vos mots de passe de connexion sont seulement obfusqués, pas chiffrés.',
   'config.encryption.insecureBackend.title': 'Mots de passe non chiffrés',
   'config.encryption.unavailable.message':
     'Votre système a refusé de chiffrer les mots de passe de connexion, la configuration n’a donc pas été enregistrée. Déverrouillez votre trousseau puis redémarrez Tiana Tables.',

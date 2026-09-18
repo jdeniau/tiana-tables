@@ -25,9 +25,9 @@ export default {
     ' other {Read-only.}}',
   'cell.detail.setNull': 'Set to NULL',
   'config.encryption.insecureBackend.detail':
-    'Storage backend: {backend}. Install a keyring (gnome-keyring, KWallet) and restart the application to store your passwords encrypted.',
+    'The key comes from the application itself, so anyone who reads the configuration file can read the passwords. Start or install a keyring (gnome-keyring, KWallet, KeePassXC), then restart the application to store them encrypted.',
   'config.encryption.insecureBackend.message':
-    'No system keyring was found, so your connection passwords are only obfuscated, not encrypted.',
+    'No keyring answered, so your connection passwords are only obfuscated, not encrypted.',
   'config.encryption.insecureBackend.title': 'Passwords are not encrypted',
   'config.encryption.unavailable.message':
     'Your system refused to encrypt the connection passwords, so the configuration was not saved. Unlock your keyring, then restart Tiana Tables.',

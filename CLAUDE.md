@@ -133,11 +133,22 @@ and they reach the user as two `ConnectionFailure` reasons: the first is worth
 the Retry the connection-failed page already offers, the second asks for the
 password to be typed again.
 
-`getSelectedStorageBackend()` still describes the legacy desktop-environment
-detection, not the provider the async API picked, so the "your passwords are
-only obfuscated" warning can be pessimistic where D-Bus finds a keyring that
-detection misses. Left as is: warning too much beats staying silent, and
-Electron exposes nothing more precise today.
+**Whether a password is really encrypted is read off the ciphertext**, never
+from `getSelectedStorageBackend()`. `os_crypt_async` writes the tag of the
+provider its key came from in front of every ciphertext:
+
+| Tag   | Provider                    | Verdict                   |
+| ----- | --------------------------- | ------------------------- |
+| `v10` | the key built into Chromium | obfuscated, not encrypted |
+| `v11` | Secret Service or KWallet   | encrypted                 |
+| `v12` | Flatpak portal              | encrypted                 |
+
+`getSelectedStorageBackend()` describes the **legacy** selection, made from the
+desktop environment name alone, so it answers `basic_text` under a compositor
+Chromium does not know — Hyprland, sway — where the async providers find a
+keyring over D-Bus. It goes to the startup log as a hint, never as a verdict.
+`isAsyncEncryptionAvailable()` is no verdict either: it answers `true` on a
+machine with no keyring at all, since the fallback provider always has a key.
 
 ### Translations
 

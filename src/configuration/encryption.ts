@@ -13,85 +13,64 @@ export class EncryptionUnavailableError extends Error {
   }
 }
 
-/** Linux-only: the password store Electron picked. `null` on macOS/Windows. */
-type StorageBackend = ReturnType<typeof safeStorage.getSelectedStorageBackend>;
+/**
+ * `os_crypt_async` writes the tag of the provider its key came from in front of every ciphertext: `v10` for the key Chromium carries in its own binary, `v11` for a Secret Service or KWallet keyring, `v12` for the Flatpak portal.
+ * `null` for an empty password, which Chromium encrypts to an empty buffer without asking any provider.
+ */
+function keyProviderTag(ciphertext: Buffer): string | null {
+  return ciphertext.length === 0
+    ? null
+    : ciphertext.subarray(0, 3).toString('latin1');
+}
 
-type EncryptionStatus = {
-  backend: StorageBackend | null;
-  /**
-   * `basic_text` means the key is derived from a hardcoded password: that is obfuscation, not encryption.
-   * `unknown` means we asked before the `ready` event, so we cannot tell — treated as insecure on purpose.
-   * It is read from `getSelectedStorageBackend()`, which describes the legacy desktop-environment detection and not the providers the asynchronous API uses: those probe D-Bus and can find a keyring where this answers `basic_text`.
-   * So it is pessimistic, never optimistic — precise enough to warn on, not to stay silent on.
-   */
-  isSecure: boolean;
-};
+/** the key built into Chromium: nothing answered, and the password is obfuscated rather than encrypted */
+const HARDCODED_KEY_TAG = 'v10';
 
-export function getEncryptionStatus(): EncryptionStatus {
-  // getSelectedStorageBackend is Linux-only
-  const backend =
+/**
+ * Called once at startup. `getSelectedStorageBackend()` describes the **legacy** selection, made from
+ * the desktop environment name alone, so it answers `basic_text` under a compositor Chromium does not
+ * know (Hyprland, sway…) where the asynchronous providers find a keyring over D-Bus. It goes to the
+ * log as a hint, never as a verdict — the verdict is the tag of a real ciphertext.
+ */
+export async function logEncryptionStatus(): Promise<void> {
+  const legacyBackend =
     process.platform === 'linux'
       ? safeStorage.getSelectedStorageBackend()
       : null;
-
-  return {
-    backend,
-    isSecure: backend !== 'basic_text' && backend !== 'unknown',
-  };
-}
-
-/**
- * Called once at startup, so that the log tells which backend is in use — the
- * only trace left when a password silently stops being protected.
- */
-export async function logEncryptionStatus(): Promise<void> {
-  const { backend, isSecure } = getEncryptionStatus();
   const available = await safeStorage.isAsyncEncryptionAvailable();
 
-  log.info('safeStorage status:', { available, backend, isSecure });
+  log.info('safeStorage status:', { available, legacyBackend });
 
   if (!available) {
     log.error(
       'safeStorage: the asynchronous encryptor never initialized, connection passwords cannot be stored'
     );
-
-    return;
-  }
-
-  if (!isSecure) {
-    log.warn(
-      `safeStorage: backend "${backend}" derives its key from a hardcoded password. Stored passwords may be obfuscated rather than encrypted.`
-    );
   }
 }
 
-let insecureBackendWarned = false;
+let insecureKeyWarned = false;
 
 /**
- * Warn the user the first time a password is actually persisted on an insecure
- * backend. At startup it would be noise; at save time it is the moment the
- * choice matters.
+ * Warn the user the first time a password is actually persisted with the key built into the
+ * application. At startup it would be noise, and a guess; here the ciphertext in hand names the
+ * provider that answered.
  */
-function warnIfBackendIsInsecure(): void {
-  if (insecureBackendWarned) {
+function warnIfKeyIsNotFromAKeyring(tag: string | null): void {
+  if (insecureKeyWarned || tag !== HARDCODED_KEY_TAG) {
     return;
   }
 
-  const { isSecure, backend } = getEncryptionStatus();
+  insecureKeyWarned = true;
 
-  if (isSecure) {
-    return;
-  }
-
-  insecureBackendWarned = true;
+  log.warn(
+    `safeStorage: no keyring answered (key tagged "${tag}"), stored passwords are obfuscated rather than encrypted`
+  );
 
   void dialog.showMessageBox({
     type: 'warning',
     title: t('config.encryption.insecureBackend.title'),
     message: t('config.encryption.insecureBackend.message'),
-    detail: t('config.encryption.insecureBackend.detail', {
-      backend: String(backend),
-    }),
+    detail: t('config.encryption.insecureBackend.detail'),
   });
 }
 
@@ -106,7 +85,7 @@ export async function encryptPassword(password: string): Promise<string> {
     throw new EncryptionUnavailableError();
   }
 
-  warnIfBackendIsInsecure();
+  warnIfKeyIsNotFromAKeyring(keyProviderTag(encrypted));
 
   return encrypted.toString('base64');
 }
@@ -152,6 +131,6 @@ export async function decryptPassword(
 
 export const testables = {
   resetInsecureBackendWarning: () => {
-    insecureBackendWarned = false;
+    insecureKeyWarned = false;
   },
 };

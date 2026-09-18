@@ -4,7 +4,6 @@ import {
   EncryptionUnavailableError,
   decryptPassword,
   encryptPassword,
-  getEncryptionStatus,
   logEncryptionStatus,
   testables,
 } from './encryption';
@@ -51,6 +50,18 @@ const mockEncryptStringAsync = vi.mocked(safeStorage.encryptStringAsync);
 const mockDecryptStringAsync = vi.mocked(safeStorage.decryptStringAsync);
 const mockShowMessageBox = vi.mocked(dialog.showMessageBox);
 
+/** the tags `os_crypt_async` writes in front of a ciphertext, naming the provider its key came from */
+const KEYRING_TAG = 'v11';
+const PORTAL_TAG = 'v12';
+const HARDCODED_TAG = 'v10';
+
+/** what a machine with no keyring produces: the key built into Chromium */
+function mockKeyFrom(tag: string): void {
+  mockEncryptStringAsync.mockImplementation((plain: string) =>
+    Promise.resolve(Buffer.from(`${tag}encrypted-${plain}`))
+  );
+}
+
 const realPlatform = process.platform;
 
 function mockPlatform(platform: NodeJS.Platform): void {
@@ -66,7 +77,7 @@ beforeEach(() => {
   mockGetSelectedStorageBackend.mockReturnValue('gnome_libsecret');
   // `clearAllMocks` forgets the calls, not the implementations: every test starts from a keyring that answers
   mockEncryptStringAsync.mockImplementation((plain: string) =>
-    Promise.resolve(Buffer.from(`encrypted-${plain}`))
+    Promise.resolve(Buffer.from(`${KEYRING_TAG}encrypted-${plain}`))
   );
   mockDecryptStringAsync.mockImplementation((encrypted: Buffer) =>
     Promise.resolve({
@@ -82,41 +93,10 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe('getEncryptionStatus', () => {
-  test('a real keyring is secure', () => {
-    expect(getEncryptionStatus()).toEqual({
-      backend: 'gnome_libsecret',
-      isSecure: true,
-    });
-  });
-
-  test('basic_text is NOT secure', () => {
-    mockGetSelectedStorageBackend.mockReturnValue('basic_text');
-
-    expect(getEncryptionStatus()).toEqual({
-      backend: 'basic_text',
-      isSecure: false,
-    });
-  });
-
-  test('unknown backend is treated as insecure', () => {
-    mockGetSelectedStorageBackend.mockReturnValue('unknown');
-
-    expect(getEncryptionStatus().isSecure).toBe(false);
-  });
-
-  test('the Linux-only backend is not read on macOS', () => {
-    mockPlatform('darwin');
-
-    expect(getEncryptionStatus()).toEqual({ backend: null, isSecure: true });
-    expect(mockGetSelectedStorageBackend).not.toHaveBeenCalled();
-  });
-});
-
 describe('encryptPassword', () => {
   test('encrypts when the keyring answers', async () => {
     expect(await encryptPassword('password')).toBe(
-      Buffer.from('encrypted-password').toString('base64')
+      Buffer.from(`${KEYRING_TAG}encrypted-password`).toString('base64')
     );
   });
 
@@ -128,8 +108,8 @@ describe('encryptPassword', () => {
     );
   });
 
-  test('warns once when the backend only obfuscates', async () => {
-    mockGetSelectedStorageBackend.mockReturnValue('basic_text');
+  test('warns once when the key is the one built into the application', async () => {
+    mockKeyFrom(HARDCODED_TAG);
 
     await encryptPassword('password');
     await encryptPassword('another');
@@ -145,6 +125,32 @@ describe('encryptPassword', () => {
 
   test('does not warn on a real keyring', async () => {
     await encryptPassword('password');
+
+    expect(mockShowMessageBox).not.toHaveBeenCalled();
+  });
+
+  test('does not warn on the Flatpak portal either', async () => {
+    mockKeyFrom(PORTAL_TAG);
+
+    await encryptPassword('password');
+
+    expect(mockShowMessageBox).not.toHaveBeenCalled();
+  });
+
+  // the desktop environment is what the legacy backend selection reads, and what it gets wrong
+  // under a compositor Chromium does not know: the tag of the ciphertext is the only verdict
+  test('the legacy backend name is never the verdict', async () => {
+    mockGetSelectedStorageBackend.mockReturnValue('basic_text');
+
+    await encryptPassword('password');
+
+    expect(mockShowMessageBox).not.toHaveBeenCalled();
+  });
+
+  test('an empty password has no ciphertext to judge', async () => {
+    mockEncryptStringAsync.mockResolvedValue(Buffer.alloc(0));
+
+    await encryptPassword('');
 
     expect(mockShowMessageBox).not.toHaveBeenCalled();
   });
