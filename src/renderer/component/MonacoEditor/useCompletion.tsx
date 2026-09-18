@@ -11,6 +11,10 @@ import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
 import { mysqlParser } from '../../../sql/mysqlParser';
 import {
+  splitStatements,
+  statementAtOffset,
+} from '../../../sql/splitStatements';
+import {
   extractTableAliases,
   generateTableAlias,
 } from '../../../sql/tableName';
@@ -68,9 +72,15 @@ export function buildCompletionProvider(
         endColumn: word.endColumn,
       };
 
-      // the whole query, not only what precedes the caret: completing the
-      // select list of `SELECT e.| FROM employee e` needs the `FROM` clause
-      const tableAliases = extractTableAliases(sql);
+      // the whole statement, not only what precedes the caret: completing the
+      // select list of `SELECT e.| FROM employee e` needs the `FROM` clause.
+      // Only that statement though: a `;` opens a new scope, where the tables
+      // and the aliases of the previous ones mean nothing.
+      const statement = statementAtOffset(
+        splitStatements(sql),
+        model.getOffsetAt(position) + prefix.length
+      );
+      const tableAliases = extractTableAliases(statement?.sql ?? sql);
       const qualifier = qualifierBefore(model, position, word.startColumn);
       const qualifiedTable = qualifier ? tableAliases[qualifier] : undefined;
 

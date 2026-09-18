@@ -217,3 +217,30 @@ describe('unknown columns', () => {
     expect(unknownColumns('SELECT u. FROM users u')).toEqual([]);
   });
 });
+
+describe('several statements', () => {
+  it('resolves an alias in its own statement', () => {
+    // `u` is `orders` here, whatever the next statement calls `u`
+    expect(
+      unknownColumns('SELECT u.user_id FROM orders u;\nSELECT * FROM users u;')
+    ).toEqual([]);
+  });
+
+  it('says nothing about an alias another statement declares', () => {
+    expect(
+      unknownColumns('SELECT * FROM users u;\nSELECT u.nope FROM orders o;')
+    ).toEqual([]);
+  });
+
+  it('still reports an unknown column of the statement it sits in', () => {
+    expect(
+      unknownColumns('SELECT * FROM users u;\nSELECT o.nope FROM orders o;')
+    ).toEqual(['orders.nope']);
+  });
+
+  it('colors every statement', () => {
+    expect(
+      highlighted('SELECT * FROM users u;\nSELECT o.id FROM orders o;')
+    ).toEqual(['table:users', 'alias:u', 'alias:o', 'table:orders', 'alias:o']);
+  });
+});

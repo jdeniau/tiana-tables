@@ -191,6 +191,40 @@ describe('columns', () => {
   });
 });
 
+describe('several statements', () => {
+  it('reuses an alias the previous statement took', () => {
+    const suggestions = completionsAt(
+      'SELECT * FROM employee e;\n\nSELECT * FROM |'
+    );
+
+    expect(
+      suggestions.find((item) => item.label === 'employee')?.insertText
+    ).toBe('employee e ');
+  });
+
+  it('does not join on a table of the previous statement', () => {
+    const suggestions = completionsAt(
+      'SELECT * FROM employee e;\n\nSELECT * FROM |'
+    );
+
+    expect(suggestions.find((item) => item.label === 'title')?.insertText).toBe(
+      'title t '
+    );
+  });
+
+  it('proposes the columns of the current statement only', () => {
+    expect(
+      columns('SELECT * FROM employee e;\n\nSELECT | FROM title t')
+    ).toEqual(['id', 'label']);
+  });
+
+  it('knows nothing of an alias declared by another statement', () => {
+    expect(
+      columns('SELECT * FROM employee e;\n\nSELECT e.| FROM title')
+    ).toEqual([]);
+  });
+});
+
 describe('keywords', () => {
   it('comes from the grammar, not from a hardcoded list', () => {
     // a keyword only the parser knows to be valid right there
