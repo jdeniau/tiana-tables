@@ -4,6 +4,7 @@ import { AttrName } from 'dt-sql-parser/dist/parser/common/entityCollector';
 import type { IRange } from 'monaco-editor';
 import type { WordRange } from 'monaco-sql-languages';
 import { collectEntities, mysqlParser } from '../../../sql/mysqlParser';
+import { splitStatements } from '../../../sql/splitStatements';
 import { unquote } from '../../../sql/tableName';
 
 export type SqlSemanticKind = 'table' | 'alias';
@@ -81,6 +82,9 @@ interface Analysis {
  * Only tables of the schema are reported, so that a typo stays uncolored.
  * Aliases are reported either way: the query declares them itself, no schema
  * needed to tell that `u` in `FROM whatever u` is an alias.
+ *
+ * Names resolve in the statement they sit in: a `;` opens a new scope, where
+ * the same alias may well name another table.
  */
 export function analyzeQuery(sql: string, schema: QuerySchema): Analysis {
   const entities = collectEntities(sql).filter(
@@ -88,23 +92,22 @@ export function analyzeQuery(sql: string, schema: QuerySchema): Analysis {
   );
 
   const semanticTokens: SqlSemanticToken[] = [];
-  const tables = new Set<string>();
-  // an alias of an unknown table is still an alias, it just resolves to nothing
-  const aliases = new Map<string, string | undefined>();
+  const scopeAt = scopeReader(sql);
 
   for (const entity of entities) {
     const table = resolveTable(entity.text, schema);
+    const scope = scopeAt(entity.position.startIndex);
 
     if (table) {
       semanticTokens.push({ kind: 'table', range: toRange(entity.position) });
-      tables.add(table);
+      scope.tables.add(table);
     }
 
     const alias = entity[AttrName.alias];
 
     if (alias) {
       semanticTokens.push({ kind: 'alias', range: toRange(alias) });
-      aliases.set(alias.text, table);
+      scope.aliases.set(alias.text, table);
     }
   }
 
@@ -113,6 +116,7 @@ export function analyzeQuery(sql: string, schema: QuerySchema): Analysis {
 
   for (const reference of qualifiedReferences(sql)) {
     const { qualifier, name } = reference;
+    const { tables, aliases } = scopeAt(qualifier.startIndex);
     const kind = aliases.has(qualifier.text)
       ? 'alias'
       : tables.has(unquote(qualifier.text))
@@ -153,8 +157,42 @@ export function analyzeQuery(sql: string, schema: QuerySchema): Analysis {
   return { semanticTokens, unknownColumns };
 }
 
+/** what one statement declares, and where its names resolve */
+interface Scope {
+  /** tables of the schema it names */
+  readonly tables: Set<string>;
+  /** an alias of an unknown table is still an alias, it resolves to nothing */
+  readonly aliases: Map<string, string | undefined>;
+}
+
+/**
+ * Read the scope an offset of the query falls in, creating it on first use.
+ *
+ * Anything before the first statement belongs to it, as everywhere else in the
+ * editor, and a content holding no statement at all has the one empty scope.
+ */
+function scopeReader(sql: string): (offset: number) => Scope {
+  const statements = splitStatements(sql);
+  const scopes = new Map<number, Scope>();
+
+  return (offset) => {
+    const index = Math.max(
+      statements.findLastIndex((statement) => statement.start <= offset),
+      0
+    );
+    const scope = scopes.get(index) ?? {
+      tables: new Set<string>(),
+      aliases: new Map<string, string | undefined>(),
+    };
+
+    scopes.set(index, scope);
+
+    return scope;
+  };
+}
+
 interface QualifiedReference {
-  readonly qualifier: { text: string; range: IRange };
+  readonly qualifier: { text: string; startIndex: number; range: IRange };
   /** what follows the dot, unless it is `*` or the end of the query */
   readonly name?: { text: string; range: IRange };
 }
@@ -184,7 +222,11 @@ function qualifiedReferences(sql: string): QualifiedReference[] {
       /^[A-Za-z_`"[]/.test(name.text);
 
     references.push({
-      qualifier: { text: qualifier.text, range: tokenRange(qualifier) },
+      qualifier: {
+        text: qualifier.text,
+        startIndex: qualifier.start,
+        range: tokenRange(qualifier),
+      },
       name:
         isName && name.text
           ? { text: name.text, range: tokenRange(name) }
