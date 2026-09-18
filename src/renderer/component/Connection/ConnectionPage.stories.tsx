@@ -5,6 +5,7 @@ import { DEFAULT_LOCALE } from '../../../configuration/locale';
 import { DEFAULT_THEME } from '../../../configuration/themes';
 import { testables } from '../../../contexts/ConfigurationContext';
 import { ConnectionContext } from '../../../contexts/ConnectionContext';
+import { DatabaseEngine } from '../../../sql/engine';
 import { Centered } from '../Style/Region';
 import ConnectionPage from './ConnectionPage';
 
@@ -45,6 +46,7 @@ const meta: Meta<typeof ConnectionPage> = {
             connections: {
               test: {
                 name: 'test',
+                engine: DatabaseEngine.MySQL,
                 slug: 'test',
                 host: 'localhost',
                 port: 3307,
@@ -53,6 +55,7 @@ const meta: Meta<typeof ConnectionPage> = {
               },
               'production connection': {
                 name: 'prod',
+                engine: DatabaseEngine.MySQL,
                 slug: 'prod',
                 host: 'localhost',
                 port: 3306,
