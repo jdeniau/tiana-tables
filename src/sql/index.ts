@@ -14,12 +14,13 @@ import {
   PASSWORD_UNREADABLE,
   asConnectionError,
 } from './connectionError';
+import { getDialect } from './dialect';
+import type { Dialect } from './dialect/types';
 import {
   QueryResultOrError,
   ResultOrError,
   encodeError,
 } from './errorSerializer';
-import { escapeIdentifier } from './escapeIdentifier';
 import {
   ColumnDetail,
   ColumnDetailResult,
@@ -109,6 +110,21 @@ class ConnectionStack {
         handler.bind(this)(...args)
       );
     }
+  }
+
+  /** The SQL text of the connection queries are currently sent to. */
+  #dialect(): Dialect {
+    invariant(this.#currentConnectionSlug, 'Connection slug is required');
+
+    const connection =
+      getConfiguration().connections[this.#currentConnectionSlug];
+
+    invariant(
+      connection,
+      `Connection "${this.#currentConnectionSlug}" not found`
+    );
+
+    return getDialect(connection.engine);
   }
 
   async getKeyColumnUsage(
@@ -222,9 +238,7 @@ class ConnectionStack {
     invariant(databaseName, 'Database name is required');
 
     const query = `
-      SHOW KEYS FROM ${escapeIdentifier(databaseName)}.${escapeIdentifier(
-        tableName
-      )} WHERE Key_name = 'PRIMARY';
+      SHOW KEYS FROM ${this.#dialect().qualify(databaseName, tableName)} WHERE Key_name = 'PRIMARY';
     `;
 
     return this.executeQueryAndRetry<ShowKeyRow[]>(query);
@@ -314,7 +328,7 @@ class ConnectionStack {
     invariant(databaseName, 'Database name is required');
 
     return this.executeQueryAndRetry<ShowTableStatusResult>(
-      `SHOW TABLE STATUS FROM ${escapeIdentifier(databaseName)}`
+      `SHOW TABLE STATUS FROM ${this.#dialect().escapeIdentifier(databaseName)}`
     );
   }
 

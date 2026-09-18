@@ -1,4 +1,4 @@
-import { escapeIdentifier } from './escapeIdentifier';
+import { escapeIdentifier } from './dialect/mysql/escapeIdentifier';
 
 /**
  * The comparisons the grid's context menu offers on a column.

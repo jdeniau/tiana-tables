@@ -2,7 +2,7 @@ import { ReactElement, useRef, useState } from 'react';
 import { Form } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
-import { escapeIdentifier } from '../../../sql/escapeIdentifier';
+import { useDialect } from '../../hooks/useDialect';
 import { RawSqlEditor } from '../MonacoEditor/RawSqlEditor';
 import { Region, RegionBody, RegionHeader, RegionName } from '../Style/Region';
 import { fill } from '../Style/fill';
@@ -27,13 +27,14 @@ function WhereFilter({
   history,
 }: Props): ReactElement {
   const { t } = useTranslation();
+  const dialect = useDialect();
   const [where, setWhere] = useState<string>(defaultValue);
   const ref = useRef<HTMLFormElement>(null);
 
   // the editor only holds the body of the clause; the query it is a fragment
   // of is what makes `salary > 1000` valid SQL, and what gives completion the
   // columns of this very table
-  const queryPrefix = `SELECT * FROM ${escapeIdentifier(tableName)} WHERE `;
+  const queryPrefix = `SELECT * FROM ${dialect.escapeIdentifier(tableName)} WHERE `;
 
   return (
     <FillForm ref={ref}>

@@ -5,7 +5,6 @@ import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import { PANEL } from '../../configuration/panels';
 import { useTranslation } from '../../i18n';
-import { escapeIdentifier } from '../../sql/escapeIdentifier';
 import { hasLimitClause } from '../../sql/hasLimitClause';
 import { isSqlError } from '../../sql/isSqlError';
 import { RunMode, toRunMode } from '../../sql/runMode';
@@ -25,6 +24,7 @@ import {
   RegionName,
 } from '../component/Style/Region';
 import { fill } from '../component/Style/fill';
+import { loadDialect } from '../hooks/useDialect';
 import { usePanelSize } from '../hooks/usePanelSize';
 
 // antd's Form is a block between the region body and the editor
@@ -78,8 +78,9 @@ export async function action({
   request,
   params,
 }: ActionFunctionArgs): Promise<SqlActionReturnTypes> {
-  const { databaseName } = params;
+  const { connectionSlug, databaseName } = params;
 
+  invariant(connectionSlug, 'Connection slug is required');
   invariant(databaseName, 'Database name is required');
 
   const formData = await request.formData();
@@ -98,7 +99,9 @@ export async function action({
     return { outcomes: [] };
   }
 
-  const useDatabase = `USE ${escapeIdentifier(databaseName)};`;
+  const useDatabase = (await loadDialect(connectionSlug)).useDatabase(
+    databaseName
+  );
 
   try {
     await window.sql.executeQuery(useDatabase);

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ConnectionFailure } from './connectionError';
+import { DatabaseEngine } from './engine';
 import connectionStack from './index';
 
 const mocks = vi.hoisted(() => ({
@@ -48,6 +49,11 @@ describe('database-scoped queries', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+
+    mocks.connections = {
+      'my-connection': { slug: 'my-connection', engine: DatabaseEngine.MySQL },
+    };
+    connectionStack.onConnectionSlugChanged('my-connection', undefined);
 
     executeQuery = vi
       .spyOn(connectionStack, 'executeQueryAndRetry')
@@ -177,6 +183,7 @@ describe('opening a connection', () => {
       'my-connection': {
         name: 'My connection',
         slug: 'my-connection',
+        engine: DatabaseEngine.MySQL,
         host: 'db.example.org',
         port: 3306,
         user: 'root',

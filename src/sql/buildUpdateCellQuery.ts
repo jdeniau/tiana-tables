@@ -1,5 +1,5 @@
 import invariant from 'tiny-invariant';
-import { escapeIdentifier } from './escapeIdentifier';
+import { escapeIdentifier } from './dialect/mysql/escapeIdentifier';
 import type { SqlBoundValues } from './types';
 import type { UpdateCellRequest } from './updateCell';
 

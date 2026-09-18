@@ -2,6 +2,7 @@
  * @vitest-environment happy-dom
  */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { DatabaseEngine } from '../../sql/engine';
 import { SqlError } from '../../sql/errorSerializer';
 import { RunMode } from '../../sql/runMode';
 import { action } from './sql.$connectionSlug';
@@ -50,11 +51,25 @@ describe('action', () => {
       // @ts-expect-error return is OK here, the type is too complex for now
       executeQuery: vi.fn(() => Promise.resolve([[], []])),
     };
+
+    // the action reads the engine of the connection to know how to spell `USE`
+    window.config = {
+      // @ts-expect-error only the connections are read here
+      getConfiguration: vi.fn(() =>
+        Promise.resolve({
+          connections: {
+            connectionSlug: { engine: DatabaseEngine.MySQL },
+          },
+        })
+      ),
+    };
   });
 
   afterEach(() => {
     // @ts-expect-error reset data here, will be re-set in `beforeEach`
     window.sql = undefined;
+    // @ts-expect-error same
+    window.config = undefined;
   });
 
   test('escapes the database name of the USE it sends first', async () => {
@@ -127,9 +142,9 @@ describe('action', () => {
   });
 
   test('sends nothing at all when the editor holds no statement', async () => {
-    await expect(
-      runAction('shop', '-- nothing to run yet\n')
-    ).resolves.toEqual({ outcomes: [] });
+    await expect(runAction('shop', '-- nothing to run yet\n')).resolves.toEqual(
+      { outcomes: [] }
+    );
 
     expect(window.sql.executeQuery).not.toHaveBeenCalled();
   });
