@@ -13,4 +13,10 @@ export interface Dialect {
 
   /** The statement making unqualified names resolve in `databaseName`. */
   useDatabase(databaseName: string): string;
+
+  /** Quote a string so it reads as one value, whatever it holds. */
+  escapeLiteral(text: string): string;
+
+  /** How this server spells a boolean in a comparison. */
+  booleanLiteral(value: boolean): string;
 }

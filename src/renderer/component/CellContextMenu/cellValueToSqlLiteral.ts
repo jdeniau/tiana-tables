@@ -1,9 +1,5 @@
-// importing from mysql2 will import the commonjs package and will fail. `escape`
-// is the driver's own escaping (it delegates to `sqlstring`, the package mysql2
-// escapes with too), and it is only ever called on a string here: its object
-// branch calls `Buffer.isBuffer`, which would throw in the renderer, and its
-// `Date` branch would shift the value into a time zone it never had.
-import { Types, escape } from 'mysql';
+import { Types } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
+import type { Dialect } from '../../../sql/dialect/types';
 import { formatDate, formatDateTime } from '../../utils/dateFormatter';
 
 /**
@@ -21,6 +17,7 @@ import { formatDate, formatDateTime } from '../../utils/dateFormatter';
  * `IS NULL` as the way to filter on it.
  */
 export function cellValueToSqlLiteral(
+  dialect: Dialect,
   value: unknown,
   fieldType: number | undefined
 ): string | undefined {
@@ -33,17 +30,17 @@ export function cellValueToSqlLiteral(
   }
 
   if (typeof value === 'boolean') {
-    return value ? '1' : '0';
+    return dialect.booleanLiteral(value);
   }
 
   if (value instanceof Date) {
-    return escape(
+    return dialect.escapeLiteral(
       fieldType === Types.DATE ? formatDate(value) : formatDateTime(value)
     );
   }
 
   if (typeof value === 'string') {
-    return escape(value);
+    return dialect.escapeLiteral(value);
   }
 
   // raw bytes: `String(bytes)` would compare against a decoding the server
@@ -53,5 +50,5 @@ export function cellValueToSqlLiteral(
   }
 
   // all that is left is a JSON column, which mysql2 hands over already parsed
-  return escape(JSON.stringify(value));
+  return dialect.escapeLiteral(JSON.stringify(value));
 }
