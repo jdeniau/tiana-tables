@@ -1,4 +1,4 @@
-import { KeyColumnUsageRow } from './types';
+import { ForeignKeyRow, KeyColumnUsageRow } from './types';
 
 export class ForeignKeysHelper {
   // Can not use JS #private props because of an issue in storybook with react-docgen ¯\_(ツ)_/¯
@@ -9,12 +9,14 @@ export class ForeignKeysHelper {
   }
 
   getForeignKey(tableName: string, columnName: string) {
+    // the predicate is typed, so what comes back is a key that references
+    // something: every other kind of key has both `REFERENCED_` columns NULL
     const row = this._keyColumnUsageRows.find(
-      (r) =>
+      (r): r is ForeignKeyRow =>
         r.TABLE_NAME === tableName &&
         r.COLUMN_NAME === columnName &&
-        r.REFERENCED_TABLE_NAME &&
-        r.REFERENCED_COLUMN_NAME
+        r.REFERENCED_TABLE_NAME !== null &&
+        r.REFERENCED_COLUMN_NAME !== null
     );
 
     if (!row) {

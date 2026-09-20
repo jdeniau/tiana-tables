@@ -28,8 +28,10 @@ import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import { isJsonColumn } from '../../sql/columnEditing';
+import type { Dialect } from '../../sql/dialect/types';
 import type { ColumnDetail } from '../../sql/types';
 import type { PrimaryKeyPart } from '../../sql/updateCell';
+import { useDialect } from '../hooks/useDialect';
 import {
   accent,
   background,
@@ -205,6 +207,7 @@ function TableGrid<Row extends RowDataPacket>({
 
   const foreignKeys = useForeignKeysContext();
   const allColumns = useAllColumnsContext();
+  const dialect = useDialect();
   const { database } = useDatabaseContext();
 
   const saveCell = useCallback(
@@ -332,6 +335,7 @@ function TableGrid<Row extends RowDataPacket>({
           isLastPinned: isPinned === 'start' && column.getIsLastColumn('start'),
           numeric: isNumericType(field?.type),
           hasForeignKey: foreignKey !== null,
+          dialect,
           // the schema of the column, resolved here rather than in the modal so
           // that no context lookup happens per mounted cell
           detail: field
@@ -341,7 +345,7 @@ function TableGrid<Row extends RowDataPacket>({
         };
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `table` is a new object on every state change, and a width no longer travels through here: only these drive a cell
-    [columns, columnPinning, columnSources, foreignKeys, allColumns]
+    [columns, columnPinning, columnSources, foreignKeys, allColumns, dialect]
   );
 
   // the width of every column, and the offset of the pinned ones, rewritten on
@@ -491,6 +495,8 @@ export interface ColumnMeta {
   // resolved once per column so that non-FK cells (the vast majority) don't
   // mount a ForeignKeyLink that would render null
   hasForeignKey: boolean;
+  /** the dialect of the connection, carried here so no cell looks it up */
+  dialect: Dialect;
   /**
    * What INFORMATION_SCHEMA says about the column: nullability, the whole type
    * declaration, whether the server computes it. Undefined for a column that
@@ -683,8 +689,10 @@ const GridCell = memo(function GridCell({
       link={
         column.hasForeignKey ? (
           <ForeignKeyLink
+            dialect={column.dialect}
             tableName={column.tableName ?? ''}
             columnName={column.name}
+            fieldType={column.type}
             value={value}
           />
         ) : undefined
