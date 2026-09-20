@@ -1,5 +1,5 @@
 import log from 'electron-log';
-import type { Connection, ResultSetHeader } from 'mysql2/promise';
+import type { ResultSetHeader } from 'mysql2/promise';
 import invariant from 'tiny-invariant';
 import { getConfiguration } from '../configuration';
 import { decryptPassword } from '../configuration/encryption';
@@ -16,6 +16,8 @@ import {
 } from './connectionError';
 import { getDialect } from './dialect';
 import type { Dialect } from './dialect/types';
+import { loadDriver } from './driver';
+import type { DriverConnection } from './driver';
 import {
   QueryResultOrError,
   ResultOrError,
@@ -54,7 +56,7 @@ class ConnectionStack {
    * their own socket. A rejected attempt is removed right away, so a failure
    * is never cached and never retried on its own.
    */
-  #connections: Map<string, Promise<Connection>> = new Map();
+  #connections: Map<string, Promise<DriverConnection>> = new Map();
 
   #currentConnectionSlug: string | undefined;
 
@@ -344,64 +346,42 @@ class ConnectionStack {
   ): QueryResultOrError<T> {
     invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
-    const queryResult = await this.#executeQuery<T>(
-      this.#currentConnectionSlug,
-      query,
-      rowsAsArray,
-      values
-    );
+    const connectionSlug = this.#currentConnectionSlug;
 
-    if (queryResult.error) {
-      const message = queryResult.error.message;
+    for (let attempt = 0; ; attempt++) {
+      let connection: DriverConnection | undefined;
 
-      if (
-        typeof message === 'string' &&
-        message.includes('connection is in closed state')
-      ) {
-        // retry once
-        this.#connections.delete(this.#currentConnectionSlug);
+      // Opening the connection is inside the try: a handshake that fails is an
+      // answer like any other, and must travel encoded next to the result. Left
+      // outside, it escaped the `{ result, error }` envelope and reached the
+      // renderer as Electron's own "Error invoking remote method …".
+      try {
+        connection = await this.#getConnection(connectionSlug);
 
-        return this.#executeQuery<T>(
-          this.#currentConnectionSlug,
-          query,
-          rowsAsArray,
-          values
-        );
+        log.debug(`Execute query on "${connectionSlug}": "${query}"`);
+
+        return {
+          result: await connection.query<T>({
+            sql: query,
+            rowsAsArray,
+            values,
+          }),
+          error: undefined,
+        };
+      } catch (error) {
+        // A socket the server dropped is worth one fresh connection; a
+        // statement it refused is not, and neither is a second drop. Only the
+        // connection that failed can tell the two apart, which is why the
+        // question is asked here rather than a layer up.
+        const worthRetrying =
+          attempt === 0 && connection?.isConnectionLost(error) === true;
+
+        if (!worthRetrying) {
+          return { result: undefined, error: encodeError(error) };
+        }
+
+        this.#connections.delete(connectionSlug);
       }
-    }
-
-    return queryResult;
-  }
-
-  async #executeQuery<T extends QueryReturnType = QueryReturnType>(
-    connectionSlug: string,
-    query: string,
-    rowsAsArray: boolean,
-    values?: SqlBoundValues
-  ): QueryResultOrError<T> {
-    // Opening the connection is inside the try: a handshake that fails is an
-    // answer like any other, and must travel encoded next to the result. Left
-    // outside, it escaped the `{ result, error }` envelope and reached the
-    // renderer as Electron's own "Error invoking remote method …".
-    try {
-      const connection = await this.#getConnection(connectionSlug);
-
-      log.debug(`Execute query on "${connectionSlug}": "${query}"`);
-
-      return {
-        result: await connection.query({
-          sql: query,
-          rowsAsArray,
-          values,
-          // Asked for per query, and never for the raw SQL of the editor: the
-          // rewriter does not know backticks, so a `:` inside a quoted
-          // identifier would be read as a parameter and corrupt the statement.
-          namedPlaceholders: values !== undefined,
-        }),
-        error: undefined,
-      };
-    } catch (error) {
-      return { result: undefined, error: encodeError(error) };
     }
   }
 
@@ -446,7 +426,7 @@ class ConnectionStack {
     this.#connections.clear();
   }
 
-  async #getConnection(connectionSlug: string): Promise<Connection> {
+  async #getConnection(connectionSlug: string): Promise<DriverConnection> {
     const pending = this.#connections.get(connectionSlug);
 
     if (pending) {
@@ -477,22 +457,12 @@ class ConnectionStack {
 
   async #connect(
     params: Omit<EncryptedConnectionObject, 'appState'>
-  ): Promise<Connection> {
-    const {
-      slug,
-      name: _name,
-      color: _color,
-      host,
-      port,
-      password,
-      ...rest
-    } = params;
+  ): Promise<DriverConnection> {
+    const { slug, engine, host, port, user, password } = params;
 
     log.debug(`Open connection to "${slug}"`);
 
-    // Lazy-load mysql2 only when the user actually opens a connection,
-    // to keep app startup light.
-    const { createConnection } = await import('mysql2/promise');
+    const driver = await loadDriver(engine);
 
     try {
       // the only place the stored password is read back: the configuration holds the ciphertext from end to end, so a keyring that cannot open it costs this connection and never the file
@@ -511,31 +481,16 @@ class ConnectionStack {
         );
       }
 
-      // `createConnection` already resolves on the `connect` event and rejects
-      // on `error`, so there is nothing left to await afterwards.
-      // TODO use a connection pool instead ? https://github.com/mysqljs/mysql?tab=readme-ov-file#establishing-connections
-      const connection = await createConnection({
-        ...rest,
-        host,
-        port,
-        password: decrypted.password,
-        connectTimeout: CONNECT_TIMEOUT_MS,
-      });
-
-      connection.on('end', () => {
-        log.debug(`Connection to "${slug}" ended`);
-        this.#connections.delete(slug);
-      });
-
-      connection.on('error', (err) => {
-        log.debug(`Received error from "${slug}" connection`);
-        log.error(err);
-
-        // end the connection from the stack. It will be regerenated on the next query
-        connection.end();
-      });
-
-      return connection;
+      return await driver.connect(
+        { host, port, user, password: decrypted.password },
+        {
+          connectTimeoutMs: CONNECT_TIMEOUT_MS,
+          onClosed: () => {
+            log.debug(`Connection to "${slug}" ended`);
+            this.#connections.delete(slug);
+          },
+        }
+      );
     } catch (error) {
       log.error(`Could not connect to "${slug}"`, error);
 

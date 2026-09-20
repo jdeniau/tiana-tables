@@ -287,6 +287,66 @@ describe('opening a connection', () => {
     expect(second.error).toBeDefined();
   });
 
+  test('a query on a socket the server dropped is retried on a fresh one', async () => {
+    const dropped = fakeConnection();
+
+    // what mysql2 answers on a connection the server closed under us, and it
+    // says it in the message alone — no code, no class
+    dropped.query.mockRejectedValue(
+      new Error("Can't add new command when connection is in closed state")
+    );
+
+    mocks.createConnection
+      .mockResolvedValueOnce(dropped)
+      .mockResolvedValueOnce(fakeConnection());
+
+    const { error } = await connectionStack.showDatabases();
+
+    expect(error).toBeUndefined();
+    expect(mocks.createConnection).toHaveBeenCalledTimes(2);
+  });
+
+  test('a socket that is gone twice is retried once, then answered', async () => {
+    const dropped = () => {
+      const connection = fakeConnection();
+
+      connection.query.mockRejectedValue(
+        new Error("Can't add new command when connection is in closed state")
+      );
+
+      return connection;
+    };
+
+    mocks.createConnection.mockResolvedValue(dropped());
+
+    const { error } = await connectionStack.showDatabases();
+
+    expect(error).toBeDefined();
+    // two handshakes and no more: a retry that loses its socket too is an
+    // answer, not a reason to keep opening connections
+    expect(mocks.createConnection).toHaveBeenCalledTimes(2);
+  });
+
+  test('a query that the server refused is answered, never retried', async () => {
+    const connection = fakeConnection();
+
+    connection.query.mockRejectedValue(
+      Object.assign(new Error("Table 'shop.nope' doesn't exist"), {
+        code: 'ER_NO_SUCH_TABLE',
+      })
+    );
+
+    mocks.createConnection.mockResolvedValue(connection);
+
+    const { error } = await connectionStack.showDatabases();
+
+    expect(error).toBeDefined();
+    // one handshake, one query: a statement the server understood and refused
+    // is not something a second connection would answer differently
+    expect(mocks.createConnection).toHaveBeenCalledTimes(1);
+    expect(connection.query).toHaveBeenCalledTimes(1);
+  });
+
   test('a failed attempt is forgotten, so a later query tries again', async () => {
     mocks.createConnection
       .mockRejectedValueOnce(timeout())

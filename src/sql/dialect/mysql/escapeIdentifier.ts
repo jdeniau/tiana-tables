@@ -23,7 +23,7 @@ import invariant from 'tiny-invariant';
  *
  * `mysql2.escapeId` is doubly out of reach anyway: the renderer cannot import
  * mysql2 at all, and the main process keeps it behind a lazy `await import()`
- * until a connection is actually opened (`src/sql/index.ts`).
+ * until a connection is actually opened (`src/sql/driver/mysql`).
  */
 export function escapeIdentifier(identifier: string): string {
   invariant(identifier.length > 0, 'An empty identifier cannot be escaped');
