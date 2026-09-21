@@ -43,7 +43,8 @@ const KIND_BY_TYPE: Readonly<Record<number, FieldKind>> = {
   // `CHAR`, and `BINARY` with it
   [Types.STRING]: FieldKind.String,
 
-  // a closed set of labels, which the grid colours like text
+  // never announced for a result column, measured: the server sends `STRING`
+  // and puts the enum in the flags. Here because mysql2 names them
   [Types.ENUM]: FieldKind.Text,
   [Types.SET]: FieldKind.Text,
   // one type for `TEXT` and `BLOB` both: only the value says which
@@ -64,13 +65,40 @@ const KIND_BY_TYPE: Readonly<Record<number, FieldKind>> = {
   [VECTOR]: FieldKind.Unknown,
 };
 
-/** The kind of a column, `Unknown` for a type the table does not cover. */
-export function toFieldKind(type: number | undefined): FieldKind {
+/** The collation of a column holding bytes rather than characters. */
+const BINARY_CHARSET = 63;
+
+/**
+ * The kind of a column, `Unknown` for a type the table does not cover.
+ *
+ * The collation decides the three pairs the wire type confuses, because each
+ * pair shares a single one: `BLOB` with `TEXT`, `VARBINARY` with `VARCHAR`,
+ * `BINARY` with `CHAR`. Measured on `tiana-dev-mysql`, where the binary half of
+ * each answers 63 and is handed over as bytes.
+ *
+ * The flags say nothing usable here: MariaDB's `JSON`, a `LONGTEXT` underneath,
+ * carries `BINARY_FLAG` while answering a string. And 63 alone means nothing
+ * either — `TIME`, `BIT` and `GEOMETRY` all carry it without holding text — so
+ * it is asked of the kinds that hold characters, and of no other.
+ */
+export function toFieldKind(
+  type: number | undefined,
+  characterSet: number | undefined
+): FieldKind {
   if (type === undefined) {
     return FieldKind.Unknown;
   }
 
-  return KIND_BY_TYPE[type] ?? FieldKind.Unknown;
+  const kind = KIND_BY_TYPE[type] ?? FieldKind.Unknown;
+
+  if (
+    characterSet === BINARY_CHARSET &&
+    (kind === FieldKind.String || kind === FieldKind.Text)
+  ) {
+    return FieldKind.Binary;
+  }
+
+  return kind;
 }
 
 export const testables = {

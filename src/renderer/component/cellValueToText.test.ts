@@ -53,4 +53,29 @@ describe('cellValueToText', () => {
   test('stringifies numbers', () => {
     expect(cellValueToText(42, FieldKind.Number)).toBe('42');
   });
+
+  /**
+   * A `Uint8Array` is an object, and `JSON.stringify` writes one out as a map
+   * of indexes to bytes — `{"0":98,"1":108,…}`, which is what the modal used
+   * to show of a `BLOB`. It gets the same literal as the grid, only longer.
+   */
+  test('writes bytes as the literal the grid shows', () => {
+    expect(
+      cellValueToText(
+        new Uint8Array([0x62, 0x6c, 0x6f, 0x62]),
+        FieldKind.Binary
+      )
+    ).toBe('0x626C6F62');
+  });
+
+  test('a value beyond what the window can hold says it was cut', () => {
+    const text = cellValueToText(
+      new Uint8Array(5000).fill(0xff),
+      FieldKind.Binary
+    );
+
+    expect(text.endsWith('\u2026')).toBe(true);
+    // two characters a byte, plus `0x`, plus the ellipsis
+    expect(text).toHaveLength(2 + 4096 * 2 + 1);
+  });
 });

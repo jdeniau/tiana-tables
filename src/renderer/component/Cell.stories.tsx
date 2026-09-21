@@ -108,10 +108,10 @@ export const WithDatetimeType: Story = {
   },
 };
 
-export const WithBlobType: Story = {
+export const WithTextType: Story = {
   args: {
     kind: FieldKind.Text,
-    value: 'BLOB value',
+    value: 'TEXT value',
   },
 };
 
@@ -126,7 +126,7 @@ export const WithJSONType: Story = {
 
 // The only string that reaches a JSON cell is a JSON scalar: mysql2 parses
 // `CAST('"foo"' AS JSON)` into `foo`, which is rendered without its quotes.
-// (JSON stored in a TEXT column is announced as a blob and goes to `BlobCell`.)
+// (JSON stored in a TEXT column is announced as text and rendered as such.)
 export const WithJSONScalar: Story = {
   args: {
     kind: FieldKind.Json,
@@ -138,6 +138,42 @@ export const WithENUMType: Story = {
   args: {
     kind: FieldKind.Text,
     value: 'ENUM value',
+  },
+};
+
+// A `BLOB`, a `VARBINARY` or a `BIT`: bytes, with no encoding to read them by,
+// shown as the hexadecimal literal a server accepts back.
+export const WithBinaryType: Story = {
+  args: {
+    kind: FieldKind.Binary,
+    value: new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  },
+};
+
+// Past 150 bytes the literal is cut: the cell clips long before, and each byte
+// costs two characters.
+export const WithLongBinaryType: Story = {
+  args: {
+    kind: FieldKind.Binary,
+    value: new Uint8Array(1000).map((_, index) => index % 256),
+  },
+};
+
+// `TIME` is answered as `HH:MM:SS` and not as a Date — a duration has no day to
+// sit on. It used to throw, and the throw blanked the whole grid.
+export const WithTimeType: Story = {
+  args: {
+    kind: FieldKind.Time,
+    value: '123:45:56',
+  },
+};
+
+// A `GEOMETRY` column, answered as a plain object: no kind describes it, and
+// the shape of the value is what gets it rendered.
+export const WithUnknownType: Story = {
+  args: {
+    kind: FieldKind.Unknown,
+    value: { x: 1, y: 2 },
   },
 };
 

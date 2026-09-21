@@ -20,10 +20,12 @@ export type CellEditability =
 const EDITABLE: CellEditability = { editable: true };
 
 /**
- * Types whose values are bytes rather than text. `blob` and `text` share a
- * single wire type in the protocol, so the grid cannot tell them apart — only
- * `DATA_TYPE` can, which is why editability is decided from the schema and not
- * from the type of the field.
+ * Types whose values are bytes rather than text.
+ *
+ * Read from `DATA_TYPE` and not from the kind of the field, even though the
+ * kind now tells a `BLOB` from a `TEXT`: `GEOMETRY` is bytes here and
+ * `Unknown` there, and a column with no schema row is already unwritable for
+ * want of one. The schema stays the single source every other reason reads.
  */
 const BINARY_DATA_TYPES: ReadonlySet<string> = new Set([
   DataType.Binary,

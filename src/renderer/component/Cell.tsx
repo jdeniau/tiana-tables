@@ -3,6 +3,7 @@ import { styled } from 'styled-components';
 import { FieldKind } from '../../sql/resultField';
 import { constantForeground, foreground, stringForeground } from '../theme';
 import { formatDate, formatDateTime } from '../utils/dateFormatter';
+import toHexLiteral from './hexLiteral';
 
 interface TableCellFactoryProps {
   kind: FieldKind;
@@ -112,19 +113,19 @@ function TextCell({ value }: CellProps<string>) {
 }
 
 /**
- * mysql2 parses JSON columns into plain values (`jsonStrings` is off), so a
- * MySQL `JSON` column arrives here already parsed — an object or an array,
- * which React refuses to render ("Objects are not valid as a React child").
- * It is serialized back to a compact one-liner; the indented form belongs to
- * the detail modal (see `cellValueToText`), and the grid body is too hot for
- * anything more (see the performance note in TableGrid).
+ * Anything the driver handed over as an object, which React refuses to render
+ * ("Objects are not valid as a React child"). A MySQL `JSON` column is the
+ * common one — mysql2 parses it, `jsonStrings` being off — and a `GEOMETRY`
+ * column the other, answered as `{ x, y }` (measured). It is serialized back
+ * to a compact one-liner; the indented form belongs to the detail modal (see
+ * `cellValueToText`), and the grid body is too hot for anything more (see the
+ * performance note in TableGrid).
  *
  * A `string` here is a JSON *scalar*: `CAST('"foo"' AS JSON)` parses to
  * `'foo'`, and re-serializing it would show the quotes. JSON stored in a text
  * column never reaches this branch — it is announced as TEXT/BLOB and routed
- * to `TextCell`. Neither does anything on MariaDB, where `JSON` is only an
- * alias for `LONGTEXT`: the server never announces a JSON column, so this
- * component is MySQL-only.
+ * to `TextCell`, and on MariaDB, where `JSON` is only an alias for `LONGTEXT`,
+ * so is a real JSON column.
  */
 function JsonCell({ value }: CellProps<unknown>) {
   const text = typeof value === 'string' ? value : JSON.stringify(value);
@@ -141,6 +142,38 @@ function JsonCell({ value }: CellProps<unknown>) {
   );
 }
 
+/**
+ * How many bytes of a byte column are worth turning into text: the cell clips
+ * at `max-width` long before that, and each byte costs two characters.
+ */
+const MAX_BINARY_PREVIEW_BYTES = 150;
+
+const BinarySpan = styled(BaseCell)`
+  color: ${constantForeground};
+`;
+
+function BinaryCell({ value }: CellProps<Uint8Array>) {
+  return (
+    <BinarySpan hasTitle>
+      {toHexLiteral(value, MAX_BINARY_PREVIEW_BYTES)}
+    </BinarySpan>
+  );
+}
+
+/**
+ * What to draw in a cell, decided in three tiers: what the value *is*, then
+ * what its column is *for*, then a last resort that always renders something.
+ *
+ * The order is not a preference, it is a necessity. A kind cannot separate a
+ * `TEXT` column from a `BLOB` — MySQL announces one type for both, and only
+ * the collation, which the driver already read, tells them apart on a declared
+ * column. It says nothing at all about a `CAST` or a function result. So the
+ * shape of the value is asked first, where it is the only thing that knows.
+ *
+ * The kind then says what a primitive is for, and what is left falls through
+ * to text. A cell renders something whatever arrives: blanking the grid on a
+ * type nobody thought of is the one outcome worth ruling out.
+ */
 const TableCellFactory = memo(function TableCellFactory({
   kind,
   value,
@@ -149,32 +182,38 @@ const TableCellFactory = memo(function TableCellFactory({
     return <NullCell />;
   }
 
+  // a `Buffer` crosses the bridge as the `Uint8Array` it extends
+  if (value instanceof Uint8Array) {
+    return <BinaryCell value={value} />;
+  }
+
+  if (value instanceof Date) {
+    // the value already settled that it is a date; the kind only picks a format
+    return kind === FieldKind.Date ? (
+      <DateCell value={value} />
+    ) : (
+      <DatetimeCell value={value} />
+    );
+  }
+
+  if (typeof value === 'object') {
+    return <JsonCell value={value} />;
+  }
+
   switch (kind) {
     case FieldKind.Number:
       return <NumberCell value={value} />;
 
-    case FieldKind.DateTime:
-      return <DatetimeCell value={value} />;
-
-    case FieldKind.Date:
-      return <DateCell value={value} />;
-
     case FieldKind.String:
       return <StringCell value={value} />;
-
-    case FieldKind.Text:
-      return <TextCell value={value} />;
 
     case FieldKind.Json:
       return <JsonCell value={value} />;
 
-    case FieldKind.Time:
-    case FieldKind.Boolean:
-    case FieldKind.Binary:
-    case FieldKind.Array:
-    case FieldKind.Unknown:
+    // `Text` and everything the app has no rendering of: a `TIME` reads
+    // `HH:MM:SS`, a boolean `true`, and an unknown type whatever it answered
     default:
-      throw new Error(`Type ${kind} is not managed for now`);
+      return <TextCell value={String(value)} />;
   }
 });
 

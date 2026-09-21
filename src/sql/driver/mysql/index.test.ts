@@ -4,13 +4,20 @@ import { testables } from './index';
 
 const { toResultFields } = testables;
 
-/** the three fields the conversion reads, which the driver keeps to itself */
+/** the four fields the conversion reads, which the driver keeps to itself */
 function column(overrides: {
   name?: string;
   orgTable?: string;
   type?: number;
+  characterSet?: number;
 }) {
-  return { name: 'c', orgTable: '', type: 253, ...overrides };
+  return {
+    name: 'c',
+    orgTable: '',
+    type: 253,
+    characterSet: 224,
+    ...overrides,
+  };
 }
 
 describe('toResultFields', () => {
@@ -49,5 +56,13 @@ describe('toResultFields', () => {
   // mysql2 types it as an array, and answers `undefined` for a write
   test('a statement that returned no rows has no columns', () => {
     expect(toResultFields(undefined)).toEqual([]);
+  });
+
+  // the collation is read too, or a `VARBINARY` would read as a string — the
+  // two share type 253, and only 63 separates them
+  test('hands the collation over, not only the type', () => {
+    const [field] = toResultFields([column({ characterSet: 63 })]);
+
+    expect(field.kind).toBe(FieldKind.Binary);
   });
 });
