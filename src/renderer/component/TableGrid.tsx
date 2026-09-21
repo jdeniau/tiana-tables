@@ -20,7 +20,7 @@ import {
 import type { ReactTable, Row as TanstackRow } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Empty } from 'antd';
-import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
+import type { FieldPacket } from 'mysql2/promise';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import type { ColumnWidthByColumn } from '../../configuration/type';
@@ -29,7 +29,7 @@ import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import { isJsonColumn } from '../../sql/columnEditing';
 import type { Dialect } from '../../sql/dialect/types';
-import type { ColumnDetail } from '../../sql/types';
+import type { ColumnDetail, ResultRow } from '../../sql/types';
 import type { PrimaryKeyPart } from '../../sql/updateCell';
 import { useDialect } from '../hooks/useDialect';
 import {
@@ -74,9 +74,9 @@ const leftVar = (index: number): string => `--tg-l-${index}`;
 /** subscribes the grid to no table state: the widths reach the DOM on their own */
 const NO_TABLE_STATE = (): Record<string, never> => ({});
 
-const EMPTY_DATA: RowDataPacket[] = [];
+const EMPTY_DATA: ResultRow[] = [];
 
-interface TableGridProps<R extends RowDataPacket> {
+interface TableGridProps<R extends ResultRow> {
   rowsAsArray?: boolean;
   result: null | R[];
   fields: null | FieldPacket[];
@@ -114,7 +114,7 @@ interface TableGridProps<R extends RowDataPacket> {
  * A column the caller renders itself.
  * `render` runs on every mounted cell, so a rich control belongs in a grid of few rows — see the performance note below.
  */
-export interface ExtraColumn<Row extends RowDataPacket> {
+export interface ExtraColumn<Row extends ResultRow> {
   id: string;
   header: string;
   size: number;
@@ -126,29 +126,47 @@ export interface ExtraColumn<Row extends RowDataPacket> {
 const NO_EXTRA_COLUMNS: Array<never> = [];
 
 /** `fieldIndex` indexes `fields`, not the columns on screen. */
-type ColumnSource<Row extends RowDataPacket> =
+type ColumnSource<Row extends ResultRow> =
   | { field: FieldPacket; fieldIndex: number; extra?: undefined }
   | { field?: undefined; fieldIndex: -1; extra: ExtraColumn<Row> };
 
+/** A scalar the driver answers with, and binds back unchanged. */
+function isPrimaryKeyValue(value: unknown): value is PrimaryKeyPart['value'] {
+  return (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    value instanceof Date
+  );
+}
+
 /**
- * What identifies the row of a cell, or `null` when no primary key does.
+ * What identifies the row of a cell, or `null` when nothing does.
  *
- * The values go back as they were read, with no conversion: a `PRIMARY KEY`
- * column is `NOT NULL` and holds a scalar the driver answers with as a number,
- * a string or a `Date` — all three of which mysql2 binds back. A `BINARY` key
- * would be the exception, arriving as bytes, but such a table does not reach
- * this point: the grid renders that column through `StringCell`, which hands
- * the bytes straight to React. Nothing to guard against here.
+ * A key part that is not a scalar — a `BINARY` column, arriving as bytes —
+ * gives up the whole key: the row reads as read-only rather than being written
+ * against a value reshaped on the way out.
  */
 function buildRowKey(
-  row: RowDataPacket,
+  row: ResultRow,
   primaryKeys: Array<string> | undefined
 ): Array<PrimaryKeyPart> | null {
   if (!primaryKeys || primaryKeys.length === 0) {
     return null;
   }
 
-  return primaryKeys.map((column) => ({ column, value: row[column] }));
+  const parts: Array<PrimaryKeyPart> = [];
+
+  for (const column of primaryKeys) {
+    const value = row[column];
+
+    if (!isPrimaryKeyValue(value)) {
+      return null;
+    }
+
+    parts.push({ column, value });
+  }
+
+  return parts;
 }
 
 /**
@@ -164,7 +182,7 @@ function buildRowKey(
  * into the single element they style. See the CLAUDE.md gotcha for the
  * benchmark details.
  */
-function TableGrid<Row extends RowDataPacket>({
+function TableGrid<Row extends ResultRow>({
   fields,
   result,
   primaryKeys,
@@ -505,13 +523,13 @@ export interface ColumnMeta {
    */
   detail: ColumnDetail | undefined;
   /** what an extra column renders, `undefined` for a column of the result */
-  render?: (row: RowDataPacket) => ReactNode;
+  render?: (row: ResultRow) => ReactNode;
 }
 
 /** opens the detail modal on a cell, from the `<td>` that was double-clicked */
 type ShowCellDetail = (detail: CellDetail, cell: HTMLTableCellElement) => void;
 
-interface TableBodyProps<Row extends RowDataPacket> {
+interface TableBodyProps<Row extends ResultRow> {
   table: ReactTable<typeof features, Row, ReturnType<typeof NO_TABLE_STATE>>;
   columnsMeta: Array<ColumnMeta>;
   rowsAsArray: boolean;
@@ -523,7 +541,7 @@ interface TableBodyProps<Row extends RowDataPacket> {
 
 // keep the virtualizer in the lowest component possible: it re-renders on
 // every scroll event, so only the body must be affected
-function TableBody<Row extends RowDataPacket>({
+function TableBody<Row extends ResultRow>({
   table,
   columnsMeta,
   rowsAsArray,
@@ -563,7 +581,7 @@ function TableBody<Row extends RowDataPacket>({
   );
 }
 
-interface BodyRowProps<Row extends RowDataPacket> {
+interface BodyRowProps<Row extends ResultRow> {
   row: TanstackRow<typeof features, Row>;
   start: number;
   columnsMeta: Array<ColumnMeta>;
@@ -573,7 +591,7 @@ interface BodyRowProps<Row extends RowDataPacket> {
   onCellContextMenu: ((target: CellFilterTarget) => void) | undefined;
 }
 
-function BodyRowInner<Row extends RowDataPacket>({
+function BodyRowInner<Row extends ResultRow>({
   row,
   start,
   columnsMeta,

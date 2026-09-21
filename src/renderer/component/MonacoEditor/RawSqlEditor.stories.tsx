@@ -84,7 +84,6 @@ JOIN
     (Story) => (
       <ForeignKeysContextProvider
         keyColumnUsageRows={[
-          // @ts-expect-error issue with contstructor name
           {
             TABLE_NAME: 'employe',
             COLUMN_NAME: 'title_id',
@@ -92,7 +91,6 @@ JOIN
             REFERENCED_COLUMN_NAME: 'id',
             CONSTRAINT_NAME: 'employe_title_id_fkey',
           },
-          // @ts-expect-error issue with contstructor name
           {
             TABLE_NAME: 'planning',
             COLUMN_NAME: 'employe_id',

@@ -3,7 +3,6 @@ import { ForeignKeysHelper } from './ForeignKeysHelper';
 import { KeyColumnUsageRow } from './types';
 
 const FOREIGN_KEYS: Array<KeyColumnUsageRow> = [
-  // @ts-expect-error issue with contstructor name
   {
     TABLE_NAME: 'employee',
     COLUMN_NAME: 'title_id',
@@ -11,7 +10,6 @@ const FOREIGN_KEYS: Array<KeyColumnUsageRow> = [
     REFERENCED_COLUMN_NAME: 'id',
     CONSTRAINT_NAME: 'employee_title_id_fkey',
   },
-  // @ts-expect-error issue with contstructor name
   {
     TABLE_NAME: 'planning',
     COLUMN_NAME: 'employee_id',

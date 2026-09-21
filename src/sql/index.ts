@@ -1,5 +1,4 @@
 import log from 'electron-log';
-import type { ResultSetHeader } from 'mysql2/promise';
 import invariant from 'tiny-invariant';
 import { getConfiguration } from '../configuration';
 import { decryptPassword } from '../configuration/encryption';
@@ -33,6 +32,7 @@ import {
   ShowTableStatusResult,
   SqlBoundValues,
   TableStructureResult,
+  WriteResult,
 } from './types';
 import {
   CellReadRow,
@@ -264,7 +264,7 @@ class ConnectionStack {
   ): ResultOrError<UpdateCellOutcome> {
     const update = buildUpdateCellQuery(request);
 
-    const updateResult = await this.executeQueryAndRetry<ResultSetHeader>(
+    const updateResult = await this.executeQueryAndRetry<WriteResult>(
       update.sql,
       false,
       update.values
@@ -360,14 +360,15 @@ class ConnectionStack {
 
         log.debug(`Execute query on "${connectionSlug}": "${query}"`);
 
-        return {
-          result: await connection.query<T>({
-            sql: query,
-            rowsAsArray,
-            values,
-          }),
-          error: undefined,
-        };
+        const [rows, fields] = await connection.query({
+          sql: query,
+          rowsAsArray,
+          values,
+        });
+
+        // nothing between here and the socket read the query, so the shape is
+        // the caller's to name
+        return { result: [rows as T, fields], error: undefined };
       } catch (error) {
         // A socket the server dropped is worth one fresh connection; a
         // statement it refused is not, and neither is a second drop. Only the

@@ -2,12 +2,13 @@ import { ComponentProps, useEffect, useState } from 'react';
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Types } from 'mysql';
-import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
+import type { FieldPacket } from 'mysql2/promise';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
+import type { ResultRow } from '../../sql/types';
 import { ColumnDetail, KeyColumnUsageRow } from '../../sql/types';
 import type { UpdateCellRequest } from '../../sql/updateCell';
 import {
@@ -66,7 +67,7 @@ function makeFields(columnCount: number): FieldPacket[] {
   return fields.slice(0, columnCount);
 }
 
-function makeRows(rowCount: number, columnCount: number): RowDataPacket[] {
+function makeRows(rowCount: number, columnCount: number): ResultRow[] {
   const random = mulberry32(42);
   const fields = makeFields(columnCount);
 
@@ -103,7 +104,7 @@ function makeRows(rowCount: number, columnCount: number): RowDataPacket[] {
       }
     }
 
-    return row as RowDataPacket;
+    return row as ResultRow;
   });
 }
 

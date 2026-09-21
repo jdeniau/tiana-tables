@@ -1,6 +1,6 @@
 import invariant from 'tiny-invariant';
 import { DatabaseEngine } from '../engine';
-import type { QueryResult, QueryReturnType, SqlBoundValues } from '../types';
+import type { QueryResult, SqlBoundValues } from '../types';
 
 /**
  * What a server needs to be reached. Named one by one rather than spread from
@@ -29,7 +29,8 @@ interface DriverQuery {
 }
 
 export interface DriverConnection {
-  query<T extends QueryReturnType>(statement: DriverQuery): QueryResult<T>;
+  /** Whatever the server answered: narrowing it is the caller's claim, never a driver's. */
+  query(statement: DriverQuery): QueryResult;
   end(): Promise<void>;
 
   /**

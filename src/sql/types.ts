@@ -1,18 +1,29 @@
-import {
-  FieldPacket,
-  ProcedureCallPacket,
-  ResultSetHeader,
-  RowDataPacket,
-} from 'mysql2/promise';
+import { FieldPacket } from 'mysql2/promise';
 import { ConnectionColor } from '../configuration/connectionColor';
 import { DatabaseEngine } from './engine';
 
-export type QueryReturnType =
-  | ResultSetHeader
-  | ResultSetHeader[]
-  | RowDataPacket[]
-  | RowDataPacket[][]
-  | ProcedureCallPacket;
+/**
+ * One row of a result, by column name.
+ *
+ * `rowsAsArray` answers arrays instead, carried under this same type. The raw
+ * SQL page asks for it because a name does not identify a column there:
+ * `SELECT a.id, b.id` has two, and an object would keep one.
+ */
+export type ResultRow = Record<string, unknown>;
+
+/** What a statement that changed rows answered, whichever engine ran it. */
+export interface WriteResult {
+  affectedRows: number;
+  /** `null` where no key was generated: PostgreSQL only answers one on `RETURNING` */
+  insertId: number | string | null;
+}
+
+export type QueryReturnType = ResultRow[] | WriteResult;
+
+/** Whether a statement changed rows rather than returned them. */
+export function isWriteResult(result: QueryReturnType): result is WriteResult {
+  return !Array.isArray(result);
+}
 
 export type QueryResult<T extends QueryReturnType = QueryReturnType> = Promise<
   [T, FieldPacket[]]
@@ -38,12 +49,12 @@ export type ConnectionObjectWithoutSlug = Omit<ConnectionObject, 'slug'>;
 /**
  * Represent the return type of "SHOW DATABASES;" query.
  */
-interface ShowDatabaseRow extends RowDataPacket {
+interface ShowDatabaseRow extends ResultRow {
   Database: string;
 }
 export type ShowDatabasesResult = ShowDatabaseRow[];
 
-export interface ShowTableStatus extends RowDataPacket {
+export interface ShowTableStatus extends ResultRow {
   Name: string;
   Rows: number;
   Data_length: number;
@@ -53,7 +64,7 @@ export interface ShowTableStatus extends RowDataPacket {
 
 export type ShowTableStatusResult = ShowTableStatus[];
 
-export interface KeyColumnUsageRow extends RowDataPacket {
+export interface KeyColumnUsageRow extends ResultRow {
   TABLE_NAME: string;
   COLUMN_NAME: string;
   CONSTRAINT_NAME: string;
@@ -61,7 +72,7 @@ export interface KeyColumnUsageRow extends RowDataPacket {
   REFERENCED_COLUMN_NAME: string | null;
 }
 
-export interface ColumnDetail extends RowDataPacket {
+export interface ColumnDetail extends ResultRow {
   Table: string;
   Column: string;
   /** the bare type, e.g. `varchar`, `enum`, `text` */
@@ -86,7 +97,7 @@ export type ColumnDetailResult = ColumnDetail[];
  * (`Type`, `Null`, `Default`) rather than as INFORMATION_SCHEMA's own
  * `SCREAMING_SNAKE_CASE`.
  */
-interface TableStructureRow extends RowDataPacket {
+interface TableStructureRow extends ResultRow {
   Column: string;
   /** the whole declaration, e.g. `varchar(255)` or `enum('a','b')` */
   Type: string;
@@ -132,6 +143,6 @@ export interface ForeignKeyRow extends KeyColumnUsageRow {
   REFERENCED_COLUMN_NAME: string;
 }
 
-export interface ShowKeyRow extends RowDataPacket {
+export interface ShowKeyRow extends ResultRow {
   Column_name: string;
 }

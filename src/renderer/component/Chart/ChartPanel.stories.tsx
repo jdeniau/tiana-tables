@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Types } from 'mysql';
-import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
+import type { FieldPacket } from 'mysql2/promise';
+import type { ResultRow } from '../../../sql/types';
 import ChartPanel from './ChartPanel';
 
 function makeField(name: string, type: number): FieldPacket {
@@ -21,7 +22,7 @@ const ROWS = Array.from({ length: 30 }, (_, index) => [
   new Date(2026, 0, index + 1),
   40 + Math.round(30 * Math.sin(index / 3)),
   (500 + 220 * Math.cos(index / 4)).toFixed(2),
-]) as unknown as RowDataPacket[];
+]) as unknown as ResultRow[];
 
 const meta: Meta<typeof ChartPanel> = {
   component: ChartPanel,
@@ -50,7 +51,7 @@ export const SingleSeries: Story = {
     fields: FIELDS.slice(0, 2),
     result: ROWS.map((row) =>
       (row as unknown as unknown[]).slice(0, 2)
-    ) as unknown as RowDataPacket[],
+    ) as unknown as ResultRow[],
   },
 };
 
@@ -63,6 +64,6 @@ export const Categorical: Story = {
       ['Belgium', 74],
       ['Canada', 96],
       ['Japan', 51],
-    ] as unknown as RowDataPacket[],
+    ] as unknown as ResultRow[],
   },
 };

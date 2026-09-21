@@ -1,5 +1,6 @@
 import { Types } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
-import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
+import type { FieldPacket } from 'mysql2/promise';
+import type { ResultRow } from '../../../sql/types';
 import { formatDate, formatDateTime } from '../../utils/dateFormatter';
 import type { ChartConfig } from './chartConfig';
 
@@ -35,7 +36,7 @@ export interface BarData {
  * `TableGrid` makes the same distinction.
  */
 function readCell(
-  row: RowDataPacket,
+  row: ResultRow,
   index: number,
   field: FieldPacket,
   rowsAsArray: boolean
@@ -90,7 +91,7 @@ export function toAxisLabel(value: unknown, isDateOnly: boolean): string {
 }
 
 interface Input {
-  rows: readonly RowDataPacket[];
+  rows: readonly ResultRow[];
   fields: readonly FieldPacket[];
   config: ChartConfig;
   rowsAsArray: boolean;

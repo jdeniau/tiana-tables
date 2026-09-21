@@ -1,6 +1,7 @@
 import { Types } from 'mysql';
-import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
+import type { FieldPacket } from 'mysql2/promise';
 import { describe, expect, test } from 'vitest';
+import type { ResultRow } from '../../../sql/types';
 import type { ChartConfig } from './chartConfig';
 import {
   MAX_POINTS,
@@ -26,7 +27,7 @@ const CONFIG: ChartConfig = { kind: 'line', x: 0, y: [1, 2] };
 const ROWS = [
   [new Date(2026, 0, 1), 3, '10.50'],
   [new Date(2026, 0, 2), 5, '20.25'],
-] as unknown as RowDataPacket[];
+] as unknown as ResultRow[];
 
 describe('toNumber', () => {
   test.each([
@@ -51,7 +52,9 @@ describe('toNumber', () => {
 
 describe('toAxisLabel', () => {
   test('a DATE column drops the time part', () => {
-    expect(toAxisLabel(new Date(2026, 0, 2, 15, 4, 5), true)).toBe('2026-01-02');
+    expect(toAxisLabel(new Date(2026, 0, 2, 15, 4, 5), true)).toBe(
+      '2026-01-02'
+    );
   });
 
   test('any other temporal column keeps it', () => {
@@ -96,7 +99,7 @@ describe('toLineSeries', () => {
   test('reads rows by column name when they are objects', () => {
     const rows = [
       { day: new Date(2026, 0, 1), total: 3, revenue: '10.50' },
-    ] as unknown as RowDataPacket[];
+    ] as unknown as ResultRow[];
 
     const { series } = toLineSeries({
       rows,
@@ -112,7 +115,7 @@ describe('toLineSeries', () => {
     const rows = [
       [new Date(2026, 0, 1), 3, null],
       [new Date(2026, 0, 2), null, '1'],
-    ] as unknown as RowDataPacket[];
+    ] as unknown as ResultRow[];
 
     const { series } = toLineSeries({
       rows,
@@ -130,7 +133,7 @@ describe('toLineSeries', () => {
       new Date(2026, 0, 1),
       index,
       '1',
-    ]) as unknown as RowDataPacket[];
+    ]) as unknown as ResultRow[];
 
     const { series, isTruncated } = toLineSeries({
       rows,
@@ -165,9 +168,7 @@ describe('toBarData', () => {
   });
 
   test('a NULL leaves the key out rather than writing a zero', () => {
-    const rows = [
-      [new Date(2026, 0, 1), null, '1'],
-    ] as unknown as RowDataPacket[];
+    const rows = [[new Date(2026, 0, 1), null, '1']] as unknown as ResultRow[];
 
     const { data } = toBarData({
       rows,

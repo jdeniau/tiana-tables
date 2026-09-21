@@ -26,12 +26,7 @@ export const Primary: Story = {
   decorators: [
     (Story) => (
       <DatabaseListContextProvider
-        databaseList={[
-          // @ts-expect-error don't want all data, only the name
-          { Database: 'mysql' },
-          // @ts-expect-error don't want all data, only the name
-          { Database: 'users' },
-        ]}
+        databaseList={[{ Database: 'mysql' }, { Database: 'users' }]}
       >
         <TableListContextProvider
           tableList={[

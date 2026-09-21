@@ -1,5 +1,4 @@
-import type { RowDataPacket } from 'mysql2/promise';
-import type { SqlBoundValue } from './types';
+import type { ResultRow, SqlBoundValue } from './types';
 
 /**
  * The contract of writing one cell: what the renderer asks for, and what it is
@@ -49,7 +48,7 @@ export type UpdateCellOutcome =
  * One row of the read-back query of `buildReadCellQuery`. A result shape, but
  * one that exists only to serve this action, so it lives with it.
  */
-export interface CellReadRow extends RowDataPacket {
+export interface CellReadRow extends ResultRow {
   value: unknown;
   /** 1 when the cell still holds the value the guard was built on, 0 otherwise */
   guardMatches: number;
