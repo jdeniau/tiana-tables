@@ -1,3 +1,4 @@
+import { FieldKind } from '../../../sql/resultField';
 import type { SqlBoundValue } from '../../../sql/types';
 import cellValueToText from '../cellValueToText';
 import { looksLikeJson } from './editorKind';
@@ -26,11 +27,11 @@ export interface EditableValue {
  */
 export function toEditableValue(
   value: unknown,
-  fieldType: number | undefined
+  fieldKind: FieldKind
 ): EditableValue {
   return {
     isNull: value === null || value === undefined,
-    text: cellValueToText(value, fieldType),
+    text: cellValueToText(value, fieldKind),
   };
 }
 

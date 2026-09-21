@@ -1,13 +1,12 @@
 import { ComponentProps, useEffect, useState } from 'react';
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Types } from 'mysql';
-import type { FieldPacket } from 'mysql2/promise';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
+import { FieldKind, type ResultField } from '../../sql/resultField';
 import type { ResultRow } from '../../sql/types';
 import { ColumnDetail, KeyColumnUsageRow } from '../../sql/types';
 import type { UpdateCellRequest } from '../../sql/updateCell';
@@ -44,24 +43,24 @@ const WORDS = [
   'elit',
 ];
 
-function makeField(name: string, type: number): FieldPacket {
-  return { name, type, table: 'items' } as unknown as FieldPacket;
+function makeField(name: string, kind: FieldKind): ResultField {
+  return { name, kind, table: 'items' };
 }
 
-function makeFields(columnCount: number): FieldPacket[] {
+function makeFields(columnCount: number): ResultField[] {
   const fields = [
-    makeField('id', Types.LONG),
-    makeField('name', Types.VAR_STRING),
-    makeField('linkedId', Types.LONG),
-    makeField('price', Types.NEWDECIMAL),
-    makeField('createdAt', Types.DATETIME),
-    makeField('payload', Types.JSON),
-    makeField('description', Types.VAR_STRING),
-    makeField('quantity', Types.LONG),
+    makeField('id', FieldKind.Number),
+    makeField('name', FieldKind.String),
+    makeField('linkedId', FieldKind.Number),
+    makeField('price', FieldKind.Number),
+    makeField('createdAt', FieldKind.DateTime),
+    makeField('payload', FieldKind.Json),
+    makeField('description', FieldKind.String),
+    makeField('quantity', FieldKind.Number),
   ];
 
   for (let i = fields.length; i < columnCount; i++) {
-    fields.push(makeField(`extra_${i}`, Types.VAR_STRING));
+    fields.push(makeField(`extra_${i}`, FieldKind.String));
   }
 
   return fields.slice(0, columnCount);
@@ -293,20 +292,19 @@ export const WithFilterContextMenu: Story = {
  * the text that was sent.
  */
 function readBack(
-  fields: FieldPacket[],
+  fields: ResultField[],
   { column, newValue }: UpdateCellRequest
 ): unknown {
   if (newValue === null) {
     return null;
   }
 
-  switch (fields.find((field) => field.name === column)?.type) {
-    case Types.DATETIME:
+  switch (fields.find((field) => field.name === column)?.kind) {
+    case FieldKind.DateTime:
       return new Date(newValue);
-    case Types.JSON:
+    case FieldKind.Json:
       return JSON.parse(newValue);
-    case Types.LONG:
-    case Types.NEWDECIMAL:
+    case FieldKind.Number:
       return Number(newValue);
     default:
       return newValue;

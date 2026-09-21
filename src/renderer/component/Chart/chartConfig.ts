@@ -1,5 +1,4 @@
-import { Types } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
-import type { FieldPacket } from 'mysql2/promise';
+import { FieldKind, type ResultField } from '../../../sql/resultField';
 
 export type ChartKind = 'line' | 'bar';
 
@@ -25,31 +24,12 @@ export enum ChartUnavailableReason {
   NoNumericColumn = 'noNumericColumn',
 }
 
-/**
- * The protocol types that hold a number.
- *
- * Same grouping as the `NumberCell` branch of `Cell.tsx`. The types that file
- * throws on — TIME, YEAR, BIT, GEOMETRY — are simply absent here: an unplottable
- * column is one we do not offer, never one we raise on.
- */
-const NUMERIC_TYPES: ReadonlySet<number> = new Set([
-  Types.TINY, // TINYINT
-  Types.SHORT, // SMALLINT
-  Types.LONG, // INT
-  Types.INT24, // MEDIUMINT
-  Types.FLOAT,
-  Types.DOUBLE,
-  Types.DECIMAL,
-  Types.NEWDECIMAL,
-  Types.LONGLONG, // BIGINT
-]);
-
-function isNumericField(field: FieldPacket): boolean {
-  return field.type !== undefined && NUMERIC_TYPES.has(field.type);
+function isNumericField(field: ResultField): boolean {
+  return field.kind === FieldKind.Number;
 }
 
 export function numericFieldIndexes(
-  fields: readonly FieldPacket[]
+  fields: readonly ResultField[]
 ): Array<number> {
   return fields.reduce<Array<number>>(
     (indexes, field, index) =>
@@ -67,7 +47,7 @@ export function numericFieldIndexes(
  * numeric column charts against nothing.
  */
 export function defaultChartConfig(
-  fields: readonly FieldPacket[]
+  fields: readonly ResultField[]
 ): ChartConfig | null {
   const numeric = numericFieldIndexes(fields);
 
@@ -91,7 +71,7 @@ export function chartUnavailableReason({
   isTabular: boolean;
   hasLimit: boolean;
   rowCount: number;
-  fields: readonly FieldPacket[];
+  fields: readonly ResultField[];
 }): ChartUnavailableReason | null {
   if (!isTabular) {
     return ChartUnavailableReason.NotTabular;

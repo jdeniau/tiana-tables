@@ -1,21 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Types } from 'mysql';
-import type { FieldPacket } from 'mysql2/promise';
 import { Fetcher } from 'react-router';
 import reactRouterDecorator from '../../../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../../../contexts/AllColumnsContext';
 import { ForeignKeysContextProvider } from '../../../../contexts/ForeignKeysContext';
 import { SqlError } from '../../../../sql/errorSerializer';
+import { FieldKind, type ResultField } from '../../../../sql/resultField';
 import type { ResultRow, WriteResult } from '../../../../sql/types';
 import RawSqlResult, {
   SqlActionReturnTypes,
   StatementOutcome,
 } from './RowDataPacketResult';
 
-const FIELDS = [
-  { name: 'id', type: Types.LONG, table: 'employe' },
-  { name: 'name', type: Types.VAR_STRING, table: 'employe' },
-] as unknown as FieldPacket[];
+const FIELDS: ResultField[] = [
+  { name: 'id', kind: FieldKind.Number, table: 'employe' },
+  { name: 'name', kind: FieldKind.String, table: 'employe' },
+];
 
 const ROWS = [
   { id: 1, name: 'Ada' },

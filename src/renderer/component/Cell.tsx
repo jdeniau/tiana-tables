@@ -1,11 +1,11 @@
 import { MouseEvent, ReactNode, memo } from 'react';
-import { Types } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
 import { styled } from 'styled-components';
+import { FieldKind } from '../../sql/resultField';
 import { constantForeground, foreground, stringForeground } from '../theme';
 import { formatDate, formatDateTime } from '../utils/dateFormatter';
 
 interface TableCellFactoryProps {
-  type: number | undefined;
+  kind: FieldKind;
   value: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
@@ -14,24 +14,6 @@ interface TableCellFactoryProps {
 // titles and an unwrapped wall of text is unreadable anyway. Bigger values
 // (JSON, TEXT, blobs) need a real detail view, not a tooltip.
 const MAX_TITLE_LENGTH = 300;
-
-/** the wire types the server announces a numeric column with */
-const NUMERIC_TYPES = new Set<number>([
-  Types.TINY, // aka TINYINT, 1 byte
-  Types.SHORT, // aka SMALLINT, 2 bytes
-  Types.LONG, // aka INT, 4 bytes
-  Types.INT24, // aka MEDIUMINT, 3 bytes
-  Types.FLOAT, // aka FLOAT, 4-8 bytes
-  Types.DOUBLE, // aka DOUBLE, 8 bytes
-  Types.DECIMAL, // aka DECIMAL (http://dev.mysql.com/doc/refman/5.0/en/precision-math-decimal-changes.html)
-  Types.NEWDECIMAL, // aka DECIMAL
-  Types.LONGLONG, // aka BIGINT, 8 bytes
-]);
-
-/** whether a column holds numbers — what the grid sets flush right */
-export function isNumericType(type: number | undefined): boolean {
-  return type !== undefined && NUMERIC_TYPES.has(type);
-}
 
 /**
  * Set the `title` on hover rather than on render: reading `scrollWidth` forces
@@ -125,7 +107,7 @@ function NumberCell({ value }: CellProps<number>) {
   return <NumberSpan hasTitle>{value}</NumberSpan>;
 }
 
-function BlobCell({ value }: CellProps<string>) {
+function TextCell({ value }: CellProps<string>) {
   return <ForegroundSpan hasTitle>{value}</ForegroundSpan>;
 }
 
@@ -140,9 +122,9 @@ function BlobCell({ value }: CellProps<string>) {
  * A `string` here is a JSON *scalar*: `CAST('"foo"' AS JSON)` parses to
  * `'foo'`, and re-serializing it would show the quotes. JSON stored in a text
  * column never reaches this branch — it is announced as TEXT/BLOB and routed
- * to `BlobCell`. Neither does anything on MariaDB, where `JSON` is only an
- * alias for `LONGTEXT`: the server never sends `Types.JSON`, so this component
- * is MySQL-only.
+ * to `TextCell`. Neither does anything on MariaDB, where `JSON` is only an
+ * alias for `LONGTEXT`: the server never announces a JSON column, so this
+ * component is MySQL-only.
  */
 function JsonCell({ value }: CellProps<unknown>) {
   const text = typeof value === 'string' ? value : JSON.stringify(value);
@@ -159,62 +141,40 @@ function JsonCell({ value }: CellProps<unknown>) {
   );
 }
 
-function EnumCell({ value }: CellProps<string>) {
-  return <ForegroundSpan hasTitle>{value}</ForegroundSpan>;
-}
-
 const TableCellFactory = memo(function TableCellFactory({
-  type,
+  kind,
   value,
 }: TableCellFactoryProps) {
   if (value === null || value === undefined) {
     return <NullCell />;
   }
 
-  if (isNumericType(type)) {
-    return <NumberCell value={value} />;
-  }
+  switch (kind) {
+    case FieldKind.Number:
+      return <NumberCell value={value} />;
 
-  switch (type) {
-    // Dates
-    case Types.DATETIME: // aka DATETIME
-    case Types.DATETIME2: // aka DATETIME with fractional seconds
-    case Types.TIMESTAMP: // aka TIMESTAMP
-    case Types.TIMESTAMP2: // aka TIMESTAMP with fractional seconds
-    case Types.NEWDATE: // aka ?
+    case FieldKind.DateTime:
       return <DatetimeCell value={value} />;
 
-    case Types.DATE: // aka DATE
+    case FieldKind.Date:
       return <DateCell value={value} />;
 
-    // Strings
-    case Types.VARCHAR: // aka VARCHAR (?)
-    case Types.VAR_STRING: // aka VARCHAR, VARBINARY
-    case Types.STRING: // aka CHAR, BINARY
+    case FieldKind.String:
       return <StringCell value={value} />;
 
-    // Blobs
-    case Types.TINY_BLOB: // aka TINYBLOB, TINYTEXT
-    case Types.MEDIUM_BLOB: // aka MEDIUMBLOB, MEDIUMTEXT
-    case Types.LONG_BLOB: // aka LONGBLOG, LONGTEXT
-    case Types.BLOB: // aka BLOB, TEXT
-      return <BlobCell value={value} />;
+    case FieldKind.Text:
+      return <TextCell value={value} />;
 
-    case Types.JSON: // aka JSON
+    case FieldKind.Json:
       return <JsonCell value={value} />;
 
-    case Types.ENUM: // aka ENUM
-    case Types.SET: // aka SET
-      return <EnumCell value={value} />;
-
-    case Types.NULL: // NULL (used for prepared statements, I think)
-    case Types.TIME: // aka TIME
-    case Types.TIME2: // aka TIME with fractional seconds
-    case Types.YEAR: // aka YEAR, 1 byte (don't ask)
-    case Types.BIT: // aka BIT, 1-8 byte
-    case Types.GEOMETRY: // aka GEOMETRY
+    case FieldKind.Time:
+    case FieldKind.Boolean:
+    case FieldKind.Binary:
+    case FieldKind.Array:
+    case FieldKind.Unknown:
     default:
-      throw new Error(`Type ${type} is not managed for now`);
+      throw new Error(`Type ${kind} is not managed for now`);
   }
 });
 
@@ -232,7 +192,7 @@ const TableCellFactoryContainer = memo(
   },
   (prevProps, nextProps) => {
     return (
-      prevProps.type === nextProps.type && prevProps.value === nextProps.value
+      prevProps.kind === nextProps.kind && prevProps.value === nextProps.value
       // prevProps.link === nextProps.link // omit link from comparison to avoid re-renders
     );
   }

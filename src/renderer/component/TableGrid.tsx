@@ -20,7 +20,6 @@ import {
 import type { ReactTable, Row as TanstackRow } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Empty } from 'antd';
-import type { FieldPacket } from 'mysql2/promise';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import type { ColumnWidthByColumn } from '../../configuration/type';
@@ -29,6 +28,7 @@ import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import { isJsonColumn } from '../../sql/columnEditing';
 import type { Dialect } from '../../sql/dialect/types';
+import { FieldKind, type ResultField } from '../../sql/resultField';
 import type { ColumnDetail, ResultRow } from '../../sql/types';
 import type { PrimaryKeyPart } from '../../sql/updateCell';
 import { useDialect } from '../hooks/useDialect';
@@ -41,7 +41,7 @@ import {
   size,
   space,
 } from '../theme';
-import Cell, { isNumericType } from './Cell';
+import Cell from './Cell';
 import CellContextMenu, { CellFilterTarget } from './CellContextMenu';
 import CellDetailModal, { CellDetail, SaveCellParams } from './CellDetailModal';
 import { toBoundValue } from './CellEditor/editableValue';
@@ -79,7 +79,7 @@ const EMPTY_DATA: ResultRow[] = [];
 interface TableGridProps<R extends ResultRow> {
   rowsAsArray?: boolean;
   result: null | R[];
-  fields: null | FieldPacket[];
+  fields: null | ResultField[];
   primaryKeys?: Array<string>;
   /**
    * Called once a cell has been written, with the value the server now holds.
@@ -127,7 +127,7 @@ const NO_EXTRA_COLUMNS: Array<never> = [];
 
 /** `fieldIndex` indexes `fields`, not the columns on screen. */
 type ColumnSource<Row extends ResultRow> =
-  | { field: FieldPacket; fieldIndex: number; extra?: undefined }
+  | { field: ResultField; fieldIndex: number; extra?: undefined }
   | { field?: undefined; fieldIndex: -1; extra: ExtraColumn<Row> };
 
 /** A scalar the driver answers with, and binds back unchanged. */
@@ -298,7 +298,7 @@ function TableGrid<Row extends ResultRow>({
                 // (browsing mode keeps plain names so that column pinning can match primary key names)
                 id: rowsAsArray ? `${fieldIndex}:${field.name}` : field.name,
                 header: field.name,
-                size: getColumnWidth(field.type),
+                size: getColumnWidth(field.kind),
               }
             )
       )
@@ -347,11 +347,11 @@ function TableGrid<Row extends ResultRow>({
           fieldIndex,
           name: field?.name ?? column.id,
           tableName: field?.table,
-          type: field?.type,
+          kind: field?.kind ?? FieldKind.Unknown,
           width: `var(${widthVar(index)})`,
           pinnedLeft: isPinned === 'start' ? `var(${leftVar(index)})` : null,
           isLastPinned: isPinned === 'start' && column.getIsLastColumn('start'),
-          numeric: isNumericType(field?.type),
+          numeric: field?.kind === FieldKind.Number,
           hasForeignKey: foreignKey !== null,
           dialect,
           // the schema of the column, resolved here rather than in the modal so
@@ -501,8 +501,8 @@ export interface ColumnMeta {
   id: string;
   fieldIndex: number;
   name: string;
-  tableName: string | undefined;
-  type: number | undefined;
+  tableName: string | null | undefined;
+  kind: FieldKind;
   /** `var(--tg-w-N)`, the property the table holds the width in */
   width: string;
   /** `var(--tg-l-N)` for a pinned column, `null` for the others */
@@ -702,7 +702,7 @@ const GridCell = memo(function GridCell({
 }): ReactElement {
   return (
     <Cell
-      type={column.type}
+      kind={column.kind}
       value={value}
       link={
         column.hasForeignKey ? (
@@ -710,7 +710,7 @@ const GridCell = memo(function GridCell({
             dialect={column.dialect}
             tableName={column.tableName ?? ''}
             columnName={column.name}
-            fieldType={column.type}
+            fieldKind={column.kind}
             value={value}
           />
         ) : undefined

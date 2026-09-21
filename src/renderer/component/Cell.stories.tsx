@@ -1,8 +1,8 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Types } from 'mysql';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
+import { FieldKind } from '../../sql/resultField';
 import Cell from './Cell';
 
 const meta: Meta<typeof Cell> = {
@@ -55,7 +55,7 @@ type Story = StoryObj<typeof Cell>;
  */
 export const WithNULLValue: Story = {
   args: {
-    type: Types.VARCHAR,
+    kind: FieldKind.String,
     value: null,
   },
   argTypes: {
@@ -65,14 +65,14 @@ export const WithNULLValue: Story = {
 
 export const WithStringType: Story = {
   args: {
-    type: Types.VARCHAR,
+    kind: FieldKind.String,
     value: 'VARCHAR value',
   },
 };
 
 export const WithLongStringType: Story = {
   args: {
-    type: Types.VARCHAR,
+    kind: FieldKind.String,
     value:
       'This is a very long string that should be truncated to fit the cell width.',
   },
@@ -80,7 +80,7 @@ export const WithLongStringType: Story = {
 
 export const WithTooLongStringType: Story = {
   args: {
-    type: Types.VARCHAR,
+    kind: FieldKind.String,
     value:
       'This is a too long string (more than 300 char), without title.' +
       'x'.repeat(300),
@@ -89,28 +89,28 @@ export const WithTooLongStringType: Story = {
 
 export const WithNumberType: Story = {
   args: {
-    type: Types.FLOAT,
+    kind: FieldKind.Number,
     value: 123.45,
   },
 };
 
 export const WithDateType: Story = {
   args: {
-    type: Types.DATE,
+    kind: FieldKind.Date,
     value: new Date('2020-01-01T12:00:00'),
   },
 };
 
 export const WithDatetimeType: Story = {
   args: {
-    type: Types.DATETIME,
+    kind: FieldKind.DateTime,
     value: new Date('2020-01-01T12:00:00'),
   },
 };
 
 export const WithBlobType: Story = {
   args: {
-    type: Types.BLOB,
+    kind: FieldKind.Text,
     value: 'BLOB value',
   },
 };
@@ -119,7 +119,7 @@ export const WithBlobType: Story = {
 // renderer, so the value is an object, never its serialized form.
 export const WithJSONType: Story = {
   args: {
-    type: Types.JSON,
+    kind: FieldKind.Json,
     value: { backgroundColor: 'red', tags: ['a', 'b'], nested: { count: 2 } },
   },
 };
@@ -129,21 +129,21 @@ export const WithJSONType: Story = {
 // (JSON stored in a TEXT column is announced as a blob and goes to `BlobCell`.)
 export const WithJSONScalar: Story = {
   args: {
-    type: Types.JSON,
+    kind: FieldKind.Json,
     value: 'a scalar string, not an object',
   },
 };
 
 export const WithENUMType: Story = {
   args: {
-    type: Types.ENUM,
+    kind: FieldKind.Text,
     value: 'ENUM value',
   },
 };
 
 export const WithForeignKey: Story = {
   args: {
-    type: Types.FLOAT,
+    kind: FieldKind.Number,
     value: 8,
     link: <a href="#link">LINK</a>,
   },

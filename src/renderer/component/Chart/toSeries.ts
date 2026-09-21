@@ -1,5 +1,4 @@
-import { Types } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
-import type { FieldPacket } from 'mysql2/promise';
+import { FieldKind, type ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import { formatDate, formatDateTime } from '../../utils/dateFormatter';
 import type { ChartConfig } from './chartConfig';
@@ -38,7 +37,7 @@ export interface BarData {
 function readCell(
   row: ResultRow,
   index: number,
-  field: FieldPacket,
+  field: ResultField,
   rowsAsArray: boolean
 ): unknown {
   return rowsAsArray ? row[index] : row[field.name];
@@ -92,7 +91,7 @@ export function toAxisLabel(value: unknown, isDateOnly: boolean): string {
 
 interface Input {
   rows: readonly ResultRow[];
-  fields: readonly FieldPacket[];
+  fields: readonly ResultField[];
   config: ChartConfig;
   rowsAsArray: boolean;
 }
@@ -105,7 +104,7 @@ function axisLabels({ rows, fields, config, rowsAsArray }: Input): {
   // DATE has no time part to show; every other temporal type does. mysql2 hands
   // both over as `Date`, so the column type is the only thing that tells them
   // apart.
-  const isDateOnly = xField?.type === Types.DATE;
+  const isDateOnly = xField?.kind === FieldKind.Date;
 
   const kept = rows.slice(0, MAX_POINTS);
 

@@ -1,4 +1,4 @@
-import { Types } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
+import { FieldKind } from '../../sql/resultField';
 import { formatDate, formatDateTime } from '../utils/dateFormatter';
 
 /**
@@ -10,14 +10,14 @@ import { formatDate, formatDateTime } from '../utils/dateFormatter';
  */
 export default function cellValueToText(
   value: unknown,
-  type: number | undefined
+  kind: FieldKind
 ): string {
   if (value === null || value === undefined) {
     return '';
   }
 
   if (value instanceof Date) {
-    return type === Types.DATE ? formatDate(value) : formatDateTime(value);
+    return kind === FieldKind.Date ? formatDate(value) : formatDateTime(value);
   }
 
   if (typeof value === 'string') {

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Input, InputNumber, Select } from 'antd';
 import { isNullable, parseEnumValues } from '../../../sql/columnEditing';
+import { FieldKind } from '../../../sql/resultField';
 import type { ColumnDetail } from '../../../sql/types';
 import JsonCellEditor from './JsonCellEditor';
 import { fromDateInputValue, toDateInputValue } from './dateTimeText';
@@ -12,7 +13,7 @@ const JSON_EDITOR_HEIGHT = 320;
 interface CellEditorProps {
   column: ColumnDetail;
   /** the type of the field, which decides the editor wherever it can */
-  fieldType: number | undefined;
+  fieldKind: FieldKind;
   value: EditableValue;
   onChange: (value: EditableValue) => void;
   /** true while the cell is set to NULL, or while a save is in flight */
@@ -28,12 +29,12 @@ interface CellEditorProps {
  */
 export default function CellEditor({
   column,
-  fieldType,
+  fieldKind,
   value,
   onChange,
   disabled,
 }: CellEditorProps) {
-  const kind = resolveEditorKind(column, fieldType, value.text);
+  const kind = resolveEditorKind(column, fieldKind, value.text);
   const nullable = isNullable(column);
 
   const enumValues = useMemo(

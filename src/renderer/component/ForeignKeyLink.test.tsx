@@ -2,7 +2,6 @@
  * @vitest-environment happy-dom
  */
 import { act } from 'react';
-import { Types } from 'mysql';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
@@ -12,6 +11,7 @@ import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import { mysqlDialect } from '../../sql/dialect/mysql';
+import { FieldKind } from '../../sql/resultField';
 import type { KeyColumnUsageRow } from '../../sql/types';
 import ForeignKeyLink from './ForeignKeyLink';
 
@@ -34,7 +34,7 @@ afterEach(() => {
 });
 
 /** the `?where=` the link would navigate to, decoded */
-function renderLink(value: unknown, fieldType: number): string | null {
+function renderLink(value: unknown, fieldKind: FieldKind): string | null {
   container = document.createElement('div');
   document.body.append(container);
 
@@ -61,7 +61,7 @@ function renderLink(value: unknown, fieldType: number): string | null {
                   dialect={mysqlDialect}
                   tableName="orders"
                   columnName="customer_label"
-                  fieldType={fieldType}
+                  fieldKind={fieldKind}
                   value={value}
                 />
               </ForeignKeysContextProvider>
@@ -83,22 +83,22 @@ function renderLink(value: unknown, fieldType: number): string | null {
 
 describe('ForeignKeyLink', () => {
   test('compares the referenced column to a quoted literal', () => {
-    expect(renderLink('abc', Types.VAR_STRING)).toBe("`label` = 'abc'");
+    expect(renderLink('abc', FieldKind.String)).toBe("`label` = 'abc'");
   });
 
   test('escapes a value that would otherwise end the literal', () => {
     // it used to build `label="O'Brien"`: a double-quoted value, unescaped, so
     // an apostrophe in it made the clause a syntax error
-    expect(renderLink("O'Brien", Types.VAR_STRING)).toBe(
+    expect(renderLink("O'Brien", FieldKind.String)).toBe(
       "`label` = 'O\\'Brien'"
     );
   });
 
   test('writes a number bare', () => {
-    expect(renderLink(42, Types.LONG)).toBe('`label` = 42');
+    expect(renderLink(42, FieldKind.Number)).toBe('`label` = 42');
   });
 
   test('offers no link for a key holding NULL, which references nothing', () => {
-    expect(renderLink(null, Types.LONG)).toBeNull();
+    expect(renderLink(null, FieldKind.Number)).toBeNull();
   });
 });

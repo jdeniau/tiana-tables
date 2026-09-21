@@ -1,5 +1,5 @@
-import { Types } from 'mysql';
 import { describe, expect, it } from 'vitest';
+import { FieldKind } from '../../../sql/resultField';
 import {
   findValidationError,
   isSameValue,
@@ -10,7 +10,7 @@ import {
 
 describe('toEditableValue', () => {
   it('marks an absent value as NULL, with no text', () => {
-    expect(toEditableValue(null, Types.VAR_STRING)).toEqual({
+    expect(toEditableValue(null, FieldKind.String)).toEqual({
       isNull: true,
       text: '',
     });
@@ -18,18 +18,20 @@ describe('toEditableValue', () => {
 
   it('spells a datetime the way MySQL does', () => {
     expect(
-      toEditableValue(new Date(2026, 0, 15, 10, 30, 45), Types.DATETIME)
+      toEditableValue(new Date(2026, 0, 15, 10, 30, 45), FieldKind.DateTime)
     ).toEqual({ isNull: false, text: '2026-01-15 10:30:45' });
   });
 
   it('drops the time of a date column', () => {
     expect(
-      toEditableValue(new Date(2026, 0, 15, 10, 30, 45), Types.DATE)
+      toEditableValue(new Date(2026, 0, 15, 10, 30, 45), FieldKind.Date)
     ).toEqual({ isNull: false, text: '2026-01-15' });
   });
 
   it('indents a JSON value so that it can be read and edited', () => {
-    expect(toEditableValue('{"a":1}', Types.JSON).text).toBe('{\n  "a": 1\n}');
+    expect(toEditableValue('{"a":1}', FieldKind.Json).text).toBe(
+      '{\n  "a": 1\n}'
+    );
   });
 });
 

@@ -1,6 +1,5 @@
-import { Types } from 'mysql';
-import type { FieldPacket } from 'mysql2/promise';
 import { describe, expect, test } from 'vitest';
+import { FieldKind, type ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import type { ChartConfig } from './chartConfig';
 import {
@@ -11,14 +10,14 @@ import {
   toNumber,
 } from './toSeries';
 
-function field(name: string, type: number): FieldPacket {
-  return { name, type } as FieldPacket;
+function field(name: string, kind: FieldKind): ResultField {
+  return { name, kind, table: null };
 }
 
 const FIELDS = [
-  field('day', Types.DATE),
-  field('total', Types.LONGLONG),
-  field('revenue', Types.NEWDECIMAL),
+  field('day', FieldKind.Date),
+  field('total', FieldKind.Number),
+  field('revenue', FieldKind.Number),
 ];
 
 const CONFIG: ChartConfig = { kind: 'line', x: 0, y: [1, 2] };

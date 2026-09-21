@@ -166,7 +166,7 @@ function buildMenuItems({
   const cellLiteral =
     column.detail && isBinaryColumn(column.detail)
       ? undefined
-      : cellValueToSqlLiteral(dialect, target.value, column.type);
+      : cellValueToSqlLiteral(dialect, target.value, column.kind);
 
   const clipboardLiteral =
     clipboardText === '' ? undefined : dialect.escapeLiteral(clipboardText);

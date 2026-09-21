@@ -1,7 +1,9 @@
 import log from 'electron-log';
-import type { QueryResult as MySqlResult } from 'mysql2/promise';
+import type { FieldPacket, QueryResult as MySqlResult } from 'mysql2/promise';
 import type { Driver } from '..';
+import type { ResultField } from '../../resultField';
 import type { QueryReturnType, ResultRow } from '../../types';
+import { toFieldKind } from './fieldKind';
 
 /** What mysql2 answered, in the shape the app reads. */
 function toQueryReturn(result: MySqlResult): QueryReturnType {
@@ -16,6 +18,23 @@ function toQueryReturn(result: MySqlResult): QueryReturnType {
     // MySQL answers 0 where the statement generated no key, which is not an id
     insertId: result.insertId || null,
   };
+}
+
+/** The three things read of a mysql2 column, of the twenty it ships. */
+type MySqlField = Pick<FieldPacket, 'name' | 'orgTable' | 'type'>;
+
+/** The columns of a result, as the renderer reads them. */
+function toResultFields(fields: MySqlField[] | undefined): ResultField[] {
+  // mysql2 types this as an array, and answers `undefined` for a statement that
+  // returned no rows at all
+  return (fields ?? []).map((field) => ({
+    name: field.name,
+    // `orgTable` and not `table`, which holds the alias where the query gave
+    // one: every reader of this looks a real table up by name. An expression
+    // belongs to none, and mysql2 spells that as an empty string
+    table: field.orgTable || null,
+    kind: toFieldKind(field.type),
+  }));
 }
 
 export const mysqlDriver: Driver = {
@@ -56,7 +75,7 @@ export const mysqlDriver: Driver = {
           namedPlaceholders: statement.values !== undefined,
         });
 
-        return [toQueryReturn(result), fields];
+        return [toQueryReturn(result), toResultFields(fields)];
       },
 
       end: () => connection.end(),
@@ -67,4 +86,8 @@ export const mysqlDriver: Driver = {
         error.message.includes('connection is in closed state'),
     };
   },
+};
+
+export const testables = {
+  toResultFields,
 };

@@ -1,11 +1,12 @@
 import { Alert, Button, Flex, Input, Space } from 'antd';
 import { useTranslation } from '../../../i18n';
+import { FieldKind } from '../../../sql/resultField';
 import cellValueToText from '../cellValueToText';
 
 interface CellChangedAlertProps {
   /** what the cell holds on the server, which is not what the editor opened on */
   currentValue: unknown;
-  fieldType: number | undefined;
+  fieldKind: FieldKind;
   isSaving: boolean;
   /** start over from the server value, guard included */
   onReload: () => void;
@@ -19,7 +20,7 @@ interface CellChangedAlertProps {
  */
 export default function CellChangedAlert({
   currentValue,
-  fieldType,
+  fieldKind,
   isSaving,
   onReload,
   onOverwrite,
@@ -36,7 +37,7 @@ export default function CellChangedAlert({
           <span>{t('cell.detail.conflict.changed.description')}</span>
           <Input.TextArea
             readOnly
-            value={cellValueToText(currentValue, fieldType)}
+            value={cellValueToText(currentValue, fieldKind)}
             placeholder={t('cell.detail.nullPlaceholder')}
             autoSize={{ minRows: 2, maxRows: 8 }}
           />

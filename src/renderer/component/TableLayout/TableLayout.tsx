@@ -1,6 +1,5 @@
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Splitter } from 'antd';
-import type { FieldPacket } from 'mysql2/promise';
 import { useNavigate } from 'react-router-dom';
 import {
   DisplayAfterByColumn,
@@ -9,6 +8,7 @@ import {
 import { PANEL } from '../../../configuration/panels';
 import type { ColumnWidthByColumn } from '../../../configuration/type';
 import { useTranslation } from '../../../i18n';
+import type { ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import { useDialect } from '../../hooks/useDialect';
 import { usePanelSize } from '../../hooks/usePanelSize';
@@ -58,7 +58,7 @@ export function TableLayout({
   const dialect = useDialect();
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.TABLE_FILTERS);
   const [result, setResult] = useState<null | ResultRow[]>(null);
-  const [fields, setFields] = useState<null | FieldPacket[]>(null);
+  const [fields, setFields] = useState<null | ResultField[]>(null);
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
 

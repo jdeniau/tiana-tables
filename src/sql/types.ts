@@ -1,6 +1,6 @@
-import { FieldPacket } from 'mysql2/promise';
 import { ConnectionColor } from '../configuration/connectionColor';
 import { DatabaseEngine } from './engine';
+import { ResultField } from './resultField';
 
 /**
  * One row of a result, by column name.
@@ -26,7 +26,7 @@ export function isWriteResult(result: QueryReturnType): result is WriteResult {
 }
 
 export type QueryResult<T extends QueryReturnType = QueryReturnType> = Promise<
-  [T, FieldPacket[]]
+  [T, ResultField[]]
 >;
 
 /**

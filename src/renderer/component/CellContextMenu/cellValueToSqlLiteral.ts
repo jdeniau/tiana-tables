@@ -1,11 +1,11 @@
-import { Types } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
 import type { Dialect } from '../../../sql/dialect/types';
+import { FieldKind } from '../../../sql/resultField';
 import { formatDate, formatDateTime } from '../../utils/dateFormatter';
 
 /**
  * A cell value, turned into the SQL literal that compares to it.
  *
- * The driver hands rows over already typed, and the type is what decides the
+ * The driver hands rows over already typed, and the value is what decides the
  * form of the literal: a number is written bare (quoting it would work, MySQL
  * coerces, but the clause is shown to the user and read by them), a date is
  * written as the wall clock the grid displays, everything else is a quoted
@@ -19,7 +19,7 @@ import { formatDate, formatDateTime } from '../../utils/dateFormatter';
 export function cellValueToSqlLiteral(
   dialect: Dialect,
   value: unknown,
-  fieldType: number | undefined
+  kind: FieldKind
 ): string | undefined {
   if (value === null || value === undefined) {
     return undefined;
@@ -35,7 +35,7 @@ export function cellValueToSqlLiteral(
 
   if (value instanceof Date) {
     return dialect.escapeLiteral(
-      fieldType === Types.DATE ? formatDate(value) : formatDateTime(value)
+      kind === FieldKind.Date ? formatDate(value) : formatDateTime(value)
     );
   }
 
