@@ -1,22 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { DataType } from '../../../sql/dataType';
+import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { FieldKind } from '../../../sql/resultField';
-import type { ColumnDetail } from '../../../sql/types';
 import { EditorKind, looksLikeJson, resolveEditorKind } from './editorKind';
 
-type ColumnDetailFields = Partial<Omit<ColumnDetail, 'constructor'>>;
-
-function makeColumn(overrides: ColumnDetailFields = {}): ColumnDetail {
+function makeColumn(overrides: Partial<ColumnDetail> = {}): ColumnDetail {
   return {
-    Table: 'orders',
-    Column: 'label',
-    DataType: DataType.VarChar,
-    IsNullable: 'YES',
-    ColumnType: 'varchar(255)',
-    ColumnDefault: null,
-    Extra: '',
+    table: 'orders',
+    name: 'label',
+    nullable: true,
+    generated: false,
+    binary: false,
+    json: false,
+    allowedValues: [],
+    multiValued: false,
     ...overrides,
-  } as ColumnDetail;
+  };
 }
 
 describe('looksLikeJson', () => {
@@ -55,15 +53,15 @@ describe('resolveEditorKind', () => {
    * and the select editor hangs on that and not on the kind.
    */
   it.each([
-    [DataType.Enum, EditorKind.Enum],
-    [DataType.Set, EditorKind.Set],
+    ['an ENUM', false, EditorKind.Enum],
+    ['a SET', true, EditorKind.Set],
   ])(
     'reads %s off the schema, whatever the kind says',
-    (dataType, expected) => {
+    (_label, multiValued, expected) => {
       expect(
         resolveEditorKind(
-          makeColumn({ DataType: dataType }),
-          FieldKind.Text,
+          makeColumn({ allowedValues: ['draft', 'sent'], multiValued }),
+          FieldKind.Number,
           ''
         )
       ).toBe(expected);
@@ -71,23 +69,15 @@ describe('resolveEditorKind', () => {
   );
 
   it('gives the JSON editor to JSON stored in a text column', () => {
-    expect(
-      resolveEditorKind(
-        makeColumn({ DataType: DataType.Text }),
-        FieldKind.Text,
-        '{"a":1}'
-      )
-    ).toBe(EditorKind.Json);
+    expect(resolveEditorKind(makeColumn(), FieldKind.Text, '{"a":1}')).toBe(
+      EditorKind.Json
+    );
   });
 
   it('leaves a text column holding plain text alone', () => {
-    expect(
-      resolveEditorKind(
-        makeColumn({ DataType: DataType.Text }),
-        FieldKind.Text,
-        'hello'
-      )
-    ).toBe(EditorKind.Text);
+    expect(resolveEditorKind(makeColumn(), FieldKind.Text, 'hello')).toBe(
+      EditorKind.Text
+    );
   });
 
   it('never mistakes a numeric field for JSON', () => {

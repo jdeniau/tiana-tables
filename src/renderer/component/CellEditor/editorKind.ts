@@ -1,6 +1,5 @@
-import { DataType, readDataType } from '../../../sql/dataType';
+import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { FieldKind } from '../../../sql/resultField';
-import type { ColumnDetail } from '../../../sql/types';
 
 /** Which editor a cell gets. */
 export enum EditorKind {
@@ -42,10 +41,8 @@ export function looksLikeJson(text: string): boolean {
  * The kind of the field decides whenever it can — the very kind the grid
  * rendered the value with, so an editor never disagrees with what was shown.
  *
- * `ENUM` and `SET` are the exception: the protocol reports such a column as a
- * plain string, and while its flags do name the two, they do not carry the
- * accepted values — which is what an editor for a closed set needs, and what
- * INFORMATION_SCHEMA is asked for anyway.
+ * A closed set comes first: the protocol reports it as a plain string,
+ * without the values the editor needs.
  *
  * `text` is the fallback, and a fine one: everything MySQL accepts can be
  * written as a text literal, so an unknown type degrades to a textarea rather
@@ -56,14 +53,8 @@ export function resolveEditorKind(
   fieldKind: FieldKind,
   text: string
 ): EditorKind {
-  const dataType = readDataType(column.DataType);
-
-  if (dataType === DataType.Enum) {
-    return EditorKind.Enum;
-  }
-
-  if (dataType === DataType.Set) {
-    return EditorKind.Set;
+  if (column.allowedValues.length > 0) {
+    return column.multiValued ? EditorKind.Set : EditorKind.Enum;
   }
 
   if (fieldKind === FieldKind.Date) {

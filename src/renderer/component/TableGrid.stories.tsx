@@ -6,9 +6,9 @@ import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
+import type { ColumnDetail } from '../../sql/dialect/metadata';
 import { FieldKind, type ResultField } from '../../sql/resultField';
 import type { ResultRow } from '../../sql/types';
-import { ColumnDetail, KeyColumnUsageRow } from '../../sql/types';
 import type { UpdateCellRequest } from '../../sql/updateCell';
 import {
   Region,
@@ -109,27 +109,27 @@ function makeRows(rowCount: number, columnCount: number): ResultRow[] {
 
 // the schema the grid reads to know what a cell may become: without it every
 // cell is read-only, which is exactly what the raw-SQL case looks like
-const ALL_COLUMNS = [
-  ['id', 'int', 'int', 'NO', 'auto_increment'],
-  ['name', 'varchar', 'varchar(255)', 'NO', ''],
-  ['linkedId', 'int', 'int', 'YES', ''],
-  ['price', 'decimal', 'decimal(10,2)', 'YES', ''],
-  ['createdAt', 'datetime', 'datetime', 'NO', ''],
-  ['payload', 'json', 'json', 'YES', ''],
-  ['description', 'varchar', 'varchar(255)', 'YES', ''],
-  ['quantity', 'int', 'int', 'YES', ''],
-].map(
-  ([Column, DataType, ColumnType, IsNullable, Extra]) =>
-    ({
-      Table: 'items',
-      Column,
-      DataType,
-      ColumnType,
-      IsNullable,
-      ColumnDefault: null,
-      Extra,
-    }) as ColumnDetail
-);
+const ALL_COLUMNS: ColumnDetail[] = (
+  [
+    ['id', false],
+    ['name', false],
+    ['linkedId', true],
+    ['price', true],
+    ['createdAt', false],
+    ['payload', true],
+    ['description', true],
+    ['quantity', true],
+  ] as const
+).map(([name, nullable]) => ({
+  table: 'items',
+  name,
+  nullable,
+  generated: false,
+  binary: false,
+  json: name === 'payload',
+  allowedValues: [],
+  multiValued: false,
+}));
 
 const meta: Meta<typeof TableGrid> = {
   component: TableGrid,
@@ -161,14 +161,13 @@ const meta: Meta<typeof TableGrid> = {
           }}
         >
           <ForeignKeysContextProvider
-            keyColumnUsageRows={[
+            foreignKeys={[
               {
-                TABLE_NAME: 'items',
-                COLUMN_NAME: 'linkedId',
-                REFERENCED_TABLE_NAME: 'linkedTable',
-                REFERENCED_COLUMN_NAME: 'id',
-                CONSTRAINT_NAME: 'fk',
-              } as KeyColumnUsageRow,
+                table: 'items',
+                column: 'linkedId',
+                referencedTable: 'linkedTable',
+                referencedColumn: 'id',
+              },
             ]}
           >
             <AllColumnsContextProvider allColumns={ALL_COLUMNS}>

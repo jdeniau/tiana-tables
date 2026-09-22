@@ -1,8 +1,8 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
+import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
 import { FieldKind } from '../../../sql/resultField';
-import type { ColumnDetail } from '../../../sql/types';
 import type {
   PrimaryKeyPart,
   UpdateCellOutcome,
@@ -11,20 +11,19 @@ import type { ColumnMeta } from '../TableGrid';
 import CellDetailModal from './CellDetailModal';
 import type { CellDetail } from './types';
 
-type ColumnDetailFields = Partial<ColumnDetail>;
-
 function makeColumnDetail(
   name: string,
-  overrides: ColumnDetailFields = {}
+  overrides: Partial<ColumnDetail> = {}
 ): ColumnDetail {
   return {
-    Table: 'items',
-    Column: name,
-    DataType: 'varchar',
-    IsNullable: 'YES',
-    ColumnType: 'varchar(255)',
-    ColumnDefault: null,
-    Extra: '',
+    table: 'items',
+    name,
+    nullable: true,
+    generated: false,
+    binary: false,
+    json: false,
+    allowedValues: [],
+    multiValued: false,
     ...overrides,
   };
 }
@@ -88,7 +87,7 @@ export const LongText: Story = {
       makeColumn(
         'description',
         FieldKind.Text,
-        makeColumnDetail('description', { DataType: 'text' })
+        makeColumnDetail('description')
       ),
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(20)
     ),
@@ -101,7 +100,7 @@ export const Json: Story = {
       makeColumn(
         'payload',
         FieldKind.Json,
-        makeColumnDetail('payload', { DataType: 'json', ColumnType: 'json' })
+        makeColumnDetail('payload', { json: true })
       ),
       '{"nested":{"list":[1,2,3],"flag":true},"name":"tiana"}'
     ),
@@ -115,8 +114,7 @@ export const Enum: Story = {
         'status',
         FieldKind.Text,
         makeColumnDetail('status', {
-          DataType: 'enum',
-          ColumnType: "enum('draft','sent','paid')",
+          allowedValues: ['draft', 'sent', 'paid'],
         })
       ),
       'sent'
@@ -131,9 +129,7 @@ export const Datetime: Story = {
         'createdAt',
         FieldKind.DateTime,
         makeColumnDetail('createdAt', {
-          DataType: 'datetime',
-          ColumnType: 'datetime',
-          IsNullable: 'NO',
+          nullable: false,
         })
       ),
       new Date(2026, 0, 15, 10, 30, 0)
@@ -148,9 +144,7 @@ export const Number: Story = {
         'price',
         FieldKind.Number,
         makeColumnDetail('price', {
-          DataType: 'decimal',
-          ColumnType: 'decimal(10,2)',
-          IsNullable: 'NO',
+          nullable: false,
         })
       ),
       '1234.56'
@@ -164,7 +158,7 @@ export const NullValue: Story = {
       makeColumn(
         'payload',
         FieldKind.Json,
-        makeColumnDetail('payload', { DataType: 'json', ColumnType: 'json' })
+        makeColumnDetail('payload', { json: true })
       ),
       null
     ),
@@ -188,7 +182,7 @@ export const ReadOnlyBinaryColumn: Story = {
       makeColumn(
         'thumbnail',
         FieldKind.Text,
-        makeColumnDetail('thumbnail', { DataType: 'blob', ColumnType: 'blob' })
+        makeColumnDetail('thumbnail', { binary: true })
       ),
       '\u0000\u0001binary bytes'
     ),
@@ -201,7 +195,7 @@ export const ReadOnlyGeneratedColumn: Story = {
       makeColumn(
         'fullName',
         FieldKind.String,
-        makeColumnDetail('fullName', { Extra: 'STORED GENERATED' })
+        makeColumnDetail('fullName', { generated: true })
       ),
       'Tiana Tables'
     ),

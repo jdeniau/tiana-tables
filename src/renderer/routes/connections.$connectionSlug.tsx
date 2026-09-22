@@ -79,7 +79,7 @@ export async function loader({ params, request }: RouteParams) {
   // The database is not known yet: it is read from the configuration below.
   window.sql.connectionNameChanged(connectionSlug, undefined);
 
-  const [databaseList] = await window.sql.showDatabases();
+  const databaseList = await window.sql.listDatabases();
 
   const configuration = await window.config.getConfiguration();
 
@@ -97,13 +97,10 @@ export async function loader({ params, request }: RouteParams) {
     throw new Error('No database found. Case not handled for now.');
   }
 
-  const activeDatabase = configDatabase || databaseList[0].Database;
+  const activeDatabase = configDatabase || databaseList[0];
 
   // TODO handle the case where the "configDatabase" is not in the databaseList
-  if (
-    activeDatabase &&
-    !databaseList.find((db) => db.Database === activeDatabase)
-  ) {
+  if (activeDatabase && !databaseList.includes(activeDatabase)) {
     throw new Error(
       'Database not found in the database list. Case not handled for now.'
     );
@@ -127,24 +124,19 @@ export async function loader({ params, request }: RouteParams) {
     return redirect(expectedUrl);
   }
 
-  const [tableStatusList] = await window.sql.showTableStatus(activeDatabase);
-
-  const [keyColumnUsageRows] =
-    await window.sql.getKeyColumnUsage(activeDatabase);
-  const [allColumns] = await window.sql.getAllColumns(activeDatabase);
+  const tableList = await window.sql.listTables(activeDatabase);
+  const foreignKeys = await window.sql.getForeignKeys(activeDatabase);
+  const allColumns = await window.sql.getAllColumns(activeDatabase);
 
   return {
     connectionSlug,
     databaseList,
-    tableStatusList,
-    keyColumnUsageRows,
+    tableList,
+    foreignKeys,
     allColumns,
     activeDatabase,
 
-    openTables: pruneOpenTables(
-      databaseConfig?.openTables ?? [],
-      tableStatusList.map(({ Name }) => Name)
-    ),
+    openTables: pruneOpenTables(databaseConfig?.openTables ?? [], tableList),
   };
 }
 
@@ -153,8 +145,8 @@ export default function ConnectionDetailPage() {
   const {
     connectionSlug,
     databaseList,
-    tableStatusList,
-    keyColumnUsageRows,
+    tableList,
+    foreignKeys,
     allColumns,
     activeDatabase,
     openTables,
@@ -170,8 +162,8 @@ export default function ConnectionDetailPage() {
 
   return (
     <DatabaseListContextProvider databaseList={databaseList}>
-      <TableListContextProvider tableList={tableStatusList}>
-        <ForeignKeysContextProvider keyColumnUsageRows={keyColumnUsageRows}>
+      <TableListContextProvider tableList={tableList}>
+        <ForeignKeysContextProvider foreignKeys={foreignKeys}>
           <AllColumnsContextProvider allColumns={allColumns}>
             <OpenTablesContextProvider
               // the open tables are the database's: another database is another run
@@ -191,11 +183,11 @@ export default function ConnectionDetailPage() {
                         <OpenNavigateModalButton />
                       </SiderTools>
                       <RegionBody>
-                        <TableList tableStatusList={tableStatusList} />
+                        <TableList tableList={tableList} />
                       </RegionBody>
                       <RegionFoot>
                         {t('tableList.count', {
-                          count: tableStatusList.length,
+                          count: tableList.length,
                         })}
                       </RegionFoot>
                     </Sider>

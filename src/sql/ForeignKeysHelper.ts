@@ -1,22 +1,16 @@
-import { ForeignKeyRow, KeyColumnUsageRow } from './types';
+import type { ForeignKey } from './dialect/metadata';
 
 export class ForeignKeysHelper {
   // Can not use JS #private props because of an issue in storybook with react-docgen ¯\_(ツ)_/¯
-  private _keyColumnUsageRows: KeyColumnUsageRow[];
+  private _foreignKeys: ForeignKey[];
 
-  constructor(keyColumnUsageRows: KeyColumnUsageRow[]) {
-    this._keyColumnUsageRows = keyColumnUsageRows;
+  constructor(foreignKeys: ForeignKey[]) {
+    this._foreignKeys = foreignKeys;
   }
 
   getForeignKey(tableName: string, columnName: string) {
-    // the predicate is typed, so what comes back is a key that references
-    // something: every other kind of key has both `REFERENCED_` columns NULL
-    const row = this._keyColumnUsageRows.find(
-      (r): r is ForeignKeyRow =>
-        r.TABLE_NAME === tableName &&
-        r.COLUMN_NAME === columnName &&
-        r.REFERENCED_TABLE_NAME !== null &&
-        r.REFERENCED_COLUMN_NAME !== null
+    const row = this._foreignKeys.find(
+      (r) => r.table === tableName && r.column === columnName
     );
 
     if (!row) {
@@ -24,8 +18,8 @@ export class ForeignKeysHelper {
     }
 
     return {
-      referencedTableName: row.REFERENCED_TABLE_NAME,
-      referencedColumnName: row.REFERENCED_COLUMN_NAME,
+      referencedTableName: row.referencedTable,
+      referencedColumnName: row.referencedColumn,
     };
   }
 
@@ -36,10 +30,10 @@ export class ForeignKeysHelper {
     let foundAlias: string | undefined = undefined;
     let isManyToOne = false;
 
-    const row = this._keyColumnUsageRows.find((r) => {
+    const row = this._foreignKeys.find((r) => {
       // handle many-to-one relationship
-      if (r.REFERENCED_TABLE_NAME === tableName) {
-        const foundTable = tableList.find((t) => t.tableName === r.TABLE_NAME);
+      if (r.referencedTable === tableName) {
+        const foundTable = tableList.find((t) => t.tableName === r.table);
 
         if (foundTable) {
           foundAlias = foundTable.alias;
@@ -50,9 +44,9 @@ export class ForeignKeysHelper {
       }
 
       // handle one-to-one relationship
-      if (r.TABLE_NAME === tableName && r.REFERENCED_TABLE_NAME) {
+      if (r.table === tableName) {
         const foundTable = tableList.find(
-          (t) => t.tableName === r.REFERENCED_TABLE_NAME
+          (t) => t.tableName === r.referencedTable
         );
 
         if (foundTable) {
@@ -69,13 +63,9 @@ export class ForeignKeysHelper {
     }
 
     return {
-      columnName: isManyToOne ? row.COLUMN_NAME : row.REFERENCED_COLUMN_NAME,
-      referencedColumnName: isManyToOne
-        ? row.REFERENCED_COLUMN_NAME
-        : row.COLUMN_NAME,
-      referencedTableName: isManyToOne
-        ? row.TABLE_NAME
-        : row.REFERENCED_TABLE_NAME,
+      columnName: isManyToOne ? row.column : row.referencedColumn,
+      referencedColumnName: isManyToOne ? row.referencedColumn : row.column,
+      referencedTableName: isManyToOne ? row.table : row.referencedTable,
       alias: foundAlias,
     };
   }

@@ -66,7 +66,7 @@ const meta: Meta<typeof RawSqlResult> = {
   decorators: [
     reactRouterDecorator,
     (Story) => (
-      <ForeignKeysContextProvider keyColumnUsageRows={[]}>
+      <ForeignKeysContextProvider foreignKeys={[]}>
         <AllColumnsContextProvider allColumns={[]}>
           <div
             style={{ height: '90vh', display: 'flex', flexDirection: 'column' }}

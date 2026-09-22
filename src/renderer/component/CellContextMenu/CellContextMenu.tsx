@@ -9,7 +9,6 @@ import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
-import { isBinaryColumn } from '../../../sql/columnEditing';
 import type { Dialect } from '../../../sql/dialect/types';
 import {
   FILTER_OPERATORS,
@@ -164,7 +163,7 @@ function buildMenuItems({
   // a binary column holds bytes the grid only ever shows decoded: comparing to
   // that decoding would not mean what it looks like
   const cellLiteral =
-    column.detail && isBinaryColumn(column.detail)
+    column.detail?.binary === true
       ? undefined
       : cellValueToSqlLiteral(dialect, target.value, column.kind);
 

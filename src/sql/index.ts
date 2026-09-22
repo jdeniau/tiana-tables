@@ -14,6 +14,12 @@ import {
   asConnectionError,
 } from './connectionError';
 import { getDialect } from './dialect';
+import {
+  type ColumnDetail,
+  type ForeignKey,
+  type MetadataQuery,
+  type TableStructureRow,
+} from './dialect/metadata';
 import type { Dialect } from './dialect/types';
 import { loadDriver } from './driver';
 import type { DriverConnection } from './driver';
@@ -22,17 +28,13 @@ import {
   ResultOrError,
   encodeError,
 } from './errorSerializer';
+import { toTableStructure } from './tableStructure';
 import {
-  ColumnDetail,
-  ColumnDetailResult,
-  KeyColumnUsageRow,
+  QueryResult,
   QueryReturnType,
-  ShowDatabasesResult,
-  ShowKeyRow,
-  ShowTableStatusResult,
   SqlBoundValues,
-  TableStructureResult,
   WriteResult,
+  isWriteResult,
 } from './types';
 import {
   CellReadRow,
@@ -73,13 +75,13 @@ class ConnectionStack {
   // List of IPC events and their handlers
   #ipcMainHandler = {
     [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQueryAndRetry,
-    [SQL_CHANNEL.GET_KEY_COLUMN_USAGE]: this.getKeyColumnUsage,
-    [SQL_CHANNEL.GET_PRIMARY_KEYS]: this.getPrimaryKeys,
+    [SQL_CHANNEL.LIST_DATABASES]: this.listDatabases,
+    [SQL_CHANNEL.LIST_TABLES]: this.listTables,
+    [SQL_CHANNEL.GET_FOREIGN_KEYS]: this.getForeignKeys,
+    [SQL_CHANNEL.GET_PRIMARY_KEY_COLUMNS]: this.getPrimaryKeyColumns,
     [SQL_CHANNEL.GET_ALL_COLUMNS]: this.getAllColumns,
     [SQL_CHANNEL.GET_TABLE_STRUCTURE]: this.getTableStructure,
     [SQL_CHANNEL.UPDATE_CELL]: this.updateCell,
-    [SQL_CHANNEL.SHOW_DATABASES]: this.showDatabases,
-    [SQL_CHANNEL.SHOW_TABLE_STATUS]: this.showTableStatus,
     [SQL_CHANNEL.CLOSE]: this.closeConnection,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
@@ -129,121 +131,106 @@ class ConnectionStack {
     return getDialect(connection.engine);
   }
 
-  async getKeyColumnUsage(
-    databaseName: string,
-    tableName?: string
-  ): QueryResultOrError<KeyColumnUsageRow[]> {
-    invariant(databaseName, 'Database name is required');
+  /**
+   * Run a metadata question and read its answer.
+   * A write summary means the dialect sent something that is not a question.
+   */
+  async #answer<Answer>(query: MetadataQuery<Answer>): Promise<Answer> {
+    const [rows] = await this.#send(query.sql, false, query.values);
 
-    const query = `
-      SELECT
-        TABLE_NAME,
-        COLUMN_NAME,
-        CONSTRAINT_NAME,
-        REFERENCED_TABLE_NAME,
-        REFERENCED_COLUMN_NAME
-      FROM
-        INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-      WHERE
-        TABLE_SCHEMA = :databaseName
-        ${tableName ? 'AND TABLE_NAME = :tableName' : ''}
-    `;
+    if (isWriteResult(rows)) {
+      throw new Error(`A metadata query wrote rows instead of reading them`);
+    }
 
-    return this.executeQueryAndRetry<KeyColumnUsageRow[]>(query, false, {
-      databaseName,
-      ...(tableName ? { tableName } : {}),
-    });
-  }
-
-  async getAllColumns(
-    databaseName: string
-  ): QueryResultOrError<Array<ColumnDetail>> {
-    invariant(databaseName, 'Database name is required');
-
-    const query = `
-      SELECT
-        TABLE_NAME AS \`Table\`,
-        COLUMN_NAME AS \`Column\`,
-        DATA_TYPE AS \`DataType\`,
-        IS_NULLABLE AS \`IsNullable\`,
-        COLUMN_TYPE AS \`ColumnType\`,
-        COLUMN_DEFAULT AS \`ColumnDefault\`,
-        EXTRA AS \`Extra\`
-      FROM
-        INFORMATION_SCHEMA.COLUMNS
-      WHERE
-        TABLE_SCHEMA = :databaseName
-    `;
-
-    return this.executeQueryAndRetry<ColumnDetailResult>(query, false, {
-      databaseName,
-    });
+    return query.answer(rows);
   }
 
   /**
-   * Every column of one table, as the structure page shows them.
-   *
-   * The foreign keys are read as a correlated subquery rather than a join: a
-   * column can sit in two constraints, and a join would then answer the same
-   * column twice — one row per column is what the page is about.
+   * Ask the server about itself, encoding a failure:
+   * the renderer cannot catch one across IPC.
    */
-  async getTableStructure(
+  async #ask<T>(question: () => Promise<T>): ResultOrError<T> {
+    try {
+      return { result: await question(), error: undefined };
+    } catch (error) {
+      return { result: undefined, error: encodeError(error) };
+    }
+  }
+
+  /**
+   * Sorted here, by code unit, as `SHOW DATABASES` did:
+   * a server's collation would put `user_role` after `users`, and differ per engine.
+   */
+  async listDatabases(): ResultOrError<string[]> {
+    return this.#ask(async () =>
+      (await this.#answer(this.#dialect().metadata.listDatabases())).sort()
+    );
+  }
+
+  /** Sorted by code unit, as `listDatabases`. */
+  async listTables(databaseName: string): ResultOrError<string[]> {
+    invariant(databaseName, 'Database name is required');
+
+    return this.#ask(async () =>
+      (
+        await this.#answer(this.#dialect().metadata.listTables(databaseName))
+      ).sort()
+    );
+  }
+
+  /** The columns of the primary key, in the order the key declares them. */
+  async getPrimaryKeyColumns(
     databaseName: string,
     tableName: string
-  ): QueryResultOrError<TableStructureResult> {
+  ): ResultOrError<string[]> {
     invariant(databaseName, 'Database name is required');
     invariant(tableName, 'Table name is required');
 
-    const query = `
-      SELECT
-        c.COLUMN_NAME AS \`Column\`,
-        c.COLUMN_TYPE AS \`Type\`,
-        c.IS_NULLABLE AS \`Null\`,
-        c.COLUMN_KEY AS \`Key\`,
-        c.COLUMN_DEFAULT AS \`Default\`,
-        c.EXTRA AS \`Extra\`,
-        (
-          SELECT
-            GROUP_CONCAT(
-              DISTINCT CONCAT(k.REFERENCED_TABLE_NAME, '.', k.REFERENCED_COLUMN_NAME)
-              SEPARATOR ', '
-            )
-          FROM
-            INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
-          WHERE
-            k.TABLE_SCHEMA = c.TABLE_SCHEMA
-            AND k.TABLE_NAME = c.TABLE_NAME
-            AND k.COLUMN_NAME = c.COLUMN_NAME
-            AND k.REFERENCED_TABLE_NAME IS NOT NULL
-        ) AS \`References\`,
-        c.COLLATION_NAME AS \`Collation\`,
-        c.COLUMN_COMMENT AS \`Comment\`
-      FROM
-        INFORMATION_SCHEMA.COLUMNS c
-      WHERE
-        c.TABLE_SCHEMA = :databaseName
-        AND c.TABLE_NAME = :tableName
-      ORDER BY
-        c.ORDINAL_POSITION
-    `;
-
-    return this.executeQueryAndRetry<TableStructureResult>(query, false, {
-      databaseName,
-      tableName,
-    });
+    return this.#ask(() =>
+      this.#answer(
+        this.#dialect().metadata.listPrimaryKeyColumns(databaseName, tableName)
+      )
+    );
   }
 
-  async getPrimaryKeys(
-    databaseName: string,
-    tableName: string
-  ): QueryResultOrError<ShowKeyRow[]> {
+  async getForeignKeys(databaseName: string): ResultOrError<ForeignKey[]> {
     invariant(databaseName, 'Database name is required');
 
-    const query = `
-      SHOW KEYS FROM ${this.#dialect().qualify(databaseName, tableName)} WHERE Key_name = 'PRIMARY';
-    `;
+    return this.#ask(() =>
+      this.#answer(this.#dialect().metadata.listForeignKeys(databaseName))
+    );
+  }
 
-    return this.executeQueryAndRetry<ShowKeyRow[]>(query);
+  /** Every column of every table of a database. */
+  async getAllColumns(
+    databaseName: string
+  ): ResultOrError<Array<ColumnDetail>> {
+    invariant(databaseName, 'Database name is required');
+
+    return this.#ask(() =>
+      this.#answer(this.#dialect().metadata.listColumns(databaseName))
+    );
+  }
+
+  /** Every column of one table, as the structure page shows them. */
+  async getTableStructure(
+    databaseName: string,
+    tableName: string
+  ): QueryResultOrError<TableStructureRow[]> {
+    invariant(databaseName, 'Database name is required');
+    invariant(tableName, 'Table name is required');
+
+    return this.#ask(async () => {
+      const { metadata } = this.#dialect();
+      const columns = await this.#answer(
+        metadata.describeTable(databaseName, tableName)
+      );
+      const foreignKeys = await this.#answer(
+        metadata.listForeignKeys(databaseName)
+      );
+
+      return toTableStructure(tableName, columns, foreignKeys);
+    });
   }
 
   /**
@@ -320,18 +307,43 @@ class ConnectionStack {
     };
   }
 
-  async showDatabases(): QueryResultOrError<ShowDatabasesResult> {
-    return this.executeQueryAndRetry<ShowDatabasesResult>('SHOW DATABASES');
-  }
+  /**
+   * Send one statement, reopening a connection the server dropped.
+   * Throws, handshake failures included.
+   */
+  async #send(
+    query: string,
+    rowsAsArray: boolean,
+    values: SqlBoundValues | undefined
+  ): QueryResult {
+    invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
-  async showTableStatus(
-    databaseName: string
-  ): QueryResultOrError<ShowTableStatusResult> {
-    invariant(databaseName, 'Database name is required');
+    const connectionSlug = this.#currentConnectionSlug;
 
-    return this.executeQueryAndRetry<ShowTableStatusResult>(
-      `SHOW TABLE STATUS FROM ${this.#dialect().escapeIdentifier(databaseName)}`
-    );
+    for (let attempt = 0; ; attempt++) {
+      let connection: DriverConnection | undefined;
+
+      try {
+        connection = await this.#getConnection(connectionSlug);
+
+        log.debug(`Execute query on "${connectionSlug}": "${query}"`);
+
+        return await connection.query({ sql: query, rowsAsArray, values });
+      } catch (error) {
+        // A socket the server dropped is worth one fresh connection; a
+        // statement it refused is not, and neither is a second drop. Only the
+        // connection that failed can tell the two apart, which is why the
+        // question is asked here rather than a layer up.
+        const worthRetrying =
+          attempt === 0 && connection?.isConnectionLost(error) === true;
+
+        if (!worthRetrying) {
+          throw error;
+        }
+
+        this.#connections.delete(connectionSlug);
+      }
+    }
   }
 
   /**
@@ -344,45 +356,14 @@ class ConnectionStack {
     rowsAsArray = false,
     values?: SqlBoundValues
   ): QueryResultOrError<T> {
-    invariant(this.#currentConnectionSlug, 'Connection slug is required');
+    try {
+      const [rows, fields] = await this.#send(query, rowsAsArray, values);
 
-    const connectionSlug = this.#currentConnectionSlug;
-
-    for (let attempt = 0; ; attempt++) {
-      let connection: DriverConnection | undefined;
-
-      // Opening the connection is inside the try: a handshake that fails is an
-      // answer like any other, and must travel encoded next to the result. Left
-      // outside, it escaped the `{ result, error }` envelope and reached the
-      // renderer as Electron's own "Error invoking remote method …".
-      try {
-        connection = await this.#getConnection(connectionSlug);
-
-        log.debug(`Execute query on "${connectionSlug}": "${query}"`);
-
-        const [rows, fields] = await connection.query({
-          sql: query,
-          rowsAsArray,
-          values,
-        });
-
-        // nothing between here and the socket read the query, so the shape is
-        // the caller's to name
-        return { result: [rows as T, fields], error: undefined };
-      } catch (error) {
-        // A socket the server dropped is worth one fresh connection; a
-        // statement it refused is not, and neither is a second drop. Only the
-        // connection that failed can tell the two apart, which is why the
-        // question is asked here rather than a layer up.
-        const worthRetrying =
-          attempt === 0 && connection?.isConnectionLost(error) === true;
-
-        if (!worthRetrying) {
-          return { result: undefined, error: encodeError(error) };
-        }
-
-        this.#connections.delete(connectionSlug);
-      }
+      // nothing between here and the socket read the query, so the shape is
+      // the caller's to name
+      return { result: [rows as T, fields], error: undefined };
+    } catch (error) {
+      return { result: undefined, error: encodeError(error) };
     }
   }
 

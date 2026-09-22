@@ -18,7 +18,6 @@ import {
   extractTableAliases,
   generateTableAlias,
 } from '../../../sql/tableName';
-import { ShowTableStatus } from '../../../sql/types';
 import { QuerySchema, analyzeQuery } from './queryAnalysis';
 import {
   fromPrefixedRange,
@@ -44,7 +43,7 @@ setupLanguageFeatures(LanguageIdEnum.MYSQL, {
 type CompletionRange = languages.CompletionItem['range'];
 
 export function buildCompletionProvider(
-  tableList: ShowTableStatus[],
+  tableList: string[],
   foreignKeys: ForeignKeysHelper,
   allColumns: ColumnDetailHelper
 ): languages.CompletionItemProvider {
@@ -138,7 +137,7 @@ export function buildCompletionProvider(
 
 /** `FROM ` / `JOIN `: propose every table, aliased and joined when possible */
 function tableCompletions(
-  tableList: ShowTableStatus[],
+  tableList: string[],
   foreignKeys: ForeignKeysHelper,
   tableAliases: Record<string, string>,
   range: CompletionRange
@@ -150,8 +149,8 @@ function tableCompletions(
   }));
 
   return tableList.map((table): languages.CompletionItem => {
-    const alias = generateTableAlias(table.Name, usedAliases);
-    const foreignKey = foreignKeys.getLinkBetweenTables(table.Name, usedTables);
+    const alias = generateTableAlias(table, usedAliases);
+    const foreignKey = foreignKeys.getLinkBetweenTables(table, usedTables);
 
     const joinString = foreignKey
       ? `ON ${alias}.${foreignKey.referencedColumnName} = ${
@@ -160,12 +159,12 @@ function tableCompletions(
       : '';
 
     return {
-      label: table.Name,
+      label: table,
       detail: foreignKey?.referencedTableName ?? undefined,
       kind: languages.CompletionItemKind.Variable,
-      insertText: `${table.Name} ${alias} ${joinString}`,
+      insertText: `${table} ${alias} ${joinString}`,
       range,
-      sortText: `1${table.Name}`,
+      sortText: `1${table}`,
     };
   });
 }
@@ -206,12 +205,12 @@ function columnCompletions(
   return tableNames.flatMap((tableName) =>
     allColumns.getColumnsForTable(tableName).map(
       (column): languages.CompletionItem => ({
-        label: column.Column,
-        insertText: column.Column,
+        label: column.name,
+        insertText: column.name,
         kind: languages.CompletionItemKind.Field,
         detail: tableName,
         range,
-        sortText: `1${column.Column}`,
+        sortText: `1${column.name}`,
       })
     )
   );

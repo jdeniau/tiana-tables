@@ -1,6 +1,7 @@
 import { escape } from 'mysql';
 import type { Dialect } from '../types';
 import { escapeIdentifier } from './escapeIdentifier';
+import { mysqlMetadata } from './metadata';
 
 export const mysqlDialect: Dialect = {
   escapeIdentifier,
@@ -21,4 +22,6 @@ export const mysqlDialect: Dialect = {
   // MySQL has no boolean type: `TRUE` is a synonym of `1`, and a column holding
   // one is a `TINYINT(1)` the driver hands over as a number
   booleanLiteral: (value) => (value ? '1' : '0'),
+
+  metadata: mysqlMetadata,
 };

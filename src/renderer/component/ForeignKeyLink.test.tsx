@@ -10,20 +10,19 @@ import { DEFAULT_THEME } from '../../configuration/themes';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
+import type { ForeignKey } from '../../sql/dialect/metadata';
 import { mysqlDialect } from '../../sql/dialect/mysql';
 import { FieldKind } from '../../sql/resultField';
-import type { KeyColumnUsageRow } from '../../sql/types';
 import ForeignKeyLink from './ForeignKeyLink';
 
-const FOREIGN_KEYS = [
+const FOREIGN_KEYS: ForeignKey[] = [
   {
-    TABLE_NAME: 'orders',
-    COLUMN_NAME: 'customer_label',
-    CONSTRAINT_NAME: 'fk_customer',
-    REFERENCED_TABLE_NAME: 'customers',
-    REFERENCED_COLUMN_NAME: 'label',
+    table: 'orders',
+    column: 'customer_label',
+    referencedTable: 'customers',
+    referencedColumn: 'label',
   },
-] as KeyColumnUsageRow[];
+];
 
 let container: HTMLElement;
 let unmount: () => void;
@@ -56,7 +55,7 @@ function renderLink(value: unknown, fieldKind: FieldKind): string | null {
             <DatabaseContext.Provider
               value={{ database: 'db', setDatabase: () => {} }}
             >
-              <ForeignKeysContextProvider keyColumnUsageRows={FOREIGN_KEYS}>
+              <ForeignKeysContextProvider foreignKeys={FOREIGN_KEYS}>
                 <ForeignKeyLink
                   dialect={mysqlDialect}
                   tableName="orders"

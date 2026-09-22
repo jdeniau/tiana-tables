@@ -26,10 +26,10 @@ import type { ColumnWidthByColumn } from '../../configuration/type';
 import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
-import { isJsonColumn } from '../../sql/columnEditing';
+import type { ColumnDetail } from '../../sql/dialect/metadata';
 import type { Dialect } from '../../sql/dialect/types';
 import { FieldKind, type ResultField } from '../../sql/resultField';
-import type { ColumnDetail, ResultRow } from '../../sql/types';
+import type { ResultRow } from '../../sql/types';
 import type { PrimaryKeyPart } from '../../sql/updateCell';
 import { useDialect } from '../hooks/useDialect';
 import {
@@ -243,7 +243,7 @@ function TableGrid<Row extends ResultRow>({
         primaryKey: rowKey,
         newValue,
         originalValue: toBoundValue(originalValue),
-        isJsonColumn: column.detail ? isJsonColumn(column.detail) : false,
+        isJsonColumn: column.detail?.json ?? false,
         force,
       });
 

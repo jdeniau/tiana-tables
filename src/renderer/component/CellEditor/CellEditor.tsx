@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
 import { Input, InputNumber, Select } from 'antd';
-import { isNullable, parseEnumValues } from '../../../sql/columnEditing';
+import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { FieldKind } from '../../../sql/resultField';
-import type { ColumnDetail } from '../../../sql/types';
 import JsonCellEditor from './JsonCellEditor';
 import { fromDateInputValue, toDateInputValue } from './dateTimeText';
 import type { EditableValue } from './editableValue';
@@ -35,17 +34,15 @@ export default function CellEditor({
   disabled,
 }: CellEditorProps) {
   const kind = resolveEditorKind(column, fieldKind, value.text);
-  const nullable = isNullable(column);
+  const nullable = column.nullable;
 
   const enumValues = useMemo(
     () =>
-      kind === EditorKind.Enum || kind === EditorKind.Set
-        ? parseEnumValues(column.ColumnType).map((enumValue) => ({
-            value: enumValue,
-            label: enumValue === '' ? '(empty)' : enumValue,
-          }))
-        : [],
-    [kind, column.ColumnType]
+      column.allowedValues.map((allowed) => ({
+        value: allowed,
+        label: allowed === '' ? '(empty)' : allowed,
+      })),
+    [column.allowedValues]
   );
 
   // clearing an editor means NULL on a nullable column, and an empty value

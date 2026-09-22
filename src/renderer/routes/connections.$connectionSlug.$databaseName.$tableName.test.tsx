@@ -55,10 +55,10 @@ function loadWith(url: string) {
 
 describe('loader', () => {
   beforeEach(() => {
+    // the one call this loader makes
     window.sql = {
-      // @ts-expect-error return is OK here, type is too complex for now
-      getPrimaryKeys: vi.fn(() => Promise.resolve([[{ Column_name: 'id' }]])),
-    };
+      getPrimaryKeyColumns: vi.fn(() => Promise.resolve(['id'])),
+    } as unknown as typeof window.sql;
   });
 
   afterEach(() => {

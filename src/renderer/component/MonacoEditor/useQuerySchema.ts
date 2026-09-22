@@ -13,17 +13,17 @@ export default function useQuerySchema(): QuerySchema {
   return useMemo(() => {
     const columns = new Map<string, Set<string>>();
 
-    for (const { Table, Column } of allColumns.getAllColumns()) {
-      const tableColumns = columns.get(Table) ?? new Set<string>();
+    for (const { table, name } of allColumns.getAllColumns()) {
+      const tableColumns = columns.get(table) ?? new Set<string>();
 
       // MySQL ignores the case of column names
-      tableColumns.add(Column.toLowerCase());
-      columns.set(Table, tableColumns);
+      tableColumns.add(name.toLowerCase());
+      columns.set(table, tableColumns);
     }
 
     return {
       database,
-      tables: new Set(tableList.map((table) => table.Name)),
+      tables: new Set(tableList),
       columns,
     };
   }, [allColumns, database, tableList]);

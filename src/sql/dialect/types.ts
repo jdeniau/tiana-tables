@@ -1,3 +1,5 @@
+import type { DialectMetadata } from './metadata';
+
 /**
  * The SQL text that differs from one server to another.
  *
@@ -19,4 +21,7 @@ export interface Dialect {
 
   /** How this server spells a boolean in a comparison. */
   booleanLiteral(value: boolean): string;
+
+  /** What the app asks this server about itself. */
+  metadata: DialectMetadata;
 }

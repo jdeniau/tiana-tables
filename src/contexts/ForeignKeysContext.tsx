@@ -1,17 +1,17 @@
 import { createContext, useContext } from 'react';
 import { ForeignKeysHelper } from '../sql/ForeignKeysHelper';
-import { KeyColumnUsageRow } from '../sql/types';
+import type { ForeignKey } from '../sql/dialect/metadata';
 
 const foreignKeysContext = createContext<ForeignKeysHelper | null>(null);
 
 export function ForeignKeysContextProvider({
   children,
-  keyColumnUsageRows,
+  foreignKeys,
 }: {
   children: React.ReactNode;
-  keyColumnUsageRows: KeyColumnUsageRow[];
+  foreignKeys: ForeignKey[];
 }) {
-  const foreignKeysHelper = new ForeignKeysHelper(keyColumnUsageRows);
+  const foreignKeysHelper = new ForeignKeysHelper(foreignKeys);
 
   return (
     <foreignKeysContext.Provider value={foreignKeysHelper}>

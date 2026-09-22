@@ -5,13 +5,12 @@ import { styled } from 'styled-components';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useOpenTablesContext } from '../../contexts/OpenTablesContext';
-import { ShowTableStatus } from '../../sql/types';
 import { accent, size, space } from '../theme';
 
 type MenuItem = Required<MenuProps>['items'][number];
 
 type Props = {
-  tableStatusList: ShowTableStatus[];
+  tableList: string[];
 };
 
 /**
@@ -32,9 +31,7 @@ const TableLink = styled(Link)<{ $selected: boolean }>`
   }
 `;
 
-export default function TableList({
-  tableStatusList,
-}: Props): ReactElement | null {
+export default function TableList({ tableList }: Props): ReactElement | null {
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const { memoriseTable } = useOpenTablesContext();
@@ -42,24 +39,24 @@ export default function TableList({
 
   const items: MenuItem[] = useMemo(
     () =>
-      tableStatusList?.map((rowDataPacket: ShowTableStatus) => ({
-        key: rowDataPacket.Name,
+      tableList?.map((name) => ({
+        key: name,
         label: (
           // the second click of a double memorises the table; the first navigated to the same place, so there is nothing to undo
           <TableLink
-            $selected={rowDataPacket.Name === tableName}
-            to={`/connections/${currentConnectionSlug}/${database}/tables/${rowDataPacket.Name}`}
-            onDoubleClick={() => memoriseTable(rowDataPacket.Name)}
+            $selected={name === tableName}
+            to={`/connections/${currentConnectionSlug}/${database}/tables/${name}`}
+            onDoubleClick={() => memoriseTable(name)}
           >
-            {rowDataPacket.Name}
+            {name}
           </TableLink>
         ),
-        title: rowDataPacket.Name,
+        title: name,
       })),
-    [currentConnectionSlug, database, memoriseTable, tableStatusList, tableName]
+    [currentConnectionSlug, database, memoriseTable, tableList, tableName]
   );
 
-  if (!tableStatusList) {
+  if (!tableList) {
     return null;
   }
 

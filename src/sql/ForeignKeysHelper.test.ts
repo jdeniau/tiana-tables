@@ -1,21 +1,19 @@
 import { describe, expect, test } from 'vitest';
 import { ForeignKeysHelper } from './ForeignKeysHelper';
-import { KeyColumnUsageRow } from './types';
+import type { ForeignKey } from './dialect/metadata';
 
-const FOREIGN_KEYS: Array<KeyColumnUsageRow> = [
+const FOREIGN_KEYS: Array<ForeignKey> = [
   {
-    TABLE_NAME: 'employee',
-    COLUMN_NAME: 'title_id',
-    REFERENCED_TABLE_NAME: 'title',
-    REFERENCED_COLUMN_NAME: 'id',
-    CONSTRAINT_NAME: 'employee_title_id_fkey',
+    table: 'employee',
+    column: 'title_id',
+    referencedTable: 'title',
+    referencedColumn: 'id',
   },
   {
-    TABLE_NAME: 'planning',
-    COLUMN_NAME: 'employee_id',
-    REFERENCED_TABLE_NAME: 'employee',
-    REFERENCED_COLUMN_NAME: 'id',
-    CONSTRAINT_NAME: 'planning_employee_id_fkey',
+    table: 'planning',
+    column: 'employee_id',
+    referencedTable: 'employee',
+    referencedColumn: 'id',
   },
 ];
 

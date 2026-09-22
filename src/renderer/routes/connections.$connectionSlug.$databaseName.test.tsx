@@ -49,46 +49,16 @@ function setConfiguration(
 
 describe('loader', () => {
   beforeEach(() => {
+    // only the metadata calls the loader makes are mocked
     window.sql = {
-      // @ts-expect-error return is OK here, type is too complex or now
-      showDatabases: vi.fn(() =>
-        Promise.resolve([
-          [
-            {
-              Database: 'databaseName1',
-            },
-            {
-              Database: 'databaseName2',
-            },
-          ],
-          [],
-        ])
+      listDatabases: vi.fn(() =>
+        Promise.resolve(['databaseName1', 'databaseName2'])
       ),
-      // @ts-expect-error return is OK here, type is too complex or now
-      showTableStatus: vi.fn(() =>
-        Promise.resolve([
-          [
-            {
-              Name: 'table1',
-              Rows: 1,
-              Data_length: 1,
-              Comment: 'table1 comment',
-            },
-            {
-              Name: 'table2',
-              Rows: 2,
-              Data_length: 2,
-              Comment: 'table2 comment',
-            },
-          ],
-        ])
-      ),
-      // @ts-expect-error return is OK here, type is too complex or now
-      getKeyColumnUsage: vi.fn(() => []),
-      // @ts-expect-error return is OK here, type is too complex or now
+      listTables: vi.fn(() => Promise.resolve(['table1', 'table2'])),
+      getForeignKeys: vi.fn(() => Promise.resolve([])),
       getAllColumns: vi.fn(() => Promise.resolve([])),
       connectionNameChanged: vi.fn(),
-    };
+    } as unknown as typeof window.sql;
   });
 
   afterEach(() => {
@@ -112,23 +82,22 @@ describe('loader', () => {
     // TODO handle this case
     const params = { connectionSlug: 'connectionSlug' };
 
-    // @ts-expect-error return is OK here, type is too complex or now
-    window.sql.showDatabases = vi.fn(() => Promise.resolve([[]]));
+    window.sql.listDatabases = vi.fn(() => Promise.resolve([]));
 
     setConfiguration(undefined, undefined);
 
-    expect(() =>
+    await expect(() =>
       loader({ params, request: new Request('http://localhost') })
     ).rejects.toThrowError('No database found. Case not handled for now.');
   });
 
-  test('current database is not in the database list', () => {
+  test('current database is not in the database list', async () => {
     // TODO handle this case
     const params = { connectionSlug: 'connectionSlug' };
 
     setConfiguration('connectionSlug', 'inexistant');
 
-    expect(() =>
+    await expect(() =>
       loader({ params, request: new Request('http://localhost') })
     ).rejects.toThrowError(
       'Database not found in the database list. Case not handled for now.'
@@ -161,24 +130,10 @@ describe('loader', () => {
       connectionSlug: 'connectionSlug',
       activeDatabase: 'databaseName2',
       openTables: [],
-      databaseList: [
-        { Database: 'databaseName1' },
-        { Database: 'databaseName2' },
-      ],
-      tableStatusList: [
-        {
-          Name: 'table1',
-          Rows: 1,
-          Data_length: 1,
-          Comment: 'table1 comment',
-        },
-        {
-          Name: 'table2',
-          Rows: 2,
-          Data_length: 2,
-          Comment: 'table2 comment',
-        },
-      ],
+      databaseList: ['databaseName1', 'databaseName2'],
+      tableList: ['table1', 'table2'],
+      foreignKeys: [],
+      allColumns: [],
     });
   });
 
@@ -217,8 +172,8 @@ describe('loader', () => {
       ),
     });
 
-    expect(window.sql.showTableStatus).toHaveBeenCalledWith('databaseName2');
-    expect(window.sql.getKeyColumnUsage).toHaveBeenCalledWith('databaseName2');
+    expect(window.sql.listTables).toHaveBeenCalledWith('databaseName2');
+    expect(window.sql.getForeignKeys).toHaveBeenCalledWith('databaseName2');
     expect(window.sql.getAllColumns).toHaveBeenCalledWith('databaseName2');
     expect(window.sql.connectionNameChanged).toHaveBeenLastCalledWith(
       'connectionSlug',

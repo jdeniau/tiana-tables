@@ -4,8 +4,6 @@ import { useTranslation } from '../../../i18n';
 import {
   NotEditableReason,
   getCellEditability,
-  isJsonColumn,
-  isNullable,
 } from '../../../sql/columnEditing';
 import CellEditor from '../CellEditor/CellEditor';
 import {
@@ -81,7 +79,7 @@ export default function CellDetailForm({
   }
 
   const column = columnDetail;
-  const validationError = findValidationError(edited, isJsonColumn(column));
+  const validationError = findValidationError(edited, column.json);
   const isUnchanged = isSameValue(edited, baseEditable);
   const isDeleted = conflict?.reason === 'deleted';
   const canSave =
@@ -140,7 +138,7 @@ export default function CellDetailForm({
 
       {saveError && <Alert type="error" showIcon title={saveError} />}
 
-      {isNullable(column) && (
+      {column.nullable && (
         <Checkbox
           checked={edited.isNull}
           disabled={isSaving}
