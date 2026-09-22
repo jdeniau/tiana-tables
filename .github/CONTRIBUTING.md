@@ -16,6 +16,24 @@ Then, you can install the dependencies with:
 yarn install
 ```
 
+## A database to work against
+
+Running the app means pointing it at a real server. [`dev/fixtures/`](../dev/fixtures/) holds a development dataset — "Le Fil", a news site with its articles, readers, subscriptions and comments — and the script that loads it into a local MariaDB container:
+
+```sh
+docker run -d --name tiana-dev-mysql --restart unless-stopped \
+  -p 13306:3306 -v tiana-dev-mysql:/var/lib/mysql \
+  -e MARIADB_ROOT_PASSWORD=devpassword -e MARIADB_DATABASE=tiana_dev \
+  mariadb:11
+dev/fixtures/mysql/load.sh
+```
+
+Then add a connection to `127.0.0.1:13306`, user `root`, password `devpassword`.
+
+It is 25 tables and 2 views, around 14 000 rows, written to exercise what the app has to render: composite primary keys, self-referencing foreign keys, a generated column, `JSON`, `ENUM`, `DECIMAL`, `TIMESTAMP … ON UPDATE`, column comments, nullable columns everywhere, long `TEXT` and views next to base tables. The rows hold together in time, so a screenshot of any table reads like real data.
+
+Loading is repeatable: the script drops and recreates its own tables, leaves anything else in the database alone, and the generator is seeded, so you always get the same rows. [`dev/fixtures/README.md`](../dev/fixtures/README.md) describes the dataset.
+
 ## Understand the project
 
 The main code repository is located in the `src` folder.
