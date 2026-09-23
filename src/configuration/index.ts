@@ -106,8 +106,13 @@ function loadConfiguration(): Configuration {
     connections: Object.fromEntries(
       Object.entries(config.connections ?? {}).map(([slug, connection]) => [
         slug,
-        // nothing checks what the file holds, and no file names an engine yet: MySQL is all the app has ever talked to
-        { ...connection, engine: connection.engine ?? DatabaseEngine.MySQL },
+        {
+          ...connection,
+          // nothing checks what the file holds, and no file names an engine yet: MySQL is all the app has ever talked to
+          engine: connection.engine ?? DatabaseEngine.MySQL,
+          // the form submitted the port as text until it had a number field, so older files hold a string
+          port: Number(connection.port),
+        },
       ])
     ),
   };

@@ -1,4 +1,4 @@
-import { Button, Flex, Form, Input } from 'antd';
+import { Button, Flex, Form, Input, InputNumber } from 'antd';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router';
 import type { EncryptedConnectionObject } from '../../../configuration/type';
@@ -137,7 +137,13 @@ function ConnectionForm({ connection }: Props) {
                 rules={[{ required: true }]}
                 style={PORT}
               >
-                <Input />
+                <InputNumber
+                  min={1}
+                  max={65535}
+                  precision={0}
+                  controls={false}
+                  style={{ width: '100%' }}
+                />
               </Form.Item>
             </Flex>
 

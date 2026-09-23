@@ -152,6 +152,28 @@ describe('read configuration from file', () => {
     expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
 
+  test('a port stored as text is read as the number it is', () => {
+    mockExistingConfig({
+      version: 1,
+      theme: DEFAULT_THEME.name,
+      locale: DEFAULT_LOCALE,
+      connections: {
+        local: {
+          name: 'local',
+          engine: DatabaseEngine.MySQL,
+          host: 'localhost',
+          user: 'root',
+          // @ts-expect-error -- what the form wrote before it had a number field
+          port: '3307',
+          password: Buffer.from('encrypted-password').toString('base64'),
+          slug: 'local',
+        },
+      },
+    });
+
+    expect(getConfiguration().connections.local.port).toBe(3307);
+  });
+
   test('existing file with connexions', () => {
     mockExistingConfig();
 
