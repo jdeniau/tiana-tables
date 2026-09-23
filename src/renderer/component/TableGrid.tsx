@@ -30,7 +30,7 @@ import type { ColumnDetail } from '../../sql/dialect/metadata';
 import type { Dialect } from '../../sql/dialect/types';
 import { FieldKind, type ResultField } from '../../sql/resultField';
 import type { ResultRow } from '../../sql/types';
-import type { PrimaryKeyPart } from '../../sql/updateCell';
+import { type PrimaryKeyPart, UpdateCellStatus } from '../../sql/updateCell';
 import { useDialect } from '../hooks/useDialect';
 import {
   accent,
@@ -247,7 +247,7 @@ function TableGrid<Row extends ResultRow>({
         force,
       });
 
-      if (outcome.status === 'updated') {
+      if (outcome.status === UpdateCellStatus.Updated) {
         flashCell();
         onValueUpdated?.(detail.rowIndex, column.name, outcome.value);
       }

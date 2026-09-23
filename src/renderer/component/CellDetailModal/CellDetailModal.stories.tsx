@@ -3,9 +3,11 @@ import type { Meta, StoryObj } from '@storybook/react';
 import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
 import { FieldKind } from '../../../sql/resultField';
-import type {
-  PrimaryKeyPart,
-  UpdateCellOutcome,
+import {
+  ConflictReason,
+  type PrimaryKeyPart,
+  type UpdateCellOutcome,
+  UpdateCellStatus,
 } from '../../../sql/updateCell';
 import type { ColumnMeta } from '../TableGrid';
 import CellDetailModal from './CellDetailModal';
@@ -67,7 +69,7 @@ const saveSucceeds = async ({
 }): Promise<UpdateCellOutcome> => {
   action('onSave')(newValue);
 
-  return { status: 'updated', value: newValue };
+  return { status: UpdateCellStatus.Updated, value: newValue };
 };
 
 const meta: Meta<typeof CellDetailModal> = {
@@ -213,8 +215,8 @@ export const ConflictOnSave: Story = {
       action('onSave')(newValue);
 
       return {
-        status: 'conflict',
-        reason: 'changed',
+        status: UpdateCellStatus.Conflict,
+        reason: ConflictReason.Changed,
         currentValue: 'what someone else wrote',
       };
     },
@@ -230,7 +232,10 @@ export const RowDeletedOnSave: Story = {
     onSave: async ({ newValue }) => {
       action('onSave')(newValue);
 
-      return { status: 'conflict', reason: 'deleted' };
+      return {
+        status: UpdateCellStatus.Conflict,
+        reason: ConflictReason.Deleted,
+      };
     },
   },
 };

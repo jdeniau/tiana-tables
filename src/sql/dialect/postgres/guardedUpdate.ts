@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import type { UpdateCellRequest } from '../../updateCell';
+import {
+  ConflictReason,
+  type UpdateCellRequest,
+  UpdateCellStatus,
+} from '../../updateCell';
 import { primaryKeyClause } from '../primaryKeyClause';
 import { readQuery } from '../readQuery';
 import type { GuardedUpdate } from '../types';
@@ -55,7 +59,7 @@ export function postgresGuardedUpdate(
     outcomeOfWrite: (written) => {
       const [row] = z.array(cellRow).parse(written);
 
-      return row && { status: 'updated', value: row.value };
+      return row && { status: UpdateCellStatus.Updated, value: row.value };
     },
 
     readBack: readQuery('readBack', {
@@ -72,7 +76,11 @@ export function postgresGuardedUpdate(
     // the write matched nothing: the row is gone, or its cell holds something else
     outcomeOfReadBack: (_written, read) =>
       read
-        ? { status: 'conflict', reason: 'changed', currentValue: read.value }
-        : { status: 'conflict', reason: 'deleted' },
+        ? {
+            status: UpdateCellStatus.Conflict,
+            reason: ConflictReason.Changed,
+            currentValue: read.value,
+          }
+        : { status: UpdateCellStatus.Conflict, reason: ConflictReason.Deleted },
   };
 }

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ConnectionFailure } from './connectionError';
 import { DatabaseEngine } from './engine';
+import { UpdateCellStatus } from './updateCell';
 import connectionStack from './index';
 
 const mocks = vi.hoisted(() => ({
@@ -206,7 +207,10 @@ describe('database-scoped queries', () => {
         expect.stringMatching(/^UPDATE /),
         expect.stringMatching(/^SELECT /),
       ]);
-      expect(result).toEqual({ status: 'updated', value: 'new label' });
+      expect(result).toEqual({
+        status: UpdateCellStatus.Updated,
+        value: 'new label',
+      });
     });
 
     test('a write the server refused is encoded, and nothing is read back', async () => {

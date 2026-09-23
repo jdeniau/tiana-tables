@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { UpdateCellRequest } from '../../updateCell';
+import {
+  ConflictReason,
+  type UpdateCellRequest,
+  UpdateCellStatus,
+} from '../../updateCell';
 import { postgresGuardedUpdate } from './guardedUpdate';
 
 function makeRequest(
@@ -93,7 +97,7 @@ describe('the outcome', () => {
 
   it('is settled by the write when it returned the row', () => {
     expect(guarded.outcomeOfWrite([{ value: 'stored' }])).toEqual({
-      status: 'updated',
+      status: UpdateCellStatus.Updated,
       value: 'stored',
     });
   });
@@ -106,8 +110,8 @@ describe('the outcome', () => {
     const read = guarded.readBack.answer([{ value: 'theirs' }]);
 
     expect(guarded.outcomeOfReadBack([], read)).toEqual({
-      status: 'conflict',
-      reason: 'changed',
+      status: UpdateCellStatus.Conflict,
+      reason: ConflictReason.Changed,
       currentValue: 'theirs',
     });
   });
@@ -116,8 +120,8 @@ describe('the outcome', () => {
     const read = guarded.readBack.answer([]);
 
     expect(guarded.outcomeOfReadBack([], read)).toEqual({
-      status: 'conflict',
-      reason: 'deleted',
+      status: UpdateCellStatus.Conflict,
+      reason: ConflictReason.Deleted,
     });
   });
 

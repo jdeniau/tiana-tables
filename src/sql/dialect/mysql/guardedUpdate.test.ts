@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { UpdateCellRequest } from '../../updateCell';
+import {
+  ConflictReason,
+  type UpdateCellRequest,
+  UpdateCellStatus,
+} from '../../updateCell';
 import { mysqlGuardedUpdate } from './guardedUpdate';
 
 function write(request: UpdateCellRequest) {
@@ -180,35 +184,39 @@ describe('the outcome', () => {
 
   it('reports the value read back once a row was changed', () => {
     expect(outcome(WROTE_ONE, [{ value: 'new', guardMatches: 0 }])).toEqual({
-      status: 'updated',
+      status: UpdateCellStatus.Updated,
       value: 'new',
     });
   });
 
   it('takes a guard that still holds for a value written twice', () => {
     expect(outcome(WROTE_NONE, [{ value: 'same', guardMatches: 1 }])).toEqual({
-      status: 'updated',
+      status: UpdateCellStatus.Updated,
       value: 'same',
     });
   });
 
   it('reports a conflict when someone else changed the cell', () => {
     expect(outcome(WROTE_NONE, [{ value: 'theirs', guardMatches: 0 }])).toEqual(
-      { status: 'conflict', reason: 'changed', currentValue: 'theirs' }
+      {
+        status: UpdateCellStatus.Conflict,
+        reason: ConflictReason.Changed,
+        currentValue: 'theirs',
+      }
     );
   });
 
   it('reports a deleted row when nothing reads back', () => {
     expect(outcome(WROTE_NONE, [])).toEqual({
-      status: 'conflict',
-      reason: 'deleted',
+      status: UpdateCellStatus.Conflict,
+      reason: ConflictReason.Deleted,
     });
   });
 
   it('trusts a forced write, which has no guard to fail', () => {
     expect(
       outcome(WROTE_NONE, [{ value: 'mine', guardMatches: 0 }], { force: true })
-    ).toEqual({ status: 'updated', value: 'mine' });
+    ).toEqual({ status: UpdateCellStatus.Updated, value: 'mine' });
   });
 
   it('refuses a read-back of another shape', () => {

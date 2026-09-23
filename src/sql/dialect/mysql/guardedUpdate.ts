@@ -1,7 +1,11 @@
 import invariant from 'tiny-invariant';
 import { z } from 'zod';
 import { isWriteResult } from '../../types';
-import type { UpdateCellRequest } from '../../updateCell';
+import {
+  ConflictReason,
+  type UpdateCellRequest,
+  UpdateCellStatus,
+} from '../../updateCell';
 import { primaryKeyClause } from '../primaryKeyClause';
 import { type BuiltQuery, readQuery } from '../readQuery';
 import type { GuardedUpdate } from '../types';
@@ -129,7 +133,10 @@ export function mysqlGuardedUpdate(
       invariant(isWriteResult(written), 'An UPDATE answers a write summary');
 
       if (!read) {
-        return { status: 'conflict', reason: 'deleted' };
+        return {
+          status: UpdateCellStatus.Conflict,
+          reason: ConflictReason.Deleted,
+        };
       }
 
       // MySQL counts *changed* rows in `affectedRows`, so writing the value a
@@ -139,12 +146,12 @@ export function mysqlGuardedUpdate(
       // comparison redone in JavaScript could not promise. A forced write has no
       // guard to speak of, so the row being there is all there is to check.
       if (request.force || written.affectedRows > 0 || read.guardMatches) {
-        return { status: 'updated', value: read.value };
+        return { status: UpdateCellStatus.Updated, value: read.value };
       }
 
       return {
-        status: 'conflict',
-        reason: 'changed',
+        status: UpdateCellStatus.Conflict,
+        reason: ConflictReason.Changed,
         currentValue: read.value,
       };
     },
