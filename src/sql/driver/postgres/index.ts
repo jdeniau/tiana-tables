@@ -7,9 +7,10 @@ import { asSqlError } from '../../sqlError';
 import type { QueryReturnType, ResultRow, SqlBoundValue } from '../../types';
 import { toFieldKind } from './fieldKind';
 import { toPositional } from './namedPlaceholders';
+import { relationNames } from './relationNames';
 
-/** The two fields read of a `pg` column, of the seven it ships. */
-type PostgresField = Pick<pg.FieldDef, 'name' | 'dataTypeID'>;
+/** The three fields read of a `pg` column, of the seven it ships. */
+type PostgresField = Pick<pg.FieldDef, 'name' | 'tableID' | 'dataTypeID'>;
 
 /**
  * What `pg` answered, in the shape the app reads.
@@ -26,14 +27,14 @@ function toQueryReturn(result: pg.QueryResult): QueryReturnType {
   return { affectedRows: result.rowCount ?? 0, insertId: null };
 }
 
-/**
- * The columns of a result, as the renderer reads them.
- * `table` stays `null` until the relation OID `pg` gives is resolved to a name.
- */
-function toResultFields(fields: PostgresField[]): ResultField[] {
+/** The columns of a result, as the renderer reads them, each table named from its OID. */
+function toResultFields(
+  fields: PostgresField[],
+  tables: ReadonlyMap<number, string | null>
+): ResultField[] {
   return fields.map((field) => ({
     name: field.name,
-    table: null,
+    table: tables.get(field.tableID) ?? null,
     kind: toFieldKind(field.dataTypeID),
   }));
 }
@@ -130,6 +131,15 @@ export const postgresDriver: Driver = {
 
     client.on('end', options.onClosed);
 
+    const tablesOf = relationNames(async (oids) => {
+      const { rows } = await client.query({
+        text: 'SELECT oid, relname FROM pg_catalog.pg_class WHERE oid = ANY ($1)',
+        values: [oids],
+      });
+
+      return rows;
+    });
+
     client.on('error', (error) => {
       log.error(error);
 
@@ -160,8 +170,11 @@ export const postgresDriver: Driver = {
 
         try {
           const result = await client.query(config);
+          const tables = await tablesOf(
+            result.fields.map((field) => field.tableID)
+          );
 
-          return [toQueryReturn(result), toResultFields(result.fields)];
+          return [toQueryReturn(result), toResultFields(result.fields, tables)];
         } catch (error) {
           throw asServerError(error);
         }

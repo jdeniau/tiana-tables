@@ -82,11 +82,23 @@ describe('toQueryReturn', () => {
 });
 
 describe('toResultFields', () => {
-  test('names each column with its kind, and no table yet', () => {
-    expect(toResultFields([field('email', 1043), field('id', 23)])).toEqual([
-      { name: 'email', table: null, kind: FieldKind.String },
-      { name: 'id', table: null, kind: FieldKind.Number },
+  // measured: `SELECT o.id, 1 FROM app.orders o` answers the OID of `orders`, then 0
+  test('names each column with its kind and the table its OID names', () => {
+    expect(
+      toResultFields(
+        [field('email', 1043), { ...field('one', 23), tableID: 0 }],
+        new Map([[16400, 'users']])
+      )
+    ).toEqual([
+      { name: 'email', table: 'users', kind: FieldKind.String },
+      { name: 'one', table: null, kind: FieldKind.Number },
     ]);
+  });
+
+  test('leaves the table out when its OID names none', () => {
+    expect(
+      toResultFields([field('email', 1043)], new Map([[16400, null]]))
+    ).toEqual([{ name: 'email', table: null, kind: FieldKind.String }]);
   });
 });
 
