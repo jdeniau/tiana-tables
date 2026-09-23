@@ -2,6 +2,7 @@ import log from 'electron-log';
 import type { FieldPacket, QueryResult as MySqlResult } from 'mysql2/promise';
 import type { Driver } from '..';
 import type { ResultField } from '../../resultField';
+import { asSqlError } from '../../sqlError';
 import type { QueryReturnType, ResultRow } from '../../types';
 import { toFieldKind } from './fieldKind';
 
@@ -40,6 +41,28 @@ function toResultFields(fields: MySqlField[] | undefined): ResultField[] {
   }));
 }
 
+/**
+ * Tag what mysql2 answered with a `code` and an `errno` as a statement the
+ * server refused, so the result tab shows it; anything else goes on untouched.
+ */
+function asServerError(error: unknown): unknown {
+  if (!(error instanceof Error) || !('code' in error) || !('errno' in error)) {
+    return error;
+  }
+
+  const { code, errno, sqlState } = error as {
+    code: unknown;
+    errno: unknown;
+    sqlState?: unknown;
+  };
+
+  return asSqlError(error, {
+    code: String(code),
+    errno: typeof errno === 'number' ? errno : undefined,
+    sqlState: typeof sqlState === 'string' ? sqlState : undefined,
+  });
+}
+
 export const mysqlDriver: Driver = {
   async connect(params, options) {
     // loaded only when a connection is actually opened, to keep app startup light
@@ -68,17 +91,21 @@ export const mysqlDriver: Driver = {
 
     return {
       query: async (statement) => {
-        const [result, fields] = await connection.query({
-          sql: statement.sql,
-          rowsAsArray: statement.rowsAsArray,
-          values: statement.values,
-          // Asked for per query, and never for the raw SQL of the editor: the
-          // rewriter does not know backticks, so a `:` inside a quoted
-          // identifier would be read as a parameter and corrupt the statement.
-          namedPlaceholders: statement.values !== undefined,
-        });
+        try {
+          const [result, fields] = await connection.query({
+            sql: statement.sql,
+            rowsAsArray: statement.rowsAsArray,
+            values: statement.values,
+            // Asked for per query, and never for the raw SQL of the editor: the
+            // rewriter does not know backticks, so a `:` inside a quoted
+            // identifier would be read as a parameter and corrupt the statement.
+            namedPlaceholders: statement.values !== undefined,
+          });
 
-        return [toQueryReturn(result), toResultFields(fields)];
+          return [toQueryReturn(result), toResultFields(fields)];
+        } catch (error) {
+          throw asServerError(error);
+        }
       },
 
       end: () => connection.end(),
@@ -92,5 +119,6 @@ export const mysqlDriver: Driver = {
 };
 
 export const testables = {
+  asServerError,
   toResultFields,
 };

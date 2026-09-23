@@ -220,6 +220,26 @@ describe('database-scoped queries', () => {
     });
   });
 
+  // tagged by the driver, so the result tab can tell it from a crash
+  test('a statement the server refused crosses IPC as one', async () => {
+    query.mockRejectedValue(
+      Object.assign(new Error("Table 'shop.nope' doesn't exist"), {
+        code: 'ER_NO_SUCH_TABLE',
+        errno: 1146,
+        sqlState: '42S02',
+      })
+    );
+
+    const { error } = await connectionStack.listTables('some-database');
+
+    // a plain object: an Error loses everything but its message over IPC
+    expect(error).not.toBeInstanceOf(Error);
+    expect(error).toMatchObject({
+      message: "Table 'shop.nope' doesn't exist",
+      detail: { kind: 'sql', code: 'ER_NO_SUCH_TABLE', errno: 1146 },
+    });
+  });
+
   test('an error of the server is encoded, never thrown at the renderer', async () => {
     query.mockRejectedValue(new Error('ER_NO_SUCH_TABLE'));
 

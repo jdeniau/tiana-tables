@@ -1,6 +1,6 @@
 import { useRouteError } from 'react-router';
 import SqlErrorComponent from '../../..//renderer/component/Query/SqlErrorComponent';
-import { SqlError } from '../../../sql/errorSerializer';
+import type { SqlError } from '../../../sql/sqlError';
 
 export default function ConnectionErrorPage() {
   const error = useRouteError() as SqlError;

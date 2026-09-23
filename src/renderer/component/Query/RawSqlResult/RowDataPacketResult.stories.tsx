@@ -3,8 +3,8 @@ import { Fetcher } from 'react-router';
 import reactRouterDecorator from '../../../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../../../contexts/AllColumnsContext';
 import { ForeignKeysContextProvider } from '../../../../contexts/ForeignKeysContext';
-import { SqlError } from '../../../../sql/errorSerializer';
 import { FieldKind, type ResultField } from '../../../../sql/resultField';
+import type { SqlError } from '../../../../sql/sqlError';
 import type { ResultRow, WriteResult } from '../../../../sql/types';
 import RawSqlResult, {
   SqlActionReturnTypes,
@@ -24,15 +24,14 @@ const ROWS = [
 
 const WRITTEN: WriteResult = { affectedRows: 3, insertId: 42 };
 
-const ERROR = {
+const ERROR: SqlError = {
   name: 'Error',
   message: "Table 'shop.nope' doesn't exist",
+  kind: 'sql',
   code: 'ER_NO_SUCH_TABLE',
   errno: 1146,
-  sql: 'SELECT * FROM nope',
-  sqlMessage: "Table 'shop.nope' doesn't exist",
   sqlState: '42S02',
-} as SqlError;
+};
 
 const SELECT: StatementOutcome = {
   sql: 'SELECT id, name FROM employe LIMIT 10;',

@@ -3,7 +3,7 @@ import { Empty, Segmented, Spin, theme as antdTheme } from 'antd';
 import { Fetcher } from 'react-router';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../../i18n';
-import { SqlError } from '../../../../sql/errorSerializer';
+import type { SqlError } from '../../../../sql/sqlError';
 import { QueryResult, isWriteResult } from '../../../../sql/types';
 import { space } from '../../../theme';
 import ChartPanel from '../../Chart/ChartPanel';

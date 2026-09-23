@@ -6,9 +6,9 @@ import invariant from 'tiny-invariant';
 import { PANEL } from '../../configuration/panels';
 import { useTranslation } from '../../i18n';
 import { hasLimitClause } from '../../sql/hasLimitClause';
-import { isSqlError } from '../../sql/isSqlError';
 import { RunMode, toRunMode } from '../../sql/runMode';
 import { splitStatements, statementAtOffset } from '../../sql/splitStatements';
+import { isSqlError } from '../../sql/sqlError';
 import type { RawSqlEditorHandle } from '../component/MonacoEditor/RawSqlEditor';
 import RawSqlResult, {
   SqlActionReturnTypes,

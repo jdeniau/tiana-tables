@@ -17,13 +17,12 @@ type Story = StoryObj<typeof SqlErrorComponent>;
 export const SqlError: Story = {
   args: {
     error: {
-      message: 'Unable to connect to the database "test"',
-      errno: 42,
-      code: 'ERR_SOME_ERROR',
-      sql: 'SQL',
-      sqlMessage: 'SQL Message',
-      sqlState: 'SQL State',
-      name: 'Error Name',
+      name: 'Error',
+      message: "Table 'shop.nope' doesn't exist",
+      kind: 'sql',
+      code: 'ER_NO_SUCH_TABLE',
+      errno: 1146,
+      sqlState: '42S02',
     },
   },
 };

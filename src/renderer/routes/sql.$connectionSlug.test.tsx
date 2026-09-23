@@ -3,8 +3,8 @@
  */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DatabaseEngine } from '../../sql/engine';
-import { SqlError } from '../../sql/errorSerializer';
 import { RunMode } from '../../sql/runMode';
+import type { SqlError } from '../../sql/sqlError';
 import { action } from './sql.$connectionSlug';
 
 function runAction(
@@ -35,14 +35,16 @@ function sentQueries(): unknown[] {
     .map(([query]) => query);
 }
 
+/** a refused statement as the preload throws it: decoded flat */
 function sqlError(message: string): SqlError {
-  return Object.assign(new Error(message), {
+  return {
+    name: 'Error',
+    message,
+    kind: 'sql',
     code: 'ER_NO_SUCH_TABLE',
     errno: 1146,
-    sql: '',
-    sqlMessage: message,
     sqlState: '42S02',
-  });
+  };
 }
 
 describe('action', () => {

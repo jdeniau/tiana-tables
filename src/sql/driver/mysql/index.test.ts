@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { FieldKind } from '../../resultField';
 import { testables } from './index';
 
-const { toResultFields } = testables;
+const { asServerError, toResultFields } = testables;
 
 /** the four fields the conversion reads, which the driver keeps to itself */
 function column(overrides: {
@@ -19,6 +19,59 @@ function column(overrides: {
     ...overrides,
   };
 }
+
+describe('asServerError', () => {
+  // the fields mysql2 rejects a statement with, measured against MariaDB 11.8
+  function refused() {
+    return Object.assign(new Error("Unknown column 'nope' in 'SELECT'"), {
+      code: 'ER_BAD_FIELD_ERROR',
+      errno: 1054,
+      sqlState: '42S22',
+      sqlMessage: "Unknown column 'nope' in 'SELECT'",
+      sql: 'SELECT nope FROM t',
+    });
+  }
+
+  test('tags a statement the server refused, keeping its message', () => {
+    const error = asServerError(refused());
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toMatchObject({
+      message: "Unknown column 'nope' in 'SELECT'",
+      detail: {
+        kind: 'sql',
+        code: 'ER_BAD_FIELD_ERROR',
+        errno: 1054,
+        sqlState: '42S22',
+      },
+    });
+  });
+
+  // the retry reads `isConnectionLost` off the very same error
+  test('tags the error in place, rather than a copy', () => {
+    const error = refused();
+
+    expect(asServerError(error)).toBe(error);
+  });
+
+  // mysql2 builds its own ETIMEDOUT with `errorno`, not `errno`
+  test('leaves alone a code the server did not number', () => {
+    const error = Object.assign(new Error('connect ETIMEDOUT'), {
+      code: 'ETIMEDOUT',
+      errorno: 'ETIMEDOUT',
+    });
+
+    expect(asServerError(error)).not.toHaveProperty('detail');
+  });
+
+  test('leaves alone what is not the server answering', () => {
+    const error = new Error(
+      "Can't add new command when connection is in closed state"
+    );
+
+    expect(asServerError(error)).not.toHaveProperty('detail');
+  });
+});
 
 describe('toResultFields', () => {
   /**
