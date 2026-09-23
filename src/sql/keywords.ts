@@ -499,7 +499,25 @@ const MYSQL_RESERVED_KEYWORDS = [
   'ZEROFILL',
 ];
 
+// the words PostgreSQL reserves beyond the two lists above, from its documentation (appendix C)
+const POSTGRESQL_RESERVED_KEYWORDS = [
+  'ANALYSE',
+  'COLLATION',
+  'CONCURRENTLY',
+  'DEFERRABLE',
+  'FREEZE',
+  'ILIKE',
+  'INITIALLY',
+  'ISNULL',
+  'NOTNULL',
+  'PLACING',
+  'RETURNING',
+  'VARIADIC',
+  'VERBOSE',
+];
+
 export const SQL_RESERVED_KEYWORDS = [
   ...SQL_2023_RESERVED_KEYWORDS,
   ...MYSQL_RESERVED_KEYWORDS,
+  ...POSTGRESQL_RESERVED_KEYWORDS,
 ];

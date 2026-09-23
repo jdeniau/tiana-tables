@@ -107,7 +107,7 @@ export type RawSqlEditorHandle = {
 };
 
 type Props = {
-  /** whose grammar reads the content, and whose tokenizer colors it */
+  /** whose grammar reads the content, and whose tokenizer colors it: fixed, since a connection change remounts the page */
   engine: DatabaseEngine;
   defaultValue?: string;
   ref?: Ref<RawSqlEditorHandle>;
