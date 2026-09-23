@@ -1,4 +1,35 @@
+import type { QueryReturnType } from '../types';
+import type { UpdateCellOutcome, UpdateCellRequest } from '../updateCell';
 import type { DialectMetadata } from './metadata';
+import type { BuiltQuery, ReadQuery } from './readQuery';
+
+/**
+ * The edited cell as read back after the write:
+ * its value, and whether the guard still holds.
+ */
+interface CellRead {
+  value: unknown;
+  guardMatches: boolean;
+}
+
+/**
+ * Writing one cell only if it still holds what the grid showed,
+ * and telling what became of it.
+ */
+export interface GuardedUpdate {
+  write: BuiltQuery;
+
+  /** Settled by the write alone, or `undefined` when the read-back must tell. */
+  outcomeOfWrite(written: QueryReturnType): UpdateCellOutcome | undefined;
+
+  /** The cell after the write, `undefined` when its row is gone. */
+  readBack: ReadQuery<CellRead | undefined>;
+
+  outcomeOfReadBack(
+    written: QueryReturnType,
+    read: CellRead | undefined
+  ): UpdateCellOutcome;
+}
 
 /**
  * The SQL text that differs from one server to another.
@@ -24,4 +55,6 @@ export interface Dialect {
 
   /** What the app asks this server about itself. */
   metadata: DialectMetadata;
+
+  guardedUpdate(request: UpdateCellRequest): GuardedUpdate;
 }

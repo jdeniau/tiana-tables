@@ -125,7 +125,7 @@ describe('database-scoped queries', () => {
     const { result, error } = await connectionStack.listTables('some-database');
 
     expect(result).toBeUndefined();
-    expect(error?.message).toContain('metadata query');
+    expect(error?.message).toContain('read query');
   });
 
   // two questions, one page: the dialect's description, then the database's foreign keys
@@ -183,6 +183,41 @@ describe('database-scoped queries', () => {
     const { result } = await ask();
 
     expect(result).toEqual(['Zeta', 'alpha', 'user', 'user_role', 'users']);
+  });
+
+  describe('writing a cell', () => {
+    const request = {
+      database: 'shop',
+      table: 'orders',
+      column: 'label',
+      primaryKey: [{ column: 'id', value: 42 }],
+      newValue: 'new label',
+      originalValue: 'old label',
+    };
+
+    test('writes, then reads the cell back for the outcome', async () => {
+      query
+        .mockResolvedValueOnce([{ affectedRows: 1, insertId: 0 }, []])
+        .mockResolvedValueOnce([[{ value: 'new label', guardMatches: 0 }], []]);
+
+      const { result } = await connectionStack.updateCell(request);
+
+      expect(statementsSent()).toEqual([
+        expect.stringMatching(/^UPDATE /),
+        expect.stringMatching(/^SELECT /),
+      ]);
+      expect(result).toEqual({ status: 'updated', value: 'new label' });
+    });
+
+    test('a write the server refused is encoded, and nothing is read back', async () => {
+      query.mockRejectedValueOnce(new Error('ER_DATA_TOO_LONG'));
+
+      const { result, error } = await connectionStack.updateCell(request);
+
+      expect(result).toBeUndefined();
+      expect(error).toMatchObject({ message: 'ER_DATA_TOO_LONG' });
+      expect(query).toHaveBeenCalledTimes(1);
+    });
   });
 
   test('an error of the server is encoded, never thrown at the renderer', async () => {

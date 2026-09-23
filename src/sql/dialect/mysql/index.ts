@@ -1,6 +1,7 @@
 import { escape } from 'mysql';
 import type { Dialect } from '../types';
 import { escapeIdentifier } from './escapeIdentifier';
+import { mysqlGuardedUpdate } from './guardedUpdate';
 import { mysqlMetadata } from './metadata';
 
 export const mysqlDialect: Dialect = {
@@ -24,4 +25,6 @@ export const mysqlDialect: Dialect = {
   booleanLiteral: (value) => (value ? '1' : '0'),
 
   metadata: mysqlMetadata,
+
+  guardedUpdate: mysqlGuardedUpdate,
 };

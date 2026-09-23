@@ -1,63 +1,5 @@
-import { z } from 'zod';
-import type { ResultRow, SqlBoundValues } from '../types';
-
-/**
- * A statement with the values its placeholders name:
- * identifiers are bound, never interpolated.
- */
-export interface BuiltQuery {
-  sql: string;
-  values: SqlBoundValues;
-}
-
-/**
- * Parses a server's rows against the shape its statement selects,
- * naming the question, row and column that do not fit.
- */
-function rowsOf<T>(
-  question: string,
-  row: z.ZodType<T>,
-  rows: ResultRow[]
-): T[] {
-  const parsed = z.array(row).safeParse(rows);
-
-  if (parsed.success) {
-    return parsed.data;
-  }
-
-  const [issue] = parsed.error.issues;
-  // the path of an array of objects reads `[index, …keys]`
-  const [index, ...keys] = issue.path.map(String);
-  const where =
-    keys.length > 0 ? `row ${index}, ${keys.join('.')}` : `row ${index}`;
-
-  throw new Error(
-    `${question} answered a row this dialect cannot read — ${where}: ${issue.message}`
-  );
-}
-
-/** A metadata statement, and how to read what the server answers to it. */
-export interface MetadataQuery<Answer> extends BuiltQuery {
-  answer(rows: ResultRow[]): Answer;
-}
-
-/**
- * The one way a dialect writes a metadata question:
- * the rows are parsed against `row` before `read` sees them.
- */
-export function metadataQuery<Row, Answer>(
-  question: string,
-  query: BuiltQuery & {
-    row: z.ZodType<Row>;
-    read(rows: Row[]): Answer;
-  }
-): MetadataQuery<Answer> {
-  return {
-    sql: query.sql,
-    values: query.values,
-    answer: (rows) => query.read(rowsOf(question, query.row, rows)),
-  };
-}
+import type { ResultRow } from '../types';
+import type { ReadQuery } from './readQuery';
 
 /** One column that references another, both named as the app knows them. */
 export interface ForeignKey {
@@ -111,25 +53,25 @@ export interface TableStructureRow extends DescribedColumn, ResultRow {
 /** What the app asks a server about itself. */
 export interface DialectMetadata {
   /** The databases, which are the schemas on PostgreSQL, in no particular order. */
-  listDatabases(): MetadataQuery<string[]>;
+  listDatabases(): ReadQuery<string[]>;
 
   /** Tables and views alike, in no particular order: the app browses both. */
-  listTables(databaseName: string): MetadataQuery<string[]>;
+  listTables(databaseName: string): ReadQuery<string[]>;
 
   /** Only the columns that reference another, the rest being of no use here. */
-  listForeignKeys(databaseName: string): MetadataQuery<ForeignKey[]>;
+  listForeignKeys(databaseName: string): ReadQuery<ForeignKey[]>;
 
   /** In the order the key declares them, which a row key has to agree with. */
   listPrimaryKeyColumns(
     databaseName: string,
     tableName: string
-  ): MetadataQuery<string[]>;
+  ): ReadQuery<string[]>;
 
-  listColumns(databaseName: string): MetadataQuery<ColumnDetail[]>;
+  listColumns(databaseName: string): ReadQuery<ColumnDetail[]>;
 
   /** Every column of one table, in the order the table declares them. */
   describeTable(
     databaseName: string,
     tableName: string
-  ): MetadataQuery<DescribedColumn[]>;
+  ): ReadQuery<DescribedColumn[]>;
 }

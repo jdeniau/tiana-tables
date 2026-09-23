@@ -1,12 +1,11 @@
 import invariant from 'tiny-invariant';
-import { escapeIdentifier } from './dialect/mysql/escapeIdentifier';
-import type { SqlBoundValues } from './types';
-import type { UpdateCellRequest } from './updateCell';
-
-export interface BuiltQuery {
-  sql: string;
-  values: SqlBoundValues;
-}
+import { z } from 'zod';
+import { isWriteResult } from '../../types';
+import type { SqlBoundValues } from '../../types';
+import type { UpdateCellRequest } from '../../updateCell';
+import { type BuiltQuery, readQuery } from '../readQuery';
+import type { GuardedUpdate } from '../types';
+import { escapeIdentifier } from './escapeIdentifier';
 
 function qualifiedTable({
   database,
@@ -32,7 +31,7 @@ function primaryKeyParameter(index: number): string {
  *
  * Plain `=`, and not the null-safe `<=>` used by the guard below: MySQL forces
  * `NOT NULL` on every column of a `PRIMARY KEY`, and it is the `PRIMARY` key we
- * read (`SHOW KEYS … WHERE Key_name = 'PRIMARY'`), never a unique index that
+ * read (`STATISTICS … INDEX_NAME = 'PRIMARY'`), never a unique index that
  * could hold one. A null-safe comparison here would only invite the reader to
  * wonder when a key is `NULL`.
  */
@@ -76,15 +75,15 @@ function valueExpression(
  *
  * Optimistic concurrency lives in the last term of the `WHERE`: the cell is
  * only written if it still holds the value the row was loaded with. When it
- * doesn't, the statement matches nothing and `updateCell` goes on to find out
- * why (see `buildReadCellQuery`). `force` drops that term, which is what the
+ * doesn't, the statement matches nothing and the read-back finds out why
+ * (see `buildReadBack`). `force` drops that term, which is what the
  * user asks for when they choose to overwrite a reported conflict.
  *
  * `LIMIT 1` bounds the blast radius: the primary key should already match a
  * single row, and if it doesn't (an incomplete key list) one wrong row is a
  * far smaller accident than a whole table.
  */
-export function buildUpdateCellQuery(request: UpdateCellRequest): BuiltQuery {
+function buildWrite(request: UpdateCellRequest): BuiltQuery {
   const { column, newValue, originalValue, isJsonColumn, force } = request;
   const escapedColumn = escapeIdentifier(column);
   const primaryKeyPart = primaryKeyClause(request.primaryKey);
@@ -124,7 +123,7 @@ export function buildUpdateCellQuery(request: UpdateCellRequest): BuiltQuery {
  * MySQL with the very same `<=>` comparison as the guard, so it never disagrees
  * with it the way a comparison redone in JavaScript would.
  */
-export function buildReadCellQuery(request: UpdateCellRequest): BuiltQuery {
+function buildReadBack(request: UpdateCellRequest): BuiltQuery {
   const escapedColumn = escapeIdentifier(request.column);
   const primaryKeyPart = primaryKeyClause(request.primaryKey);
 
@@ -139,5 +138,47 @@ export function buildReadCellQuery(request: UpdateCellRequest): BuiltQuery {
   return {
     sql,
     values: { originalValue: request.originalValue, ...primaryKeyPart.values },
+  };
+}
+
+const cellReadRow = z.object({ value: z.unknown(), guardMatches: z.number() });
+
+export function mysqlGuardedUpdate(request: UpdateCellRequest): GuardedUpdate {
+  return {
+    write: buildWrite(request),
+
+    // the value to display is the server's, never the string the editor sent
+    outcomeOfWrite: () => undefined,
+
+    readBack: readQuery('readBack', {
+      ...buildReadBack(request),
+      row: cellReadRow,
+      read: ([row]) =>
+        row && { value: row.value, guardMatches: row.guardMatches === 1 },
+    }),
+
+    outcomeOfReadBack: (written, read) => {
+      invariant(isWriteResult(written), 'An UPDATE answers a write summary');
+
+      if (!read) {
+        return { status: 'conflict', reason: 'deleted' };
+      }
+
+      // MySQL counts *changed* rows in `affectedRows`, so writing the value a
+      // cell already held reports 0 — indistinguishable, on its own, from a
+      // guard that did not match. `guardMatches` tells the two apart: the server
+      // computed it with the very same `<=>` comparison as the guard, which a
+      // comparison redone in JavaScript could not promise. A forced write has no
+      // guard to speak of, so the row being there is all there is to check.
+      if (request.force || written.affectedRows > 0 || read.guardMatches) {
+        return { status: 'updated', value: read.value };
+      }
+
+      return {
+        status: 'conflict',
+        reason: 'changed',
+        currentValue: read.value,
+      };
+    },
   };
 }

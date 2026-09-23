@@ -49,7 +49,7 @@ export type ConnectionObjectWithoutSlug = Omit<ConnectionObject, 'slug'>;
 /**
  * A value bound to a placeholder of an UPDATE. Values travel over IPC, so they
  * are limited to what structured clone carries: `Date` survives, and every
- * edited value is sent as a string (see `buildUpdateCellQuery`).
+ * edited value is sent as a string (see the dialect's `guardedUpdate`).
  */
 export type SqlBoundValue = string | number | Date | null;
 

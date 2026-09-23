@@ -5,10 +5,6 @@ import { decryptPassword } from '../configuration/encryption';
 import { EncryptedConnectionObject } from '../configuration/type';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import {
-  buildReadCellQuery,
-  buildUpdateCellQuery,
-} from './buildUpdateCellQuery';
-import {
   KEYRING_LOCKED,
   PASSWORD_UNREADABLE,
   asConnectionError,
@@ -17,9 +13,9 @@ import { getDialect } from './dialect';
 import {
   type ColumnDetail,
   type ForeignKey,
-  type MetadataQuery,
   type TableStructureRow,
 } from './dialect/metadata';
+import type { ReadQuery } from './dialect/readQuery';
 import type { Dialect } from './dialect/types';
 import { loadDriver } from './driver';
 import type { DriverConnection } from './driver';
@@ -33,14 +29,9 @@ import {
   QueryResult,
   QueryReturnType,
   SqlBoundValues,
-  WriteResult,
   isWriteResult,
 } from './types';
-import {
-  CellReadRow,
-  UpdateCellOutcome,
-  UpdateCellRequest,
-} from './updateCell';
+import { UpdateCellOutcome, UpdateCellRequest } from './updateCell';
 
 /**
  * How long a handshake is given before we call it off.
@@ -132,14 +123,14 @@ class ConnectionStack {
   }
 
   /**
-   * Run a metadata question and read its answer.
+   * Run a read and parse its answer.
    * A write summary means the dialect sent something that is not a question.
    */
-  async #answer<Answer>(query: MetadataQuery<Answer>): Promise<Answer> {
+  async #answer<Answer>(query: ReadQuery<Answer>): Promise<Answer> {
     const [rows] = await this.#send(query.sql, false, query.values);
 
     if (isWriteResult(rows)) {
-      throw new Error(`A metadata query wrote rows instead of reading them`);
+      throw new Error(`A read query wrote rows instead of reading them`);
     }
 
     return query.answer(rows);
@@ -249,62 +240,19 @@ class ConnectionStack {
   async updateCell(
     request: UpdateCellRequest
   ): ResultOrError<UpdateCellOutcome> {
-    const update = buildUpdateCellQuery(request);
+    return this.#ask(async () => {
+      const guarded = this.#dialect().guardedUpdate(request);
+      const [written] = await this.#send(
+        guarded.write.sql,
+        false,
+        guarded.write.values
+      );
 
-    const updateResult = await this.executeQueryAndRetry<WriteResult>(
-      update.sql,
-      false,
-      update.values
-    );
-
-    if (updateResult.error) {
-      return { result: undefined, error: updateResult.error };
-    }
-
-    const read = buildReadCellQuery(request);
-
-    const readResult = await this.executeQueryAndRetry<CellReadRow[]>(
-      read.sql,
-      false,
-      read.values
-    );
-
-    if (readResult.error) {
-      return { result: undefined, error: readResult.error };
-    }
-
-    const [[row]] = readResult.result;
-
-    if (!row) {
-      return {
-        result: { status: 'conflict', reason: 'deleted' },
-        error: undefined,
-      };
-    }
-
-    const [header] = updateResult.result;
-
-    // MySQL counts *changed* rows in `affectedRows`, so writing the value a
-    // cell already held reports 0 — indistinguishable, on its own, from a
-    // guard that did not match. `guardMatches` tells the two apart: the server
-    // computed it with the very same `<=>` comparison as the guard, which a
-    // comparison redone in JavaScript could not promise. A forced write has no
-    // guard to speak of, so the row being there is all there is to check.
-    if (request.force || header.affectedRows > 0 || row.guardMatches === 1) {
-      return {
-        result: { status: 'updated', value: row.value },
-        error: undefined,
-      };
-    }
-
-    return {
-      result: {
-        status: 'conflict',
-        reason: 'changed',
-        currentValue: row.value,
-      },
-      error: undefined,
-    };
+      return (
+        guarded.outcomeOfWrite(written) ??
+        guarded.outcomeOfReadBack(written, await this.#answer(guarded.readBack))
+      );
+    });
   }
 
   /**

@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import {
-  buildReadCellQuery,
-  buildUpdateCellQuery,
-} from './buildUpdateCellQuery';
-import type { UpdateCellRequest } from './updateCell';
+import type { UpdateCellRequest } from '../../updateCell';
+import { mysqlGuardedUpdate } from './guardedUpdate';
+
+function write(request: UpdateCellRequest) {
+  return mysqlGuardedUpdate(request).write;
+}
+
+function readBack(request: UpdateCellRequest) {
+  return mysqlGuardedUpdate(request).readBack;
+}
 
 function makeRequest(
   overrides: Partial<UpdateCellRequest> = {}
@@ -35,12 +40,12 @@ function namedParameters(sql: string): Array<string> {
  * both are checked here.
  */
 describe.each([
-  ['a guarded write', () => buildUpdateCellQuery(makeRequest())],
-  ['a forced write', () => buildUpdateCellQuery(makeRequest({ force: true }))],
+  ['a guarded write', () => write(makeRequest())],
+  ['a forced write', () => write(makeRequest({ force: true }))],
   [
     'a write on a composite key',
     () =>
-      buildUpdateCellQuery(
+      write(
         makeRequest({
           primaryKey: [
             { column: 'order_id', value: 1 },
@@ -51,9 +56,9 @@ describe.each([
   ],
   [
     'a write on a JSON column',
-    () => buildUpdateCellQuery(makeRequest({ isJsonColumn: true })),
+    () => write(makeRequest({ isJsonColumn: true })),
   ],
-  ['a read-back', () => buildReadCellQuery(makeRequest())],
+  ['a read-back', () => readBack(makeRequest())],
 ])('%s', (_name, build) => {
   it('binds exactly the parameters it names', () => {
     const { sql, values } = build();
@@ -64,9 +69,9 @@ describe.each([
   });
 });
 
-describe('buildUpdateCellQuery', () => {
+describe('the write', () => {
   it('guards the write on the value the row was loaded with', () => {
-    const { sql, values } = buildUpdateCellQuery(makeRequest());
+    const { sql, values } = write(makeRequest());
 
     expect(sql).toBe(
       'UPDATE `shop`.`orders` SET `label` = :newValue ' +
@@ -80,7 +85,7 @@ describe('buildUpdateCellQuery', () => {
   });
 
   it('compares every part of a composite primary key', () => {
-    const { sql, values } = buildUpdateCellQuery(
+    const { sql, values } = write(
       makeRequest({
         primaryKey: [
           { column: 'order_id', value: 1 },
@@ -103,7 +108,7 @@ describe('buildUpdateCellQuery', () => {
   });
 
   it('binds NULL like any other value, so the guard holds on an empty cell', () => {
-    const { sql, values } = buildUpdateCellQuery(
+    const { sql, values } = write(
       makeRequest({ newValue: null, originalValue: null })
     );
 
@@ -119,7 +124,7 @@ describe('buildUpdateCellQuery', () => {
   });
 
   it('drops the guard when the user chose to overwrite', () => {
-    const { sql, values } = buildUpdateCellQuery(makeRequest({ force: true }));
+    const { sql, values } = write(makeRequest({ force: true }));
 
     expect(sql).toBe(
       'UPDATE `shop`.`orders` SET `label` = :newValue ' +
@@ -130,7 +135,7 @@ describe('buildUpdateCellQuery', () => {
   });
 
   it('casts both sides of a JSON column, so spacing does not read as a conflict', () => {
-    const { sql, values } = buildUpdateCellQuery(
+    const { sql, values } = write(
       makeRequest({
         column: 'payload',
         isJsonColumn: true,
@@ -152,24 +157,20 @@ describe('buildUpdateCellQuery', () => {
   });
 
   it('escapes identifiers instead of interpolating them raw', () => {
-    const { sql } = buildUpdateCellQuery(
-      makeRequest({ table: 'or`ders', column: 'la`bel' })
-    );
+    const { sql } = write(makeRequest({ table: 'or`ders', column: 'la`bel' }));
 
     expect(sql).toContain('`shop`.`or``ders`');
     expect(sql).toContain('SET `la``bel` = :newValue');
   });
 
   it('refuses a row that no primary key identifies', () => {
-    expect(() => buildUpdateCellQuery(makeRequest({ primaryKey: [] }))).toThrow(
-      /primary key/
-    );
+    expect(() => write(makeRequest({ primaryKey: [] }))).toThrow(/primary key/);
   });
 });
 
-describe('buildReadCellQuery', () => {
+describe('the read-back', () => {
   it('reads the value back and asks whether the guard still matches', () => {
-    const { sql, values } = buildReadCellQuery(makeRequest());
+    const { sql, values } = readBack(makeRequest());
 
     expect(sql).toBe(
       'SELECT `label` AS `value`, ' +
@@ -182,18 +183,82 @@ describe('buildReadCellQuery', () => {
   it('targets the row by its primary key only, never by the guard', () => {
     // the row must be read even once the guard fails: that is how a concurrent
     // write is told apart from a deleted row
-    const { sql } = buildReadCellQuery(makeRequest());
+    const { sql } = readBack(makeRequest());
 
     expect(sql).toContain('WHERE `id` = :primaryKey0 LIMIT 1');
   });
 
   it('compares as JSON on a JSON column', () => {
-    const { sql } = buildReadCellQuery(
+    const { sql } = readBack(
       makeRequest({ column: 'payload', isJsonColumn: true })
     );
 
     expect(sql).toContain(
       '(`payload` <=> CAST(:originalValue AS JSON)) AS `guardMatches`'
     );
+  });
+});
+
+/**
+ * What MySQL's answers mean, on answers written by hand:
+ * `affectedRows` counts changed rows, so it cannot tell alone.
+ */
+describe('the outcome', () => {
+  const WROTE_ONE = { affectedRows: 1, insertId: null };
+  const WROTE_NONE = { affectedRows: 0, insertId: null };
+
+  function outcome(
+    written: typeof WROTE_ONE,
+    rows: Array<{ value: unknown; guardMatches: number }>,
+    overrides: Partial<UpdateCellRequest> = {}
+  ) {
+    const guarded = mysqlGuardedUpdate(makeRequest(overrides));
+
+    return guarded.outcomeOfReadBack(written, guarded.readBack.answer(rows));
+  }
+
+  it('always needs the read-back, for the value the server kept', () => {
+    expect(
+      mysqlGuardedUpdate(makeRequest()).outcomeOfWrite(WROTE_ONE)
+    ).toBeUndefined();
+  });
+
+  it('reports the value read back once a row was changed', () => {
+    expect(outcome(WROTE_ONE, [{ value: 'new', guardMatches: 0 }])).toEqual({
+      status: 'updated',
+      value: 'new',
+    });
+  });
+
+  it('takes a guard that still holds for a value written twice', () => {
+    expect(outcome(WROTE_NONE, [{ value: 'same', guardMatches: 1 }])).toEqual({
+      status: 'updated',
+      value: 'same',
+    });
+  });
+
+  it('reports a conflict when someone else changed the cell', () => {
+    expect(outcome(WROTE_NONE, [{ value: 'theirs', guardMatches: 0 }])).toEqual(
+      { status: 'conflict', reason: 'changed', currentValue: 'theirs' }
+    );
+  });
+
+  it('reports a deleted row when nothing reads back', () => {
+    expect(outcome(WROTE_NONE, [])).toEqual({
+      status: 'conflict',
+      reason: 'deleted',
+    });
+  });
+
+  it('trusts a forced write, which has no guard to fail', () => {
+    expect(
+      outcome(WROTE_NONE, [{ value: 'mine', guardMatches: 0 }], { force: true })
+    ).toEqual({ status: 'updated', value: 'mine' });
+  });
+
+  it('refuses a read-back of another shape', () => {
+    expect(() =>
+      mysqlGuardedUpdate(makeRequest()).readBack.answer([{ value: 'x' }])
+    ).toThrow(/readBack .* row 0, guardMatches/);
   });
 });

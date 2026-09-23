@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { DialectMetadata } from '../metadata';
-import { metadataQuery } from '../metadata';
+import { readQuery } from '../readQuery';
 import {
   isBinary,
   isGenerated,
@@ -49,7 +49,7 @@ const describedColumnRow = z.object({
  */
 export const mysqlMetadata: DialectMetadata = {
   listDatabases: () =>
-    metadataQuery('listDatabases', {
+    readQuery('listDatabases', {
       sql: `
         SELECT SCHEMA_NAME
         FROM INFORMATION_SCHEMA.SCHEMATA
@@ -60,7 +60,7 @@ export const mysqlMetadata: DialectMetadata = {
     }),
 
   listTables: (databaseName) =>
-    metadataQuery('listTables', {
+    readQuery('listTables', {
       sql: `
         SELECT TABLE_NAME
         FROM INFORMATION_SCHEMA.TABLES
@@ -72,7 +72,7 @@ export const mysqlMetadata: DialectMetadata = {
     }),
 
   listForeignKeys: (databaseName) =>
-    metadataQuery('listForeignKeys', {
+    readQuery('listForeignKeys', {
       sql: `
         SELECT
           TABLE_NAME,
@@ -98,7 +98,7 @@ export const mysqlMetadata: DialectMetadata = {
   // `SEQ_IN_INDEX`: a key declared `(y, x)` identifies a row as `(y, x)`,
   // whatever the table order
   listPrimaryKeyColumns: (databaseName, tableName) =>
-    metadataQuery('listPrimaryKeyColumns', {
+    readQuery('listPrimaryKeyColumns', {
       sql: `
         SELECT COLUMN_NAME
         FROM INFORMATION_SCHEMA.STATISTICS
@@ -113,7 +113,7 @@ export const mysqlMetadata: DialectMetadata = {
     }),
 
   listColumns: (databaseName) =>
-    metadataQuery('listColumns', {
+    readQuery('listColumns', {
       sql: `
         SELECT
           TABLE_NAME,
@@ -142,7 +142,7 @@ export const mysqlMetadata: DialectMetadata = {
     }),
 
   describeTable: (databaseName, tableName) =>
-    metadataQuery('describeTable', {
+    readQuery('describeTable', {
       sql: `
         SELECT
           COLUMN_NAME,
