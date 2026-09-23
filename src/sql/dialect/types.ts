@@ -1,3 +1,4 @@
+import type { DatabaseEngine } from '../engine';
 import type { QueryReturnType } from '../types';
 import type { UpdateCellOutcome, UpdateCellRequest } from '../updateCell';
 import type { DialectMetadata } from './metadata';
@@ -38,6 +39,9 @@ export interface GuardedUpdate {
  * loads this too.
  */
 export interface Dialect {
+  /** The engine this text is written for, which also picks its grammar. */
+  engine: DatabaseEngine;
+
   /** Quote one identifier; the caller assembles the qualification itself. */
   escapeIdentifier(identifier: string): string;
 

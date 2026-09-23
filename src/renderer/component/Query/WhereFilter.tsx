@@ -49,6 +49,7 @@ function WhereFilter({
 
         <RegionBody>
           <RawSqlEditor
+            engine={dialect.engine}
             defaultValue={where}
             onChange={setWhere}
             queryPrefix={queryPrefix}

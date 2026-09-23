@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DatabaseEngine } from '../../../sql/engine';
 import { QuerySchema, analyzeQuery } from './queryAnalysis';
 
 const SCHEMA: QuerySchema = {
@@ -14,7 +15,7 @@ const SCHEMA: QuerySchema = {
 function highlighted(sql: string, schema = SCHEMA): string[] {
   const lines = sql.split('\n');
 
-  return analyzeQuery(sql, schema)
+  return analyzeQuery(sql, schema, DatabaseEngine.MySQL)
     .semanticTokens.sort(
       (a, b) =>
         a.range.startLineNumber - b.range.startLineNumber ||
@@ -30,7 +31,7 @@ function highlighted(sql: string, schema = SCHEMA): string[] {
 }
 
 function unknownColumns(sql: string, schema = SCHEMA): string[] {
-  return analyzeQuery(sql, schema).unknownColumns.map(
+  return analyzeQuery(sql, schema, DatabaseEngine.MySQL).unknownColumns.map(
     ({ table, column }) => `${table}.${column}`
   );
 }
@@ -45,7 +46,8 @@ describe('semantic tokens', () => {
 
   it('reports 1-based lines and columns', () => {
     expect(
-      analyzeQuery('SELECT *\nFROM users u', SCHEMA).semanticTokens
+      analyzeQuery('SELECT *\nFROM users u', SCHEMA, DatabaseEngine.MySQL)
+        .semanticTokens
     ).toEqual([
       {
         kind: 'table',
@@ -182,7 +184,8 @@ describe('unknown columns', () => {
   it('points at the column, not at the qualifier', () => {
     const [marker] = analyzeQuery(
       'SELECT u.nam FROM users u',
-      SCHEMA
+      SCHEMA,
+      DatabaseEngine.MySQL
     ).unknownColumns;
 
     // `nam` spans columns 10, 11 and 12

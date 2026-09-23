@@ -1,13 +1,29 @@
 import { EntityContext, MySQL } from 'dt-sql-parser';
+import { DatabaseEngine } from '../engine';
+
+/** What the app asks of a grammar: the same four methods on every engine. */
+export type SqlParser = Pick<
+  MySQL,
+  | 'getAllTokens'
+  | 'getAllEntities'
+  | 'validate'
+  | 'getSuggestionAtCaretPosition'
+>;
 
 /**
- * The single MySQL parser of the app.
+ * One parser per engine, shared by the whole app.
  *
- * The parser holds no state between calls, but it does cache the parse tree of
+ * A parser holds no state between calls, but it does cache the parse tree of
  * the last input it saw, so sharing one instance between completion, syntax
  * validation and highlighting means they parse the editor content once.
  */
-export const mysqlParser = new MySQL();
+const PARSERS: Record<DatabaseEngine, SqlParser> = {
+  [DatabaseEngine.MySQL]: new MySQL(),
+};
+
+export function getParser(engine: DatabaseEngine): SqlParser {
+  return PARSERS[engine];
+}
 
 /** an incomplete clause is a few tokens long, no need to trim further */
 const MAX_TRIM_ATTEMPTS = 8;
@@ -25,17 +41,20 @@ const MAX_TRIM_ATTEMPTS = 8;
  * Lexing, on the other hand, never fails, which is what gives us the token
  * boundaries to cut on.
  */
-export function collectEntities(sql: string): EntityContext[] {
+export function collectEntities(
+  parser: SqlParser,
+  sql: string
+): EntityContext[] {
   let candidate = sql;
 
   for (let attempt = 0; attempt <= MAX_TRIM_ATTEMPTS; attempt++) {
-    const entities = mysqlParser.getAllEntities(candidate);
+    const entities = parser.getAllEntities(candidate);
 
     if (entities?.length) {
       return entities;
     }
 
-    const lastToken = mysqlParser
+    const lastToken = parser
       .getAllTokens(candidate)
       .filter((token) => token.text?.trim())
       .at(-1);

@@ -1,10 +1,13 @@
 import { escape } from 'mysql';
+import { DatabaseEngine } from '../../engine';
 import type { Dialect } from '../types';
 import { escapeIdentifier } from './escapeIdentifier';
 import { mysqlGuardedUpdate } from './guardedUpdate';
 import { mysqlMetadata } from './metadata';
 
 export const mysqlDialect: Dialect = {
+  engine: DatabaseEngine.MySQL,
+
   escapeIdentifier,
 
   qualify: (databaseName, tableName) =>

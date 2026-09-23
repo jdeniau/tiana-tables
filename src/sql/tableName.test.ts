@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { DatabaseEngine } from './engine';
 import { extractTableAliases, generateTableAlias } from './tableName';
 
 describe('tableName', () => {
@@ -83,7 +84,7 @@ describe('extractTableAliases', () => {
     ],
     ['SELECT ticketing. FROM ticketing LIMIT 10;', { ticketing: 'ticketing' }],
   ])('table aliases', (sql, expected) => {
-    expect(extractTableAliases(sql)).toEqual(expected);
+    expect(extractTableAliases(sql, DatabaseEngine.MySQL)).toEqual(expected);
   });
 
   // The editor parses on every keystroke, so the query is usually unfinished.
@@ -106,6 +107,6 @@ describe('extractTableAliases', () => {
     // see the "SQL statements" rule in CLAUDE.md.
     ['SELECT * FROM t1 a; SELECT * FROM t2 b JOIN ', { a: 't1' }],
   ])('table aliases in unfinished query %j', (sql, expected) => {
-    expect(extractTableAliases(sql)).toEqual(expected);
+    expect(extractTableAliases(sql, DatabaseEngine.MySQL)).toEqual(expected);
   });
 });

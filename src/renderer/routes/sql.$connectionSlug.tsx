@@ -5,6 +5,7 @@ import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import { PANEL } from '../../configuration/panels';
 import { useTranslation } from '../../i18n';
+import type { DatabaseEngine } from '../../sql/engine';
 import { hasLimitClause } from '../../sql/hasLimitClause';
 import { RunMode, toRunMode } from '../../sql/runMode';
 import { splitStatements, statementAtOffset } from '../../sql/splitStatements';
@@ -24,7 +25,7 @@ import {
   RegionName,
 } from '../component/Style/Region';
 import { fill } from '../component/Style/fill';
-import { loadDialect } from '../hooks/useDialect';
+import { loadDialect, useDialect } from '../hooks/useDialect';
 import { usePanelSize } from '../hooks/usePanelSize';
 
 // antd's Form is a block between the region body and the editor
@@ -53,7 +54,10 @@ function useSqlFileStorage(): [string | null, (value: string) => void] {
   return [sqlQuery, saveValue];
 }
 
-async function runStatement(sql: string): Promise<StatementOutcome> {
+async function runStatement(
+  sql: string,
+  engine: DatabaseEngine
+): Promise<StatementOutcome> {
   const started = performance.now();
 
   try {
@@ -62,7 +66,7 @@ async function runStatement(sql: string): Promise<StatementOutcome> {
     return {
       sql,
       result,
-      hasLimit: hasLimitClause(sql),
+      hasLimit: hasLimitClause(sql, engine),
       durationMs: Math.round(performance.now() - started),
     };
   } catch (error) {
@@ -90,7 +94,8 @@ export async function action({
 
   invariant(typeof content === 'string', 'Query as string is required');
 
-  const statements = splitStatements(content);
+  const dialect = await loadDialect(connectionSlug);
+  const statements = splitStatements(content, dialect.engine);
   const caretStatement = statementAtOffset(statements, caretOffset);
   const toRun =
     mode === RunMode.All ? statements : caretStatement ? [caretStatement] : [];
@@ -99,9 +104,7 @@ export async function action({
     return { outcomes: [] };
   }
 
-  const useDatabase = (await loadDialect(connectionSlug)).useDatabase(
-    databaseName
-  );
+  const useDatabase = dialect.useDatabase(databaseName);
 
   try {
     await window.sql.executeQuery(useDatabase);
@@ -116,7 +119,7 @@ export async function action({
   const outcomes: StatementOutcome[] = [];
 
   for (const { sql } of toRun) {
-    const outcome = await runStatement(sql);
+    const outcome = await runStatement(sql, dialect.engine);
 
     outcomes.push(outcome);
 
@@ -137,6 +140,7 @@ export default function SqlPage() {
   const [sqlQuery, saveSqlQuery] = useSqlFileStorage();
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.SQL_EDITOR);
   const editorRef = useRef<RawSqlEditorHandle>(null);
+  const { engine } = useDialect();
   const [statementCount, setStatementCount] = useState(0);
 
   const { state } = fetcher;
@@ -191,6 +195,7 @@ export default function SqlPage() {
                     editor in a few divs that would not pass the height down */}
                 <Form.Item name="raw" valuePropName="defaultValue" noStyle>
                   <RawSqlEditor
+                    engine={engine}
                     ref={editorRef}
                     style={{ height: '100%' }}
                     onStatementCountChange={setStatementCount}

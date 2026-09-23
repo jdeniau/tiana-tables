@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { languages } from 'monaco-editor';
-import { LanguageIdEnum } from 'monaco-sql-languages';
+import type { DatabaseEngine } from '../../../sql/engine';
+import { SQL_LANGUAGES } from './language';
 import { QuerySchema, SqlSemanticKind, analyzeQuery } from './queryAnalysis';
 import {
   fromPrefixedRange,
@@ -26,6 +27,7 @@ const LEGEND: languages.SemanticTokensLegend = {
 const TOKEN_SIZE = 5;
 
 function buildProvider(
+  engine: DatabaseEngine,
   schema: QuerySchema
 ): languages.DocumentSemanticTokensProvider {
   return {
@@ -37,7 +39,7 @@ function buildProvider(
       // then dropped: it is not in the model, and Monaco would place it on the
       // user's first characters.
       const prefix = getQueryPrefix(model);
-      const tokens = analyzeQuery(prefixedValue(model), schema)
+      const tokens = analyzeQuery(prefixedValue(model), schema, engine)
         .semanticTokens.flatMap((token) => {
           const range = fromPrefixedRange(prefix, token.range);
 
@@ -89,11 +91,14 @@ export default function useSemanticTokens(): void {
   const schema = useQuerySchema();
 
   useEffect(() => {
-    const registration = languages.registerDocumentSemanticTokensProvider(
-      LanguageIdEnum.MYSQL,
-      buildProvider(schema)
+    const registrations = SQL_LANGUAGES.map(([engine, language]) =>
+      languages.registerDocumentSemanticTokensProvider(
+        language,
+        buildProvider(engine, schema)
+      )
     );
 
-    return () => registration.dispose();
+    return () =>
+      registrations.forEach((registration) => registration.dispose());
   }, [schema]);
 }

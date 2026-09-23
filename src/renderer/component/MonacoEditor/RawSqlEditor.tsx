@@ -8,8 +8,8 @@ import {
   useState,
 } from 'react';
 import type monaco from 'monaco-editor';
-import { LanguageIdEnum } from 'monaco-sql-languages';
 import { createGlobalStyle, useTheme } from 'styled-components';
+import type { DatabaseEngine } from '../../../sql/engine';
 import {
   SqlStatement,
   splitStatements,
@@ -17,6 +17,7 @@ import {
 } from '../../../sql/splitStatements';
 import useEffectOnce from '../../hooks/useEffectOnce';
 import { accent, fontScale, mono, selection, size } from '../../theme';
+import { languageOf } from './language';
 import { setQueryPrefix } from './queryPrefix';
 import { buildMonacoTheme } from './themes';
 import useCompletion from './useCompletion';
@@ -106,6 +107,8 @@ export type RawSqlEditorHandle = {
 };
 
 type Props = {
+  /** whose grammar reads the content, and whose tokenizer colors it */
+  engine: DatabaseEngine;
   defaultValue?: string;
   ref?: Ref<RawSqlEditorHandle>;
   onChange?: (value: string) => void;
@@ -127,6 +130,7 @@ type Props = {
 };
 
 export function RawSqlEditor({
+  engine,
   defaultValue,
   onChange,
   onStatementCountChange,
@@ -149,6 +153,8 @@ export function RawSqlEditor({
   onChangeRef.current = onChange;
   const onStatementCountChangeRef = useRef(onStatementCountChange);
   onStatementCountChangeRef.current = onStatementCountChange;
+  const engineRef = useRef(engine);
+  engineRef.current = engine;
   const theme = useTheme();
 
   const monacoTheme = buildMonacoTheme(theme);
@@ -188,7 +194,7 @@ export function RawSqlEditor({
 
         const createdEditor = loadedMonaco.editor.create(monacoEl.current, {
           value: defaultValue,
-          language: LanguageIdEnum.MYSQL,
+          language: languageOf(engineRef.current),
           theme: 'currentTheme',
           // standalone themes cannot opt in, `StandaloneTheme` hardcodes
           // `semanticHighlighting = false`
@@ -219,7 +225,10 @@ export function RawSqlEditor({
           null;
         const statementsOf = (content: string): SqlStatement[] => {
           if (lastSplit?.content !== content) {
-            lastSplit = { content, statements: splitStatements(content) };
+            lastSplit = {
+              content,
+              statements: splitStatements(content, engineRef.current),
+            };
           }
 
           return lastSplit.statements;

@@ -3,7 +3,7 @@ name: sql-editor
 description: >
   Use when working on the SQL editor of Tiana Tables — completion, syntax
   validation, semantic highlighting, or anything under
-  src/renderer/component/MonacoEditor/ and src/sql/mysqlParser.ts. Triggers on
+  src/renderer/component/MonacoEditor/ and src/sql/parser/. Triggers on
   monaco-editor, monaco-sql-languages, dt-sql-parser, Monarch tokenizers,
   semantic tokens, model markers, or SQL parsing questions.
 ---
@@ -144,8 +144,8 @@ Four of them, and mixing two is a silent off-by-one:
 - **`splitSQLByStatement` returns `null` on any syntax error**, so it cannot
   answer "is the tail unfinished?". Split on the `;` tokens of `getAllTokens`.
 - The parser caches the parse tree of its last input, so one shared instance
-  (`src/sql/mysqlParser.ts`) makes completion, validation and highlighting parse
-  the editor content once.
+  per engine (`getParser`, `src/sql/parser/index.ts`) makes completion,
+  validation and highlighting parse the editor content once.
 
 ## Electron
 

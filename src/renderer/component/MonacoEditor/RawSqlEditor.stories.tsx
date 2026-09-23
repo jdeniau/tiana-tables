@@ -3,6 +3,7 @@ import { AllColumnsContextProvider } from '../../../contexts/AllColumnsContext';
 import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext';
 import { TableListContextProvider } from '../../../contexts/TableListContext';
 import type { ColumnDetail } from '../../../sql/dialect/metadata';
+import { DatabaseEngine } from '../../../sql/engine';
 import { RawSqlEditor } from './RawSqlEditor';
 
 /** the schema the completion reads: a table and a column */
@@ -22,6 +23,7 @@ function column(table: string, name: string): ColumnDetail {
 const meta: Meta<typeof RawSqlEditor> = {
   component: RawSqlEditor,
   args: {
+    engine: DatabaseEngine.MySQL,
     style: { width: '100vw', height: '35vh' },
   },
   decorators: [

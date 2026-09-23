@@ -189,7 +189,7 @@ diagnostics of `monaco-sql-languages` are **disabled** — they run in a worker
 built on Monaco's pre-0.45 API and never answer — and rebuilt on
 `dt-sql-parser` in `useCompletion.tsx`.
 
-- `src/sql/mysqlParser.ts` — the single `MySQL` parser instance, plus
+- `src/sql/parser/index.ts` — one shared parser per engine (`getParser`), plus
   `collectEntities`, which tolerates the unfinished tail of a query being typed.
 - `MonacoEditor/queryAnalysis.ts` — one read of a query against the schema,
   producing what to color (table names, aliases) and what to warn about

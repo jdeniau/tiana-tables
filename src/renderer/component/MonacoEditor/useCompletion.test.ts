@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
 import type { ColumnDetail } from '../../../sql/dialect/metadata';
+import { DatabaseEngine } from '../../../sql/engine';
 import { QuerySchema } from './queryAnalysis';
 import { setQueryPrefix } from './queryPrefix';
 import { buildCompletionProvider, validateModel } from './useCompletion';
@@ -76,6 +77,7 @@ function completionsAt(
 
   try {
     const result = buildCompletionProvider(
+      DatabaseEngine.MySQL,
       TABLE_LIST,
       FOREIGN_KEYS,
       ALL_COLUMNS
