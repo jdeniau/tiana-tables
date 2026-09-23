@@ -95,7 +95,9 @@ function ConnectionPage(): JSX.Element {
           </RegionGroup>
         ) : (
           <RegionMeta>
+            {t('connection.engine.name', { engine: connection.engine })} ·{' '}
             {connection.user}@{connection.host}:{connection.port}
+            {connection.database ? `/${connection.database}` : ''}
           </RegionMeta>
         )}
       </Open>
