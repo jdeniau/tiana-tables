@@ -41,6 +41,8 @@ export type ConnectionObject = {
   port: number;
   user: string;
   password: string;
+  /** the database a PostgreSQL connection opens, whose schemas the app browses */
+  database?: string;
   color?: ConnectionColor;
 };
 

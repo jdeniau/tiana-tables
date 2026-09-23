@@ -1,4 +1,4 @@
-import { EntityContext, MySQL } from 'dt-sql-parser';
+import { EntityContext, MySQL, PostgreSQL } from 'dt-sql-parser';
 import { DatabaseEngine } from '../engine';
 
 /** What the app asks of a grammar: the same four methods on every engine. */
@@ -19,6 +19,7 @@ export type SqlParser = Pick<
  */
 const PARSERS: Record<DatabaseEngine, SqlParser> = {
   [DatabaseEngine.MySQL]: new MySQL(),
+  [DatabaseEngine.PostgreSQL]: new PostgreSQL(),
 };
 
 export function getParser(engine: DatabaseEngine): SqlParser {

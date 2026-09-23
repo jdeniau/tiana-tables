@@ -52,6 +52,9 @@ export default {
     ' other {This result cannot be plotted.}}',
   'connect.new': 'New connection',
   'connection.connecting': 'Connecting…',
+  // ICU select on `DatabaseEngine`: product names, the same in every language
+  'connection.engine.name':
+    '{engine, select, mysql {MySQL / MariaDB} postgresql {PostgreSQL} other {{engine}}}',
   'connection.failed.back': 'Back to connections',
   // ICU select on the `ConnectionFailure` enum
   'connection.failed.reason':
@@ -72,6 +75,7 @@ export default {
   'connection.form.color.label': 'Colour',
   'connection.form.color.none': 'No colour',
   'connection.form.color.palette': 'Theme colour {hex}',
+  'connection.form.database.label': 'Database',
   'connection.form.host.label': 'Host',
   'connection.form.name.label': 'Name',
   'connection.form.password.label': 'Password',

@@ -53,6 +53,8 @@ export interface Driver {
 const IMPORTS: Record<DatabaseEngine, () => Promise<Driver>> = {
   [DatabaseEngine.MySQL]: () =>
     import('./mysql/index').then((m) => m.mysqlDriver),
+  [DatabaseEngine.PostgreSQL]: () =>
+    import('./postgres/index').then((m) => m.postgresDriver),
 };
 
 const loaded = new Map<DatabaseEngine, Promise<Driver>>();

@@ -56,6 +56,9 @@ const fr: Translation = {
     ' other {Ce résultat ne peut pas être tracé.}}',
   'connect.new': 'Nouvelle connexion',
   'connection.connecting': 'Connexion…',
+  // ICU select on `DatabaseEngine`: product names, the same in every language
+  'connection.engine.name':
+    '{engine, select, mysql {MySQL / MariaDB} postgresql {PostgreSQL} other {{engine}}}',
   'connection.failed.back': 'Retour aux connexions',
   // ICU select on the `ConnectionFailure` enum
   'connection.failed.reason':
@@ -76,6 +79,7 @@ const fr: Translation = {
   'connection.form.color.label': 'Couleur',
   'connection.form.color.none': 'Aucune couleur',
   'connection.form.color.palette': 'Couleur {hex} du thème',
+  'connection.form.database.label': 'Base de données',
   'connection.form.host.label': 'Hôte',
   'connection.form.name.label': 'Nom',
   'connection.form.password.label': 'Mot de passe',

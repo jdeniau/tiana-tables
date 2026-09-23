@@ -4,6 +4,7 @@ import { DatabaseEngine } from '../../../sql/engine';
 /** The Monaco language of each engine, whose tokenizer colors its SQL. */
 const LANGUAGES: Record<DatabaseEngine, LanguageIdEnum> = {
   [DatabaseEngine.MySQL]: LanguageIdEnum.MYSQL,
+  [DatabaseEngine.PostgreSQL]: LanguageIdEnum.PG,
 };
 
 /** Every engine with the language its SQL providers are registered for. */

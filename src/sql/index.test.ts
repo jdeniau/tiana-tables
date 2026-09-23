@@ -7,6 +7,7 @@ import connectionStack from './index';
 const mocks = vi.hoisted(() => ({
   connections: {} as Record<string, unknown>,
   createConnection: vi.fn(),
+  pgClient: vi.fn(),
 }));
 
 vi.mock('electron-log', () => ({
@@ -32,6 +33,13 @@ vi.mock('../configuration/encryption', () => ({
 vi.mock('mysql2/promise', () => ({
   createConnection: mocks.createConnection,
 }));
+
+// the real module but its client: the driver reads `types` and `DatabaseError` off it
+vi.mock('pg', async (importOriginal) => {
+  const { default: pg } = await importOriginal<typeof import('pg')>();
+
+  return { default: { ...pg, Client: mocks.pgClient } };
+});
 
 /**
  * Every database-scoped query names its database. Nothing here announces a
@@ -277,6 +285,107 @@ describe('database-scoped queries', () => {
  * look at, so it is bounded, attempted once, and answered — never thrown past
  * the `{ result, error }` envelope the renderer decodes.
  */
+/** The same routing on a PostgreSQL connection, with markers the MySQL dialect cannot hold. */
+describe('database-scoped queries on PostgreSQL', () => {
+  let query: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mocks.pgClient.mockReset();
+
+    mocks.connections = {
+      'my-postgres': {
+        slug: 'my-postgres',
+        engine: DatabaseEngine.PostgreSQL,
+        host: 'db.example.org',
+        port: 5432,
+        user: 'postgres',
+        password: 'encrypted-secret',
+        database: 'shop',
+      },
+    };
+    connectionStack.onConnectionSlugChanged('my-postgres', undefined);
+
+    // a column and no row: what a question finding nothing answers
+    query = vi.fn().mockResolvedValue({
+      fields: [{ name: 'relname', dataTypeID: 19 }],
+      rows: [],
+      rowCount: 0,
+    });
+    mocks.pgClient.mockImplementation(function () {
+      return {
+        connect: vi.fn().mockResolvedValue(undefined),
+        on: vi.fn(),
+        end: vi.fn().mockResolvedValue(undefined),
+        query,
+      };
+    });
+  });
+
+  afterEach(async () => {
+    await connectionStack.closeAllConnections();
+  });
+
+  test('the connection opens the database it names', async () => {
+    await connectionStack.listDatabases();
+
+    expect(mocks.pgClient).toHaveBeenCalledWith(
+      expect.objectContaining({ database: 'shop', password: 'secret' })
+    );
+  });
+
+  test.each([
+    [
+      'the schemas',
+      () => connectionStack.listDatabases(),
+      'pg_catalog.pg_namespace',
+    ],
+    [
+      'the tables',
+      () => connectionStack.listTables('app'),
+      'pg_catalog.pg_class',
+    ],
+    [
+      'the columns',
+      () => connectionStack.getAllColumns('app'),
+      'pg_catalog.pg_attribute',
+    ],
+    [
+      'the foreign keys',
+      () => connectionStack.getForeignKeys('app'),
+      'con.confkey',
+    ],
+    [
+      'the primary key',
+      () => connectionStack.getPrimaryKeyColumns('app', 'orders'),
+      "con.contype = 'p'",
+    ],
+    [
+      'the structure of a table',
+      () => connectionStack.getTableStructure('app', 'orders'),
+      'pg_catalog.pg_attrdef',
+    ],
+  ])('%s is asked of the PostgreSQL dialect', async (_label, ask, marker) => {
+    const { error } = await ask();
+
+    expect(error).toBeUndefined();
+    expect(
+      query.mock.calls.map(([statement]) => statement.text).join('\n')
+    ).toContain(marker);
+  });
+
+  // the placeholders are numbered on the way to `pg`, which knows no `:name`
+  test('a question binds its values by number', async () => {
+    await connectionStack.listTables('app');
+
+    expect(query).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.stringContaining('n.nspname = $1'),
+        values: ['app'],
+      })
+    );
+  });
+});
+
 describe('opening a connection', () => {
   function fakeConnection() {
     return {
