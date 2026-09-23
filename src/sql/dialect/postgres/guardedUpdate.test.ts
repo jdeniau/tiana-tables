@@ -124,6 +124,6 @@ describe('the outcome', () => {
   it('refuses a write that answered no rows at all', () => {
     expect(() =>
       guarded.outcomeOfWrite({ affectedRows: 1, insertId: null })
-    ).toThrow('RETURNING');
+    ).toThrow();
   });
 });

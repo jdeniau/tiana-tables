@@ -1,4 +1,3 @@
-import invariant from 'tiny-invariant';
 import { z } from 'zod';
 import type { UpdateCellRequest } from '../../updateCell';
 import { primaryKeyClause } from '../primaryKeyClause';
@@ -52,9 +51,8 @@ export function postgresGuardedUpdate(
       },
     },
 
+    // a write summary instead of rows fails the parse: `RETURNING` answers rows
     outcomeOfWrite: (written) => {
-      invariant(Array.isArray(written), 'A RETURNING write answers rows');
-
       const [row] = z.array(cellRow).parse(written);
 
       return row && { status: 'updated', value: row.value };
