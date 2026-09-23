@@ -24,6 +24,7 @@ import {
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
+import { buildTableQuery } from './tableQuery';
 
 interface TableNameProps {
   connectionSlug: string;
@@ -64,11 +65,14 @@ export function TableLayout({
 
   const fetchTableData = useCallback(
     (offset: number) => {
-      // the identifiers are escaped, the filter is not: `where` is SQL the
-      // user wrote, and is sent as written
-      const query = `SELECT * FROM ${dialect.qualify(database, tableName)} ${
-        where ? ` WHERE ${where}` : ''
-      } LIMIT ${DEFAULT_LIMIT} OFFSET ${offset};`;
+      const query = buildTableQuery(dialect, {
+        database,
+        tableName,
+        primaryKeys,
+        where,
+        limit: DEFAULT_LIMIT,
+        offset,
+      });
 
       window.sql
         .executeQuery<ResultRow[]>(query)
@@ -83,7 +87,7 @@ export function TableLayout({
           setError(err);
         });
     },
-    [dialect, database, tableName, where]
+    [dialect, database, tableName, primaryKeys, where]
   );
 
   useEffect(() => {
