@@ -63,6 +63,8 @@ export default {
     ' refused {The server refused the connection. Check that it is running, and that the port is the right one.}' +
     ' unknownHost {This host name could not be resolved.}' +
     ' accessDenied {The server rejected these credentials.}' +
+    ' unknownDatabase {The server has no database of this name.}' +
+    ' tooManyConnections {The server accepts no more connections for now, from this user or from anyone.}' +
     ' keyringLocked {Your keyring is locked, so the saved password could not be read. Unlock it, then retry.}' +
     ' passwordUnreadable {The saved password was encrypted with a key this machine no longer has. Type it again in the connection form.}' +
     ' other {The connection could not be opened.}}',

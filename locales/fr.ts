@@ -67,6 +67,8 @@ const fr: Translation = {
     " refused {Le serveur a refusé la connexion. Vérifiez qu'il tourne, et que le port est le bon.}" +
     " unknownHost {Ce nom d'hôte n'a pas pu être résolu.}" +
     ' accessDenied {Le serveur a rejeté ces identifiants.}' +
+    ' unknownDatabase {Le serveur n’a pas de base de données de ce nom.}' +
+    ' tooManyConnections {Le serveur n’accepte plus de connexion pour l’instant, de cet utilisateur ou de personne.}' +
     ' keyringLocked {Votre trousseau est verrouillé, le mot de passe enregistré n’a donc pas pu être lu. Déverrouillez-le, puis réessayez.}' +
     ' passwordUnreadable {Le mot de passe enregistré a été chiffré avec une clé que cette machine n’a plus. Saisissez-le à nouveau dans le formulaire de connexion.}' +
     " other {La connexion n'a pas pu être ouverte.}}",

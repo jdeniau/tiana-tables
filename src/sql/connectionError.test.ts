@@ -24,6 +24,14 @@ describe('classifyConnectionError', () => {
     ['ER_ACCESS_DENIED_ERROR', ConnectionFailure.accessDenied],
     ['ER_DBACCESS_DENIED_ERROR', ConnectionFailure.accessDenied],
     ['ER_NOT_SUPPORTED_AUTH_MODE', ConnectionFailure.accessDenied],
+    // measured on tiana-dev-postgres: a wrong password, a role that may not log in
+    ['28P01', ConnectionFailure.accessDenied],
+    ['28000', ConnectionFailure.accessDenied],
+    ['3D000', ConnectionFailure.unknownDatabase],
+    // a role's CONNECTION LIMIT on PostgreSQL, MAX_USER_CONNECTIONS on MariaDB
+    ['53300', ConnectionFailure.tooManyConnections],
+    ['ER_USER_LIMIT_REACHED', ConnectionFailure.tooManyConnections],
+    ['ER_CON_COUNT_ERROR', ConnectionFailure.tooManyConnections],
     ['EHOSTUNREACH', ConnectionFailure.other],
   ])('%s is a %s', (code, reason) => {
     expect(
