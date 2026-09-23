@@ -1,15 +1,15 @@
-import { ColumnDetail, ColumnDetailResult } from './types';
+import type { ColumnDetail } from './dialect/metadata';
 
 type TableName = string;
 type ColumnName = string;
 type ColumnByTable = Map<TableName, Map<ColumnName, ColumnDetail>>;
 export class ColumnDetailHelper {
   // Can not use JS #private props because of an issue in storybook with react-docgen ¯\_(ツ)_/¯
-  private _columnDetailResult: ColumnDetailResult;
+  private _columnDetailResult: ColumnDetail[];
 
   private _columnsByTable?: ColumnByTable;
 
-  constructor(columnDetailResult: ColumnDetailResult) {
+  constructor(columnDetailResult: ColumnDetail[]) {
     this._columnDetailResult = columnDetailResult;
   }
 
@@ -21,19 +21,19 @@ export class ColumnDetailHelper {
     this._columnsByTable = new Map();
 
     for (const columnDetail of this._columnDetailResult) {
-      const { Table, Column } = columnDetail;
+      const { table, name } = columnDetail;
 
-      if (!this._columnsByTable.has(Table)) {
-        this._columnsByTable.set(Table, new Map());
+      if (!this._columnsByTable.has(table)) {
+        this._columnsByTable.set(table, new Map());
       }
 
-      this._columnsByTable.get(Table)!.set(Column, columnDetail);
+      this._columnsByTable.get(table)!.set(name, columnDetail);
     }
 
     return this._columnsByTable;
   }
 
-  getAllColumns(): ColumnDetailResult {
+  getAllColumns(): ColumnDetail[] {
     return this._columnDetailResult;
   }
 

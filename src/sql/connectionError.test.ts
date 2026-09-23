@@ -6,7 +6,7 @@ import {
   isConnectionError,
 } from './connectionError';
 import { decodeError, encodeError } from './errorSerializer';
-import { isSqlError } from './isSqlError';
+import { asSqlError, isSqlError } from './sqlError';
 
 const target = { host: 'db.example.org', port: 3306, timeoutMs: 10_000 };
 
@@ -74,6 +74,7 @@ describe('a failure on its way to the renderer', () => {
     const decoded = roundTrip(asConnectionError(timeout(), target));
 
     expect(isConnectionError(decoded)).toBe(true);
+    expect(isSqlError(decoded)).toBe(false);
     expect(decoded).toMatchObject({
       message: 'connect ETIMEDOUT',
       reason: ConnectionFailure.timeout,
@@ -89,11 +90,9 @@ describe('a failure on its way to the renderer', () => {
 
   test('a query error still arrives flat, and is not read as a connection one', () => {
     const decoded = roundTrip(
-      Object.assign(new Error("Unknown column 'nope'"), {
+      asSqlError(new Error("Unknown column 'nope'"), {
         code: 'ER_BAD_FIELD_ERROR',
         errno: 1054,
-        sql: 'SELECT nope FROM article',
-        sqlMessage: "Unknown column 'nope'",
         sqlState: '42S22',
       })
     );
@@ -108,5 +107,6 @@ describe('a failure on its way to the renderer', () => {
 
     expect(decoded).toBeInstanceOf(Error);
     expect(isConnectionError(decoded)).toBe(false);
+    expect(isSqlError(decoded)).toBe(false);
   });
 });

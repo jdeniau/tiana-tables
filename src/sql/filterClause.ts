@@ -1,4 +1,4 @@
-import { escapeIdentifier } from './escapeIdentifier';
+import type { Dialect } from './dialect/types';
 
 /**
  * The comparisons the grid's context menu offers on a column.
@@ -56,11 +56,12 @@ export function operatorTakesValue(operator: FilterOperator): boolean {
  * part it owns — the column name.
  */
 export function buildFilterClause(
+  dialect: Dialect,
   columnName: string,
   operator: FilterOperator,
   literal?: string
 ): string {
-  const column = escapeIdentifier(columnName);
+  const column = dialect.escapeIdentifier(columnName);
 
   if (!operatorTakesValue(operator)) {
     return `${column} ${operator}`;

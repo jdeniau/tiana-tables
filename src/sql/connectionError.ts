@@ -2,10 +2,11 @@
  * Why a connection could not be opened, in the terms the user can act on.
  *
  * The driver only hands over a network `code`, and one of them (`ETIMEDOUT`)
- * is built by mysql2 itself with `err.errorno` rather than `errno` — so
- * `isSqlError` does not recognise it, and the code would be lost on its way
- * through IPC. The failure is therefore named here, in the main process, while
- * the original error is still whole.
+ * is built by mysql2 itself with `err.errorno` rather than `errno` —
+ * so the driver does not take it for a refused statement,
+ * and the code would be lost on its way through IPC.
+ * The failure is therefore named here, in the main process,
+ * while the original error is still whole.
  */
 export enum ConnectionFailure {
   timeout = 'timeout',

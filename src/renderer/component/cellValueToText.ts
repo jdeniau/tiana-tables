@@ -1,5 +1,13 @@
-import { Types } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
+import { FieldKind } from '../../sql/resultField';
 import { formatDate, formatDateTime } from '../utils/dateFormatter';
+import toHexLiteral from './hexLiteral';
+
+/**
+ * How many bytes of a byte column the modal writes out. It shows the whole of
+ * everything else, but a `LONGBLOB` holds up to 4 GB and two characters a byte
+ * would be the end of the window.
+ */
+const MAX_BINARY_BYTES = 4096;
 
 /**
  * Turn a cell value into the text shown in the detail modal.
@@ -10,18 +18,24 @@ import { formatDate, formatDateTime } from '../utils/dateFormatter';
  */
 export default function cellValueToText(
   value: unknown,
-  type: number | undefined
+  kind: FieldKind
 ): string {
   if (value === null || value === undefined) {
     return '';
   }
 
   if (value instanceof Date) {
-    return type === Types.DATE ? formatDate(value) : formatDateTime(value);
+    return kind === FieldKind.Date ? formatDate(value) : formatDateTime(value);
   }
 
   if (typeof value === 'string') {
     return indentJsonIfAny(value);
+  }
+
+  // before the object branch: a `Buffer` crosses the bridge as a `Uint8Array`,
+  // which `JSON.stringify` writes out as a map of indexes to bytes
+  if (value instanceof Uint8Array) {
+    return toHexLiteral(value, MAX_BINARY_BYTES);
   }
 
   // mysql2 hands JSON columns over as already parsed objects

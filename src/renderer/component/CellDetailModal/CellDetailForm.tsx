@@ -4,8 +4,6 @@ import { useTranslation } from '../../../i18n';
 import {
   NotEditableReason,
   getCellEditability,
-  isJsonColumn,
-  isNullable,
 } from '../../../sql/columnEditing';
 import CellEditor from '../CellEditor/CellEditor';
 import {
@@ -36,7 +34,7 @@ export default function CellDetailForm({
 }: CellDetailFormProps) {
   const { t } = useTranslation();
   const columnDetail = detail.column.detail;
-  const fieldType = detail.column.type;
+  const fieldKind = detail.column.kind;
 
   /**
    * The value the write is guarded on. It starts as the loaded value and moves
@@ -47,8 +45,8 @@ export default function CellDetailForm({
 
   /** the same value as text: what the editor opens on, and what "unchanged" means */
   const baseEditable = useMemo(
-    () => toEditableValue(baseValue, fieldType),
-    [baseValue, fieldType]
+    () => toEditableValue(baseValue, fieldKind),
+    [baseValue, fieldKind]
   );
 
   const [edited, setEdited] = useState(baseEditable);
@@ -62,7 +60,7 @@ export default function CellDetailForm({
     return (
       <ReadOnlyCellValue
         value={detail.value}
-        fieldType={fieldType}
+        fieldKind={fieldKind}
         reason={editability.reason}
       />
     );
@@ -74,14 +72,14 @@ export default function CellDetailForm({
     return (
       <ReadOnlyCellValue
         value={detail.value}
-        fieldType={fieldType}
+        fieldKind={fieldKind}
         reason={NotEditableReason.UnknownColumn}
       />
     );
   }
 
   const column = columnDetail;
-  const validationError = findValidationError(edited, isJsonColumn(column));
+  const validationError = findValidationError(edited, column.json);
   const isUnchanged = isSameValue(edited, baseEditable);
   const isDeleted = conflict?.reason === 'deleted';
   const canSave =
@@ -120,7 +118,7 @@ export default function CellDetailForm({
   /** Start over from what the server holds, guard included. */
   const reloadConflict = (currentValue: unknown): void => {
     setBaseValue(currentValue);
-    setEdited(toEditableValue(currentValue, fieldType));
+    setEdited(toEditableValue(currentValue, fieldKind));
     setConflict(null);
   };
 
@@ -129,7 +127,7 @@ export default function CellDetailForm({
       {conflict?.reason === 'changed' && (
         <CellChangedAlert
           currentValue={conflict.currentValue}
-          fieldType={fieldType}
+          fieldKind={fieldKind}
           isSaving={isSaving}
           onReload={() => reloadConflict(conflict.currentValue)}
           onOverwrite={() => void save(true)}
@@ -140,7 +138,7 @@ export default function CellDetailForm({
 
       {saveError && <Alert type="error" showIcon title={saveError} />}
 
-      {isNullable(column) && (
+      {column.nullable && (
         <Checkbox
           checked={edited.isNull}
           disabled={isSaving}
@@ -160,7 +158,7 @@ export default function CellDetailForm({
 
       <CellEditor
         column={column}
-        fieldType={fieldType}
+        fieldKind={fieldKind}
         value={edited}
         onChange={setEdited}
         disabled={edited.isNull || isSaving}

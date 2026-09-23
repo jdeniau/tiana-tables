@@ -1,4 +1,5 @@
-import { mysqlParser } from './mysqlParser';
+import type { DatabaseEngine } from './engine';
+import { getParser } from './parser';
 
 /** A statement of the editor, and where it sits in the content. */
 export type SqlStatement = {
@@ -30,7 +31,10 @@ const CODE_CHANNEL = 0;
  * sitting between two statements belongs to the one that follows it, so the
  * comment documenting a query is run — and highlighted — with it.
  */
-export function splitStatements(content: string): SqlStatement[] {
+export function splitStatements(
+  content: string,
+  engine: DatabaseEngine
+): SqlStatement[] {
   const statements: SqlStatement[] = [];
   let segmentStart = 0;
   let hasCode = false;
@@ -48,7 +52,7 @@ export function splitStatements(content: string): SqlStatement[] {
     hasCode = false;
   };
 
-  for (const token of mysqlParser.getAllTokens(content)) {
+  for (const token of getParser(engine).getAllTokens(content)) {
     if (token.channel !== CODE_CHANNEL) {
       continue;
     }

@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
-import { KeyColumnUsageRow } from '../../sql/types';
 import ForeignKeyLink from './ForeignKeyLink';
 
 const meta: Meta<typeof ForeignKeyLink> = {
@@ -10,14 +9,13 @@ const meta: Meta<typeof ForeignKeyLink> = {
     reactRouterDecorator,
     (Story) => (
       <ForeignKeysContextProvider
-        keyColumnUsageRows={[
+        foreignKeys={[
           {
-            TABLE_NAME: 'table',
-            COLUMN_NAME: 'linkedId',
-            REFERENCED_TABLE_NAME: 'linkedTable',
-            REFERENCED_COLUMN_NAME: 'id',
-            CONSTRAINT_NAME: 'fk',
-          } as KeyColumnUsageRow,
+            table: 'table',
+            column: 'linkedId',
+            referencedTable: 'linkedTable',
+            referencedColumn: 'id',
+          },
         ]}
       >
         <Story />

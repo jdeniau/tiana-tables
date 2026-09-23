@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Input, InputNumber, Select } from 'antd';
-import { isNullable, parseEnumValues } from '../../../sql/columnEditing';
-import type { ColumnDetail } from '../../../sql/types';
+import type { ColumnDetail } from '../../../sql/dialect/metadata';
+import { FieldKind } from '../../../sql/resultField';
 import JsonCellEditor from './JsonCellEditor';
 import { fromDateInputValue, toDateInputValue } from './dateTimeText';
 import type { EditableValue } from './editableValue';
@@ -12,7 +12,7 @@ const JSON_EDITOR_HEIGHT = 320;
 interface CellEditorProps {
   column: ColumnDetail;
   /** the type of the field, which decides the editor wherever it can */
-  fieldType: number | undefined;
+  fieldKind: FieldKind;
   value: EditableValue;
   onChange: (value: EditableValue) => void;
   /** true while the cell is set to NULL, or while a save is in flight */
@@ -28,23 +28,21 @@ interface CellEditorProps {
  */
 export default function CellEditor({
   column,
-  fieldType,
+  fieldKind,
   value,
   onChange,
   disabled,
 }: CellEditorProps) {
-  const kind = resolveEditorKind(column, fieldType, value.text);
-  const nullable = isNullable(column);
+  const kind = resolveEditorKind(column, fieldKind, value.text);
+  const nullable = column.nullable;
 
   const enumValues = useMemo(
     () =>
-      kind === EditorKind.Enum || kind === EditorKind.Set
-        ? parseEnumValues(column.ColumnType).map((enumValue) => ({
-            value: enumValue,
-            label: enumValue === '' ? '(empty)' : enumValue,
-          }))
-        : [],
-    [kind, column.ColumnType]
+      column.allowedValues.map((allowed) => ({
+        value: allowed,
+        label: allowed === '' ? '(empty)' : allowed,
+      })),
+    [column.allowedValues]
   );
 
   // clearing an editor means NULL on a nullable column, and an empty value

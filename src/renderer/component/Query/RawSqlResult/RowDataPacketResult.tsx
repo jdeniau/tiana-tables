@@ -3,12 +3,8 @@ import { Empty, Segmented, Spin, theme as antdTheme } from 'antd';
 import { Fetcher } from 'react-router';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../../i18n';
-import { SqlError } from '../../../../sql/errorSerializer';
-import {
-  isResultSetHeader,
-  isRowDataPacketArray,
-} from '../../../../sql/type-guard';
-import { QueryResult } from '../../../../sql/types';
+import type { SqlError } from '../../../../sql/sqlError';
+import { QueryResult, isWriteResult } from '../../../../sql/types';
 import { space } from '../../../theme';
 import ChartPanel from '../../Chart/ChartPanel';
 import { chartUnavailableReason } from '../../Chart/chartConfig';
@@ -79,7 +75,7 @@ function statementSummary(sql: string): string {
 function rowsOf(outcome: StatementOutcome) {
   const first = outcome.result?.[0];
 
-  return first && isRowDataPacketArray(first) ? first : null;
+  return first && !isWriteResult(first) ? first : null;
 }
 
 /**
@@ -134,15 +130,19 @@ function OutcomePane({
     );
   }
 
-  if (isResultSetHeader(result[0])) {
+  const written = result[0];
+
+  if (isWriteResult(written)) {
     return (
       <Written>
         <div>
-          {t('rawSql.result.affectedRows')} {result[0].affectedRows}
+          {t('rawSql.result.affectedRows')} {written.affectedRows}
         </div>
-        <div>
-          {t('rawSql.result.insertId')} {result[0].insertId}
-        </div>
+        {written.insertId !== null && (
+          <div>
+            {t('rawSql.result.insertId')} {written.insertId}
+          </div>
+        )}
       </Written>
     );
   }

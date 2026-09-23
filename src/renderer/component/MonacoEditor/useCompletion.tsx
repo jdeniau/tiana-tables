@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { EntityContextType } from 'dt-sql-parser';
 import { MarkerSeverity, Position, editor, languages } from 'monaco-editor';
-import { LanguageIdEnum, setupLanguageFeatures } from 'monaco-sql-languages';
+import { setupLanguageFeatures } from 'monaco-sql-languages';
 // registers the `mysql` language and its tokenizer
 import 'monaco-sql-languages/esm/languages/mysql/mysql.contribution';
 import { useAllColumnsContext } from '../../../contexts/AllColumnsContext';
@@ -9,7 +9,8 @@ import { useForeignKeysContext } from '../../../contexts/ForeignKeysContext';
 import { useTableListContext } from '../../../contexts/TableListContext';
 import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
-import { mysqlParser } from '../../../sql/mysqlParser';
+import type { DatabaseEngine } from '../../../sql/engine';
+import { getParser } from '../../../sql/parser';
 import {
   splitStatements,
   statementAtOffset,
@@ -18,7 +19,7 @@ import {
   extractTableAliases,
   generateTableAlias,
 } from '../../../sql/tableName';
-import { ShowTableStatus } from '../../../sql/types';
+import { SQL_LANGUAGES, engineOf } from './language';
 import { QuerySchema, analyzeQuery } from './queryAnalysis';
 import {
   fromPrefixedRange,
@@ -36,15 +37,18 @@ import useQuerySchema from './useQuerySchema';
  * and rebuilt on `dt-sql-parser` — which we already depend on, and which is
  * fast enough on the main thread for editor-sized queries.
  */
-setupLanguageFeatures(LanguageIdEnum.MYSQL, {
-  completionItems: false,
-  diagnostics: false,
-});
+for (const [, language] of SQL_LANGUAGES) {
+  setupLanguageFeatures(language, {
+    completionItems: false,
+    diagnostics: false,
+  });
+}
 
 type CompletionRange = languages.CompletionItem['range'];
 
 export function buildCompletionProvider(
-  tableList: ShowTableStatus[],
+  engine: DatabaseEngine,
+  tableList: string[],
   foreignKeys: ForeignKeysHelper,
   allColumns: ColumnDetailHelper
 ): languages.CompletionItemProvider {
@@ -55,7 +59,7 @@ export function buildCompletionProvider(
       // table, and its columns can only be completed from the prefix
       const prefix = getQueryPrefix(model);
       const sql = prefixedValue(model);
-      const suggestions = mysqlParser.getSuggestionAtCaretPosition(
+      const suggestions = getParser(engine).getSuggestionAtCaretPosition(
         sql,
         toPrefixedPosition(prefix, position)
       );
@@ -77,10 +81,10 @@ export function buildCompletionProvider(
       // Only that statement though: a `;` opens a new scope, where the tables
       // and the aliases of the previous ones mean nothing.
       const statement = statementAtOffset(
-        splitStatements(sql),
+        splitStatements(sql, engine),
         model.getOffsetAt(position) + prefix.length
       );
-      const tableAliases = extractTableAliases(statement?.sql ?? sql);
+      const tableAliases = extractTableAliases(statement?.sql ?? sql, engine);
       const qualifier = qualifierBefore(model, position, word.startColumn);
       const qualifiedTable = qualifier ? tableAliases[qualifier] : undefined;
 
@@ -138,7 +142,7 @@ export function buildCompletionProvider(
 
 /** `FROM ` / `JOIN `: propose every table, aliased and joined when possible */
 function tableCompletions(
-  tableList: ShowTableStatus[],
+  tableList: string[],
   foreignKeys: ForeignKeysHelper,
   tableAliases: Record<string, string>,
   range: CompletionRange
@@ -150,8 +154,8 @@ function tableCompletions(
   }));
 
   return tableList.map((table): languages.CompletionItem => {
-    const alias = generateTableAlias(table.Name, usedAliases);
-    const foreignKey = foreignKeys.getLinkBetweenTables(table.Name, usedTables);
+    const alias = generateTableAlias(table, usedAliases);
+    const foreignKey = foreignKeys.getLinkBetweenTables(table, usedTables);
 
     const joinString = foreignKey
       ? `ON ${alias}.${foreignKey.referencedColumnName} = ${
@@ -160,12 +164,12 @@ function tableCompletions(
       : '';
 
     return {
-      label: table.Name,
+      label: table,
       detail: foreignKey?.referencedTableName ?? undefined,
       kind: languages.CompletionItemKind.Variable,
-      insertText: `${table.Name} ${alias} ${joinString}`,
+      insertText: `${table} ${alias} ${joinString}`,
       range,
-      sortText: `1${table.Name}`,
+      sortText: `1${table}`,
     };
   });
 }
@@ -206,24 +210,26 @@ function columnCompletions(
   return tableNames.flatMap((tableName) =>
     allColumns.getColumnsForTable(tableName).map(
       (column): languages.CompletionItem => ({
-        label: column.Column,
-        insertText: column.Column,
+        label: column.name,
+        insertText: column.name,
         kind: languages.CompletionItemKind.Field,
         detail: tableName,
         range,
-        sortText: `1${column.Column}`,
+        sortText: `1${column.name}`,
       })
     )
   );
 }
 
-const MARKER_OWNER = 'mysql-syntax';
+const MARKER_OWNER = 'sql-syntax';
 
 export function validateModel(
   model: editor.ITextModel,
   schema: QuerySchema
 ): void {
-  if (model.isDisposed() || model.getLanguageId() !== LanguageIdEnum.MYSQL) {
+  const engine = engineOf(model.getLanguageId());
+
+  if (model.isDisposed() || !engine) {
     return;
   }
 
@@ -238,7 +244,7 @@ export function validateModel(
   const prefix = getQueryPrefix(model);
   const sql = prefixedValue(model);
 
-  const syntaxErrors = mysqlParser
+  const syntaxErrors = getParser(engine)
     .validate(sql)
     .map((error) => ({
       severity: MarkerSeverity.Error,
@@ -256,21 +262,23 @@ export function validateModel(
 
   // a warning rather than an error: the query is valid SQL, and only the
   // qualified references we could resolve are checked, never a bare column
-  const unknownColumns = analyzeQuery(sql, schema).unknownColumns.flatMap(
-    ({ range, table, column }): editor.IMarkerData[] => {
-      const modelRange = fromPrefixedRange(prefix, range);
+  const unknownColumns = analyzeQuery(
+    sql,
+    schema,
+    engine
+  ).unknownColumns.flatMap(({ range, table, column }): editor.IMarkerData[] => {
+    const modelRange = fromPrefixedRange(prefix, range);
 
-      return modelRange
-        ? [
-            {
-              severity: MarkerSeverity.Warning,
-              message: `Unknown column \`${column}\` on table \`${table}\``,
-              ...modelRange,
-            },
-          ]
-        : [];
-    }
-  );
+    return modelRange
+      ? [
+          {
+            severity: MarkerSeverity.Warning,
+            message: `Unknown column \`${column}\` on table \`${table}\``,
+            ...modelRange,
+          },
+        ]
+      : [];
+  });
 
   editor.setModelMarkers(model, MARKER_OWNER, [
     ...syntaxErrors,
@@ -308,12 +316,14 @@ export default function useCompletion(): void {
   const schema = useQuerySchema();
 
   useEffect(() => {
-    const provider = languages.registerCompletionItemProvider(
-      LanguageIdEnum.MYSQL,
-      buildCompletionProvider(tableList, foreignKeys, allColumns)
+    const providers = SQL_LANGUAGES.map(([engine, language]) =>
+      languages.registerCompletionItemProvider(
+        language,
+        buildCompletionProvider(engine, tableList, foreignKeys, allColumns)
+      )
     );
 
-    return () => provider.dispose();
+    return () => providers.forEach((provider) => provider.dispose());
   }, [allColumns, foreignKeys, tableList]);
 
   // read through a ref: the schema changes identity on every render of its
@@ -327,7 +337,7 @@ export default function useCompletion(): void {
       validateModel(model, schemaRef.current);
 
     const watch = (model: editor.ITextModel) => {
-      if (model.getLanguageId() === LanguageIdEnum.MYSQL) {
+      if (engineOf(model.getLanguageId())) {
         watchers.set(model.uri.toString(), watchModel(model, validate));
       }
     };

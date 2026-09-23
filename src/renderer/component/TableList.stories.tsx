@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { openTablesDecorator } from '../../../.storybook/decorators/openTablesDecorator';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
-import { ShowTableStatus } from '../../sql/types';
 import { RegionBody } from './Style/Region';
 import TableList from './TableList';
 
@@ -21,28 +20,16 @@ const meta: Meta<typeof TableList> = {
 export default meta;
 type Story = StoryObj<typeof TableList>;
 
-function createTableStatusRow(
-  // weirdly `Omit` does not work here
-  params: Pick<ShowTableStatus, 'Name' | 'Rows' | 'Data_length' | 'Comment'>
-): ShowTableStatus {
-  return {
-    constructor: { name: 'RowDataPacket' },
-    ...params,
-  };
-}
-
-const TABLES = ['foo', 'bar', 'baz'].map((Name) =>
-  createTableStatusRow({ Name, Rows: 150, Data_length: 1234, Comment: '' })
-);
+const TABLES = ['foo', 'bar', 'baz'];
 
 export const Primary: Story = {
   decorators: [openTablesDecorator([]), reactRouterDecorator],
-  args: { tableStatusList: TABLES },
+  args: { tableList: TABLES },
 };
 
 /** the route names a table: its row gets the fill and the accent rule */
 export const Selected: Story = {
-  args: { tableStatusList: TABLES },
+  args: { tableList: TABLES },
   decorators: [
     openTablesDecorator([]),
     (Story) => (

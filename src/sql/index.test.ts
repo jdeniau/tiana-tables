@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ConnectionFailure } from './connectionError';
+import { DatabaseEngine } from './engine';
 import connectionStack from './index';
 
 const mocks = vi.hoisted(() => ({
@@ -38,114 +39,233 @@ vi.mock('mysql2/promise', () => ({
  * name would query whatever the last event happened to leave behind.
  */
 describe('database-scoped queries', () => {
-  let executeQuery: ReturnType<typeof vi.spyOn>;
+  let query: ReturnType<typeof vi.fn>;
 
-  function lastQuery(): { query: unknown; values: unknown } {
-    const [query, , values] = executeQuery.mock.lastCall ?? [];
-
-    return { query, values };
+  /** what the dialect's questions put on the socket */
+  function statementsSent(): string[] {
+    return query.mock.calls.map(([statement]) => statement.sql);
   }
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    mocks.createConnection.mockReset();
 
-    executeQuery = vi
-      .spyOn(connectionStack, 'executeQueryAndRetry')
-      // the result is not what is under test here
-      .mockResolvedValue({ result: [[], []], error: undefined } as never);
-  });
+    mocks.connections = {
+      'my-connection': {
+        slug: 'my-connection',
+        engine: DatabaseEngine.MySQL,
+        host: 'db.example.org',
+        port: 3306,
+        user: 'root',
+        password: 'encrypted-secret',
+      },
+    };
+    connectionStack.onConnectionSlugChanged('my-connection', undefined);
 
-  test('SHOW TABLE STATUS names the given database', async () => {
-    await connectionStack.showTableStatus('some-database');
-
-    expect(lastQuery().query).toContain(
-      'SHOW TABLE STATUS FROM `some-database`'
-    );
-  });
-
-  test('SHOW KEYS names the given database and table', async () => {
-    await connectionStack.getPrimaryKeys('some-database', 'some-table');
-
-    expect(lastQuery().query).toContain(
-      'SHOW KEYS FROM `some-database`.`some-table`'
-    );
-  });
-
-  test('the columns of a database are read with a bound schema name', async () => {
-    await connectionStack.getAllColumns('some-database');
-
-    const { query, values } = lastQuery();
-
-    expect(query).toContain('TABLE_SCHEMA = :databaseName');
-    expect(values).toEqual({ databaseName: 'some-database' });
-  });
-
-  test('the key column usage of a table is read with bound names', async () => {
-    await connectionStack.getKeyColumnUsage('some-database', 'some-table');
-
-    const { query, values } = lastQuery();
-
-    expect(query).toContain('TABLE_SCHEMA = :databaseName');
-    expect(query).toContain('AND TABLE_NAME = :tableName');
-    expect(values).toEqual({
-      databaseName: 'some-database',
-      tableName: 'some-table',
+    query = vi.fn().mockResolvedValue([[], []]);
+    mocks.createConnection.mockResolvedValue({
+      on: vi.fn(),
+      end: vi.fn().mockResolvedValue(undefined),
+      query,
     });
   });
 
-  test('the key column usage of a whole database binds the schema alone', async () => {
-    await connectionStack.getKeyColumnUsage('some-database');
-
-    const { query, values } = lastQuery();
-
-    expect(query).not.toContain(':tableName');
-    // no `:tableName` in the query, so no `tableName` to bind: a parameter the
-    // statement does not name would be ignored in silence
-    expect(values).toEqual({ databaseName: 'some-database' });
+  afterEach(async () => {
+    await connectionStack.closeAllConnections();
   });
 
-  test('the structure of a table is read with bound names, in column order', async () => {
-    await connectionStack.getTableStructure('some-database', 'some-table');
+  /**
+   * The routing, which is all this layer owns:
+   * what each statement says is tested with its dialect.
+   */
+  test.each([
+    [
+      'the databases',
+      () => connectionStack.listDatabases(),
+      'INFORMATION_SCHEMA.SCHEMATA',
+    ],
+    [
+      'the tables',
+      () => connectionStack.listTables('some-database'),
+      'INFORMATION_SCHEMA.TABLES',
+    ],
+    [
+      'the columns',
+      () => connectionStack.getAllColumns('some-database'),
+      'INFORMATION_SCHEMA.COLUMNS',
+    ],
+    [
+      'the foreign keys',
+      () => connectionStack.getForeignKeys('some-database'),
+      'INFORMATION_SCHEMA.KEY_COLUMN_USAGE',
+    ],
+    [
+      'the primary key',
+      () => connectionStack.getPrimaryKeyColumns('some-database', 'some-table'),
+      'INFORMATION_SCHEMA.STATISTICS',
+    ],
+    [
+      'the structure of a table',
+      () => connectionStack.getTableStructure('some-database', 'some-table'),
+      'INFORMATION_SCHEMA.COLUMNS',
+    ],
+  ])(
+    '%s is asked of the dialect of the connection',
+    async (_label, ask, marker) => {
+      await ask();
 
-    const { query, values } = lastQuery();
+      expect(statementsSent().join('\n')).toContain(marker);
+    }
+  );
 
-    expect(query).toContain('c.TABLE_SCHEMA = :databaseName');
-    expect(query).toContain('AND c.TABLE_NAME = :tableName');
-    // the page reads as the table is declared, not as INFORMATION_SCHEMA
-    // happens to answer
-    expect(query).toContain('ORDER BY');
-    expect(query).toContain('c.ORDINAL_POSITION');
-    expect(values).toEqual({
-      databaseName: 'some-database',
-      tableName: 'some-table',
+  // otherwise a summary object would reach a reader expecting rows, as one nonsense row
+  test('a question answered with a write summary is refused', async () => {
+    query.mockResolvedValue([{ affectedRows: 1, insertId: null }, []]);
+
+    const { result, error } = await connectionStack.listTables('some-database');
+
+    expect(result).toBeUndefined();
+    expect(error?.message).toContain('read query');
+  });
+
+  // two questions, one page: the dialect's description, then the database's foreign keys
+  test('the structure of a table joins its columns to their references', async () => {
+    query.mockImplementation(({ sql }: { sql: string }) =>
+      Promise.resolve([
+        sql.includes('KEY_COLUMN_USAGE')
+          ? [
+              {
+                TABLE_NAME: 'some-table',
+                COLUMN_NAME: 'auteur_id',
+                REFERENCED_TABLE_NAME: 'auteur',
+                REFERENCED_COLUMN_NAME: 'id',
+              },
+            ]
+          : [
+              {
+                COLUMN_NAME: 'auteur_id',
+                COLUMN_TYPE: 'int(11)',
+                IS_NULLABLE: 'NO',
+                COLUMN_KEY: 'MUL',
+                COLUMN_DEFAULT: null,
+                EXTRA: '',
+                COLLATION_NAME: null,
+                COLUMN_COMMENT: '',
+              },
+            ],
+        [],
+      ])
+    );
+
+    const { result } = await connectionStack.getTableStructure(
+      'some-database',
+      'some-table'
+    );
+
+    expect(result?.[0]).toEqual([
+      expect.objectContaining({ Column: 'auteur_id', References: 'auteur.id' }),
+    ]);
+    expect(result?.[1].map((field) => field.name)).toContain('References');
+  });
+
+  // a server's collation would answer `user, users, user_role`
+  test.each([
+    ['tables', () => connectionStack.listTables('some-database'), 'TABLE_NAME'],
+    ['databases', () => connectionStack.listDatabases(), 'SCHEMA_NAME'],
+  ])('the %s are listed as `SHOW` listed them', async (_label, ask, column) => {
+    query.mockResolvedValue([
+      ['users', 'user_role', 'alpha', 'Zeta', 'user'].map((name) => ({
+        [column]: name,
+      })),
+      [],
+    ]);
+
+    const { result } = await ask();
+
+    expect(result).toEqual(['Zeta', 'alpha', 'user', 'user_role', 'users']);
+  });
+
+  describe('writing a cell', () => {
+    const request = {
+      database: 'shop',
+      table: 'orders',
+      column: 'label',
+      primaryKey: [{ column: 'id', value: 42 }],
+      newValue: 'new label',
+      originalValue: 'old label',
+    };
+
+    test('writes, then reads the cell back for the outcome', async () => {
+      query
+        .mockResolvedValueOnce([{ affectedRows: 1, insertId: 0 }, []])
+        .mockResolvedValueOnce([[{ value: 'new label', guardMatches: 0 }], []]);
+
+      const { result } = await connectionStack.updateCell(request);
+
+      expect(statementsSent()).toEqual([
+        expect.stringMatching(/^UPDATE /),
+        expect.stringMatching(/^SELECT /),
+      ]);
+      expect(result).toEqual({ status: 'updated', value: 'new label' });
+    });
+
+    test('a write the server refused is encoded, and nothing is read back', async () => {
+      query.mockRejectedValueOnce(new Error('ER_DATA_TOO_LONG'));
+
+      const { result, error } = await connectionStack.updateCell(request);
+
+      expect(result).toBeUndefined();
+      expect(error).toMatchObject({ message: 'ER_DATA_TOO_LONG' });
+      expect(query).toHaveBeenCalledTimes(1);
     });
   });
 
-  test('the structure of a table is one statement, subquery included', async () => {
-    await connectionStack.getTableStructure('some-database', 'some-table');
-
-    const { query } = lastQuery();
-
-    // `multipleStatements` is off: a `;` anywhere but at the very end would
-    // make the whole read fail
-    expect(String(query).replace(/;\s*$/, '')).not.toContain(';');
-  });
-
-  test('a missing table name is refused rather than queried', async () => {
-    await expect(
-      connectionStack.getTableStructure('some-database', '')
-    ).rejects.toThrow('Table name is required');
-
-    expect(executeQuery).not.toHaveBeenCalled();
-  });
-
-  test('a missing database name is refused rather than queried', async () => {
-    await expect(connectionStack.showTableStatus('')).rejects.toThrow(
-      'Database name is required'
+  // tagged by the driver, so the result tab can tell it from a crash
+  test('a statement the server refused crosses IPC as one', async () => {
+    query.mockRejectedValue(
+      Object.assign(new Error("Table 'shop.nope' doesn't exist"), {
+        code: 'ER_NO_SUCH_TABLE',
+        errno: 1146,
+        sqlState: '42S02',
+      })
     );
 
-    expect(executeQuery).not.toHaveBeenCalled();
+    const { error } = await connectionStack.listTables('some-database');
+
+    // a plain object: an Error loses everything but its message over IPC
+    expect(error).not.toBeInstanceOf(Error);
+    expect(error).toMatchObject({
+      message: "Table 'shop.nope' doesn't exist",
+      detail: { kind: 'sql', code: 'ER_NO_SUCH_TABLE', errno: 1146 },
+    });
   });
+
+  test('an error of the server is encoded, never thrown at the renderer', async () => {
+    query.mockRejectedValue(new Error('ER_NO_SUCH_TABLE'));
+
+    const { result, error } = await connectionStack.listTables('some-database');
+
+    expect(result).toBeUndefined();
+    expect(error).toMatchObject({ message: 'ER_NO_SUCH_TABLE' });
+  });
+
+  // a name we failed to pass is our bug, not a server's answer,
+  // so it is thrown rather than encoded
+  test.each([
+    ['a database', () => connectionStack.listTables(''), 'Database name'],
+    [
+      'a table',
+      () => connectionStack.getTableStructure('some-database', ''),
+      'Table name',
+    ],
+  ])(
+    '%s left unnamed is refused rather than queried',
+    async (_label, ask, message) => {
+      await expect(ask()).rejects.toThrow(`${message} is required`);
+
+      expect(query).not.toHaveBeenCalled();
+    }
+  );
 });
 
 /**
@@ -177,6 +297,7 @@ describe('opening a connection', () => {
       'my-connection': {
         name: 'My connection',
         slug: 'my-connection',
+        engine: DatabaseEngine.MySQL,
         host: 'db.example.org',
         port: 3306,
         user: 'root',
@@ -192,7 +313,7 @@ describe('opening a connection', () => {
   test('the handshake is given a deadline of our own', async () => {
     mocks.createConnection.mockResolvedValue(fakeConnection());
 
-    await connectionStack.showDatabases();
+    await connectionStack.listDatabases();
 
     expect(mocks.createConnection).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -210,7 +331,7 @@ describe('opening a connection', () => {
   test('the stored password is decrypted on its way to the driver', async () => {
     mocks.createConnection.mockResolvedValue(fakeConnection());
 
-    await connectionStack.showDatabases();
+    await connectionStack.listDatabases();
 
     expect(mocks.createConnection).toHaveBeenCalledWith(
       expect.objectContaining({ password: 'secret' })
@@ -229,7 +350,7 @@ describe('opening a connection', () => {
         password: stored,
       };
 
-      const { result, error } = await connectionStack.showDatabases();
+      const { result, error } = await connectionStack.listDatabases();
 
       expect(result).toBeUndefined();
       expect(error).toMatchObject({ detail: { kind: 'connection', reason } });
@@ -243,8 +364,8 @@ describe('opening a connection', () => {
 
     // what React Router does with the loaders of a `/connections/x/db/tables/t`
     await Promise.all([
-      connectionStack.showDatabases(),
-      connectionStack.showTableStatus('some-database'),
+      connectionStack.listDatabases(),
+      connectionStack.listTables('some-database'),
     ]);
 
     expect(mocks.createConnection).toHaveBeenCalledTimes(1);
@@ -253,7 +374,7 @@ describe('opening a connection', () => {
   test('a handshake that fails is answered, not thrown', async () => {
     mocks.createConnection.mockRejectedValue(timeout());
 
-    const { result, error } = await connectionStack.showDatabases();
+    const { result, error } = await connectionStack.listDatabases();
 
     expect(result).toBeUndefined();
     expect(error).toMatchObject({
@@ -271,8 +392,8 @@ describe('opening a connection', () => {
     mocks.createConnection.mockRejectedValue(timeout());
 
     const [first, second] = await Promise.all([
-      connectionStack.showDatabases(),
-      connectionStack.showTableStatus('some-database'),
+      connectionStack.listDatabases(),
+      connectionStack.listTables('some-database'),
     ]);
 
     expect(mocks.createConnection).toHaveBeenCalledTimes(1);
@@ -280,13 +401,73 @@ describe('opening a connection', () => {
     expect(second.error).toBeDefined();
   });
 
+  test('a query on a socket the server dropped is retried on a fresh one', async () => {
+    const dropped = fakeConnection();
+
+    // what mysql2 answers on a connection the server closed under us, and it
+    // says it in the message alone — no code, no class
+    dropped.query.mockRejectedValue(
+      new Error("Can't add new command when connection is in closed state")
+    );
+
+    mocks.createConnection
+      .mockResolvedValueOnce(dropped)
+      .mockResolvedValueOnce(fakeConnection());
+
+    const { error } = await connectionStack.listDatabases();
+
+    expect(error).toBeUndefined();
+    expect(mocks.createConnection).toHaveBeenCalledTimes(2);
+  });
+
+  test('a socket that is gone twice is retried once, then answered', async () => {
+    const dropped = () => {
+      const connection = fakeConnection();
+
+      connection.query.mockRejectedValue(
+        new Error("Can't add new command when connection is in closed state")
+      );
+
+      return connection;
+    };
+
+    mocks.createConnection.mockResolvedValue(dropped());
+
+    const { error } = await connectionStack.listDatabases();
+
+    expect(error).toBeDefined();
+    // two handshakes and no more: a retry that loses its socket too is an
+    // answer, not a reason to keep opening connections
+    expect(mocks.createConnection).toHaveBeenCalledTimes(2);
+  });
+
+  test('a query that the server refused is answered, never retried', async () => {
+    const connection = fakeConnection();
+
+    connection.query.mockRejectedValue(
+      Object.assign(new Error("Table 'shop.nope' doesn't exist"), {
+        code: 'ER_NO_SUCH_TABLE',
+      })
+    );
+
+    mocks.createConnection.mockResolvedValue(connection);
+
+    const { error } = await connectionStack.listDatabases();
+
+    expect(error).toBeDefined();
+    // one handshake, one query: a statement the server understood and refused
+    // is not something a second connection would answer differently
+    expect(mocks.createConnection).toHaveBeenCalledTimes(1);
+    expect(connection.query).toHaveBeenCalledTimes(1);
+  });
+
   test('a failed attempt is forgotten, so a later query tries again', async () => {
     mocks.createConnection
       .mockRejectedValueOnce(timeout())
       .mockResolvedValueOnce(fakeConnection());
 
-    const failed = await connectionStack.showDatabases();
-    const retried = await connectionStack.showDatabases();
+    const failed = await connectionStack.listDatabases();
+    const retried = await connectionStack.listDatabases();
 
     expect(failed.error).toBeDefined();
     expect(retried.error).toBeUndefined();

@@ -6,40 +6,49 @@ import { LanguageIdEnum } from 'monaco-sql-languages';
 import { describe, expect, it } from 'vitest';
 import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
-import { ShowTableStatus } from '../../../sql/types';
+import type { ColumnDetail } from '../../../sql/dialect/metadata';
+import { DatabaseEngine } from '../../../sql/engine';
 import { QuerySchema } from './queryAnalysis';
 import { setQueryPrefix } from './queryPrefix';
 import { buildCompletionProvider, validateModel } from './useCompletion';
 
-const TABLE_LIST = [
-  { Name: 'employee' },
-  { Name: 'title' },
-  { Name: 'planning' },
-] as ShowTableStatus[];
+const TABLE_LIST = ['employee', 'title', 'planning'];
 
 const FOREIGN_KEYS = new ForeignKeysHelper([
   {
-    TABLE_NAME: 'employee',
-    COLUMN_NAME: 'title_id',
-    REFERENCED_TABLE_NAME: 'title',
-    REFERENCED_COLUMN_NAME: 'id',
-    CONSTRAINT_NAME: 'employee_title_id_fkey',
+    table: 'employee',
+    column: 'title_id',
+    referencedTable: 'title',
+    referencedColumn: 'id',
   },
   {
-    TABLE_NAME: 'planning',
-    COLUMN_NAME: 'employee_id',
-    REFERENCED_TABLE_NAME: 'employee',
-    REFERENCED_COLUMN_NAME: 'id',
-    CONSTRAINT_NAME: 'planning_employee_id_fkey',
+    table: 'planning',
+    column: 'employee_id',
+    referencedTable: 'employee',
+    referencedColumn: 'id',
   },
-] as ConstructorParameters<typeof ForeignKeysHelper>[0]);
+]);
+
+/** only the two names the completion reads of a column */
+function column(table: string, name: string): ColumnDetail {
+  return {
+    table,
+    name,
+    nullable: false,
+    generated: false,
+    binary: false,
+    json: false,
+    allowedValues: [],
+    multiValued: false,
+  };
+}
 
 const ALL_COLUMNS = new ColumnDetailHelper([
-  { Table: 'employee', Column: 'id', DataType: 'int' },
-  { Table: 'employee', Column: 'name', DataType: 'varchar' },
-  { Table: 'title', Column: 'id', DataType: 'int' },
-  { Table: 'title', Column: 'label', DataType: 'varchar' },
-] as ConstructorParameters<typeof ColumnDetailHelper>[0]);
+  column('employee', 'id'),
+  column('employee', 'name'),
+  column('title', 'id'),
+  column('title', 'label'),
+]);
 
 /** what the table filter of `employee` implies around what the user types */
 const WHERE_PREFIX = 'SELECT * FROM `employee` WHERE ';
@@ -68,6 +77,7 @@ function completionsAt(
 
   try {
     const result = buildCompletionProvider(
+      DatabaseEngine.MySQL,
       TABLE_LIST,
       FOREIGN_KEYS,
       ALL_COLUMNS

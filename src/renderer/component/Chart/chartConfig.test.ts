@@ -1,6 +1,5 @@
-import { Types } from 'mysql';
-import type { FieldPacket } from 'mysql2/promise';
 import { describe, expect, test } from 'vitest';
+import { FieldKind, type ResultField } from '../../../sql/resultField';
 import {
   ChartUnavailableReason,
   chartUnavailableReason,
@@ -8,16 +7,16 @@ import {
   numericFieldIndexes,
 } from './chartConfig';
 
-function field(name: string, type: number): FieldPacket {
-  return { name, type } as FieldPacket;
+function field(name: string, kind: FieldKind): ResultField {
+  return { name, kind, table: null };
 }
 
-const DAY = field('day', Types.DATE);
-const COUNT = field('total', Types.LONGLONG);
-const PRICE = field('price', Types.NEWDECIMAL);
-const NAME = field('name', Types.VAR_STRING);
+const DAY = field('day', FieldKind.Date);
+const COUNT = field('total', FieldKind.Number);
+const PRICE = field('price', FieldKind.Number);
+const NAME = field('name', FieldKind.String);
 // `Cell.tsx` throws on these; here they are simply never offered
-const DURATION = field('duration', Types.TIME);
+const DURATION = field('duration', FieldKind.Time);
 
 describe('numericFieldIndexes', () => {
   test('keeps the numeric columns, in field order', () => {
@@ -28,8 +27,8 @@ describe('numericFieldIndexes', () => {
     expect(numericFieldIndexes([DURATION, COUNT])).toEqual([1]);
   });
 
-  test('a column with no type is not numeric', () => {
-    expect(numericFieldIndexes([{ name: 'x' } as FieldPacket])).toEqual([]);
+  test('a column of any other kind is not numeric', () => {
+    expect(numericFieldIndexes([field('x', FieldKind.Unknown)])).toEqual([]);
   });
 });
 

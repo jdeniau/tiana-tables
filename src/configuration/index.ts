@@ -4,6 +4,7 @@ import log from 'electron-log';
 import { t } from '../i18n';
 import { WindowState } from '../main-process/windowState';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
+import { DatabaseEngine } from '../sql/engine';
 import { ConnectionObjectWithoutSlug } from '../sql/types';
 import { EncryptionUnavailableError, encryptPassword } from './encryption';
 import {
@@ -100,7 +101,21 @@ function loadConfiguration(): Configuration {
   // the passwords stay as they are stored: they are decrypted when a connection is opened, never on the way in or out of the file
   const config = JSON.parse(dataString) as Configuration;
 
-  return { ...config, connections: config.connections ?? {} };
+  return {
+    ...config,
+    connections: Object.fromEntries(
+      Object.entries(config.connections ?? {}).map(([slug, connection]) => [
+        slug,
+        {
+          ...connection,
+          // nothing checks what the file holds, and no file names an engine yet: MySQL is all the app has ever talked to
+          engine: connection.engine ?? DatabaseEngine.MySQL,
+          // the form submitted the port as text until it had a number field, so older files hold a string
+          port: Number(connection.port),
+        },
+      ])
+    ),
+  };
 }
 
 function writeConfiguration(config: Configuration): void {

@@ -1,15 +1,11 @@
-// importing from mysql2 will import the commonjs package and will fail. `escape`
-// is the driver's own escaping (it delegates to `sqlstring`, the package mysql2
-// escapes with too), and it is only ever called on a string here: its object
-// branch calls `Buffer.isBuffer`, which would throw in the renderer, and its
-// `Date` branch would shift the value into a time zone it never had.
-import { Types, escape } from 'mysql';
+import type { Dialect } from '../../../sql/dialect/types';
+import { FieldKind } from '../../../sql/resultField';
 import { formatDate, formatDateTime } from '../../utils/dateFormatter';
 
 /**
  * A cell value, turned into the SQL literal that compares to it.
  *
- * The driver hands rows over already typed, and the type is what decides the
+ * The driver hands rows over already typed, and the value is what decides the
  * form of the literal: a number is written bare (quoting it would work, MySQL
  * coerces, but the clause is shown to the user and read by them), a date is
  * written as the wall clock the grid displays, everything else is a quoted
@@ -21,8 +17,9 @@ import { formatDate, formatDateTime } from '../../utils/dateFormatter';
  * `IS NULL` as the way to filter on it.
  */
 export function cellValueToSqlLiteral(
+  dialect: Dialect,
   value: unknown,
-  fieldType: number | undefined
+  kind: FieldKind
 ): string | undefined {
   if (value === null || value === undefined) {
     return undefined;
@@ -33,17 +30,17 @@ export function cellValueToSqlLiteral(
   }
 
   if (typeof value === 'boolean') {
-    return value ? '1' : '0';
+    return dialect.booleanLiteral(value);
   }
 
   if (value instanceof Date) {
-    return escape(
-      fieldType === Types.DATE ? formatDate(value) : formatDateTime(value)
+    return dialect.escapeLiteral(
+      kind === FieldKind.Date ? formatDate(value) : formatDateTime(value)
     );
   }
 
   if (typeof value === 'string') {
-    return escape(value);
+    return dialect.escapeLiteral(value);
   }
 
   // raw bytes: `String(bytes)` would compare against a decoding the server
@@ -53,5 +50,5 @@ export function cellValueToSqlLiteral(
   }
 
   // all that is left is a JSON column, which mysql2 hands over already parsed
-  return escape(JSON.stringify(value));
+  return dialect.escapeLiteral(JSON.stringify(value));
 }

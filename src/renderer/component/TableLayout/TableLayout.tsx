@@ -1,6 +1,5 @@
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Splitter } from 'antd';
-import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { useNavigate } from 'react-router-dom';
 import {
   DisplayAfterByColumn,
@@ -9,7 +8,9 @@ import {
 import { PANEL } from '../../../configuration/panels';
 import type { ColumnWidthByColumn } from '../../../configuration/type';
 import { useTranslation } from '../../../i18n';
-import { escapeIdentifier } from '../../../sql/escapeIdentifier';
+import type { ResultField } from '../../../sql/resultField';
+import type { ResultRow } from '../../../sql/types';
+import { useDialect } from '../../hooks/useDialect';
 import { usePanelSize } from '../../hooks/usePanelSize';
 import WhereFilter from '../Query/WhereFilter';
 import {
@@ -54,9 +55,10 @@ export function TableLayout({
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const dialect = useDialect();
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.TABLE_FILTERS);
-  const [result, setResult] = useState<null | RowDataPacket[]>(null);
-  const [fields, setFields] = useState<null | FieldPacket[]>(null);
+  const [result, setResult] = useState<null | ResultRow[]>(null);
+  const [fields, setFields] = useState<null | ResultField[]>(null);
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
 
@@ -64,14 +66,12 @@ export function TableLayout({
     (offset: number) => {
       // the identifiers are escaped, the filter is not: `where` is SQL the
       // user wrote, and is sent as written
-      const query = `SELECT * FROM ${escapeIdentifier(
-        database
-      )}.${escapeIdentifier(tableName)} ${
+      const query = `SELECT * FROM ${dialect.qualify(database, tableName)} ${
         where ? ` WHERE ${where}` : ''
       } LIMIT ${DEFAULT_LIMIT} OFFSET ${offset};`;
 
       window.sql
-        .executeQuery<RowDataPacket[]>(query)
+        .executeQuery<ResultRow[]>(query)
         .then(([result, fields]) => {
           setCurrentOffset(offset);
           setFields(fields.map((field) => ({ ...field, table: tableName })));
@@ -83,7 +83,7 @@ export function TableLayout({
           setError(err);
         });
     },
-    [database, tableName, where]
+    [dialect, database, tableName, where]
   );
 
   useEffect(() => {

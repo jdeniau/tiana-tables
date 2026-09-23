@@ -1,22 +1,20 @@
-import { Types } from 'mysql';
 import { describe, expect, it } from 'vitest';
-import { DataType } from '../../../sql/dataType';
-import type { ColumnDetail } from '../../../sql/types';
+import type { ColumnDetail } from '../../../sql/dialect/metadata';
+import { FieldKind } from '../../../sql/resultField';
 import { EditorKind, looksLikeJson, resolveEditorKind } from './editorKind';
 
-type ColumnDetailFields = Partial<Omit<ColumnDetail, 'constructor'>>;
-
-function makeColumn(overrides: ColumnDetailFields = {}): ColumnDetail {
+function makeColumn(overrides: Partial<ColumnDetail> = {}): ColumnDetail {
   return {
-    Table: 'orders',
-    Column: 'label',
-    DataType: DataType.VarChar,
-    IsNullable: 'YES',
-    ColumnType: 'varchar(255)',
-    ColumnDefault: null,
-    Extra: '',
+    table: 'orders',
+    name: 'label',
+    nullable: true,
+    generated: false,
+    binary: false,
+    json: false,
+    allowedValues: [],
+    multiValued: false,
     ...overrides,
-  } as ColumnDetail;
+  };
 }
 
 describe('looksLikeJson', () => {
@@ -35,67 +33,68 @@ describe('looksLikeJson', () => {
 
 describe('resolveEditorKind', () => {
   it.each([
-    ['DATE', Types.DATE, EditorKind.Date],
-    ['DATETIME', Types.DATETIME, EditorKind.DateTime],
-    ['TIMESTAMP', Types.TIMESTAMP, EditorKind.DateTime],
-    ['LONG', Types.LONG, EditorKind.Number],
-    ['LONGLONG', Types.LONGLONG, EditorKind.Number],
-    ['NEWDECIMAL', Types.NEWDECIMAL, EditorKind.Number],
-    ['DOUBLE', Types.DOUBLE, EditorKind.Number],
-    ['JSON', Types.JSON, EditorKind.Json],
-    ['VAR_STRING', Types.VAR_STRING, EditorKind.Text],
-    ['BLOB', Types.BLOB, EditorKind.Text],
+    ['DATE', FieldKind.Date, EditorKind.Date],
+    ['DATETIME', FieldKind.DateTime, EditorKind.DateTime],
+    ['TIMESTAMP', FieldKind.DateTime, EditorKind.DateTime],
+    ['LONG', FieldKind.Number, EditorKind.Number],
+    ['LONGLONG', FieldKind.Number, EditorKind.Number],
+    ['NEWDECIMAL', FieldKind.Number, EditorKind.Number],
+    ['DOUBLE', FieldKind.Number, EditorKind.Number],
+    ['JSON', FieldKind.Json, EditorKind.Json],
+    ['VAR_STRING', FieldKind.String, EditorKind.Text],
+    ['BLOB', FieldKind.Text, EditorKind.Text],
   ])('gives a %s field the %s editor', (_label, fieldType, expected) => {
     expect(resolveEditorKind(makeColumn(), fieldType, '')).toBe(expected);
   });
 
+  /**
+   * The protocol announces an `ENUM` and a `SET` as a string type, which the
+   * driver reads as `Text` — so a closed set can only be told from the schema,
+   * and the select editor hangs on that and not on the kind.
+   */
   it.each([
-    [DataType.Enum, EditorKind.Enum],
-    [DataType.Set, EditorKind.Set],
+    ['an ENUM', false, EditorKind.Enum],
+    ['a SET', true, EditorKind.Set],
   ])(
-    'reads %s off the schema, which the protocol reports as a string',
-    (dataType, expected) => {
+    'reads %s off the schema, whatever the kind says',
+    (_label, multiValued, expected) => {
       expect(
-        resolveEditorKind(makeColumn({ DataType: dataType }), Types.STRING, '')
+        resolveEditorKind(
+          makeColumn({ allowedValues: ['draft', 'sent'], multiValued }),
+          FieldKind.Number,
+          ''
+        )
       ).toBe(expected);
     }
   );
 
   it('gives the JSON editor to JSON stored in a text column', () => {
-    expect(
-      resolveEditorKind(
-        makeColumn({ DataType: DataType.Text }),
-        Types.BLOB,
-        '{"a":1}'
-      )
-    ).toBe(EditorKind.Json);
-  });
-
-  it('leaves a text column holding plain text alone', () => {
-    expect(
-      resolveEditorKind(
-        makeColumn({ DataType: DataType.Text }),
-        Types.BLOB,
-        'hello'
-      )
-    ).toBe(EditorKind.Text);
-  });
-
-  it('never mistakes a numeric field for JSON', () => {
-    expect(resolveEditorKind(makeColumn(), Types.LONG, '[1]')).toBe(
-      EditorKind.Number
+    expect(resolveEditorKind(makeColumn(), FieldKind.Text, '{"a":1}')).toBe(
+      EditorKind.Json
     );
   });
 
-  it('falls back to text when the field type is unknown', () => {
-    // no field type at hand: everything MySQL accepts can be written as text
-    expect(resolveEditorKind(makeColumn(), undefined, '')).toBe(
+  it('leaves a text column holding plain text alone', () => {
+    expect(resolveEditorKind(makeColumn(), FieldKind.Text, 'hello')).toBe(
       EditorKind.Text
     );
   });
 
-  it('still recognizes JSON without a field type', () => {
-    expect(resolveEditorKind(makeColumn(), undefined, '{"a":1}')).toBe(
+  it('never mistakes a numeric field for JSON', () => {
+    expect(resolveEditorKind(makeColumn(), FieldKind.Number, '[1]')).toBe(
+      EditorKind.Number
+    );
+  });
+
+  it('falls back to text when the kind says nothing', () => {
+    // everything MySQL accepts can be written as a text literal
+    expect(resolveEditorKind(makeColumn(), FieldKind.Unknown, '')).toBe(
+      EditorKind.Text
+    );
+  });
+
+  it('still recognizes JSON on a kind that says nothing', () => {
+    expect(resolveEditorKind(makeColumn(), FieldKind.Unknown, '{"a":1}')).toBe(
       EditorKind.Json
     );
   });

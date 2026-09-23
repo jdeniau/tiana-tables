@@ -1,4 +1,4 @@
-import { Types } from 'mysql';
+import { FieldKind } from '../../sql/resultField';
 import { fontScale, space } from '../theme';
 
 /** what a column gets when the type does not say how wide its values are */
@@ -17,16 +17,12 @@ const DATE_COLUMN_WIDTH = 10 * CHAR_WIDTH + CELL_MARGINS;
 const DATETIME_COLUMN_WIDTH = 19 * CHAR_WIDTH + CELL_MARGINS;
 
 /** the width a column opens at. The cases mirror `Cell.tsx` */
-export function getColumnWidth(type: number | undefined): number {
-  switch (type) {
-    case Types.DATETIME:
-    case Types.DATETIME2:
-    case Types.TIMESTAMP:
-    case Types.TIMESTAMP2:
-    case Types.NEWDATE:
+export function getColumnWidth(kind: FieldKind): number {
+  switch (kind) {
+    case FieldKind.DateTime:
       return DATETIME_COLUMN_WIDTH;
 
-    case Types.DATE:
+    case FieldKind.Date:
       return DATE_COLUMN_WIDTH;
 
     default:

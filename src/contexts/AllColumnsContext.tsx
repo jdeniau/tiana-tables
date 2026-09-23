@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo } from 'react';
 import { ColumnDetailHelper } from '../sql/ColumnDetailHelper';
-import { ColumnDetailResult } from '../sql/types';
+import type { ColumnDetail } from '../sql/dialect/metadata';
 
 const AllColumnsContext = createContext<ColumnDetailHelper | null>(null);
 
@@ -9,7 +9,7 @@ export function AllColumnsContextProvider({
   allColumns: columnDetails,
 }: {
   children: React.ReactNode;
-  allColumns: ColumnDetailResult;
+  allColumns: ColumnDetail[];
 }) {
   // a new helper on every render would invalidate every memo built on it
   const columnDetailsHelper = useMemo(

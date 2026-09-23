@@ -1,7 +1,8 @@
 import { EntityContextType } from 'dt-sql-parser';
 import { AttrName } from 'dt-sql-parser/dist/parser/common/entityCollector';
+import type { DatabaseEngine } from './engine';
 import { SQL_RESERVED_KEYWORDS } from './keywords';
-import { collectEntities } from './mysqlParser';
+import { collectEntities, getParser } from './parser';
 
 export function generateTableAlias(
   tableName: string,
@@ -85,8 +86,11 @@ function unqualify(tableNamePath: string): TableName {
  * Incomplete queries are expected: the parser reports syntax errors instead of
  * throwing, and still returns the entities it managed to resolve.
  */
-export function extractTableAliases(sql: string): Record<Alias, TableName> {
-  const tables = collectEntities(sql).filter(
+export function extractTableAliases(
+  sql: string,
+  engine: DatabaseEngine
+): Record<Alias, TableName> {
+  const tables = collectEntities(getParser(engine), sql).filter(
     (entity) => entity.entityContextType === EntityContextType.TABLE
   );
 

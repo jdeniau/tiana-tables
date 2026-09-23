@@ -2,7 +2,7 @@ import { Flex } from 'antd';
 import { useRevalidator, useRouteError } from 'react-router';
 import { useTranslation } from '../../../i18n';
 import { isConnectionError } from '../../../sql/connectionError';
-import { SqlError } from '../../../sql/errorSerializer';
+import type { SqlError } from '../../../sql/sqlError';
 import ButtonLink from '../../component/ButtonLink';
 import SqlErrorComponent from '../../component/Query/SqlErrorComponent';
 import { ActionButton } from '../../component/Style/ActionButton';

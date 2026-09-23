@@ -15,11 +15,10 @@ export async function loader({ params, request }: RouteParams) {
   invariant(databaseName, 'Database name is required');
   invariant(tableName, 'Table name is required');
 
-  const [primaryKeyResult] = await window.sql.getPrimaryKeys(
+  const primaryKeys = await window.sql.getPrimaryKeyColumns(
     databaseName,
     tableName
   );
-  const primaryKeys = primaryKeyResult.map((row) => row.Column_name);
 
   window.config.setActiveTable(connectionSlug, databaseName, tableName);
 

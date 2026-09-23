@@ -1,4 +1,3 @@
-import type { RowDataPacket } from 'mysql2/promise';
 import type { SqlBoundValue } from './types';
 
 /**
@@ -44,13 +43,3 @@ export type UpdateCellOutcome =
   | { status: 'updated'; value: unknown }
   | { status: 'conflict'; reason: 'changed'; currentValue: unknown }
   | { status: 'conflict'; reason: 'deleted' };
-
-/**
- * One row of the read-back query of `buildReadCellQuery`. A result shape, but
- * one that exists only to serve this action, so it lives with it.
- */
-export interface CellReadRow extends RowDataPacket {
-  value: unknown;
-  /** 1 when the cell still holds the value the guard was built on, 0 otherwise */
-  guardMatches: number;
-}

@@ -2,8 +2,9 @@
  * @vitest-environment happy-dom
  */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { SqlError } from '../../sql/errorSerializer';
+import { DatabaseEngine } from '../../sql/engine';
 import { RunMode } from '../../sql/runMode';
+import type { SqlError } from '../../sql/sqlError';
 import { action } from './sql.$connectionSlug';
 
 function runAction(
@@ -34,14 +35,16 @@ function sentQueries(): unknown[] {
     .map(([query]) => query);
 }
 
+/** a refused statement as the preload throws it: decoded flat */
 function sqlError(message: string): SqlError {
-  return Object.assign(new Error(message), {
+  return {
+    name: 'Error',
+    message,
+    kind: 'sql',
     code: 'ER_NO_SUCH_TABLE',
     errno: 1146,
-    sql: '',
-    sqlMessage: message,
     sqlState: '42S02',
-  });
+  };
 }
 
 describe('action', () => {
@@ -50,11 +53,25 @@ describe('action', () => {
       // @ts-expect-error return is OK here, the type is too complex for now
       executeQuery: vi.fn(() => Promise.resolve([[], []])),
     };
+
+    // the action reads the engine of the connection to know how to spell `USE`
+    window.config = {
+      // @ts-expect-error only the connections are read here
+      getConfiguration: vi.fn(() =>
+        Promise.resolve({
+          connections: {
+            connectionSlug: { engine: DatabaseEngine.MySQL },
+          },
+        })
+      ),
+    };
   });
 
   afterEach(() => {
     // @ts-expect-error reset data here, will be re-set in `beforeEach`
     window.sql = undefined;
+    // @ts-expect-error same
+    window.config = undefined;
   });
 
   test('escapes the database name of the USE it sends first', async () => {
@@ -127,9 +144,9 @@ describe('action', () => {
   });
 
   test('sends nothing at all when the editor holds no statement', async () => {
-    await expect(
-      runAction('shop', '-- nothing to run yet\n')
-    ).resolves.toEqual({ outcomes: [] });
+    await expect(runAction('shop', '-- nothing to run yet\n')).resolves.toEqual(
+      { outcomes: [] }
+    );
 
     expect(window.sql.executeQuery).not.toHaveBeenCalled();
   });

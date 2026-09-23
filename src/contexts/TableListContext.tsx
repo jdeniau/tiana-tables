@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
-import { ShowTableStatus } from '../sql/types';
 
-export type TableListContext = ShowTableStatus[];
+/** The tables and views of the current database, by name. */
+export type TableListContext = string[];
 
 const TableListContext = createContext<TableListContext | null>(null);
 

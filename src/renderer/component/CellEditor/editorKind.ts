@@ -1,6 +1,5 @@
-import { Types } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
-import { DataType, readDataType } from '../../../sql/dataType';
-import type { ColumnDetail } from '../../../sql/types';
+import type { ColumnDetail } from '../../../sql/dialect/metadata';
+import { FieldKind } from '../../../sql/resultField';
 
 /** Which editor a cell gets. */
 export enum EditorKind {
@@ -12,30 +11,6 @@ export enum EditorKind {
   Json = 'json',
   Text = 'text',
 }
-
-/**
- * The same groups `Cell.tsx` switches on to render a value, so that the editor
- * of a cell never disagrees with the way it was displayed.
- */
-const NUMERIC_TYPES: ReadonlySet<number> = new Set([
-  Types.DECIMAL, // aka DECIMAL
-  Types.TINY, // aka TINYINT
-  Types.SHORT, // aka SMALLINT
-  Types.LONG, // aka INT
-  Types.FLOAT,
-  Types.DOUBLE,
-  Types.INT24, // aka MEDIUMINT
-  Types.LONGLONG, // aka BIGINT
-  Types.NEWDECIMAL, // aka DECIMAL
-]);
-
-const DATETIME_TYPES: ReadonlySet<number> = new Set([
-  Types.DATETIME,
-  Types.DATETIME2, // aka DATETIME with fractional seconds
-  Types.TIMESTAMP,
-  Types.TIMESTAMP2, // aka TIMESTAMP with fractional seconds
-  Types.NEWDATE,
-]);
 
 /**
  * Whether a text is worth handing to the JSON editor.
@@ -63,14 +38,11 @@ export function looksLikeJson(text: string): boolean {
 /**
  * Pick the editor for a cell.
  *
- * The type of the field decides whenever it can: those are the constants the
- * driver ships, and reading them keeps this in step with `Cell.tsx` instead of
- * duplicating a list of type names by hand.
+ * The kind of the field decides whenever it can — the very kind the grid
+ * rendered the value with, so an editor never disagrees with what was shown.
  *
- * `ENUM` and `SET` are the exception, and the protocol is why: it reports such
- * a column as a plain string — the distinction lives in a field flag the driver
- * does not surface — so only INFORMATION_SCHEMA can tell, and it is where the
- * accepted values come from anyway.
+ * A closed set comes first: the protocol reports it as a plain string,
+ * without the values the editor needs.
  *
  * `text` is the fallback, and a fine one: everything MySQL accepts can be
  * written as a text literal, so an unknown type degrades to a textarea rather
@@ -78,35 +50,27 @@ export function looksLikeJson(text: string): boolean {
  */
 export function resolveEditorKind(
   column: ColumnDetail,
-  fieldType: number | undefined,
+  fieldKind: FieldKind,
   text: string
 ): EditorKind {
-  const dataType = readDataType(column.DataType);
-
-  if (dataType === DataType.Enum) {
-    return EditorKind.Enum;
+  if (column.allowedValues.length > 0) {
+    return column.multiValued ? EditorKind.Set : EditorKind.Enum;
   }
 
-  if (dataType === DataType.Set) {
-    return EditorKind.Set;
+  if (fieldKind === FieldKind.Date) {
+    return EditorKind.Date;
   }
 
-  if (fieldType !== undefined) {
-    if (fieldType === Types.DATE) {
-      return EditorKind.Date;
-    }
+  if (fieldKind === FieldKind.DateTime) {
+    return EditorKind.DateTime;
+  }
 
-    if (DATETIME_TYPES.has(fieldType)) {
-      return EditorKind.DateTime;
-    }
+  if (fieldKind === FieldKind.Number) {
+    return EditorKind.Number;
+  }
 
-    if (NUMERIC_TYPES.has(fieldType)) {
-      return EditorKind.Number;
-    }
-
-    if (fieldType === Types.JSON) {
-      return EditorKind.Json;
-    }
+  if (fieldKind === FieldKind.Json) {
+    return EditorKind.Json;
   }
 
   return looksLikeJson(text) ? EditorKind.Json : EditorKind.Text;

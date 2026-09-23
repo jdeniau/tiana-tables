@@ -2,8 +2,8 @@ import { ReactElement, useState } from 'react';
 import { Button, Flex, Input, Modal } from 'antd';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
-import { escapeIdentifier } from '../../../sql/escapeIdentifier';
 import type { FilterOperator } from '../../../sql/filterClause';
+import { useDialect } from '../../hooks/useDialect';
 import { commentForeground } from '../../theme';
 
 /** The comparison waiting for the value the user is about to type. */
@@ -63,6 +63,7 @@ function FreeTextFilterForm({
   pending: PendingFreeTextFilter;
 }): ReactElement {
   const { t } = useTranslation();
+  const dialect = useDialect();
   const [text, setText] = useState<string>('');
 
   return (
@@ -74,7 +75,7 @@ function FreeTextFilterForm({
         // deprecates the addons in favour of `Space.Compact`, and inside the
         // field the clause reads as one line anyway, right before the caret
         prefix={
-          <ClausePrefix>{`${escapeIdentifier(pending.columnName)} ${
+          <ClausePrefix>{`${dialect.escapeIdentifier(pending.columnName)} ${
             pending.operator
           }`}</ClausePrefix>
         }

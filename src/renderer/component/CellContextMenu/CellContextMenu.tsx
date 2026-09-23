@@ -1,16 +1,22 @@
-import { ReactElement, ReactNode, useCallback, useEffect, useState } from 'react';
+import {
+  ReactElement,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
-import { escape } from 'mysql'; // importing from mysql2 will import the commonjs package and will fail
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
-import { isBinaryColumn } from '../../../sql/columnEditing';
+import type { Dialect } from '../../../sql/dialect/types';
 import {
   FILTER_OPERATORS,
   FilterOperator,
   buildFilterClause,
   operatorTakesValue,
 } from '../../../sql/filterClause';
+import { useDialect } from '../../hooks/useDialect';
 import { commentForeground } from '../../theme';
 import FreeTextFilterModal, {
   PendingFreeTextFilter,
@@ -48,6 +54,7 @@ export default function CellContextMenu({
   onFilterChange,
 }: CellContextMenuProps): ReactElement {
   const { t } = useTranslation();
+  const dialect = useDialect();
   const [clipboardText, setClipboardText] = useState<string>('');
   const [pending, setPending] = useState<PendingFreeTextFilter | null>(null);
 
@@ -81,6 +88,7 @@ export default function CellContextMenu({
 
   const items = target
     ? buildMenuItems({
+        dialect,
         target,
         clipboardText,
         t,
@@ -118,9 +126,10 @@ export default function CellContextMenu({
           if (pending) {
             applyFilter(
               buildFilterClause(
+                dialect,
                 pending.columnName,
                 pending.operator,
-                escape(text)
+                dialect.escapeLiteral(text)
               )
             );
           }
@@ -133,6 +142,7 @@ export default function CellContextMenu({
 }
 
 interface MenuItemsParams {
+  dialect: Dialect;
   target: CellFilterTarget;
   clipboardText: string;
   t: ReturnType<typeof useTranslation>['t'];
@@ -141,6 +151,7 @@ interface MenuItemsParams {
 }
 
 function buildMenuItems({
+  dialect,
   target,
   clipboardText,
   t,
@@ -152,19 +163,20 @@ function buildMenuItems({
   // a binary column holds bytes the grid only ever shows decoded: comparing to
   // that decoding would not mean what it looks like
   const cellLiteral =
-    column.detail && isBinaryColumn(column.detail)
+    column.detail?.binary === true
       ? undefined
-      : cellValueToSqlLiteral(target.value, column.type);
+      : cellValueToSqlLiteral(dialect, target.value, column.kind);
 
   const clipboardLiteral =
-    clipboardText === '' ? undefined : escape(clipboardText);
+    clipboardText === '' ? undefined : dialect.escapeLiteral(clipboardText);
 
   const operatorItems = FILTER_OPERATORS.map((operator) => {
     if (!operatorTakesValue(operator)) {
       return {
         key: operator,
         label: operator,
-        onClick: () => onApply(buildFilterClause(column.name, operator)),
+        onClick: () =>
+          onApply(buildFilterClause(dialect, column.name, operator)),
       };
     }
 
@@ -183,7 +195,9 @@ function buildMenuItems({
           disabled: cellLiteral === undefined,
           onClick: () =>
             cellLiteral !== undefined &&
-            onApply(buildFilterClause(column.name, operator, cellLiteral)),
+            onApply(
+              buildFilterClause(dialect, column.name, operator, cellLiteral)
+            ),
         },
         {
           key: `${operator}:clipboard`,
@@ -196,7 +210,14 @@ function buildMenuItems({
           disabled: clipboardLiteral === undefined,
           onClick: () =>
             clipboardLiteral !== undefined &&
-            onApply(buildFilterClause(column.name, operator, clipboardLiteral)),
+            onApply(
+              buildFilterClause(
+                dialect,
+                column.name,
+                operator,
+                clipboardLiteral
+              )
+            ),
         },
         {
           key: `${operator}:freeText`,

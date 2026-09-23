@@ -1,11 +1,16 @@
 import { ReactElement, useMemo, useRef, useState } from 'react';
-import { CheckOutlined, CopyOutlined, DownloadOutlined } from '@ant-design/icons';
+import {
+  CheckOutlined,
+  CopyOutlined,
+  DownloadOutlined,
+} from '@ant-design/icons';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
 import { Alert, Button, Select, Space } from 'antd';
-import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { styled, useTheme } from 'styled-components';
 import { useTranslation } from '../../../i18n';
+import type { ResultField } from '../../../sql/resultField';
+import type { ResultRow } from '../../../sql/types';
 import { background, space } from '../../theme';
 import { fill } from '../Style/fill';
 import {
@@ -19,8 +24,8 @@ import { buildChartTheme } from './chartTheme';
 import { MAX_POINTS, toBarData, toLineSeries } from './toSeries';
 
 interface ChartPanelProps {
-  result: readonly RowDataPacket[];
-  fields: readonly FieldPacket[];
+  result: readonly ResultRow[];
+  fields: readonly ResultField[];
   rowsAsArray?: boolean;
 }
 

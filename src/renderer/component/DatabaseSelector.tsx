@@ -3,7 +3,6 @@ import { DownOutlined } from '@ant-design/icons';
 import { Dropdown } from 'antd';
 import { styled } from 'styled-components';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
-import type { ShowDatabasesResult } from '../../sql/types';
 import {
   commentForeground,
   display,
@@ -51,7 +50,7 @@ const Caret = styled(DownOutlined)`
 export default function DatabaseSelector({
   databaseList,
 }: {
-  databaseList: ShowDatabasesResult;
+  databaseList: string[];
 }) {
   const { database, setDatabase } = useDatabaseContext();
 
@@ -66,10 +65,7 @@ export default function DatabaseSelector({
     <Dropdown
       trigger={['click']}
       menu={{
-        items: databaseList.map(({ Database }) => ({
-          key: Database,
-          label: Database,
-        })),
+        items: databaseList.map((name) => ({ key: name, label: name })),
         selectable: true,
         selectedKeys: database ? [database] : [],
         onClick: handleClick,

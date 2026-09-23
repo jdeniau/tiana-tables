@@ -12,27 +12,27 @@ type Props = {
 };
 
 export default function NavigateModalContainer(props: Props): JSX.Element {
-  const tableStatusList = useTableListContext();
+  const tableList = useTableListContext();
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
   const databaseList = useDatabaseListContext();
 
   const navigationItemList: Array<NavigationItem> = useMemo(
     () => [
-      ...tableStatusList.map((table) => ({
-        key: `Table-${table.Name}`,
-        name: table.Name,
-        link: `/connections/${currentConnectionSlug}/${database}/tables/${table.Name}`,
+      ...tableList.map((table) => ({
+        key: `Table-${table}`,
+        name: table,
+        link: `/connections/${currentConnectionSlug}/${database}/tables/${table}`,
         Icon: TableOutlined,
       })),
-      ...databaseList.map((showDatabase) => ({
-        key: `Database-${showDatabase.Database}`,
-        name: showDatabase.Database,
-        link: `/connections/${currentConnectionSlug}/${showDatabase.Database}`,
+      ...databaseList.map((databaseName) => ({
+        key: `Database-${databaseName}`,
+        name: databaseName,
+        link: `/connections/${currentConnectionSlug}/${databaseName}`,
         Icon: DatabaseOutlined,
       })),
     ],
-    [currentConnectionSlug, database, databaseList, tableStatusList]
+    [currentConnectionSlug, database, databaseList, tableList]
   );
 
   return <NavigateModal navigationItemList={navigationItemList} {...props} />;

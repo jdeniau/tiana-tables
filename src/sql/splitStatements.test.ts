@@ -1,8 +1,11 @@
 import { describe, expect, test } from 'vitest';
+import { DatabaseEngine } from './engine';
 import { splitStatements, statementAtOffset } from './splitStatements';
 
 function sqlOf(content: string): string[] {
-  return splitStatements(content).map((statement) => statement.sql);
+  return splitStatements(content, DatabaseEngine.MySQL).map(
+    (statement) => statement.sql
+  );
 }
 
 describe('splitStatements', () => {
@@ -60,7 +63,7 @@ describe('splitStatements', () => {
   test('reports where each statement sits in the content', () => {
     const content = '\nSELECT 1;\n\nSELECT 2;\n';
 
-    expect(splitStatements(content)).toEqual([
+    expect(splitStatements(content, DatabaseEngine.MySQL)).toEqual([
       { sql: 'SELECT 1;', start: 1, end: 10 },
       { sql: 'SELECT 2;', start: 12, end: 21 },
     ]);
@@ -70,7 +73,7 @@ describe('splitStatements', () => {
 
 describe('statementAtOffset', () => {
   const content = 'SELECT 1;\n\nSELECT 2;\n';
-  const statements = splitStatements(content);
+  const statements = splitStatements(content, DatabaseEngine.MySQL);
 
   test('answers the statement the caret is inside of', () => {
     expect(statementAtOffset(statements, content.indexOf('1'))?.sql).toBe(
@@ -93,9 +96,12 @@ describe('statementAtOffset', () => {
   });
 
   test('a caret before the first statement belongs to it', () => {
-    expect(statementAtOffset(splitStatements('\n\nSELECT 1;'), 0)?.sql).toBe(
-      'SELECT 1;'
-    );
+    expect(
+      statementAtOffset(
+        splitStatements('\n\nSELECT 1;', DatabaseEngine.MySQL),
+        0
+      )?.sql
+    ).toBe('SELECT 1;');
   });
 
   test('answers nothing when there is nothing to run', () => {

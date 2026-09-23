@@ -25,28 +25,15 @@ type Story = StoryObj<typeof NavigateModal>;
 export const Primary: Story = {
   decorators: [
     (Story) => (
-      <DatabaseListContextProvider
-        databaseList={[
-          // @ts-expect-error don't want all data, only the name
-          { Database: 'mysql' },
-          // @ts-expect-error don't want all data, only the name
-          { Database: 'users' },
-        ]}
-      >
+      <DatabaseListContextProvider databaseList={['mysql', 'users']}>
         <TableListContextProvider
           tableList={[
-            // @ts-expect-error don't want all data, only the name
-            { Name: 'departments' },
-            // @ts-expect-error don't want all data, only the name
-            { Name: 'dept_emp' },
-            // @ts-expect-error don't want all data, only the name
-            { Name: 'dept_manager' },
-            // @ts-expect-error don't want all data, only the name
-            { Name: 'employees' },
-            // @ts-expect-error don't want all data, only the name
-            { Name: 'salaries' },
-            // @ts-expect-error don't want all data, only the name
-            { Name: 'titles' },
+            'departments',
+            'dept_emp',
+            'dept_manager',
+            'employees',
+            'salaries',
+            'titles',
           ]}
         >
           <Story />

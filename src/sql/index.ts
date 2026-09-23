@@ -1,41 +1,37 @@
 import log from 'electron-log';
-import type { Connection, ResultSetHeader } from 'mysql2/promise';
 import invariant from 'tiny-invariant';
 import { getConfiguration } from '../configuration';
 import { decryptPassword } from '../configuration/encryption';
 import { EncryptedConnectionObject } from '../configuration/type';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import {
-  buildReadCellQuery,
-  buildUpdateCellQuery,
-} from './buildUpdateCellQuery';
-import {
   KEYRING_LOCKED,
   PASSWORD_UNREADABLE,
   asConnectionError,
 } from './connectionError';
+import { getDialect } from './dialect';
+import {
+  type ColumnDetail,
+  type ForeignKey,
+  type TableStructureRow,
+} from './dialect/metadata';
+import type { ReadQuery } from './dialect/readQuery';
+import type { Dialect } from './dialect/types';
+import { loadDriver } from './driver';
+import type { DriverConnection } from './driver';
 import {
   QueryResultOrError,
   ResultOrError,
   encodeError,
 } from './errorSerializer';
-import { escapeIdentifier } from './escapeIdentifier';
+import { toTableStructure } from './tableStructure';
 import {
-  ColumnDetail,
-  ColumnDetailResult,
-  KeyColumnUsageRow,
+  QueryResult,
   QueryReturnType,
-  ShowDatabasesResult,
-  ShowKeyRow,
-  ShowTableStatusResult,
   SqlBoundValues,
-  TableStructureResult,
+  isWriteResult,
 } from './types';
-import {
-  CellReadRow,
-  UpdateCellOutcome,
-  UpdateCellRequest,
-} from './updateCell';
+import { UpdateCellOutcome, UpdateCellRequest } from './updateCell';
 
 /**
  * How long a handshake is given before we call it off.
@@ -53,7 +49,7 @@ class ConnectionStack {
    * their own socket. A rejected attempt is removed right away, so a failure
    * is never cached and never retried on its own.
    */
-  #connections: Map<string, Promise<Connection>> = new Map();
+  #connections: Map<string, Promise<DriverConnection>> = new Map();
 
   #currentConnectionSlug: string | undefined;
 
@@ -70,13 +66,13 @@ class ConnectionStack {
   // List of IPC events and their handlers
   #ipcMainHandler = {
     [SQL_CHANNEL.EXECUTE_QUERY]: this.executeQueryAndRetry,
-    [SQL_CHANNEL.GET_KEY_COLUMN_USAGE]: this.getKeyColumnUsage,
-    [SQL_CHANNEL.GET_PRIMARY_KEYS]: this.getPrimaryKeys,
+    [SQL_CHANNEL.LIST_DATABASES]: this.listDatabases,
+    [SQL_CHANNEL.LIST_TABLES]: this.listTables,
+    [SQL_CHANNEL.GET_FOREIGN_KEYS]: this.getForeignKeys,
+    [SQL_CHANNEL.GET_PRIMARY_KEY_COLUMNS]: this.getPrimaryKeyColumns,
     [SQL_CHANNEL.GET_ALL_COLUMNS]: this.getAllColumns,
     [SQL_CHANNEL.GET_TABLE_STRUCTURE]: this.getTableStructure,
     [SQL_CHANNEL.UPDATE_CELL]: this.updateCell,
-    [SQL_CHANNEL.SHOW_DATABASES]: this.showDatabases,
-    [SQL_CHANNEL.SHOW_TABLE_STATUS]: this.showTableStatus,
     [SQL_CHANNEL.CLOSE]: this.closeConnection,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
@@ -111,123 +107,121 @@ class ConnectionStack {
     }
   }
 
-  async getKeyColumnUsage(
-    databaseName: string,
-    tableName?: string
-  ): QueryResultOrError<KeyColumnUsageRow[]> {
-    invariant(databaseName, 'Database name is required');
+  /** The SQL text of the connection queries are currently sent to. */
+  #dialect(): Dialect {
+    invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
-    const query = `
-      SELECT
-        TABLE_NAME,
-        COLUMN_NAME,
-        CONSTRAINT_NAME,
-        REFERENCED_TABLE_NAME,
-        REFERENCED_COLUMN_NAME
-      FROM
-        INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-      WHERE
-        TABLE_SCHEMA = :databaseName
-        ${tableName ? 'AND TABLE_NAME = :tableName' : ''}
-    `;
+    const connection =
+      getConfiguration().connections[this.#currentConnectionSlug];
 
-    return this.executeQueryAndRetry<KeyColumnUsageRow[]>(query, false, {
-      databaseName,
-      ...(tableName ? { tableName } : {}),
-    });
-  }
+    invariant(
+      connection,
+      `Connection "${this.#currentConnectionSlug}" not found`
+    );
 
-  async getAllColumns(
-    databaseName: string
-  ): QueryResultOrError<Array<ColumnDetail>> {
-    invariant(databaseName, 'Database name is required');
-
-    const query = `
-      SELECT
-        TABLE_NAME AS \`Table\`,
-        COLUMN_NAME AS \`Column\`,
-        DATA_TYPE AS \`DataType\`,
-        IS_NULLABLE AS \`IsNullable\`,
-        COLUMN_TYPE AS \`ColumnType\`,
-        COLUMN_DEFAULT AS \`ColumnDefault\`,
-        EXTRA AS \`Extra\`
-      FROM
-        INFORMATION_SCHEMA.COLUMNS
-      WHERE
-        TABLE_SCHEMA = :databaseName
-    `;
-
-    return this.executeQueryAndRetry<ColumnDetailResult>(query, false, {
-      databaseName,
-    });
+    return getDialect(connection.engine);
   }
 
   /**
-   * Every column of one table, as the structure page shows them.
-   *
-   * The foreign keys are read as a correlated subquery rather than a join: a
-   * column can sit in two constraints, and a join would then answer the same
-   * column twice — one row per column is what the page is about.
+   * Run a read and parse its answer.
+   * A write summary means the dialect sent something that is not a question.
    */
-  async getTableStructure(
+  async #answer<Answer>(query: ReadQuery<Answer>): Promise<Answer> {
+    const [rows] = await this.#send(query.sql, false, query.values);
+
+    if (isWriteResult(rows)) {
+      throw new Error(`A read query wrote rows instead of reading them`);
+    }
+
+    return query.answer(rows);
+  }
+
+  /**
+   * Ask the server about itself, encoding a failure:
+   * the renderer cannot catch one across IPC.
+   */
+  async #ask<T>(question: () => Promise<T>): ResultOrError<T> {
+    try {
+      return { result: await question(), error: undefined };
+    } catch (error) {
+      return { result: undefined, error: encodeError(error) };
+    }
+  }
+
+  /**
+   * Sorted here, by code unit, as `SHOW DATABASES` did:
+   * a server's collation would put `user_role` after `users`, and differ per engine.
+   */
+  async listDatabases(): ResultOrError<string[]> {
+    return this.#ask(async () =>
+      (await this.#answer(this.#dialect().metadata.listDatabases())).sort()
+    );
+  }
+
+  /** Sorted by code unit, as `listDatabases`. */
+  async listTables(databaseName: string): ResultOrError<string[]> {
+    invariant(databaseName, 'Database name is required');
+
+    return this.#ask(async () =>
+      (
+        await this.#answer(this.#dialect().metadata.listTables(databaseName))
+      ).sort()
+    );
+  }
+
+  /** The columns of the primary key, in the order the key declares them. */
+  async getPrimaryKeyColumns(
     databaseName: string,
     tableName: string
-  ): QueryResultOrError<TableStructureResult> {
+  ): ResultOrError<string[]> {
     invariant(databaseName, 'Database name is required');
     invariant(tableName, 'Table name is required');
 
-    const query = `
-      SELECT
-        c.COLUMN_NAME AS \`Column\`,
-        c.COLUMN_TYPE AS \`Type\`,
-        c.IS_NULLABLE AS \`Null\`,
-        c.COLUMN_KEY AS \`Key\`,
-        c.COLUMN_DEFAULT AS \`Default\`,
-        c.EXTRA AS \`Extra\`,
-        (
-          SELECT
-            GROUP_CONCAT(
-              DISTINCT CONCAT(k.REFERENCED_TABLE_NAME, '.', k.REFERENCED_COLUMN_NAME)
-              SEPARATOR ', '
-            )
-          FROM
-            INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
-          WHERE
-            k.TABLE_SCHEMA = c.TABLE_SCHEMA
-            AND k.TABLE_NAME = c.TABLE_NAME
-            AND k.COLUMN_NAME = c.COLUMN_NAME
-            AND k.REFERENCED_TABLE_NAME IS NOT NULL
-        ) AS \`References\`,
-        c.COLLATION_NAME AS \`Collation\`,
-        c.COLUMN_COMMENT AS \`Comment\`
-      FROM
-        INFORMATION_SCHEMA.COLUMNS c
-      WHERE
-        c.TABLE_SCHEMA = :databaseName
-        AND c.TABLE_NAME = :tableName
-      ORDER BY
-        c.ORDINAL_POSITION
-    `;
-
-    return this.executeQueryAndRetry<TableStructureResult>(query, false, {
-      databaseName,
-      tableName,
-    });
+    return this.#ask(() =>
+      this.#answer(
+        this.#dialect().metadata.listPrimaryKeyColumns(databaseName, tableName)
+      )
+    );
   }
 
-  async getPrimaryKeys(
-    databaseName: string,
-    tableName: string
-  ): QueryResultOrError<ShowKeyRow[]> {
+  async getForeignKeys(databaseName: string): ResultOrError<ForeignKey[]> {
     invariant(databaseName, 'Database name is required');
 
-    const query = `
-      SHOW KEYS FROM ${escapeIdentifier(databaseName)}.${escapeIdentifier(
-        tableName
-      )} WHERE Key_name = 'PRIMARY';
-    `;
+    return this.#ask(() =>
+      this.#answer(this.#dialect().metadata.listForeignKeys(databaseName))
+    );
+  }
 
-    return this.executeQueryAndRetry<ShowKeyRow[]>(query);
+  /** Every column of every table of a database. */
+  async getAllColumns(
+    databaseName: string
+  ): ResultOrError<Array<ColumnDetail>> {
+    invariant(databaseName, 'Database name is required');
+
+    return this.#ask(() =>
+      this.#answer(this.#dialect().metadata.listColumns(databaseName))
+    );
+  }
+
+  /** Every column of one table, as the structure page shows them. */
+  async getTableStructure(
+    databaseName: string,
+    tableName: string
+  ): QueryResultOrError<TableStructureRow[]> {
+    invariant(databaseName, 'Database name is required');
+    invariant(tableName, 'Table name is required');
+
+    return this.#ask(async () => {
+      const { metadata } = this.#dialect();
+      const columns = await this.#answer(
+        metadata.describeTable(databaseName, tableName)
+      );
+      const foreignKeys = await this.#answer(
+        metadata.listForeignKeys(databaseName)
+      );
+
+      return toTableStructure(tableName, columns, foreignKeys);
+    });
   }
 
   /**
@@ -246,76 +240,58 @@ class ConnectionStack {
   async updateCell(
     request: UpdateCellRequest
   ): ResultOrError<UpdateCellOutcome> {
-    const update = buildUpdateCellQuery(request);
+    return this.#ask(async () => {
+      const guarded = this.#dialect().guardedUpdate(request);
+      const [written] = await this.#send(
+        guarded.write.sql,
+        false,
+        guarded.write.values
+      );
 
-    const updateResult = await this.executeQueryAndRetry<ResultSetHeader>(
-      update.sql,
-      false,
-      update.values
-    );
-
-    if (updateResult.error) {
-      return { result: undefined, error: updateResult.error };
-    }
-
-    const read = buildReadCellQuery(request);
-
-    const readResult = await this.executeQueryAndRetry<CellReadRow[]>(
-      read.sql,
-      false,
-      read.values
-    );
-
-    if (readResult.error) {
-      return { result: undefined, error: readResult.error };
-    }
-
-    const [[row]] = readResult.result;
-
-    if (!row) {
-      return {
-        result: { status: 'conflict', reason: 'deleted' },
-        error: undefined,
-      };
-    }
-
-    const [header] = updateResult.result;
-
-    // MySQL counts *changed* rows in `affectedRows`, so writing the value a
-    // cell already held reports 0 — indistinguishable, on its own, from a
-    // guard that did not match. `guardMatches` tells the two apart: the server
-    // computed it with the very same `<=>` comparison as the guard, which a
-    // comparison redone in JavaScript could not promise. A forced write has no
-    // guard to speak of, so the row being there is all there is to check.
-    if (request.force || header.affectedRows > 0 || row.guardMatches === 1) {
-      return {
-        result: { status: 'updated', value: row.value },
-        error: undefined,
-      };
-    }
-
-    return {
-      result: {
-        status: 'conflict',
-        reason: 'changed',
-        currentValue: row.value,
-      },
-      error: undefined,
-    };
+      return (
+        guarded.outcomeOfWrite(written) ??
+        guarded.outcomeOfReadBack(written, await this.#answer(guarded.readBack))
+      );
+    });
   }
 
-  async showDatabases(): QueryResultOrError<ShowDatabasesResult> {
-    return this.executeQueryAndRetry<ShowDatabasesResult>('SHOW DATABASES');
-  }
+  /**
+   * Send one statement, reopening a connection the server dropped.
+   * Throws, handshake failures included.
+   */
+  async #send(
+    query: string,
+    rowsAsArray: boolean,
+    values: SqlBoundValues | undefined
+  ): QueryResult {
+    invariant(this.#currentConnectionSlug, 'Connection slug is required');
 
-  async showTableStatus(
-    databaseName: string
-  ): QueryResultOrError<ShowTableStatusResult> {
-    invariant(databaseName, 'Database name is required');
+    const connectionSlug = this.#currentConnectionSlug;
 
-    return this.executeQueryAndRetry<ShowTableStatusResult>(
-      `SHOW TABLE STATUS FROM ${escapeIdentifier(databaseName)}`
-    );
+    for (let attempt = 0; ; attempt++) {
+      let connection: DriverConnection | undefined;
+
+      try {
+        connection = await this.#getConnection(connectionSlug);
+
+        log.debug(`Execute query on "${connectionSlug}": "${query}"`);
+
+        return await connection.query({ sql: query, rowsAsArray, values });
+      } catch (error) {
+        // A socket the server dropped is worth one fresh connection; a
+        // statement it refused is not, and neither is a second drop. Only the
+        // connection that failed can tell the two apart, which is why the
+        // question is asked here rather than a layer up.
+        const worthRetrying =
+          attempt === 0 && connection?.isConnectionLost(error) === true;
+
+        if (!worthRetrying) {
+          throw error;
+        }
+
+        this.#connections.delete(connectionSlug);
+      }
+    }
   }
 
   /**
@@ -328,64 +304,12 @@ class ConnectionStack {
     rowsAsArray = false,
     values?: SqlBoundValues
   ): QueryResultOrError<T> {
-    invariant(this.#currentConnectionSlug, 'Connection slug is required');
-
-    const queryResult = await this.#executeQuery<T>(
-      this.#currentConnectionSlug,
-      query,
-      rowsAsArray,
-      values
-    );
-
-    if (queryResult.error) {
-      const message = queryResult.error.message;
-
-      if (
-        typeof message === 'string' &&
-        message.includes('connection is in closed state')
-      ) {
-        // retry once
-        this.#connections.delete(this.#currentConnectionSlug);
-
-        return this.#executeQuery<T>(
-          this.#currentConnectionSlug,
-          query,
-          rowsAsArray,
-          values
-        );
-      }
-    }
-
-    return queryResult;
-  }
-
-  async #executeQuery<T extends QueryReturnType = QueryReturnType>(
-    connectionSlug: string,
-    query: string,
-    rowsAsArray: boolean,
-    values?: SqlBoundValues
-  ): QueryResultOrError<T> {
-    // Opening the connection is inside the try: a handshake that fails is an
-    // answer like any other, and must travel encoded next to the result. Left
-    // outside, it escaped the `{ result, error }` envelope and reached the
-    // renderer as Electron's own "Error invoking remote method …".
     try {
-      const connection = await this.#getConnection(connectionSlug);
+      const [rows, fields] = await this.#send(query, rowsAsArray, values);
 
-      log.debug(`Execute query on "${connectionSlug}": "${query}"`);
-
-      return {
-        result: await connection.query({
-          sql: query,
-          rowsAsArray,
-          values,
-          // Asked for per query, and never for the raw SQL of the editor: the
-          // rewriter does not know backticks, so a `:` inside a quoted
-          // identifier would be read as a parameter and corrupt the statement.
-          namedPlaceholders: values !== undefined,
-        }),
-        error: undefined,
-      };
+      // nothing between here and the socket read the query, so the shape is
+      // the caller's to name
+      return { result: [rows as T, fields], error: undefined };
     } catch (error) {
       return { result: undefined, error: encodeError(error) };
     }
@@ -432,7 +356,7 @@ class ConnectionStack {
     this.#connections.clear();
   }
 
-  async #getConnection(connectionSlug: string): Promise<Connection> {
+  async #getConnection(connectionSlug: string): Promise<DriverConnection> {
     const pending = this.#connections.get(connectionSlug);
 
     if (pending) {
@@ -463,22 +387,12 @@ class ConnectionStack {
 
   async #connect(
     params: Omit<EncryptedConnectionObject, 'appState'>
-  ): Promise<Connection> {
-    const {
-      slug,
-      name: _name,
-      color: _color,
-      host,
-      port,
-      password,
-      ...rest
-    } = params;
+  ): Promise<DriverConnection> {
+    const { slug, engine, host, port, user, password } = params;
 
     log.debug(`Open connection to "${slug}"`);
 
-    // Lazy-load mysql2 only when the user actually opens a connection,
-    // to keep app startup light.
-    const { createConnection } = await import('mysql2/promise');
+    const driver = await loadDriver(engine);
 
     try {
       // the only place the stored password is read back: the configuration holds the ciphertext from end to end, so a keyring that cannot open it costs this connection and never the file
@@ -497,31 +411,16 @@ class ConnectionStack {
         );
       }
 
-      // `createConnection` already resolves on the `connect` event and rejects
-      // on `error`, so there is nothing left to await afterwards.
-      // TODO use a connection pool instead ? https://github.com/mysqljs/mysql?tab=readme-ov-file#establishing-connections
-      const connection = await createConnection({
-        ...rest,
-        host,
-        port,
-        password: decrypted.password,
-        connectTimeout: CONNECT_TIMEOUT_MS,
-      });
-
-      connection.on('end', () => {
-        log.debug(`Connection to "${slug}" ended`);
-        this.#connections.delete(slug);
-      });
-
-      connection.on('error', (err) => {
-        log.debug(`Received error from "${slug}" connection`);
-        log.error(err);
-
-        // end the connection from the stack. It will be regerenated on the next query
-        connection.end();
-      });
-
-      return connection;
+      return await driver.connect(
+        { host, port, user, password: decrypted.password },
+        {
+          connectTimeoutMs: CONNECT_TIMEOUT_MS,
+          onClosed: () => {
+            log.debug(`Connection to "${slug}" ended`);
+            this.#connections.delete(slug);
+          },
+        }
+      );
     } catch (error) {
       log.error(`Could not connect to "${slug}"`, error);
 

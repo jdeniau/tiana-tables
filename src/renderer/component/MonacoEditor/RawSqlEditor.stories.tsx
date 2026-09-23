@@ -2,36 +2,41 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { AllColumnsContextProvider } from '../../../contexts/AllColumnsContext';
 import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext';
 import { TableListContextProvider } from '../../../contexts/TableListContext';
+import type { ColumnDetail } from '../../../sql/dialect/metadata';
+import { DatabaseEngine } from '../../../sql/engine';
 import { RawSqlEditor } from './RawSqlEditor';
+
+/** the schema the completion reads: a table and a column */
+function column(table: string, name: string): ColumnDetail {
+  return {
+    table,
+    name,
+    nullable: true,
+    generated: false,
+    binary: false,
+    json: false,
+    allowedValues: [],
+    multiValued: false,
+  };
+}
 
 const meta: Meta<typeof RawSqlEditor> = {
   component: RawSqlEditor,
   args: {
+    engine: DatabaseEngine.MySQL,
     style: { width: '100vw', height: '35vh' },
   },
   decorators: [
     (Story) => (
-      <ForeignKeysContextProvider keyColumnUsageRows={[]}>
-        <TableListContextProvider
-          tableList={[
-            // @ts-expect-error don't want all data, only the name
-            { Name: 'employe' },
-            // @ts-expect-error don't want all data, only the name
-            { Name: 'title' },
-          ]}
-        >
+      <ForeignKeysContextProvider foreignKeys={[]}>
+        <TableListContextProvider tableList={['employe', 'title']}>
           <AllColumnsContextProvider
             allColumns={[
-              // @ts-expect-error don't want all data, only table and column
-              { Table: 'employe', Column: 'id', DataType: 'int' },
-              // @ts-expect-error don't want all data, only table and column
-              { Table: 'employe', Column: 'gender', DataType: 'varchar' },
-              // @ts-expect-error don't want all data, only table and column
-              { Table: 'employe', Column: 'title_id', DataType: 'int' },
-              // @ts-expect-error don't want all data, only table and column
-              { Table: 'title', Column: 'id', DataType: 'int' },
-              // @ts-expect-error don't want all data, only table and column
-              { Table: 'title', Column: 'title', DataType: 'varchar' },
+              column('employe', 'id'),
+              column('employe', 'gender'),
+              column('employe', 'title_id'),
+              column('title', 'id'),
+              column('title', 'title'),
             ]}
           >
             <Story />
@@ -83,35 +88,22 @@ JOIN
   decorators: [
     (Story) => (
       <ForeignKeysContextProvider
-        keyColumnUsageRows={[
-          // @ts-expect-error issue with contstructor name
+        foreignKeys={[
           {
-            TABLE_NAME: 'employe',
-            COLUMN_NAME: 'title_id',
-            REFERENCED_TABLE_NAME: 'title',
-            REFERENCED_COLUMN_NAME: 'id',
-            CONSTRAINT_NAME: 'employe_title_id_fkey',
+            table: 'employe',
+            column: 'title_id',
+            referencedTable: 'title',
+            referencedColumn: 'id',
           },
-          // @ts-expect-error issue with contstructor name
           {
-            TABLE_NAME: 'planning',
-            COLUMN_NAME: 'employe_id',
-            REFERENCED_TABLE_NAME: 'employe',
-            REFERENCED_COLUMN_NAME: 'id',
-            CONSTRAINT_NAME: 'planning_employe_id_fkey',
+            table: 'planning',
+            column: 'employe_id',
+            referencedTable: 'employe',
+            referencedColumn: 'id',
           },
         ]}
       >
-        <TableListContextProvider
-          tableList={[
-            // @ts-expect-error don't want all data, only the name
-            { Name: 'employe' },
-            // @ts-expect-error don't want all data, only the name
-            { Name: 'title' },
-            // @ts-expect-error don't want all data, only the name
-            { Name: 'planning' },
-          ]}
-        >
+        <TableListContextProvider tableList={['employe', 'title', 'planning']}>
           <Story />
         </TableListContextProvider>
       </ForeignKeysContextProvider>

@@ -3,7 +3,12 @@ import { AttrName } from 'dt-sql-parser/dist/parser/common/entityCollector';
 // type-only imports: this module must not pull the editor into the tests
 import type { IRange } from 'monaco-editor';
 import type { WordRange } from 'monaco-sql-languages';
-import { collectEntities, mysqlParser } from '../../../sql/mysqlParser';
+import type { DatabaseEngine } from '../../../sql/engine';
+import {
+  type SqlParser,
+  collectEntities,
+  getParser,
+} from '../../../sql/parser';
 import { splitStatements } from '../../../sql/splitStatements';
 import { unquote } from '../../../sql/tableName';
 
@@ -86,13 +91,18 @@ interface Analysis {
  * Names resolve in the statement they sit in: a `;` opens a new scope, where
  * the same alias may well name another table.
  */
-export function analyzeQuery(sql: string, schema: QuerySchema): Analysis {
-  const entities = collectEntities(sql).filter(
+export function analyzeQuery(
+  sql: string,
+  schema: QuerySchema,
+  engine: DatabaseEngine
+): Analysis {
+  const parser = getParser(engine);
+  const entities = collectEntities(parser, sql).filter(
     (entity) => entity.entityContextType === EntityContextType.TABLE
   );
 
   const semanticTokens: SqlSemanticToken[] = [];
-  const scopeAt = scopeReader(sql);
+  const scopeAt = scopeReader(sql, engine);
 
   for (const entity of entities) {
     const table = resolveTable(entity.text, schema);
@@ -114,7 +124,7 @@ export function analyzeQuery(sql: string, schema: QuerySchema): Analysis {
   const declarationCount = semanticTokens.length;
   const unknownColumns: UnknownColumn[] = [];
 
-  for (const reference of qualifiedReferences(sql)) {
+  for (const reference of qualifiedReferences(parser, sql)) {
     const { qualifier, name } = reference;
     const { tables, aliases } = scopeAt(qualifier.startIndex);
     const kind = aliases.has(qualifier.text)
@@ -171,8 +181,11 @@ interface Scope {
  * Anything before the first statement belongs to it, as everywhere else in the
  * editor, and a content holding no statement at all has the one empty scope.
  */
-function scopeReader(sql: string): (offset: number) => Scope {
-  const statements = splitStatements(sql);
+function scopeReader(
+  sql: string,
+  engine: DatabaseEngine
+): (offset: number) => Scope {
+  const statements = splitStatements(sql, engine);
   const scopes = new Map<number, Scope>();
 
   return (offset) => {
@@ -198,10 +211,11 @@ interface QualifiedReference {
 }
 
 /** every `qualifier.name` of the query, whatever the names turn out to be */
-function qualifiedReferences(sql: string): QualifiedReference[] {
-  const tokens = mysqlParser
-    .getAllTokens(sql)
-    .filter((token) => token.text?.trim());
+function qualifiedReferences(
+  parser: SqlParser,
+  sql: string
+): QualifiedReference[] {
+  const tokens = parser.getAllTokens(sql).filter((token) => token.text?.trim());
 
   const references: QualifiedReference[] = [];
 

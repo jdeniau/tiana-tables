@@ -1,11 +1,12 @@
-import { mysqlParser } from './mysqlParser';
+import type { DatabaseEngine } from './engine';
+import { getParser } from './parser';
 
 /**
  * Does this query carry a `LIMIT` clause?
  *
  * We lex, we never parse: lexing always answers, while `getAllEntities` and
  * `splitSQLByStatement` return nothing as soon as the input has a syntax error
- * (see `mysqlParser.ts`). A query the user is still writing must still get an
+ * (see `parser/index.ts`). A query the user is still writing must still get an
  * answer, and "no token said LIMIT" is a safe answer to give on a broken query.
  *
  * Two behaviours are deliberate, both on the cautious side — a chart drawn on
@@ -16,8 +17,8 @@ import { mysqlParser } from './mysqlParser';
  * - a string literal `'limit'` does not count: its token text keeps its quotes,
  *   so it never equals `LIMIT`.
  */
-export function hasLimitClause(sql: string): boolean {
-  return mysqlParser
+export function hasLimitClause(sql: string, engine: DatabaseEngine): boolean {
+  return getParser(engine)
     .getAllTokens(sql)
     .some((token) => token.text?.toUpperCase() === 'LIMIT');
 }

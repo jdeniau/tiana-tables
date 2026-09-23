@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_LOCALE } from '../../configuration/locale';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { Configuration } from '../../configuration/type';
+import { DatabaseEngine } from '../../sql/engine';
 import { loader } from './connections.$connectionSlug.$databaseName.$tableName';
 
 const params = {
@@ -21,6 +22,7 @@ function setStoredFilter(currentFilter: string): void {
     connections: {
       connectionSlug: {
         name: 'connectionSlug',
+        engine: DatabaseEngine.MySQL,
         slug: 'connectionSlug',
         host: 'localhost',
         port: 3306,
@@ -53,10 +55,10 @@ function loadWith(url: string) {
 
 describe('loader', () => {
   beforeEach(() => {
+    // the one call this loader makes
     window.sql = {
-      // @ts-expect-error return is OK here, type is too complex for now
-      getPrimaryKeys: vi.fn(() => Promise.resolve([[{ Column_name: 'id' }]])),
-    };
+      getPrimaryKeyColumns: vi.fn(() => Promise.resolve(['id'])),
+    } as unknown as typeof window.sql;
   });
 
   afterEach(() => {

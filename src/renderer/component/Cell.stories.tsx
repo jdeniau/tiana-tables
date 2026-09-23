@@ -1,8 +1,8 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Types } from 'mysql';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
+import { FieldKind } from '../../sql/resultField';
 import Cell from './Cell';
 
 const meta: Meta<typeof Cell> = {
@@ -55,7 +55,7 @@ type Story = StoryObj<typeof Cell>;
  */
 export const WithNULLValue: Story = {
   args: {
-    type: Types.VARCHAR,
+    kind: FieldKind.String,
     value: null,
   },
   argTypes: {
@@ -65,14 +65,14 @@ export const WithNULLValue: Story = {
 
 export const WithStringType: Story = {
   args: {
-    type: Types.VARCHAR,
+    kind: FieldKind.String,
     value: 'VARCHAR value',
   },
 };
 
 export const WithLongStringType: Story = {
   args: {
-    type: Types.VARCHAR,
+    kind: FieldKind.String,
     value:
       'This is a very long string that should be truncated to fit the cell width.',
   },
@@ -80,7 +80,7 @@ export const WithLongStringType: Story = {
 
 export const WithTooLongStringType: Story = {
   args: {
-    type: Types.VARCHAR,
+    kind: FieldKind.String,
     value:
       'This is a too long string (more than 300 char), without title.' +
       'x'.repeat(300),
@@ -89,29 +89,29 @@ export const WithTooLongStringType: Story = {
 
 export const WithNumberType: Story = {
   args: {
-    type: Types.FLOAT,
+    kind: FieldKind.Number,
     value: 123.45,
   },
 };
 
 export const WithDateType: Story = {
   args: {
-    type: Types.DATE,
+    kind: FieldKind.Date,
     value: new Date('2020-01-01T12:00:00'),
   },
 };
 
 export const WithDatetimeType: Story = {
   args: {
-    type: Types.DATETIME,
+    kind: FieldKind.DateTime,
     value: new Date('2020-01-01T12:00:00'),
   },
 };
 
-export const WithBlobType: Story = {
+export const WithTextType: Story = {
   args: {
-    type: Types.BLOB,
-    value: 'BLOB value',
+    kind: FieldKind.Text,
+    value: 'TEXT value',
   },
 };
 
@@ -119,31 +119,67 @@ export const WithBlobType: Story = {
 // renderer, so the value is an object, never its serialized form.
 export const WithJSONType: Story = {
   args: {
-    type: Types.JSON,
+    kind: FieldKind.Json,
     value: { backgroundColor: 'red', tags: ['a', 'b'], nested: { count: 2 } },
   },
 };
 
 // The only string that reaches a JSON cell is a JSON scalar: mysql2 parses
 // `CAST('"foo"' AS JSON)` into `foo`, which is rendered without its quotes.
-// (JSON stored in a TEXT column is announced as a blob and goes to `BlobCell`.)
+// (JSON stored in a TEXT column is announced as text and rendered as such.)
 export const WithJSONScalar: Story = {
   args: {
-    type: Types.JSON,
+    kind: FieldKind.Json,
     value: 'a scalar string, not an object',
   },
 };
 
 export const WithENUMType: Story = {
   args: {
-    type: Types.ENUM,
+    kind: FieldKind.Text,
     value: 'ENUM value',
+  },
+};
+
+// A `BLOB`, a `VARBINARY` or a `BIT`: bytes, with no encoding to read them by,
+// shown as the hexadecimal literal a server accepts back.
+export const WithBinaryType: Story = {
+  args: {
+    kind: FieldKind.Binary,
+    value: new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  },
+};
+
+// Past 150 bytes the literal is cut: the cell clips long before, and each byte
+// costs two characters.
+export const WithLongBinaryType: Story = {
+  args: {
+    kind: FieldKind.Binary,
+    value: new Uint8Array(1000).map((_, index) => index % 256),
+  },
+};
+
+// `TIME` is answered as `HH:MM:SS` and not as a Date — a duration has no day to
+// sit on. It used to throw, and the throw blanked the whole grid.
+export const WithTimeType: Story = {
+  args: {
+    kind: FieldKind.Time,
+    value: '123:45:56',
+  },
+};
+
+// A `GEOMETRY` column, answered as a plain object: no kind describes it, and
+// the shape of the value is what gets it rendered.
+export const WithUnknownType: Story = {
+  args: {
+    kind: FieldKind.Unknown,
+    value: { x: 1, y: 2 },
   },
 };
 
 export const WithForeignKey: Story = {
   args: {
-    type: Types.FLOAT,
+    kind: FieldKind.Number,
     value: 8,
     link: <a href="#link">LINK</a>,
   },

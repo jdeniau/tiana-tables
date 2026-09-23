@@ -1,49 +1,37 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Types } from 'mysql';
-import type {
-  FieldPacket,
-  ResultSetHeader,
-  RowDataPacket,
-} from 'mysql2/promise';
 import { Fetcher } from 'react-router';
 import reactRouterDecorator from '../../../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../../../contexts/AllColumnsContext';
 import { ForeignKeysContextProvider } from '../../../../contexts/ForeignKeysContext';
-import { SqlError } from '../../../../sql/errorSerializer';
+import { FieldKind, type ResultField } from '../../../../sql/resultField';
+import type { SqlError } from '../../../../sql/sqlError';
+import type { ResultRow, WriteResult } from '../../../../sql/types';
 import RawSqlResult, {
   SqlActionReturnTypes,
   StatementOutcome,
 } from './RowDataPacketResult';
 
-const FIELDS = [
-  { name: 'id', type: Types.LONG, table: 'employe' },
-  { name: 'name', type: Types.VAR_STRING, table: 'employe' },
-] as unknown as FieldPacket[];
+const FIELDS: ResultField[] = [
+  { name: 'id', kind: FieldKind.Number, table: 'employe' },
+  { name: 'name', kind: FieldKind.String, table: 'employe' },
+];
 
 const ROWS = [
   { id: 1, name: 'Ada' },
   { id: 2, name: 'Grace' },
   { id: 3, name: 'Margaret' },
-] as RowDataPacket[];
+] as ResultRow[];
 
-const HEADER = {
-  fieldCount: 0,
-  affectedRows: 3,
-  insertId: 0,
-  info: '',
-  serverStatus: 2,
-  warningStatus: 0,
-} as ResultSetHeader;
+const WRITTEN: WriteResult = { affectedRows: 3, insertId: 42 };
 
-const ERROR = {
+const ERROR: SqlError = {
   name: 'Error',
   message: "Table 'shop.nope' doesn't exist",
+  kind: 'sql',
   code: 'ER_NO_SUCH_TABLE',
   errno: 1146,
-  sql: 'SELECT * FROM nope',
-  sqlMessage: "Table 'shop.nope' doesn't exist",
   sqlState: '42S02',
-} as SqlError;
+};
 
 const SELECT: StatementOutcome = {
   sql: 'SELECT id, name FROM employe LIMIT 10;',
@@ -54,7 +42,7 @@ const SELECT: StatementOutcome = {
 
 const UPDATE: StatementOutcome = {
   sql: "UPDATE employe SET name = 'Ada Lovelace' WHERE id = 1;",
-  result: [HEADER, []],
+  result: [WRITTEN, []],
   hasLimit: false,
   durationMs: 7,
 };
@@ -66,9 +54,10 @@ const FAILED: StatementOutcome = {
 
 /** the panel only ever reads `state` and `data` off the fetcher */
 function fetcherOf(outcomes: StatementOutcome[]) {
-  return { state: 'idle', data: { outcomes } } as unknown as Fetcher<
-    SqlActionReturnTypes
-  >;
+  return {
+    state: 'idle',
+    data: { outcomes },
+  } as unknown as Fetcher<SqlActionReturnTypes>;
 }
 
 const meta: Meta<typeof RawSqlResult> = {
@@ -76,7 +65,7 @@ const meta: Meta<typeof RawSqlResult> = {
   decorators: [
     reactRouterDecorator,
     (Story) => (
-      <ForeignKeysContextProvider keyColumnUsageRows={[]}>
+      <ForeignKeysContextProvider foreignKeys={[]}>
         <AllColumnsContextProvider allColumns={[]}>
           <div
             style={{ height: '90vh', display: 'flex', flexDirection: 'column' }}

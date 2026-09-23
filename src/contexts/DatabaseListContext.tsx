@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
-import { ShowDatabasesResult } from '../sql/types';
 
-export type DatabaseListContext = ShowDatabasesResult;
+/** The databases of the connection, by name — the schemas on PostgreSQL. */
+export type DatabaseListContext = string[];
 
 const DatabaseListContext = createContext<DatabaseListContext | null>(null);
 

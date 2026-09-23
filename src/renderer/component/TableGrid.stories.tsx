@@ -1,14 +1,14 @@
 import { ComponentProps, useEffect, useState } from 'react';
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Types } from 'mysql';
-import type { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
-import { ColumnDetail, KeyColumnUsageRow } from '../../sql/types';
+import type { ColumnDetail } from '../../sql/dialect/metadata';
+import { FieldKind, type ResultField } from '../../sql/resultField';
+import type { ResultRow } from '../../sql/types';
 import type { UpdateCellRequest } from '../../sql/updateCell';
 import {
   Region,
@@ -43,30 +43,30 @@ const WORDS = [
   'elit',
 ];
 
-function makeField(name: string, type: number): FieldPacket {
-  return { name, type, table: 'items' } as unknown as FieldPacket;
+function makeField(name: string, kind: FieldKind): ResultField {
+  return { name, kind, table: 'items' };
 }
 
-function makeFields(columnCount: number): FieldPacket[] {
+function makeFields(columnCount: number): ResultField[] {
   const fields = [
-    makeField('id', Types.LONG),
-    makeField('name', Types.VAR_STRING),
-    makeField('linkedId', Types.LONG),
-    makeField('price', Types.NEWDECIMAL),
-    makeField('createdAt', Types.DATETIME),
-    makeField('payload', Types.JSON),
-    makeField('description', Types.VAR_STRING),
-    makeField('quantity', Types.LONG),
+    makeField('id', FieldKind.Number),
+    makeField('name', FieldKind.String),
+    makeField('linkedId', FieldKind.Number),
+    makeField('price', FieldKind.Number),
+    makeField('createdAt', FieldKind.DateTime),
+    makeField('payload', FieldKind.Json),
+    makeField('description', FieldKind.String),
+    makeField('quantity', FieldKind.Number),
   ];
 
   for (let i = fields.length; i < columnCount; i++) {
-    fields.push(makeField(`extra_${i}`, Types.VAR_STRING));
+    fields.push(makeField(`extra_${i}`, FieldKind.String));
   }
 
   return fields.slice(0, columnCount);
 }
 
-function makeRows(rowCount: number, columnCount: number): RowDataPacket[] {
+function makeRows(rowCount: number, columnCount: number): ResultRow[] {
   const random = mulberry32(42);
   const fields = makeFields(columnCount);
 
@@ -103,33 +103,33 @@ function makeRows(rowCount: number, columnCount: number): RowDataPacket[] {
       }
     }
 
-    return row as RowDataPacket;
+    return row as ResultRow;
   });
 }
 
 // the schema the grid reads to know what a cell may become: without it every
 // cell is read-only, which is exactly what the raw-SQL case looks like
-const ALL_COLUMNS = [
-  ['id', 'int', 'int', 'NO', 'auto_increment'],
-  ['name', 'varchar', 'varchar(255)', 'NO', ''],
-  ['linkedId', 'int', 'int', 'YES', ''],
-  ['price', 'decimal', 'decimal(10,2)', 'YES', ''],
-  ['createdAt', 'datetime', 'datetime', 'NO', ''],
-  ['payload', 'json', 'json', 'YES', ''],
-  ['description', 'varchar', 'varchar(255)', 'YES', ''],
-  ['quantity', 'int', 'int', 'YES', ''],
-].map(
-  ([Column, DataType, ColumnType, IsNullable, Extra]) =>
-    ({
-      Table: 'items',
-      Column,
-      DataType,
-      ColumnType,
-      IsNullable,
-      ColumnDefault: null,
-      Extra,
-    }) as ColumnDetail
-);
+const ALL_COLUMNS: ColumnDetail[] = (
+  [
+    ['id', false],
+    ['name', false],
+    ['linkedId', true],
+    ['price', true],
+    ['createdAt', false],
+    ['payload', true],
+    ['description', true],
+    ['quantity', true],
+  ] as const
+).map(([name, nullable]) => ({
+  table: 'items',
+  name,
+  nullable,
+  generated: false,
+  binary: false,
+  json: name === 'payload',
+  allowedValues: [],
+  multiValued: false,
+}));
 
 const meta: Meta<typeof TableGrid> = {
   component: TableGrid,
@@ -161,14 +161,13 @@ const meta: Meta<typeof TableGrid> = {
           }}
         >
           <ForeignKeysContextProvider
-            keyColumnUsageRows={[
+            foreignKeys={[
               {
-                TABLE_NAME: 'items',
-                COLUMN_NAME: 'linkedId',
-                REFERENCED_TABLE_NAME: 'linkedTable',
-                REFERENCED_COLUMN_NAME: 'id',
-                CONSTRAINT_NAME: 'fk',
-              } as KeyColumnUsageRow,
+                table: 'items',
+                column: 'linkedId',
+                referencedTable: 'linkedTable',
+                referencedColumn: 'id',
+              },
             ]}
           >
             <AllColumnsContextProvider allColumns={ALL_COLUMNS}>
@@ -292,20 +291,19 @@ export const WithFilterContextMenu: Story = {
  * the text that was sent.
  */
 function readBack(
-  fields: FieldPacket[],
+  fields: ResultField[],
   { column, newValue }: UpdateCellRequest
 ): unknown {
   if (newValue === null) {
     return null;
   }
 
-  switch (fields.find((field) => field.name === column)?.type) {
-    case Types.DATETIME:
+  switch (fields.find((field) => field.name === column)?.kind) {
+    case FieldKind.DateTime:
       return new Date(newValue);
-    case Types.JSON:
+    case FieldKind.Json:
       return JSON.parse(newValue);
-    case Types.LONG:
-    case Types.NEWDECIMAL:
+    case FieldKind.Number:
       return Number(newValue);
     default:
       return newValue;

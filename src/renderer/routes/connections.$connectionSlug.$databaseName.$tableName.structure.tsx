@@ -9,7 +9,7 @@ import {
 import invariant from 'tiny-invariant';
 import type { DisplayAfterByColumn } from '../../configuration/columnOrder';
 import { useTranslation } from '../../i18n';
-import type { TableStructureResult } from '../../sql/types';
+import type { TableStructureRow } from '../../sql/dialect/metadata';
 import DisplayAfterSelect from '../component/DisplayAfterSelect';
 import {
   Region,
@@ -85,7 +85,7 @@ export default function TableStructure() {
   );
 
   const extraColumns = useMemo(
-    (): Array<ExtraColumn<TableStructureResult[number]>> => [
+    (): Array<ExtraColumn<TableStructureRow>> => [
       {
         id: 'displayAfter',
         header: t('table.structure.displayAfter'),
