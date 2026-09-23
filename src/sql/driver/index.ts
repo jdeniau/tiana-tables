@@ -13,6 +13,8 @@ interface ConnectionParams {
   user: string;
   /** in clear — the only thing that reads back what the configuration stores */
   password: string;
+  /** the database a PostgreSQL connection opens; MySQL switches with `USE` instead */
+  database?: string;
 }
 
 interface ConnectOptions {
