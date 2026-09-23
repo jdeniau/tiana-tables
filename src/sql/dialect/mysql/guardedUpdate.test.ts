@@ -24,51 +24,6 @@ function makeRequest(
   };
 }
 
-/**
- * The parameters a statement names, in the syntax the driver rewrites:
- * `:name`, only ever written by these builders.
- */
-function namedParameters(sql: string): Array<string> {
-  return [...sql.matchAll(/:([a-zA-Z][a-zA-Z0-9_]*)/g)].map(([, name]) => name);
-}
-
-/**
- * Naming the parameters removes the counting, not the need to agree: a
- * parameter the statement names and the object does not hold is bound to
- * `undefined` — that is, written as `NULL` — and one the object holds and the
- * statement does not name is dropped. Neither is reported by the driver, so
- * both are checked here.
- */
-describe.each([
-  ['a guarded write', () => write(makeRequest())],
-  ['a forced write', () => write(makeRequest({ force: true }))],
-  [
-    'a write on a composite key',
-    () =>
-      write(
-        makeRequest({
-          primaryKey: [
-            { column: 'order_id', value: 1 },
-            { column: 'line_id', value: 2 },
-          ],
-        })
-      ),
-  ],
-  [
-    'a write on a JSON column',
-    () => write(makeRequest({ isJsonColumn: true })),
-  ],
-  ['a read-back', () => readBack(makeRequest())],
-])('%s', (_name, build) => {
-  it('binds exactly the parameters it names', () => {
-    const { sql, values } = build();
-    const named = namedParameters(sql);
-
-    expect(named.length).toBeGreaterThan(0);
-    expect([...named].sort()).toEqual(Object.keys(values).sort());
-  });
-});
-
 describe('the write', () => {
   it('guards the write on the value the row was loaded with', () => {
     const { sql, values } = write(makeRequest());

@@ -103,54 +103,12 @@ function detail(name: string) {
 }
 
 /**
- * Asserted on every statement:
- * the name of a database or a table is a value, never text.
+ * What MySQL's statements say;
+ * what every dialect owes is in `dialect.contract.test.ts`.
  */
 describe('the statements each question sends', () => {
   const DATABASE = 'some-database';
   const TABLE = 'some-table';
-
-  test.each([
-    ['listDatabases', mysqlMetadata.listDatabases(), {}],
-    [
-      'listTables',
-      mysqlMetadata.listTables(DATABASE),
-      { databaseName: DATABASE },
-    ],
-    [
-      'listColumns',
-      mysqlMetadata.listColumns(DATABASE),
-      { databaseName: DATABASE },
-    ],
-    [
-      'listForeignKeys',
-      mysqlMetadata.listForeignKeys(DATABASE),
-      { databaseName: DATABASE },
-    ],
-    [
-      'listPrimaryKeyColumns',
-      mysqlMetadata.listPrimaryKeyColumns(DATABASE, TABLE),
-      { databaseName: DATABASE, tableName: TABLE },
-    ],
-    [
-      'describeTable',
-      mysqlMetadata.describeTable(DATABASE, TABLE),
-      { databaseName: DATABASE, tableName: TABLE },
-    ],
-  ])(
-    '%s binds every name it uses, and interpolates none',
-    (_label, { sql, values }, expectedValues) => {
-      expect(values).toEqual(expectedValues);
-
-      for (const name of Object.keys(expectedValues)) {
-        expect(sql).toContain(`:${name}`);
-      }
-
-      for (const identifier of Object.values(expectedValues)) {
-        expect(sql).not.toContain(identifier);
-      }
-    }
-  );
 
   // a `:tableName` bound here would be ignored in silence:
   // the whole database is asked for
