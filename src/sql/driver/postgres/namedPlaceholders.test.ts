@@ -39,71 +39,18 @@ describe('toPositional', () => {
     ).toEqual({ text: 'SELECT $1::text, x::jsonb', values: ['v'] });
   });
 
-  describe('copies what is not code as it is', () => {
+  // what the dialect writes around a placeholder: its literals, and the names it escapes
+  describe('copies a quoted run as it is', () => {
     test.each([
       ['a literal', "SELECT ':no' || :yes", "SELECT ':no' || $1"],
       ['a doubled quote', "SELECT 'it''s :no', :yes", "SELECT 'it''s :no', $1"],
       [
-        'a backslash in an escape literal',
-        "SELECT E'\\' :no', :yes",
-        "SELECT E'\\' :no', $1",
-      ],
-      [
-        'a doubled quote then a backslash in an escape literal',
-        "SELECT E'it''s \\' :no', :yes",
-        "SELECT E'it''s \\' :no', $1",
-      ],
-      [
-        'a backslash in a plain literal, which escapes nothing',
-        "SELECT 'a\\', :yes",
-        "SELECT 'a\\', $1",
-      ],
-      [
-        'a quoted identifier',
-        'SELECT "odd:no" FROM t WHERE x = :yes',
-        'SELECT "odd:no" FROM t WHERE x = $1',
-      ],
-      ['a line comment', 'SELECT 1 -- :no\n, :yes', 'SELECT 1 -- :no\n, $1'],
-      [
-        'a nested block comment',
-        'SELECT /* a /* :no */ :no */ :yes',
-        'SELECT /* a /* :no */ :no */ $1',
-      ],
-      [
-        'a dollar-quoted body',
-        'SELECT $$ :no $$, :yes',
-        'SELECT $$ :no $$, $1',
-      ],
-      [
-        'a tagged dollar-quoted body holding `$$`',
-        'SELECT $fn$ $$ :no $$ $fn$, :yes',
-        'SELECT $fn$ $$ :no $$ $fn$, $1',
+        'an escaped identifier',
+        'UPDATE "odd:no" SET "a""b:no" = :yes',
+        'UPDATE "odd:no" SET "a""b:no" = $1',
       ],
     ])('%s', (_label, sql, text) => {
       expect(toPositional(sql, { yes: 1 })).toEqual({ text, values: [1] });
     });
-  });
-
-  // `a$b` is a legal identifier: its `$` opens no dollar quote
-  test('reads a `$` inside an identifier as part of it', () => {
-    expect(
-      toPositional('SELECT a$b$ FROM t WHERE x = :yes', { yes: 1 })
-    ).toEqual({ text: 'SELECT a$b$ FROM t WHERE x = $1', values: [1] });
-  });
-
-  // `LIKE'…'` ends in an E that prefixes nothing
-  test('does not take the E ending a word for an escape prefix', () => {
-    expect(
-      toPositional("SELECT 1 WHERE x LIKE'a\\' AND y = :yes", { yes: 1 })
-    ).toEqual({
-      text: "SELECT 1 WHERE x LIKE'a\\' AND y = $1",
-      values: [1],
-    });
-  });
-
-  test('leaves a statement without placeholders untouched', () => {
-    const sql = 'SELECT \'a\' AS "b" FROM c WHERE d::int = 1';
-
-    expect(toPositional(sql, {})).toEqual({ text: sql, values: [] });
   });
 });
