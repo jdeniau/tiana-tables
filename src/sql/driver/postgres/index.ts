@@ -74,12 +74,37 @@ function isConnectionLost(error: unknown): boolean {
   );
 }
 
-/** An interval kept as the server spells it, `1 day 02:00:00`, rather than as `pg`'s object. */
+/**
+ * The types `pg` decodes, each into what the app reads it as: the rest stays as the server spells it.
+ *
+ * A boolean, a number, a date as a `Date`, JSON as an object and bytes as a `Buffer`,
+ * as mysql2 answers them. `pg` would also decode an array, an interval or a point into
+ * objects that no editor can write back: `{math,poetry}` is what PostgreSQL reads.
+ */
+const DECODED: ReadonlySet<number> = new Set(
+  (
+    [
+      'BOOL',
+      'INT2',
+      'INT4',
+      'OID',
+      'FLOAT4',
+      'FLOAT8',
+      'DATE',
+      'TIMESTAMP',
+      'TIMESTAMPTZ',
+      'JSON',
+      'JSONB',
+      'BYTEA',
+    ] as const
+  ).map((name) => pg.types.builtins[name])
+);
+
 const types = {
   getTypeParser: ((oid: number, format?: 'text' | 'binary') =>
-    oid === pg.types.builtins.INTERVAL
-      ? (value: string) => value
-      : pg.types.getTypeParser(oid, format)) as typeof pg.types.getTypeParser,
+    DECODED.has(oid)
+      ? pg.types.getTypeParser(oid, format)
+      : (value: string) => value) as typeof pg.types.getTypeParser,
 };
 
 export const postgresDriver: Driver = {
@@ -155,4 +180,5 @@ export const testables = {
   isConnectionLost,
   toQueryReturn,
   toResultFields,
+  types,
 };

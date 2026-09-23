@@ -9,6 +9,7 @@ const {
   isConnectionLost,
   toQueryReturn,
   toResultFields,
+  types,
 } = testables;
 
 /** the fields of a `pg` result the conversion reads */
@@ -156,6 +157,39 @@ describe('isConnectionLost', () => {
     expect(isConnectionLost(new Error('column "nope" does not exist'))).toBe(
       false
     );
+  });
+});
+
+describe('types', () => {
+  const decode = (oid: number, text: string) => types.getTypeParser(oid)(text);
+  const { builtins } = pg.types;
+
+  test.each([
+    ['a boolean', builtins.BOOL, 't', true],
+    ['an integer', builtins.INT4, '42', 42],
+    ['a JSON object', builtins.JSONB, '{"a": 1}', { a: 1 }],
+  ])('decodes %s into what the app reads', (_label, oid, text, value) => {
+    expect(decode(oid, text)).toEqual(value);
+  });
+
+  test('decodes a date into a Date, as mysql2 does', () => {
+    expect(decode(builtins.TIMESTAMPTZ, '2026-09-23 10:00:00+00')).toEqual(
+      new Date('2026-09-23T10:00:00Z')
+    );
+  });
+
+  // measured: `text[]` is OID 1009, an enum array has an OID of its own
+  test.each([
+    ['an array', 1009, '{math,poetry}'],
+    ['an interval', builtins.INTERVAL, '1 day 02:00:00'],
+    ['a point', 600, '(1,2)'],
+    [
+      'a bigint, which a number would round',
+      builtins.INT8,
+      '12345678901234567',
+    ],
+  ])('keeps %s as the server spells it', (_label, oid, text) => {
+    expect(decode(oid, text)).toBe(text);
   });
 });
 

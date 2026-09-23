@@ -45,7 +45,7 @@ const KIND_BY_TYPE: Readonly<Record<BuiltinType, FieldKind>> = {
   TEXT: FieldKind.Text,
   XML: FieldKind.Text,
   MONEY: FieldKind.Text,
-  // `1 day 02:00:00`: kept as the server spells it (see the driver)
+  // `1 day 02:00:00`, kept as the server spells it (see the driver)
   INTERVAL: FieldKind.Text,
   TSVECTOR: FieldKind.Text,
   TSQUERY: FieldKind.Text,
@@ -55,7 +55,7 @@ const KIND_BY_TYPE: Readonly<Record<BuiltinType, FieldKind>> = {
 
   BYTEA: FieldKind.Binary,
 
-  // the catalog's own vocabulary, and geometry answered as objects
+  // the catalog's own vocabulary, and geometry: `(1,2)`
   REGPROC: FieldKind.Unknown,
   REGPROCEDURE: FieldKind.Unknown,
   REGOPER: FieldKind.Unknown,
