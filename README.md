@@ -4,7 +4,7 @@
 </h1>
 
 <p align="center">
-  <strong>A MySQL / MariaDB desktop client for developers.</strong><br />
+  <strong>A MySQL, MariaDB and PostgreSQL desktop client for developers.</strong><br />
   Browse, query and edit your data on Linux, macOS and Windows.
 </p>
 
@@ -33,8 +33,8 @@ the daily job, and it tries to be:
 
 <img src="docs/screenshots/sql-editor.png" alt="SQL editor with completion" width="700" />
 
-The editor is Monaco, the one from VS Code. It knows the MySQL grammar and your
-schema, so it can do more than color keywords:
+The editor is Monaco, the one from VS Code. It knows the grammar of your
+connection's engine and your schema, so it can do more than color keywords:
 
 - **Completion on tables, columns and aliases.** After `alias.`, you get that
   table's columns and nothing else — an unresolved qualifier suggests nothing
@@ -103,11 +103,12 @@ Download the latest build for your platform from the
 
 ## Database support
 
-Tiana Tables supports MySQL and MariaDB.
+Tiana Tables supports MySQL, MariaDB and PostgreSQL.
 
-I might add PostgreSQL support one day, but as I do not use it, it is not a
-priority for me. If you like Tiana Tables and want to implement it, it should be
-fairly easy: every query the app sends is meant to be standard SQL.
+A PostgreSQL connection opens one database, and the app browses its schemas the
+way it browses the databases of a MySQL server: the schema list is where the
+database list would be. A foreign key to another schema is not offered as a
+link.
 
 I do not plan to support other database systems. If one shares enough of the SQL
 standard, open an issue and we can discuss it — but I will probably turn down
