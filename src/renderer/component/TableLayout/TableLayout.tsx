@@ -3,7 +3,6 @@ import { useCreateAtom, useSelector } from '@tanstack/react-store';
 import type { SortingState } from '@tanstack/react-table';
 import { Button, Splitter } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { styled } from 'styled-components';
 import {
   DisplayAfterByColumn,
   applyColumnOrder,
@@ -16,7 +15,7 @@ import { SortDirection } from '../../../sql/sortOrder';
 import type { ResultRow } from '../../../sql/types';
 import { useDialect } from '../../hooks/useDialect';
 import { usePanelSize } from '../../hooks/usePanelSize';
-import { space } from '../../theme';
+import SqlErrorComponent from '../Query/SqlErrorComponent';
 import WhereFilter from '../Query/WhereFilter';
 import {
   Region,
@@ -203,7 +202,7 @@ export function TableLayout({
 
           {/* the grid stays under an error: its headers are how a failed sort is left */}
           <RegionBody>
-            {error && <QueryError>{error.message}</QueryError>}
+            {error && <SqlErrorComponent error={error} />}
 
             <TableGrid
               fields={orderedFields}
@@ -234,8 +233,3 @@ export function TableLayout({
     </Splitter>
   );
 }
-
-const QueryError = styled.div`
-  flex: none;
-  padding: ${space.sm} ${space.md};
-`;

@@ -1,15 +1,17 @@
 import { Alert } from 'antd';
-import type { SqlError } from '../../../sql/sqlError';
+import type { SqlErrorDetail } from '../../../sql/sqlError';
 import { space } from '../../theme';
 
-type Props = { error: SqlError };
+// an error boundary falls back here for any error, and most carry neither code
+type ShownError = Error & Partial<SqlErrorDetail>;
+
+type Props = { error: ShownError };
 
 /**
  * How the error names itself: `1146: ER_NO_SUCH_TABLE` on MySQL,
  * the code alone on PostgreSQL, which has no number for it.
  */
-function formatErrorCode({ code, errno }: SqlError): string | undefined {
-  // an error boundary falls back here for any error, and most carry neither
+function formatErrorCode({ code, errno }: ShownError): string | undefined {
   return errno === undefined ? code : `${errno}: ${code}`;
 }
 
