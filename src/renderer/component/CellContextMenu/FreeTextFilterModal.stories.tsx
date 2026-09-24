@@ -1,10 +1,12 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
+import connectionDecorator from '../../../../.storybook/decorators/connectionDecorator';
 import { FilterOperator } from '../../../sql/filterClause';
 import FreeTextFilterModal from './FreeTextFilterModal';
 
 const meta: Meta<typeof FreeTextFilterModal> = {
   component: FreeTextFilterModal,
+  decorators: [connectionDecorator],
   args: {
     onCancel: () => {
       action('onCancel')();
@@ -28,7 +30,10 @@ export const Default: Story = {
 
 export const NumericComparison: Story = {
   args: {
-    pending: { columnName: 'price', operator: FilterOperator.GreaterThanOrEqual },
+    pending: {
+      columnName: 'price',
+      operator: FilterOperator.GreaterThanOrEqual,
+    },
   },
 };
 
