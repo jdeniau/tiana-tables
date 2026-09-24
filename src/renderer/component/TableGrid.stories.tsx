@@ -9,7 +9,7 @@ import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
 import { FieldKind, type ResultField } from '../../sql/resultField';
 import type { ResultRow } from '../../sql/types';
-import type { UpdateCellRequest } from '../../sql/updateCell';
+import { type UpdateCellRequest, UpdateCellStatus } from '../../sql/updateCell';
 import {
   Region,
   RegionBody,
@@ -324,7 +324,7 @@ function EditableGrid(props: ComponentProps<typeof TableGrid>) {
     window.sql = {
       ...window.sql,
       updateCell: async (request) => ({
-        status: 'updated',
+        status: UpdateCellStatus.Updated,
         value: readBack(fields ?? [], request),
       }),
     };

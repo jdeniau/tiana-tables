@@ -20,6 +20,8 @@ describe('tableName', () => {
   test.each([
     ['available_story', 'as_2'],
     ['illegal_nurse', 'in_2'],
+    // reserved by PostgreSQL alone
+    ['item_list_index_key_entry', 'ilike_2'],
   ])(
     'should generate alias that is not a SQL reserved word',
     (tableName, expectedAlias) => {

@@ -5,6 +5,7 @@ import {
   NotEditableReason,
   getCellEditability,
 } from '../../../sql/columnEditing';
+import { ConflictReason, UpdateCellStatus } from '../../../sql/updateCell';
 import CellEditor from '../CellEditor/CellEditor';
 import {
   findValidationError,
@@ -81,7 +82,7 @@ export default function CellDetailForm({
   const column = columnDetail;
   const validationError = findValidationError(edited, column.json);
   const isUnchanged = isSameValue(edited, baseEditable);
-  const isDeleted = conflict?.reason === 'deleted';
+  const isDeleted = conflict?.reason === ConflictReason.Deleted;
   const canSave =
     !isSaving && !isUnchanged && validationError === null && !isDeleted;
 
@@ -97,16 +98,19 @@ export default function CellDetailForm({
         force,
       });
 
-      if (outcome.status === 'updated') {
+      if (outcome.status === UpdateCellStatus.Updated) {
         onClose();
 
         return;
       }
 
       setConflict(
-        outcome.reason === 'deleted'
-          ? { reason: 'deleted' }
-          : { reason: 'changed', currentValue: outcome.currentValue }
+        outcome.reason === ConflictReason.Deleted
+          ? { reason: ConflictReason.Deleted }
+          : {
+              reason: ConflictReason.Changed,
+              currentValue: outcome.currentValue,
+            }
       );
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : String(error));
@@ -124,7 +128,7 @@ export default function CellDetailForm({
 
   return (
     <Flex vertical gap="small">
-      {conflict?.reason === 'changed' && (
+      {conflict?.reason === ConflictReason.Changed && (
         <CellChangedAlert
           currentValue={conflict.currentValue}
           fieldKind={fieldKind}

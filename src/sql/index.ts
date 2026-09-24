@@ -388,7 +388,7 @@ class ConnectionStack {
   async #connect(
     params: Omit<EncryptedConnectionObject, 'appState'>
   ): Promise<DriverConnection> {
-    const { slug, engine, host, port, user, password } = params;
+    const { slug, engine, host, port, user, password, database } = params;
 
     log.debug(`Open connection to "${slug}"`);
 
@@ -412,7 +412,7 @@ class ConnectionStack {
       }
 
       return await driver.connect(
-        { host, port, user, password: decrypted.password },
+        { host, port, user, password: decrypted.password, database },
         {
           connectTimeoutMs: CONNECT_TIMEOUT_MS,
           onClosed: () => {

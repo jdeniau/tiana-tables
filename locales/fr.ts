@@ -56,6 +56,9 @@ const fr: Translation = {
     ' other {Ce résultat ne peut pas être tracé.}}',
   'connect.new': 'Nouvelle connexion',
   'connection.connecting': 'Connexion…',
+  // ICU select on `DatabaseEngine`: product names, the same in every language
+  'connection.engine.name':
+    '{engine, select, mysql {MySQL / MariaDB} postgresql {PostgreSQL} other {{engine}}}',
   'connection.failed.back': 'Retour aux connexions',
   // ICU select on the `ConnectionFailure` enum
   'connection.failed.reason':
@@ -64,6 +67,8 @@ const fr: Translation = {
     " refused {Le serveur a refusé la connexion. Vérifiez qu'il tourne, et que le port est le bon.}" +
     " unknownHost {Ce nom d'hôte n'a pas pu être résolu.}" +
     ' accessDenied {Le serveur a rejeté ces identifiants.}' +
+    ' unknownDatabase {Le serveur n’a pas de base de données de ce nom.}' +
+    ' tooManyConnections {Le serveur n’accepte plus de connexion pour l’instant, de cet utilisateur ou de personne.}' +
     ' keyringLocked {Votre trousseau est verrouillé, le mot de passe enregistré n’a donc pas pu être lu. Déverrouillez-le, puis réessayez.}' +
     ' passwordUnreadable {Le mot de passe enregistré a été chiffré avec une clé que cette machine n’a plus. Saisissez-le à nouveau dans le formulaire de connexion.}' +
     " other {La connexion n'a pas pu être ouverte.}}",
@@ -76,6 +81,7 @@ const fr: Translation = {
   'connection.form.color.label': 'Couleur',
   'connection.form.color.none': 'Aucune couleur',
   'connection.form.color.palette': 'Couleur {hex} du thème',
+  'connection.form.database.label': 'Base de données',
   'connection.form.host.label': 'Hôte',
   'connection.form.name.label': 'Nom',
   'connection.form.password.label': 'Mot de passe',

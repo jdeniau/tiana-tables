@@ -33,6 +33,20 @@ export interface UpdateCellRequest {
   force?: boolean;
 }
 
+/** Whether an edit was written. */
+export enum UpdateCellStatus {
+  Updated = 'updated',
+  Conflict = 'conflict',
+}
+
+/** Why a guarded write found the row in a state the editor was not opened on. */
+export enum ConflictReason {
+  /** the cell no longer holds what the grid showed */
+  Changed = 'changed',
+  /** the row is gone */
+  Deleted = 'deleted',
+}
+
 /**
  * What became of an edit. `updated` carries the value read back from the
  * server, which is the value the grid must now display — the string that was
@@ -40,6 +54,10 @@ export interface UpdateCellRequest {
  * to its scale, a JSON column normalized).
  */
 export type UpdateCellOutcome =
-  | { status: 'updated'; value: unknown }
-  | { status: 'conflict'; reason: 'changed'; currentValue: unknown }
-  | { status: 'conflict'; reason: 'deleted' };
+  | { status: UpdateCellStatus.Updated; value: unknown }
+  | {
+      status: UpdateCellStatus.Conflict;
+      reason: ConflictReason.Changed;
+      currentValue: unknown;
+    }
+  | { status: UpdateCellStatus.Conflict; reason: ConflictReason.Deleted };

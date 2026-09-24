@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react';
 import { EntityContextType } from 'dt-sql-parser';
 import { MarkerSeverity, Position, editor, languages } from 'monaco-editor';
 import { setupLanguageFeatures } from 'monaco-sql-languages';
-// registers the `mysql` language and its tokenizer
+// register the `mysql` and `pgsql` languages; Monaco loads a tokenizer when a model first uses it
 import 'monaco-sql-languages/esm/languages/mysql/mysql.contribution';
+import 'monaco-sql-languages/esm/languages/pgsql/pgsql.contribution';
 import { useAllColumnsContext } from '../../../contexts/AllColumnsContext';
 import { useForeignKeysContext } from '../../../contexts/ForeignKeysContext';
 import { useTableListContext } from '../../../contexts/TableListContext';
@@ -30,7 +31,7 @@ import {
 import useQuerySchema from './useQuerySchema';
 
 /*
- * `monaco-sql-languages` gives us the MySQL tokenizer, but its completion and
+ * `monaco-sql-languages` gives us the SQL tokenizers, but its completion and
  * diagnostics run in a worker it creates through Monaco's pre-0.45 API: the
  * worker never receives its `createData`, never answers, and the suggest
  * widget spins on "Loading" forever. Those two features are turned off here

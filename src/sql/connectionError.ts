@@ -13,6 +13,8 @@ export enum ConnectionFailure {
   refused = 'refused',
   unknownHost = 'unknownHost',
   accessDenied = 'accessDenied',
+  unknownDatabase = 'unknownDatabase',
+  tooManyConnections = 'tooManyConnections',
   keyringLocked = 'keyringLocked',
   passwordUnreadable = 'passwordUnreadable',
   other = 'other',
@@ -62,7 +64,18 @@ export function classifyConnectionError(e: unknown): ConnectionFailure {
     case 'ER_ACCESS_DENIED_ERROR':
     case 'ER_DBACCESS_DENIED_ERROR':
     case 'ER_NOT_SUPPORTED_AUTH_MODE':
+    case '28P01': // PostgreSQL: a wrong password, or user
+    case '28000': // PostgreSQL: a role that may not log in
       return ConnectionFailure.accessDenied;
+
+    // PostgreSQL only: MySQL opens no database on connecting
+    case '3D000':
+      return ConnectionFailure.unknownDatabase;
+
+    case 'ER_CON_COUNT_ERROR':
+    case 'ER_USER_LIMIT_REACHED':
+    case '53300': // PostgreSQL, for the server or for the role
+      return ConnectionFailure.tooManyConnections;
 
     case KEYRING_LOCKED:
       return ConnectionFailure.keyringLocked;

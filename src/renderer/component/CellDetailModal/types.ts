@@ -1,6 +1,7 @@
-import type {
-  PrimaryKeyPart,
-  UpdateCellOutcome,
+import {
+  ConflictReason,
+  type PrimaryKeyPart,
+  type UpdateCellOutcome,
 } from '../../../sql/updateCell';
 import type { ColumnMeta } from '../TableGrid';
 
@@ -32,5 +33,5 @@ export type SaveCell = (params: SaveCellParams) => Promise<UpdateCellOutcome>;
 
 /** Why a write found the row in a state the editor was not opened on. */
 export type Conflict =
-  | { reason: 'changed'; currentValue: unknown }
-  | { reason: 'deleted' };
+  | { reason: ConflictReason.Changed; currentValue: unknown }
+  | { reason: ConflictReason.Deleted };

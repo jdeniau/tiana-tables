@@ -1,4 +1,9 @@
-import { EntityContext, MySQL } from 'dt-sql-parser';
+import {
+  type EntityContext,
+  type ErrorListener,
+  MySQL,
+  PostgreSQL,
+} from 'dt-sql-parser';
 import { DatabaseEngine } from '../engine';
 
 /** What the app asks of a grammar: the same four methods on every engine. */
@@ -10,6 +15,28 @@ export type SqlParser = Pick<
   | 'getSuggestionAtCaretPosition'
 >;
 
+/** A listener that drops what it hears. */
+const ignoreErrors: ErrorListener = () => {};
+
+/**
+ * The grammars, made never to write to the console.
+ *
+ * Given no listener, dt-sql-parser leaves ANTLR's console one on the parser,
+ * so `getAllEntities` logged every syntax error of a query being typed (DTStack/dt-sql-parser#431).
+ * A listener of our own replaces it, as `validate` already does; the lexers log nothing (measured).
+ */
+class QuietMySQL extends MySQL {
+  createParser(input: string, errorListener = ignoreErrors) {
+    return super.createParser(input, errorListener);
+  }
+}
+
+class QuietPostgreSQL extends PostgreSQL {
+  createParser(input: string, errorListener = ignoreErrors) {
+    return super.createParser(input, errorListener);
+  }
+}
+
 /**
  * One parser per engine, shared by the whole app.
  *
@@ -18,7 +45,8 @@ export type SqlParser = Pick<
  * validation and highlighting means they parse the editor content once.
  */
 const PARSERS: Record<DatabaseEngine, SqlParser> = {
-  [DatabaseEngine.MySQL]: new MySQL(),
+  [DatabaseEngine.MySQL]: new QuietMySQL(),
+  [DatabaseEngine.PostgreSQL]: new QuietPostgreSQL(),
 };
 
 export function getParser(engine: DatabaseEngine): SqlParser {

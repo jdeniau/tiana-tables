@@ -13,11 +13,11 @@ description: >
 Three layers, three different jobs. Keep them straight — most of the traps below
 come from confusing them.
 
-| Layer                  | Job                                                                         |
-| ---------------------- | --------------------------------------------------------------------------- |
-| `monaco-editor`        | the editor: models, markers, themes, provider registries                    |
-| `monaco-sql-languages` | registers the `mysql` language and its **Monarch tokenizer** (lexical only) |
-| `dt-sql-parser`        | the real MySQL **grammar** (ANTLR): entities, suggestions, syntax errors    |
+| Layer                  | Job                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------- |
+| `monaco-editor`        | the editor: models, markers, themes, provider registries                                    |
+| `monaco-sql-languages` | registers the `mysql` and `pgsql` languages and their **Monarch tokenizers** (lexical only) |
+| `dt-sql-parser`        | the real **grammar** of each engine (ANTLR): entities, suggestions, syntax errors           |
 
 Monaco stays in charge; the two SQL packages are plugged into it.
 
@@ -104,7 +104,8 @@ editor therefore takes a `queryPrefix` — ``SELECT * FROM `city` WHERE`` — an
 completion, validation and highlighting all read `prefix + model.getValue()`.
 
 `queryPrefix.ts` holds the mapping, in a `WeakMap` keyed by model: the providers
-are registered once for the whole `mysql` language and only ever see a model.
+are registered once per SQL language (`SQL_LANGUAGES`, `language.ts`) and only
+ever see a model, whose language tells them the engine (`engineOf`).
 
 - the prefix **must stay on a single line**, so a position maps back by
   subtracting its length on line 1 and untouched anywhere else
@@ -143,6 +144,19 @@ Four of them, and mixing two is a silent off-by-one:
   `getWordUntilPosition` plus the character before the word.
 - **`splitSQLByStatement` returns `null` on any syntax error**, so it cannot
   answer "is the tail unfinished?". Split on the `;` tokens of `getAllTokens`.
+- **Given no error listener, a dt-sql-parser parser logs to the console**
+  (ANTLR's default listener), and `getAllEntities` passes none: every syntax
+  error of a query being typed was logged, several times with the retries of
+  `collectEntities` (DTStack/dt-sql-parser#431). `getParser` hands out
+  subclasses whose `createParser` defaults to a listener that ignores errors;
+  `validate` passes its own and still reports them. The lexers log nothing.
+- **The `pgsql` Monarch tokenizer colours a quoted identifier as a string**:
+  its grammar sends `"` to `stringDouble` with the `STRING` token, and only a
+  backtick opens a quoted identifier. Not fixable through the theme, since it is
+  the token name of a real string.
+- **Measure an editor change after a full page reload.** Vite's hot reload
+  replaces modules but leaves the watchers older versions registered on the
+  models, and a stale one wrote markers from a grammar the code no longer had.
 - The parser caches the parse tree of its last input, so one shared instance
   per engine (`getParser`, `src/sql/parser/index.ts`) makes completion,
   validation and highlighting parse the editor content once.

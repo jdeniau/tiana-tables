@@ -1,8 +1,12 @@
 import invariant from 'tiny-invariant';
 import { z } from 'zod';
 import { isWriteResult } from '../../types';
-import type { SqlBoundValues } from '../../types';
-import type { UpdateCellRequest } from '../../updateCell';
+import {
+  ConflictReason,
+  type UpdateCellRequest,
+  UpdateCellStatus,
+} from '../../updateCell';
+import { primaryKeyClause } from '../primaryKeyClause';
 import { type BuiltQuery, readQuery } from '../readQuery';
 import type { GuardedUpdate } from '../types';
 import { escapeIdentifier } from './escapeIdentifier';
@@ -12,49 +16,6 @@ function qualifiedTable({
   table,
 }: Pick<UpdateCellRequest, 'database' | 'table'>): string {
   return `${escapeIdentifier(database)}.${escapeIdentifier(table)}`;
-}
-
-/**
- * The parameter that carries one part of a primary key.
- *
- * Numbered rather than named after the column: a column name is not
- * necessarily a valid parameter name — the rewriter only reads
- * `[a-zA-Z][a-zA-Z0-9_]*` after the colon — and could collide with the
- * `newValue` and `originalValue` of the write.
- */
-function primaryKeyParameter(index: number): string {
-  return `primaryKey${index}`;
-}
-
-/**
- * The `WHERE` that targets exactly one row.
- *
- * Plain `=`, and not the null-safe `<=>` used by the guard below: MySQL forces
- * `NOT NULL` on every column of a `PRIMARY KEY`, and it is the `PRIMARY` key we
- * read (`STATISTICS … INDEX_NAME = 'PRIMARY'`), never a unique index that
- * could hold one. A null-safe comparison here would only invite the reader to
- * wonder when a key is `NULL`.
- */
-function primaryKeyClause(primaryKey: UpdateCellRequest['primaryKey']): {
-  sql: string;
-  values: SqlBoundValues;
-} {
-  invariant(
-    primaryKey.length > 0,
-    'A cell can only be updated on a row identified by a primary key'
-  );
-
-  return {
-    sql: primaryKey
-      .map(
-        (part, index) =>
-          `${escapeIdentifier(part.column)} = :${primaryKeyParameter(index)}`
-      )
-      .join(' AND '),
-    values: Object.fromEntries(
-      primaryKey.map((part, index) => [primaryKeyParameter(index), part.value])
-    ),
-  };
 }
 
 /**
@@ -86,7 +47,7 @@ function valueExpression(
 function buildWrite(request: UpdateCellRequest): BuiltQuery {
   const { column, newValue, originalValue, isJsonColumn, force } = request;
   const escapedColumn = escapeIdentifier(column);
-  const primaryKeyPart = primaryKeyClause(request.primaryKey);
+  const primaryKeyPart = primaryKeyClause(request.primaryKey, escapeIdentifier);
 
   const guard = force
     ? null
@@ -125,7 +86,7 @@ function buildWrite(request: UpdateCellRequest): BuiltQuery {
  */
 function buildReadBack(request: UpdateCellRequest): BuiltQuery {
   const escapedColumn = escapeIdentifier(request.column);
-  const primaryKeyPart = primaryKeyClause(request.primaryKey);
+  const primaryKeyPart = primaryKeyClause(request.primaryKey, escapeIdentifier);
 
   const sql = [
     `SELECT ${escapedColumn} AS \`value\`,`,
@@ -143,7 +104,18 @@ function buildReadBack(request: UpdateCellRequest): BuiltQuery {
 
 const cellReadRow = z.object({ value: z.unknown(), guardMatches: z.number() });
 
-export function mysqlGuardedUpdate(request: UpdateCellRequest): GuardedUpdate {
+/**
+ * The edited cell as read back after the write:
+ * its value, and whether the guard still holds.
+ */
+interface CellRead {
+  value: unknown;
+  guardMatches: boolean;
+}
+
+export function mysqlGuardedUpdate(
+  request: UpdateCellRequest
+): GuardedUpdate<CellRead | undefined> {
   return {
     write: buildWrite(request),
 
@@ -161,7 +133,10 @@ export function mysqlGuardedUpdate(request: UpdateCellRequest): GuardedUpdate {
       invariant(isWriteResult(written), 'An UPDATE answers a write summary');
 
       if (!read) {
-        return { status: 'conflict', reason: 'deleted' };
+        return {
+          status: UpdateCellStatus.Conflict,
+          reason: ConflictReason.Deleted,
+        };
       }
 
       // MySQL counts *changed* rows in `affectedRows`, so writing the value a
@@ -171,12 +146,12 @@ export function mysqlGuardedUpdate(request: UpdateCellRequest): GuardedUpdate {
       // comparison redone in JavaScript could not promise. A forced write has no
       // guard to speak of, so the row being there is all there is to check.
       if (request.force || written.affectedRows > 0 || read.guardMatches) {
-        return { status: 'updated', value: read.value };
+        return { status: UpdateCellStatus.Updated, value: read.value };
       }
 
       return {
-        status: 'conflict',
-        reason: 'changed',
+        status: UpdateCellStatus.Conflict,
+        reason: ConflictReason.Changed,
         currentValue: read.value,
       };
     },

@@ -37,8 +37,8 @@ export default function Nav(): ReactElement | null {
   return (
     <TabStrip $caps $framed>
       {Array.from(connectionSlugList).map((connectionSlug) => {
-        const connectionName =
-          configuration.connections[connectionSlug]?.name || connectionSlug;
+        const connection = configuration.connections[connectionSlug];
+        const connectionName = connection?.name || connectionSlug;
 
         return (
           <TabStripLink
@@ -47,7 +47,12 @@ export default function Nav(): ReactElement | null {
             onAuxClick={(event) => {
               handleAuxClick(event, connectionSlug);
             }}
-            title={connectionName}
+            // the engine in the tooltip only: the text of a tab is its name, and its colour the prod/dev mark
+            title={
+              connection
+                ? `${connectionName} · ${t('connection.engine.name', { engine: connection.engine })}`
+                : connectionName
+            }
             to={`/connections/${connectionSlug}`}
           >
             {connectionName}

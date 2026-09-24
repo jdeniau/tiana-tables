@@ -33,50 +33,141 @@ function type(input: HTMLInputElement, text: string): void {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-describe('ConnectionForm', () => {
-  // an `<Input>` answered the port as text, whatever its type claimed
-  test('submits the port typed as a number', async () => {
-    const addConnectionToConfig = vi.fn();
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const root = createRoot(container);
-    unmount = () => root.unmount();
+/** the form mounted as the new-connection page does, with the add spied on */
+async function renderForm() {
+  const addConnectionToConfig = vi.fn();
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  unmount = () => root.unmount();
+
+  await act(async () => {
+    root.render(
+      <MemoryRouter>
+        <ThemeProvider theme={DEFAULT_THEME}>
+          <ConfigurationContext.Provider
+            value={
+              {
+                configuration: { connections: {} },
+                addConnectionToConfig,
+              } as never
+            }
+          >
+            <ConnectionForm />
+          </ConfigurationContext.Provider>
+        </ThemeProvider>
+      </MemoryRouter>
+    );
+  });
+
+  const field = (id: string) =>
+    container.querySelector<HTMLInputElement>(`#${id}`);
+
+  const chooseEngine = async (label: string) => {
+    const option = [...container.querySelectorAll('label')].find(
+      (element) => element.textContent === label
+    );
 
     await act(async () => {
-      root.render(
-        <MemoryRouter>
-          <ThemeProvider theme={DEFAULT_THEME}>
-            <ConfigurationContext.Provider
-              value={
-                {
-                  configuration: { connections: {} },
-                  addConnectionToConfig,
-                } as never
-              }
-            >
-              <ConnectionForm />
-            </ConfigurationContext.Provider>
-          </ThemeProvider>
-        </MemoryRouter>
-      );
+      option?.click();
     });
+  };
 
-    const field = (id: string) =>
-      container.querySelector<HTMLInputElement>(`#${id}`)!;
-
-    await act(async () => {
-      type(field('name'), 'docker (dev)');
-      type(field('port'), '3307');
-    });
-
+  const submit = async () => {
     await act(async () => {
       container.querySelector('form')!.requestSubmit();
     });
 
     await vi.waitFor(() => expect(addConnectionToConfig).toHaveBeenCalled());
 
-    expect(addConnectionToConfig.mock.lastCall?.[0]).toMatchObject({
-      port: 3307,
+    return addConnectionToConfig.mock.lastCall?.[0];
+  };
+
+  return { field, chooseEngine, submit };
+}
+
+describe('ConnectionForm', () => {
+  // an `<Input>` answered the port as text, whatever its type claimed
+  test('submits the port typed as a number', async () => {
+    const { field, submit } = await renderForm();
+
+    await act(async () => {
+      type(field('name')!, 'docker (dev)');
+      type(field('port')!, '3307');
     });
+
+    expect(await submit()).toMatchObject({ port: 3307 });
+  });
+
+  test('opens on MySQL, with no database to name', async () => {
+    const { field, submit } = await renderForm();
+
+    expect(field('database')).toBeNull();
+
+    await act(async () => {
+      type(field('name')!, 'docker (dev)');
+    });
+
+    const submitted = await submit();
+
+    expect(submitted).toMatchObject({
+      engine: 'mysql',
+      port: 3306,
+      user: 'root',
+    });
+    expect(submitted).not.toHaveProperty('database');
+  });
+
+  test('PostgreSQL brings its own port, superuser and database', async () => {
+    const { field, chooseEngine, submit } = await renderForm();
+
+    await chooseEngine('PostgreSQL');
+
+    expect(field('port')?.value).toBe('5432');
+    expect(field('user')?.value).toBe('postgres');
+    expect(field('database')?.value).toBe('postgres');
+
+    await act(async () => {
+      type(field('name')!, 'pg (dev)');
+    });
+
+    expect(await submit()).toMatchObject({
+      engine: 'postgresql',
+      port: 5432,
+      user: 'postgres',
+      database: 'postgres',
+    });
+  });
+
+  // only a value that is still the other engine's default follows the engine
+  test('keeps a port and a user the user typed', async () => {
+    const { field, chooseEngine } = await renderForm();
+
+    await act(async () => {
+      type(field('port')!, '15432');
+      type(field('user')!, 'admin');
+    });
+
+    await chooseEngine('PostgreSQL');
+
+    expect(field('port')?.value).toBe('15432');
+    expect(field('user')?.value).toBe('admin');
+  });
+
+  // the database is dropped with its field, not carried into a MySQL connection
+  test('forgets the database when going back to MySQL', async () => {
+    const { field, chooseEngine, submit } = await renderForm();
+
+    await chooseEngine('PostgreSQL');
+    await chooseEngine('MySQL / MariaDB');
+
+    expect(field('database')).toBeNull();
+    expect(field('port')?.value).toBe('3306');
+
+    await act(async () => {
+      type(field('name')!, 'docker (dev)');
+    });
+
+    expect(await submit()).not.toHaveProperty('database');
   });
 });

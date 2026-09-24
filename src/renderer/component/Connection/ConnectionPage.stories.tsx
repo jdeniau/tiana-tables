@@ -46,12 +46,13 @@ const meta: Meta<typeof ConnectionPage> = {
             connections: {
               test: {
                 name: 'test',
-                engine: DatabaseEngine.MySQL,
+                engine: DatabaseEngine.PostgreSQL,
                 slug: 'test',
                 host: 'localhost',
-                port: 3307,
-                user: 'root',
+                port: 5432,
+                user: 'postgres',
                 password: '',
+                database: 'shop',
               },
               'production connection': {
                 name: 'prod',

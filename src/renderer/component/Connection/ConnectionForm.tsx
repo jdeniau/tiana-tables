@@ -1,4 +1,4 @@
-import { Button, Flex, Form, Input, InputNumber } from 'antd';
+import { Button, Flex, Form, Input, InputNumber, Segmented } from 'antd';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router';
 import type { EncryptedConnectionObject } from '../../../configuration/type';
@@ -37,13 +37,26 @@ const LABEL = { letterSpacing: '0.1em', textTransform: 'uppercase' } as const;
 const ITEM = { marginBottom: 0 } as const;
 const PORT = { ...ITEM, width: 96 } as const;
 
+/** What a new connection starts with on each engine: its usual port and superuser. */
+const DEFAULTS: Record<DatabaseEngine, { port: number; user: string }> = {
+  [DatabaseEngine.MySQL]: { port: 3306, user: 'root' },
+  [DatabaseEngine.PostgreSQL]: { port: 5432, user: 'postgres' },
+};
+
+/** the database every PostgreSQL server is created with */
+const DEFAULT_POSTGRES_DATABASE = 'postgres';
+
+type FormValues = ConnectionObjectWithoutSlug;
+
 function ConnectionForm({ connection }: Props) {
-  const initialValues: ConnectionObjectWithoutSlug = {
+  const engine = connection?.engine ?? DatabaseEngine.MySQL;
+  const initialValues: FormValues = {
     name: connection?.name ?? '',
-    engine: connection?.engine ?? DatabaseEngine.MySQL,
+    engine,
     host: connection?.host ?? 'localhost',
-    port: connection?.port ?? 3306,
-    user: connection?.user ?? 'root',
+    port: connection?.port ?? DEFAULTS[engine].port,
+    user: connection?.user ?? DEFAULTS[engine].user,
+    database: connection?.database ?? DEFAULT_POSTGRES_DATABASE,
     color: connection?.color,
     // the stored password is a ciphertext the renderer never sees in clear: left empty, it is kept as it is
     password: '',
@@ -53,14 +66,37 @@ function ConnectionForm({ connection }: Props) {
   const { configuration, addConnectionToConfig, editConnection } =
     useConfiguration();
   const navigate = useNavigate();
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<FormValues>();
+  const chosenEngine = Form.useWatch('engine', form) ?? engine;
+
+  // a field still holding the other engine's default follows the engine, one the user typed stays
+  const followEngine = (
+    changed: Partial<FormValues>,
+    values: FormValues
+  ): void => {
+    if (changed.engine === undefined) {
+      return;
+    }
+
+    const next = DEFAULTS[changed.engine];
+    const previous = Object.values(DEFAULTS).filter((d) => d !== next);
+
+    form.setFieldsValue({
+      port: previous.some((d) => d.port === values.port)
+        ? next.port
+        : values.port,
+      user: previous.some((d) => d.user === values.user)
+        ? next.user
+        : values.user,
+    });
+  };
 
   // on a first launch there is nowhere to go back to
   const canCancel =
     connection !== undefined ||
     Object.keys(configuration.connections).length > 0;
 
-  const handleSubmit = (formData: ConnectionObjectWithoutSlug): void => {
+  const handleSubmit = (formData: FormValues): void => {
     if (connection) {
       // edit connection
       editConnection(connection.slug, formData);
@@ -97,10 +133,22 @@ function ConnectionForm({ connection }: Props) {
           styles={{ label: LABEL }}
           initialValues={initialValues}
           onFinish={handleSubmit}
+          onValuesChange={followEngine}
           form={form}
         >
           {/* field groups 24px apart, fields 8px apart within a group */}
           <Flex vertical gap={space.xl}>
+            {/* first, since it reconfigures what follows; the words are in the control, so no label */}
+            <Form.Item name="engine" style={ITEM}>
+              <Segmented
+                block
+                options={Object.values(DatabaseEngine).map((value) => ({
+                  value,
+                  label: t('connection.engine.name', { engine: value }),
+                }))}
+              />
+            </Form.Item>
+
             {/* what the connection is called, and how it is marked in the frame */}
             <Flex vertical gap={space.sm}>
               <Form.Item
@@ -146,6 +194,18 @@ function ConnectionForm({ connection }: Props) {
                 />
               </Form.Item>
             </Flex>
+
+            {/* a PostgreSQL connection opens one database, whose schemas the app browses */}
+            {chosenEngine === DatabaseEngine.PostgreSQL && (
+              <Form.Item
+                name="database"
+                label={t('connection.form.database.label')}
+                rules={[{ required: true }]}
+                style={ITEM}
+              >
+                <Input />
+              </Form.Item>
+            )}
 
             <Flex vertical gap={space.sm}>
               <Form.Item

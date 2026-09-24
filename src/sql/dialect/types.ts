@@ -5,31 +5,19 @@ import type { DialectMetadata } from './metadata';
 import type { BuiltQuery, ReadQuery } from './readQuery';
 
 /**
- * The edited cell as read back after the write:
- * its value, and whether the guard still holds.
- */
-interface CellRead {
-  value: unknown;
-  guardMatches: boolean;
-}
-
-/**
  * Writing one cell only if it still holds what the grid showed,
  * and telling what became of it.
+ * `Read` is what the read-back answers, which only its dialect interprets.
  */
-export interface GuardedUpdate {
+export interface GuardedUpdate<Read = unknown> {
   write: BuiltQuery;
 
   /** Settled by the write alone, or `undefined` when the read-back must tell. */
   outcomeOfWrite(written: QueryReturnType): UpdateCellOutcome | undefined;
 
-  /** The cell after the write, `undefined` when its row is gone. */
-  readBack: ReadQuery<CellRead | undefined>;
+  readBack: ReadQuery<Read>;
 
-  outcomeOfReadBack(
-    written: QueryReturnType,
-    read: CellRead | undefined
-  ): UpdateCellOutcome;
+  outcomeOfReadBack(written: QueryReturnType, read: Read): UpdateCellOutcome;
 }
 
 /**
