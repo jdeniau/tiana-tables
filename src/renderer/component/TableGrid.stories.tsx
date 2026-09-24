@@ -8,6 +8,7 @@ import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
 import { FieldKind, type ResultField } from '../../sql/resultField';
+import { SortDirection, type SortOrder } from '../../sql/sortOrder';
 import type { ResultRow } from '../../sql/types';
 import { type UpdateCellRequest, UpdateCellStatus } from '../../sql/updateCell';
 import {
@@ -260,6 +261,34 @@ export const WithoutPrimaryKey: Story = {
     fields: makeFields(8),
     result: makeRows(50, 8),
   },
+};
+
+function SortableGrid(args: ComponentProps<typeof TableGrid<ResultRow>>) {
+  const [sort, setSort] = useState<SortOrder>({
+    column: 'id',
+    direction: SortDirection.Asc,
+  });
+
+  return (
+    <TableGrid
+      {...args}
+      sort={sort}
+      onSortChange={(next) => {
+        action('onSortChange')(next);
+        setSort(next);
+      }}
+    />
+  );
+}
+
+// the rows stay as they are: the order is the server's to apply, the grid only marks it
+export const Sortable: Story = {
+  args: {
+    fields: makeFields(8),
+    result: makeRows(100, 8),
+    primaryKeys: ['id'],
+  },
+  render: (args) => <SortableGrid {...args} />,
 };
 
 // `onFilterChange` is what turns the secondary click on: right-click a cell to

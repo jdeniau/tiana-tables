@@ -8,16 +8,24 @@ import {
   useRef,
   useState,
 } from 'react';
+import { CaretDownFilled, CaretUpFilled } from '@ant-design/icons';
 import {
   columnOrderingFeature,
   columnPinningFeature,
   columnResizingFeature,
   columnSizingFeature,
   createColumnHelper,
+  functionalUpdate,
+  rowSortingFeature,
   tableFeatures,
   useTable,
 } from '@tanstack/react-table';
-import type { ReactTable, Row as TanstackRow } from '@tanstack/react-table';
+import type {
+  ReactTable,
+  SortingState,
+  Row as TanstackRow,
+  Updater,
+} from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Empty } from 'antd';
 import { styled } from 'styled-components';
@@ -29,6 +37,7 @@ import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
 import type { Dialect } from '../../sql/dialect/types';
 import { FieldKind, type ResultField } from '../../sql/resultField';
+import { SortDirection, type SortOrder } from '../../sql/sortOrder';
 import type { ResultRow } from '../../sql/types';
 import { type PrimaryKeyPart, UpdateCellStatus } from '../../sql/updateCell';
 import { useDialect } from '../hooks/useDialect';
@@ -37,6 +46,7 @@ import {
   background,
   commentForeground,
   fontSize,
+  foreground,
   selection,
   size,
   space,
@@ -60,6 +70,7 @@ const features = tableFeatures({
   columnPinningFeature,
   columnResizingFeature,
   columnSizingFeature,
+  rowSortingFeature,
 });
 
 const ROW_HEIGHT = parseInt(size.row, 10);
@@ -108,6 +119,15 @@ interface TableGridProps<R extends ResultRow> {
    * grid resizes; only the one given this remembers it.
    */
   onColumnResized?: (columnName: string, width: number) => void;
+
+  /** the column the rows are ordered by, marked in its header */
+  sort?: SortOrder | null;
+
+  /**
+   * Called with the order a click on a header asks for: ascending first, flipped by each click after.
+   * Providing it is what makes the headers clickable; the caller fetches the rows in that order.
+   */
+  onSortChange?: (sort: SortOrder) => void;
 }
 
 /**
@@ -192,6 +212,8 @@ function TableGrid<Row extends ResultRow>({
   extraColumns = NO_EXTRA_COLUMNS,
   columnWidths,
   onColumnResized,
+  sort,
+  onSortChange,
 }: TableGridProps<Row>): ReactElement {
   // the table element the column widths are written on
   const tableRef = useRef<HTMLTableElement>(null);
@@ -311,6 +333,29 @@ function TableGrid<Row extends ResultRow>({
     [primaryKeys]
   );
 
+  const sorting = useMemo(
+    (): SortingState =>
+      sort
+        ? [{ id: sort.column, desc: sort.direction === SortDirection.Desc }]
+        : [],
+    [sort]
+  );
+
+  const onSortingChange = useCallback(
+    (updater: Updater<SortingState>) => {
+      const [next] = functionalUpdate(updater, sorting);
+
+      if (next) {
+        scrollElement?.scrollTo({ top: 0 });
+        onSortChange?.({
+          column: next.id,
+          direction: next.desc ? SortDirection.Desc : SortDirection.Asc,
+        });
+      }
+    },
+    [sorting, scrollElement, onSortChange]
+  );
+
   const table = useTable(
     {
       features,
@@ -319,8 +364,15 @@ function TableGrid<Row extends ResultRow>({
       // the columns dragged before; the others open at the width their type gives them
       initialState: { columnSizing: columnWidths ?? {} },
       columnResizeMode: 'onChange' as const,
-      state: { columnPinning },
+      state: { columnPinning, sorting },
       onColumnPinningChange: () => undefined,
+      // the rows arrive sorted by the server, one column at a time, and always in some order
+      manualSorting: true,
+      enableSorting: onSortChange !== undefined,
+      enableMultiSort: false,
+      enableSortingRemoval: false,
+      sortDescFirst: false,
+      onSortingChange,
       ...(primaryKeys && primaryKeys.length > 0
         ? {
             getRowId: (row: Row) =>
@@ -424,10 +476,18 @@ function TableGrid<Row extends ResultRow>({
               <HeaderRow key={headerGroup.id}>
                 {headerGroup.headers.map((header, index) => {
                   const isPinned = header.column.getIsPinned();
+                  const sorted = header.column.getIsSorted();
 
                   return (
                     <HeaderCell
                       key={header.id}
+                      aria-sort={
+                        sorted
+                          ? sorted === 'asc'
+                            ? 'ascending'
+                            : 'descending'
+                          : undefined
+                      }
                       data-last-pinned={
                         (isPinned === 'start' &&
                           header.column.getIsLastColumn('start')) ||
@@ -443,7 +503,21 @@ function TableGrid<Row extends ResultRow>({
                         zIndex: isPinned ? 3 : undefined,
                       }}
                     >
-                      <table.FlexRender header={header} />
+                      {header.column.getCanSort() ? (
+                        <SortButton
+                          type="button"
+                          data-sorted={sorted || undefined}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          <HeaderLabel>
+                            <table.FlexRender header={header} />
+                          </HeaderLabel>
+                          {sorted === 'asc' && <CaretUpFilled />}
+                          {sorted === 'desc' && <CaretDownFilled />}
+                        </SortButton>
+                      ) : (
+                        <table.FlexRender header={header} />
+                      )}
 
                       {header.column.getCanResize() && (
                         <ResizeHandle
@@ -842,6 +916,33 @@ const HeaderCell = styled.th`
   &[data-last-pinned] {
     border-inline-end-color: ${commentForeground};
   }
+`;
+
+// the whole head is the target, short of the resize handle; the sorted one reads as body text
+const SortButton = styled.button`
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: ${space.xs};
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover,
+  &[data-sorted] {
+    color: ${foreground};
+  }
+`;
+
+const HeaderLabel = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 // the rule between two column heads is what one grabs to resize: the zone is
