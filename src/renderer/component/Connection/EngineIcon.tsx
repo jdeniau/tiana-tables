@@ -11,12 +11,23 @@ const ICON_BY_ENGINE: Readonly<Record<DatabaseEngine, SimpleIcon>> = {
   [DatabaseEngine.PostgreSQL]: siPostgresql,
 };
 
-/** a logo is drawn edge to edge, so it reads at the size of a control's icon, not of the small text beside it */
-const Logo = styled.svg`
+/**
+ * A logo is drawn edge to edge, so it reads at the size of a control's icon, not of the small text beside it.
+ * The name is on the box because an SVG answers the mouse on its strokes only, and the box is positioned
+ * because antd stretches a Menu item's link over the row with an `a::before`, which would cover it.
+ */
+const Logo = styled.span`
+  position: relative;
   display: block;
   width: ${space.lg};
   height: ${space.lg};
-  fill: currentColor;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+  }
 `;
 
 /** The engine as a monochrome logo in the text colour, named for screen readers and on hover. */
@@ -29,9 +40,10 @@ export default function EngineIcon({
   const name = t('connection.engine.name', { engine });
 
   return (
-    <Logo role="img" aria-label={name} viewBox="0 0 24 24">
-      <title>{name}</title>
-      <path d={ICON_BY_ENGINE[engine].path} />
+    <Logo role="img" aria-label={name} title={name}>
+      <svg viewBox="0 0 24 24" aria-hidden>
+        <path d={ICON_BY_ENGINE[engine].path} />
+      </svg>
     </Logo>
   );
 }

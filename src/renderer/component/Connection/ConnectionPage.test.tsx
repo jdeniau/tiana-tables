@@ -81,9 +81,14 @@ async function render(element: ReactElement): Promise<HTMLElement> {
 describe('the engine of a connection', () => {
   test('is a named logo in the list, next to the database PostgreSQL opens', async () => {
     const container = await render(<ConnectionPage />);
-    const logos = [...container.querySelectorAll('svg[role="img"]')];
+    const logos = [...container.querySelectorAll('[role="img"][title]')];
 
     expect(logos.map((logo) => logo.getAttribute('aria-label'))).toEqual([
+      'MySQL / MariaDB',
+      'PostgreSQL',
+    ]);
+    // on the box, not in the SVG: an SVG is hovered on its strokes only
+    expect(logos.map((logo) => logo.getAttribute('title'))).toEqual([
       'MySQL / MariaDB',
       'PostgreSQL',
     ]);
