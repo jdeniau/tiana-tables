@@ -6,6 +6,11 @@ describe('escapeIdentifier', () => {
     expect(escapeIdentifier('users')).toBe('"users"');
   });
 
+  // `""` names nothing: the one line `pg`'s copy does not have
+  it('refuses an empty identifier', () => {
+    expect(() => escapeIdentifier('')).toThrow();
+  });
+
   // unquoted, PostgreSQL would fold it to `users`
   it('keeps the case of a name', () => {
     expect(escapeIdentifier('Users')).toBe('"Users"');
@@ -18,8 +23,9 @@ describe('escapeLiteral', () => {
   });
 
   // read the same whether `standard_conforming_strings` is on or off
+  // `pg`'s leading space, kept: `col = E'…'` and `col =  E'…'` read the same
   it('writes a backslash in an escape literal, doubled', () => {
-    expect(escapeLiteral('C:\\temp')).toBe("E'C:\\\\temp'");
+    expect(escapeLiteral('C:\\temp')).toBe(" E'C:\\\\temp'");
   });
 
   it('leaves a text without a backslash a plain literal', () => {
