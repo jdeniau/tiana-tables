@@ -38,7 +38,10 @@ function orderTerms(
 
   // the key breaks the ties of the sorted column, or equal values would page in no fixed order
   return sort
-    ? [`${dialect.escapeIdentifier(sort.column)} ${sort.direction}`, ...keys]
+    ? [
+        `${dialect.escapeIdentifier(sort.column)} ${sort.direction.toUpperCase()}`,
+        ...keys,
+      ]
     : keys;
 }
 

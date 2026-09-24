@@ -1,7 +1,7 @@
-/** The value is the keyword, the same in both engines. */
+/** TanStack's values (`getIsSorted()`); the SQL keyword is their upper case, in both engines. */
 export enum SortDirection {
-  Asc = 'ASC',
-  Desc = 'DESC',
+  Asc = 'asc',
+  Desc = 'desc',
 }
 
 /** Rows ordered by a single column. */

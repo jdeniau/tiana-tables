@@ -37,6 +37,7 @@ import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
 import type { Dialect } from '../../sql/dialect/types';
 import { FieldKind, type ResultField } from '../../sql/resultField';
+import { SortDirection } from '../../sql/sortOrder';
 import type { ResultRow } from '../../sql/types';
 import { type PrimaryKeyPart, UpdateCellStatus } from '../../sql/updateCell';
 import { useDialect } from '../hooks/useDialect';
@@ -473,7 +474,7 @@ function TableGrid<Row extends ResultRow>({
                           key={header.id}
                           aria-sort={
                             sorted
-                              ? sorted === 'asc'
+                              ? sorted === SortDirection.Asc
                                 ? 'ascending'
                                 : 'descending'
                               : undefined
@@ -502,8 +503,12 @@ function TableGrid<Row extends ResultRow>({
                               <HeaderLabel>
                                 <table.FlexRender header={header} />
                               </HeaderLabel>
-                              {sorted === 'asc' && <CaretUpFilled />}
-                              {sorted === 'desc' && <CaretDownFilled />}
+                              {sorted === SortDirection.Asc && (
+                                <CaretUpFilled />
+                              )}
+                              {sorted === SortDirection.Desc && (
+                                <CaretDownFilled />
+                              )}
                             </SortButton>
                           ) : (
                             <table.FlexRender header={header} />
