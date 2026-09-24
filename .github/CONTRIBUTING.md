@@ -16,6 +16,23 @@ Then, you can install the dependencies with:
 yarn install
 ```
 
+## Databases to work against
+
+Running the app means pointing it at a real server. `compose.yaml` starts two, a MariaDB and a PostgreSQL, each filled with a development dataset from [`dev/fixtures/`](../dev/fixtures/) the first time it is created:
+
+```sh
+docker compose up -d --wait
+```
+
+| Server        | Address           | User / password            | Database    |
+| ------------- | ----------------- | -------------------------- | ----------- |
+| MariaDB 11    | `127.0.0.1:13306` | `root` / `devpassword`     | `tiana_dev` |
+| PostgreSQL 18 | `127.0.0.1:15432` | `postgres` / `devpassword` | `tiana_dev` |
+
+Both hold the same dataset, row for row: "Le Fil", a news site with its articles, readers, subscriptions and comments — 25 tables and 2 views, around 14 000 rows, written to exercise what the app has to render: composite primary keys, self-referencing foreign keys, a generated column, JSON, enums, decimals, an auto-updated timestamp, column comments, nullable columns everywhere, long text and views next to base tables. The rows hold together in time, so a screenshot of any table reads like real data. The PostgreSQL server also holds a verification schema: several schemas, a cross-schema foreign key, arrays, a materialised view, a partitioned table, odd identifiers.
+
+The data survives `docker compose down` and is only loaded into an empty volume; `docker compose down -v` starts over. [`dev/fixtures/README.md`](../dev/fixtures/README.md) describes both datasets and how to reload one in place.
+
 ## Understand the project
 
 The main code repository is located in the `src` folder.
