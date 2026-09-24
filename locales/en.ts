@@ -156,6 +156,7 @@ export default {
   'table.filters.title': 'Filters',
   'table.rows.count': '{count, plural, one {# row} other {# rows}}',
   'table.rows.loadMore': 'Load more…',
+  'table.sort.hint': 'Click to sort, Shift+click to add to the sort',
   'table.structure.displayAfter': 'Displays after',
   'table.structure.displayAfter.none': 'Database order',
   'table.tab.data': 'Data',

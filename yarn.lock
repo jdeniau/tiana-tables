@@ -3927,7 +3927,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/react-store@npm:^0.11.0":
+"@tanstack/react-store@npm:^0.11.0, @tanstack/react-store@npm:^0.11.1":
   version: 0.11.1
   resolution: "@tanstack/react-store@npm:0.11.1"
   dependencies:
@@ -12722,6 +12722,7 @@ __metadata:
     "@storybook/react": "npm:^8.6.18"
     "@storybook/react-vite": "npm:^8.6.18"
     "@storybook/test": "npm:^8.6.18"
+    "@tanstack/react-store": "npm:^0.11.1"
     "@tanstack/react-table": "npm:^9.1.2"
     "@tanstack/react-virtual": "npm:^3.14.9"
     "@types/electron-squirrel-startup": "npm:^1.0.2"

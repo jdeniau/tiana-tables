@@ -160,6 +160,7 @@ const fr: Translation = {
   'table.filters.title': 'Filtres',
   'table.rows.count': '{count, plural, one {# ligne} other {# lignes}}',
   'table.rows.loadMore': 'Charger plus…',
+  'table.sort.hint': 'Clic pour trier, Maj+clic pour ajouter au tri',
   'table.structure.displayAfter': "S'affiche après",
   'table.structure.displayAfter.none': 'Ordre de la base',
   'table.tab.data': 'Données',

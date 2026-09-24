@@ -1,6 +1,8 @@
 import { ComponentProps, useEffect, useState } from 'react';
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
+import { useCreateAtom } from '@tanstack/react-store';
+import type { SortingState } from '@tanstack/react-table';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
@@ -260,6 +262,28 @@ export const WithoutPrimaryKey: Story = {
     fields: makeFields(8),
     result: makeRows(50, 8),
   },
+};
+
+function SortableGrid(args: ComponentProps<typeof TableGrid<ResultRow>>) {
+  const sortingAtom = useCreateAtom<SortingState>([{ id: 'id', desc: false }]);
+
+  useEffect(() => {
+    const sorts = sortingAtom.subscribe(action('sorting'));
+
+    return () => sorts.unsubscribe();
+  }, [sortingAtom]);
+
+  return <TableGrid {...args} sortingAtom={sortingAtom} />;
+}
+
+// the rows stay as they are: the order is the server's to apply, the grid only marks it
+export const Sortable: Story = {
+  args: {
+    fields: makeFields(8),
+    result: makeRows(100, 8),
+    primaryKeys: ['id'],
+  },
+  render: (args) => <SortableGrid {...args} />,
 };
 
 // `onFilterChange` is what turns the secondary click on: right-click a cell to

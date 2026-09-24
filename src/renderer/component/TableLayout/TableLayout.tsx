@@ -1,4 +1,6 @@
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCreateAtom, useSelector } from '@tanstack/react-store';
+import type { SortingState } from '@tanstack/react-table';
 import { Button, Splitter } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,6 +14,7 @@ import type { ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import { useDialect } from '../../hooks/useDialect';
 import { usePanelSize } from '../../hooks/usePanelSize';
+import SqlErrorComponent from '../Query/SqlErrorComponent';
 import WhereFilter from '../Query/WhereFilter';
 import {
   Region,
@@ -24,7 +27,7 @@ import {
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
-import { buildTableQuery } from './tableQuery';
+import { buildTableQuery, hasOrderByToken } from './tableQuery';
 
 interface TableNameProps {
   connectionSlug: string;
@@ -62,6 +65,9 @@ export function TableLayout({
   const [fields, setFields] = useState<null | ResultField[]>(null);
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
+  // empty until a header is clicked, and again once its sort is removed: the key's order
+  const sortingAtom = useCreateAtom<SortingState>([]);
+  const sorting = useSelector(sortingAtom);
 
   const fetchTableData = useCallback(
     (offset: number) => {
@@ -70,6 +76,7 @@ export function TableLayout({
         tableName,
         primaryKeys,
         where,
+        sorting,
         limit: DEFAULT_LIMIT,
         offset,
       });
@@ -77,6 +84,7 @@ export function TableLayout({
       window.sql
         .executeQuery<ResultRow[]>(query)
         .then(([result, fields]) => {
+          setError(null);
           setCurrentOffset(offset);
           setFields(fields.map((field) => ({ ...field, table: tableName })));
           setResult((prev) =>
@@ -85,14 +93,16 @@ export function TableLayout({
         })
         .catch((err) => {
           setError(err);
+          setResult(null);
         });
     },
-    [dialect, database, tableName, primaryKeys, where]
+    [dialect, database, tableName, primaryKeys, where, sorting]
   );
 
+  // a new query starts over from the first page; the next ones are fetched by "load more"
   useEffect(() => {
-    fetchTableData(currentOffset);
-  }, [fetchTableData, currentOffset]);
+    fetchTableData(0);
+  }, [fetchTableData]);
 
   // the query stays a `SELECT *`: ordering here means a column added to or dropped from the table needs no new query to be placed
   const orderedFields = useMemo(() => {
@@ -144,6 +154,9 @@ export function TableLayout({
     [connectionSlug, database, tableName]
   );
 
+  // a filter's own `ORDER BY` wins, so the headers have nothing to sort
+  const sortable = !hasOrderByToken(dialect, where);
+
   // the filter built by the grid's context menu replaces the current one, and
   // takes the same route as the filter form: the loader reads `?where`, saves it
   // and remounts this layout, so the editor reopens on the clause
@@ -181,20 +194,21 @@ export function TableLayout({
             <TableViewSwitch />
           </RegionHeader>
 
+          {/* the grid stays under an error: its headers are how a failed sort is left */}
           <RegionBody>
-            {error ? (
-              error.message
-            ) : (
-              <TableGrid
-                fields={orderedFields}
-                result={result}
-                primaryKeys={primaryKeys}
-                onValueUpdated={handleValueUpdated}
-                onFilterChange={handleFilterChange}
-                columnWidths={columnWidths}
-                onColumnResized={handleColumnResized}
-              />
-            )}
+            {error && <SqlErrorComponent error={error} />}
+
+            <TableGrid
+              fields={orderedFields}
+              result={result}
+              primaryKeys={primaryKeys}
+              onValueUpdated={handleValueUpdated}
+              onFilterChange={handleFilterChange}
+              columnWidths={columnWidths}
+              onColumnResized={handleColumnResized}
+              sortingAtom={sortingAtom}
+              enableSorting={sortable}
+            />
           </RegionBody>
 
           {!error && (
