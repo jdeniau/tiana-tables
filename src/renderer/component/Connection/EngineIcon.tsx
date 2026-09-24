@@ -1,14 +1,18 @@
 import type { ReactElement } from 'react';
-import { type SimpleIcon, siMysql, siPostgresql } from 'simple-icons';
+import {
+  type IconType,
+  SiMysql,
+  SiPostgresql,
+} from '@icons-pack/react-simple-icons';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import { DatabaseEngine } from '../../../sql/engine';
 import { space } from '../../theme';
 
 /** The logo of each engine, the dolphin standing for MariaDB too, as the engine does. */
-const ICON_BY_ENGINE: Readonly<Record<DatabaseEngine, SimpleIcon>> = {
-  [DatabaseEngine.MySQL]: siMysql,
-  [DatabaseEngine.PostgreSQL]: siPostgresql,
+const ICON_BY_ENGINE: Readonly<Record<DatabaseEngine, IconType>> = {
+  [DatabaseEngine.MySQL]: SiMysql,
+  [DatabaseEngine.PostgreSQL]: SiPostgresql,
 };
 
 /**
@@ -24,9 +28,6 @@ const Logo = styled.span`
 
   svg {
     display: block;
-    width: 100%;
-    height: 100%;
-    fill: currentColor;
   }
 `;
 
@@ -38,12 +39,11 @@ export default function EngineIcon({
 }): ReactElement {
   const { t } = useTranslation();
   const name = t('connection.engine.name', { engine });
+  const Icon = ICON_BY_ENGINE[engine];
 
   return (
     <Logo role="img" aria-label={name} title={name}>
-      <svg viewBox="0 0 24 24" aria-hidden>
-        <path d={ICON_BY_ENGINE[engine].path} />
-      </svg>
+      <Icon size="100%" title={name} aria-hidden />
     </Logo>
   );
 }
