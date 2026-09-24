@@ -15,6 +15,10 @@ export enum ConnectionFailure {
   accessDenied = 'accessDenied',
   unknownDatabase = 'unknownDatabase',
   tooManyConnections = 'tooManyConnections',
+  encryptionRequired = 'encryptionRequired',
+  encryptionUnsupported = 'encryptionUnsupported',
+  certificateRejected = 'certificateRejected',
+  reset = 'reset',
   keyringLocked = 'keyringLocked',
   passwordUnreadable = 'passwordUnreadable',
   other = 'other',
@@ -48,8 +52,53 @@ function errorCode(e: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * The certificate errors Node's TLS gives, by `code`.
+ * mysql2 wraps them all as `HANDSHAKE_SSL_ERROR`; `pg` lets them through.
+ */
+const CERTIFICATE_ERRORS: ReadonlySet<string> = new Set([
+  'HANDSHAKE_SSL_ERROR',
+  'DEPTH_ZERO_SELF_SIGNED_CERT',
+  'SELF_SIGNED_CERT_IN_CHAIN',
+  'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+  'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+  'CERT_HAS_EXPIRED',
+  'ERR_TLS_CERT_ALTNAME_INVALID',
+]);
+
+/**
+ * The two TLS refusals PostgreSQL only tells in words, measured:
+ * `pg` throws the first with no `code`, and the second shares `28000` with a role that may not log in.
+ */
+function classifyPostgresEncryption(e: unknown): ConnectionFailure | undefined {
+  if (!(e instanceof Error)) {
+    return undefined;
+  }
+
+  if (e.message === 'The server does not support SSL connections') {
+    return ConnectionFailure.encryptionUnsupported;
+  }
+
+  if (errorCode(e) === '28000' && e.message.endsWith('no encryption')) {
+    return ConnectionFailure.encryptionRequired;
+  }
+
+  return undefined;
+}
+
 export function classifyConnectionError(e: unknown): ConnectionFailure {
-  switch (errorCode(e)) {
+  const code = errorCode(e);
+  const encryption = classifyPostgresEncryption(e);
+
+  if (encryption) {
+    return encryption;
+  }
+
+  if (code !== undefined && CERTIFICATE_ERRORS.has(code)) {
+    return ConnectionFailure.certificateRejected;
+  }
+
+  switch (code) {
     case 'ETIMEDOUT':
     case 'PROTOCOL_SEQUENCE_TIMEOUT':
       return ConnectionFailure.timeout;
@@ -76,6 +125,16 @@ export function classifyConnectionError(e: unknown): ConnectionFailure {
     case 'ER_USER_LIMIT_REACHED':
     case '53300': // PostgreSQL, for the server or for the role
       return ConnectionFailure.tooManyConnections;
+
+    case 'ER_SECURE_TRANSPORT_REQUIRED': // MySQL's `require_secure_transport`
+      return ConnectionFailure.encryptionRequired;
+
+    case 'HANDSHAKE_NO_SSL_SUPPORT':
+      return ConnectionFailure.encryptionUnsupported;
+
+    // what a server that only speaks TLS may do to a plain handshake, as Prisma Postgres does
+    case 'ECONNRESET':
+      return ConnectionFailure.reset;
 
     case KEYRING_LOCKED:
       return ConnectionFailure.keyringLocked;

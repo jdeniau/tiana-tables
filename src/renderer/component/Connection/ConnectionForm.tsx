@@ -6,6 +6,7 @@ import { uniqueSlug } from '../../../configuration/utils';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
 import { DatabaseEngine } from '../../../sql/engine';
+import { SslMode } from '../../../sql/sslMode';
 import type { ConnectionObjectWithoutSlug } from '../../../sql/types';
 import { space } from '../../theme';
 import { ActionButton } from '../Style/ActionButton';
@@ -57,6 +58,7 @@ function ConnectionForm({ connection }: Props) {
     port: connection?.port ?? DEFAULTS[engine].port,
     user: connection?.user ?? DEFAULTS[engine].user,
     database: connection?.database ?? DEFAULT_POSTGRES_DATABASE,
+    ssl: connection?.ssl ?? SslMode.Disable,
     color: connection?.color,
     // the stored password is a ciphertext the renderer never sees in clear: left empty, it is kept as it is
     password: '',
@@ -68,6 +70,7 @@ function ConnectionForm({ connection }: Props) {
   const navigate = useNavigate();
   const [form] = Form.useForm<FormValues>();
   const chosenEngine = Form.useWatch('engine', form) ?? engine;
+  const chosenSsl = Form.useWatch('ssl', form) ?? initialValues.ssl;
 
   // a field still holding the other engine's default follows the engine, one the user typed stays
   const followEngine = (
@@ -194,6 +197,21 @@ function ConnectionForm({ connection }: Props) {
                 />
               </Form.Item>
             </Flex>
+
+            <Form.Item
+              name="ssl"
+              label={t('connection.form.ssl.label')}
+              extra={t('connection.form.ssl.help', { mode: chosenSsl })}
+              style={ITEM}
+            >
+              <Segmented
+                block
+                options={Object.values(SslMode).map((mode) => ({
+                  value: mode,
+                  label: t('connection.form.ssl.mode', { mode }),
+                }))}
+              />
+            </Form.Item>
 
             {/* a PostgreSQL connection opens one database, whose schemas the app browses */}
             {chosenEngine === DatabaseEngine.PostgreSQL && (

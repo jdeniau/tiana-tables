@@ -1,9 +1,10 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, fn, userEvent, within } from '@storybook/test';
+import { expect, fn, userEvent, waitFor, within } from '@storybook/test';
 import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
 import { testables } from '../../../contexts/ConfigurationContext';
 import { DatabaseEngine } from '../../../sql/engine';
+import { SslMode } from '../../../sql/sslMode';
 import { Centered } from '../Style/Region';
 import ConnectionForm from './ConnectionForm';
 
@@ -85,14 +86,18 @@ export const Create: Story = {
 
     await userEvent.click(canvas.getByText(/Save and connect/i));
 
-    expect(addConnectionToConfig).toHaveBeenCalledWith({
-      host: 'my.database.com',
-      name: 'some personnal name',
-      engine: DatabaseEngine.MySQL,
-      password: '',
-      port: 3306,
-      user: 'root',
-    });
+    // antd validates the fields before it submits, asynchronously
+    await waitFor(() =>
+      expect(addConnectionToConfig).toHaveBeenCalledWith({
+        host: 'my.database.com',
+        name: 'some personnal name',
+        engine: DatabaseEngine.MySQL,
+        password: '',
+        port: 3306,
+        user: 'root',
+        ssl: SslMode.Disable,
+      })
+    );
   },
 };
 

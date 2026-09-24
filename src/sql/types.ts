@@ -1,6 +1,7 @@
 import { ConnectionColor } from '../configuration/connectionColor';
 import { DatabaseEngine } from './engine';
 import { ResultField } from './resultField';
+import { SslMode } from './sslMode';
 
 /**
  * One row of a result, by column name.
@@ -43,6 +44,8 @@ export type ConnectionObject = {
   password: string;
   /** the database a PostgreSQL connection opens, whose schemas the app browses */
   database?: string;
+  /** absent on a connection saved before the field existed, which stays in the clear */
+  ssl?: SslMode;
   color?: ConnectionColor;
 };
 

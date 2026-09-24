@@ -65,6 +65,10 @@ export default {
     ' accessDenied {The server rejected these credentials.}' +
     ' unknownDatabase {The server has no database of this name.}' +
     ' tooManyConnections {The server accepts no more connections for now, from this user or from anyone.}' +
+    ' encryptionRequired {The server only accepts encrypted connections. Set SSL to Required in the connection form.}' +
+    ' encryptionUnsupported {The server does not accept encrypted connections. Set SSL to Disabled in the connection form.}' +
+    ' certificateRejected {The server certificate could not be verified. Set SSL to Required to encrypt without checking it.}' +
+    ' reset {The server closed the connection while it was being opened. A server that only accepts encrypted connections does that: try setting SSL to Required in the connection form.}' +
     ' keyringLocked {Your keyring is locked, so the saved password could not be read. Unlock it, then retry.}' +
     ' passwordUnreadable {The saved password was encrypted with a key this machine no longer has. Type it again in the connection form.}' +
     ' other {The connection could not be opened.}}',
@@ -84,6 +88,17 @@ export default {
   'connection.form.password.placeholder':
     'Leave empty to keep the saved password',
   'connection.form.port.label': 'Port',
+  // ICU select on the `SslMode` enum: what the chosen mode does
+  'connection.form.ssl.help':
+    '{mode, select,' +
+    ' disable {In the clear.}' +
+    ' require {Encrypted, the server certificate taken as it comes.}' +
+    ' verifyFull {Encrypted, to a certificate your system trusts and that names this host.}' +
+    ' other {}}',
+  'connection.form.ssl.label': 'SSL',
+  // ICU select on the `SslMode` enum
+  'connection.form.ssl.mode':
+    '{mode, select, disable {Disabled} require {Required} verifyFull {Verified} other {{mode}}}',
   'connection.form.title.create': 'New connection',
   'connection.form.title.edit': 'Edit {name}',
   'connection.form.user.label': 'User',

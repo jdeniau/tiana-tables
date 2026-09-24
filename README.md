@@ -110,6 +110,14 @@ way it browses the databases of a MySQL server: the schema list is where the
 database list would be. A foreign key to another schema is not offered as a
 link.
 
+A connection can be encrypted, with the modes libpq names: `Required` encrypts
+and takes the server certificate as it comes (the `sslmode=require` of a
+connection string, as Prisma Postgres hands one out), `Verified` also checks
+that the system trusts the certificate and that it names the host. Give
+`Verified` a host name rather than an IP address: both drivers check the
+certificate of an IP host against `localhost`, so a certificate issued for the
+IP is rejected. A custom CA file is not supported yet.
+
 I do not plan to support other database systems. If one shares enough of the SQL
 standard, open an issue and we can discuss it — but I will probably turn down
 anything too far from SQL, as it would make the app worse at SQL and harder to

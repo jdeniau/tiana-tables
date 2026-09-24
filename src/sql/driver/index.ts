@@ -1,5 +1,6 @@
 import invariant from 'tiny-invariant';
 import { DatabaseEngine } from '../engine';
+import type { SslMode } from '../sslMode';
 import type { QueryResult, SqlBoundValues } from '../types';
 
 /**
@@ -15,6 +16,7 @@ interface ConnectionParams {
   password: string;
   /** the database a PostgreSQL connection opens; MySQL switches with `USE` instead */
   database?: string;
+  ssl: SslMode;
 }
 
 interface ConnectOptions {
