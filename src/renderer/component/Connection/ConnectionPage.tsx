@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { EditOutlined } from '@ant-design/icons';
 import { Menu, MenuProps, Spin } from 'antd';
 import { matchPath, useNavigation } from 'react-router';
 import { Link, Navigate } from 'react-router-dom';
@@ -17,6 +18,7 @@ import {
   RegionMeta,
   RegionName,
 } from '../Style/Region';
+import EngineIcon from './EngineIcon';
 
 /**
  * The label fills the row, as the tables of the sidebar do: the name, and
@@ -94,18 +96,27 @@ function ConnectionPage(): JSX.Element {
             <RegionMeta>{t('connection.connecting')}</RegionMeta>
           </RegionGroup>
         ) : (
-          <RegionMeta>
-            {t('connection.engine.name', { engine: connection.engine })} ·{' '}
-            {connection.user}@{connection.host}:{connection.port}
-            {connection.database ? `/${connection.database}` : ''}
-          </RegionMeta>
+          <RegionGroup>
+            <RegionMeta>
+              {connection.user}@{connection.host}:{connection.port}
+              {connection.database ? `/${connection.database}` : ''}
+            </RegionMeta>
+            <RegionMeta>
+              <EngineIcon engine={connection.engine} />
+            </RegionMeta>
+          </RegionGroup>
         )}
       </Open>
     ),
     extra: (
-      <Edit type="text" size="small" to={`/connect/edit/${connection.slug}`}>
-        {t('edit')}
-      </Edit>
+      <Edit
+        type="text"
+        size="small"
+        icon={<EditOutlined />}
+        aria-label={t('edit')}
+        title={t('edit')}
+        to={`/connect/edit/${connection.slug}`}
+      />
     ),
   }));
 

@@ -79,11 +79,23 @@ async function render(element: ReactElement): Promise<HTMLElement> {
 }
 
 describe('the engine of a connection', () => {
-  test('is named in the list, with the database PostgreSQL opens', async () => {
-    const text = (await render(<ConnectionPage />)).textContent;
+  test('is a named logo in the list, next to the database PostgreSQL opens', async () => {
+    const container = await render(<ConnectionPage />);
+    const logos = [...container.querySelectorAll('svg[role="img"]')];
 
-    expect(text).toContain('MySQL / MariaDB · root@localhost:3306');
-    expect(text).toContain('PostgreSQL · postgres@localhost:5432/shop');
+    expect(logos.map((logo) => logo.getAttribute('aria-label'))).toEqual([
+      'MySQL / MariaDB',
+      'PostgreSQL',
+    ]);
+    expect(container.textContent).toContain('root@localhost:3306');
+    expect(container.textContent).toContain('postgres@localhost:5432/shop');
+  });
+
+  test('is edited from an icon that names what it does', async () => {
+    const container = await render(<ConnectionPage />);
+    const edit = container.querySelector('a[href$="/connect/edit/pg-dev"]');
+
+    expect(edit?.getAttribute('aria-label')).toBe('Edit');
   });
 
   // the text of a tab is its name, and its colour is the prod/dev mark
