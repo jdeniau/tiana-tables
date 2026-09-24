@@ -28,7 +28,7 @@ import {
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
-import { buildTableQuery, filterOrdersRows } from './tableQuery';
+import { buildTableQuery, hasOrderByToken } from './tableQuery';
 
 interface TableNameProps {
   connectionSlug: string;
@@ -161,7 +161,7 @@ export function TableLayout({
   );
 
   // a filter's own `ORDER BY` wins, so the headers have nothing to sort
-  const sortable = !filterOrdersRows(dialect, where);
+  const sortable = !hasOrderByToken(dialect, where);
 
   // the filter built by the grid's context menu replaces the current one, and
   // takes the same route as the filter form: the loader reads `?where`, saves it

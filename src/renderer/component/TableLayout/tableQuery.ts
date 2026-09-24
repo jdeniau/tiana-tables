@@ -15,7 +15,7 @@ interface TablePage {
 }
 
 /** Whether the filter orders the rows itself: lexed, so a filter being typed still answers. */
-export function filterOrdersRows(
+export function hasOrderByToken(
   dialect: Dialect,
   where: string | undefined
 ): boolean {
@@ -54,14 +54,14 @@ function orderTerms(
  * A filter holding its own `ORDER BY` keeps it, and a table without a key keeps the server's.
  */
 export function buildTableQuery(dialect: Dialect, page: TablePage): string {
-  const { where } = page;
-  const terms = filterOrdersRows(dialect, where)
+  const { where, primaryKeys, sort, limit, offset, database, tableName } = page;
+  const terms = hasOrderByToken(dialect, where)
     ? []
-    : orderTerms(dialect, page.primaryKeys, page.sort);
+    : orderTerms(dialect, primaryKeys, sort);
   const order = terms.length > 0 ? ` ORDER BY ${terms.join(', ')}` : '';
 
   // the identifiers are escaped, the filter is not: it is SQL the user wrote, and is sent as written
-  return `SELECT * FROM ${dialect.qualify(page.database, page.tableName)}${
+  return `SELECT * FROM ${dialect.qualify(database, tableName)}${
     where ? ` WHERE ${where}` : ''
-  }${order} LIMIT ${page.limit} OFFSET ${page.offset};`;
+  }${order} LIMIT ${limit} OFFSET ${offset};`;
 }
