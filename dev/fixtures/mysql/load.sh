@@ -9,10 +9,6 @@ user=${TIANA_DEV_USER:-root}
 password=${TIANA_DEV_PASSWORD:-devpassword}
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-client() { docker exec -i "$container" mariadb -u"$user" -p"$password" "$database"; }
-
-echo "→ schema"
-client < "$here/schema.sql"
-echo "→ rows"
-python3 "$here/generate.py" | client
+{ cat "$here/schema.sql"; node "$here/../generate.mjs" mysql; } |
+  docker exec -i "$container" mariadb -u"$user" -p"$password" "$database"
 echo "✓ $database rebuilt"

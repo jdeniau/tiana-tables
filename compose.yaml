@@ -1,21 +1,25 @@
 # The development databases, a MariaDB and a PostgreSQL: `docker compose up -d --wait`.
-# Each is filled with its dataset (dev/fixtures/) the first time its volume is created, and never touched after.
+# Both hold the same dataset (dev/fixtures/), loaded the first time a volume is created and never touched after.
 name: tiana-tables-dev
 
 services:
-  # Writes the MariaDB dataset where its first start reads it: the image has no python to run the generator itself.
-  mysql-fixtures:
-    image: python:3-alpine
+  # Writes each server's init scripts, read on its first start: neither image has node to run the generator.
+  fixtures:
+    image: node:22-alpine
     volumes:
-      - ./dev/fixtures/mysql:/fixtures:ro,z
-      - mysql-init:/out
+      - ./dev/fixtures:/fixtures:ro,z
+      - mysql-init:/out/mysql
+      - postgres-init:/out/postgres
     command:
       - sh
       - -ec
       - |
-        cp /fixtures/schema.sql /out/1-schema.sql
-        python3 /fixtures/generate.py > /out/2-rows.sql.tmp
-        mv /out/2-rows.sql.tmp /out/2-rows.sql
+        for dialect in mysql postgres; do
+          cp /fixtures/$$dialect/schema.sql /out/$$dialect/1-schema.sql
+          node /fixtures/generate.mjs $$dialect > /out/$$dialect/2-rows.sql.tmp
+          mv /out/$$dialect/2-rows.sql.tmp /out/$$dialect/2-rows.sql
+        done
+        cp /fixtures/postgres/verification.sql /out/postgres/3-verification.sql
 
   mysql:
     image: mariadb:11
@@ -30,7 +34,7 @@ services:
       - mysql-data:/var/lib/mysql
       - mysql-init:/docker-entrypoint-initdb.d:ro
     depends_on:
-      mysql-fixtures:
+      fixtures:
         condition: service_completed_successfully
     healthcheck:
       test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
@@ -48,7 +52,10 @@ services:
       POSTGRES_DB: tiana_dev
     volumes:
       - postgres-data:/var/lib/postgresql
-      - ./dev/fixtures/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro,z
+      - postgres-init:/docker-entrypoint-initdb.d:ro
+    depends_on:
+      fixtures:
+        condition: service_completed_successfully
     healthcheck:
       # over TCP: the server that runs the init scripts only listens on its socket
       test: [CMD, pg_isready, -h, 127.0.0.1, -U, postgres, -d, tiana_dev]
@@ -61,3 +68,4 @@ volumes:
   postgres-data:
     name: tiana-dev-postgres
   mysql-init:
+  postgres-init:

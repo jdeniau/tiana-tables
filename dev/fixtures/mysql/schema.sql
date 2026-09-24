@@ -373,3 +373,21 @@ CREATE TABLE envoi_newsletter (
   CONSTRAINT fk_envoi_newsletter FOREIGN KEY (newsletter_id) REFERENCES newsletter (id) ON DELETE CASCADE,
   CONSTRAINT fk_envoi_article FOREIGN KEY (article_une_id) REFERENCES article (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE VIEW vue_article_publie AS
+SELECT a.id, a.titre, a.slug, a.publie_le, a.acces, a.vues,
+       CONCAT(au.prenom, ' ', au.nom) AS auteur, c.nom AS rubrique,
+       (SELECT COUNT(*) FROM commentaire cm WHERE cm.article_id = a.id AND cm.statut = 'publie') AS commentaires
+FROM article a
+LEFT JOIN auteur au ON au.id = a.auteur_id
+LEFT JOIN categorie c ON c.id = a.categorie_id
+WHERE a.statut = 'publie';
+
+CREATE VIEW vue_audience_mensuelle AS
+SELECT DATE_FORMAT(l.lu_le, '%Y-%m') AS mois, c.nom AS rubrique,
+       COUNT(*) AS lectures, COUNT(DISTINCT l.utilisateur_id) AS lecteurs_identifies,
+       ROUND(AVG(l.duree_secondes)) AS duree_moyenne
+FROM lecture l
+JOIN article a ON a.id = l.article_id
+LEFT JOIN categorie c ON c.id = a.categorie_id
+GROUP BY mois, rubrique;
