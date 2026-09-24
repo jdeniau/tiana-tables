@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Fetcher } from 'react-router';
+import connectionDecorator from '../../../../../.storybook/decorators/connectionDecorator';
 import reactRouterDecorator from '../../../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../../../contexts/AllColumnsContext';
 import { ForeignKeysContextProvider } from '../../../../contexts/ForeignKeysContext';
@@ -64,6 +65,7 @@ const meta: Meta<typeof RawSqlResult> = {
   component: RawSqlResult,
   decorators: [
     reactRouterDecorator,
+    connectionDecorator,
     (Story) => (
       <ForeignKeysContextProvider foreignKeys={[]}>
         <AllColumnsContextProvider allColumns={[]}>

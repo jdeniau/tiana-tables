@@ -9,6 +9,7 @@ import { testables } from '../src/contexts/ConfigurationContext';
 import { ThemeContextProvider } from '../src/contexts/ThemeContext';
 import { changeLanguage } from '../src/i18n';
 import { background } from '../src/renderer/theme';
+import { STORY_CONNECTION } from './decorators/connectionDecorator';
 
 const { ConfigurationContext } = testables;
 
@@ -65,7 +66,7 @@ const preview: Preview = {
               version: 1,
               theme,
               locale,
-              connections: {},
+              connections: { [STORY_CONNECTION.slug]: STORY_CONNECTION },
             },
             changeLanguage: (newLocale) => {
               action('changeLanguage')(newLocale);

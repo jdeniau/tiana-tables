@@ -1,12 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import connectionDecorator from '../../../.storybook/decorators/connectionDecorator';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
+import { getDialect } from '../../sql/dialect';
+import { DatabaseEngine } from '../../sql/engine';
+import { FieldKind } from '../../sql/resultField';
 import ForeignKeyLink from './ForeignKeyLink';
 
 const meta: Meta<typeof ForeignKeyLink> = {
   component: ForeignKeyLink,
   decorators: [
     reactRouterDecorator,
+    connectionDecorator,
     (Story) => (
       <ForeignKeysContextProvider
         foreignKeys={[
@@ -34,8 +39,10 @@ type Story = StoryObj<typeof ForeignKeyLink>;
  */
 export const Primary: Story = {
   args: {
+    dialect: getDialect(DatabaseEngine.MySQL),
     tableName: 'table',
     columnName: 'linkedId',
+    fieldKind: FieldKind.Number,
     value: 1,
   },
 };

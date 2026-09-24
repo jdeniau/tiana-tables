@@ -19,6 +19,7 @@ Rules learned from past mistakes and audits. Review this file at the start of ea
 
 ## Testing
 
+- **A hook that reads a context is checked in every story, not only in the tests.** `useDialect` (stage 1 of PostgreSQL, 2026-09) needs the current connection and that connection in the configuration; the tests all provided both, Storybook provided neither, and 15 of 101 stories showed an error screen until the user opened one (2026-09-24). Nothing fails in CI when a story breaks. After adding a hook that reads a context, load every story headless (`index.json` for the ids, `iframe.html?id=…`, look for `body.sb-show-errordisplay`) and count the failures before and after.
 - **Vitest runs in the node environment by default in this repo** (`vitest.config.ts` sets no `environment`). Any test touching the DOM must declare `/** @vitest-environment happy-dom */` at the top of the file, or it will fail with `document is not defined`.
 
 ## Performance
