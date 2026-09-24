@@ -101,22 +101,38 @@ async function click(element: HTMLElement | null | undefined): Promise<void> {
 
 const lastQuery = (): string => executeQuery.mock.lastCall?.[0];
 
+const clickLoadMore = (): Promise<void> =>
+  click(
+    [...container.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Load more…'
+    )
+  );
+
+describe('load more', () => {
+  test('asks for the next page once', async () => {
+    await render();
+    executeQuery.mockClear();
+
+    await clickLoadMore();
+
+    expect(executeQuery.mock.calls.map(([query]) => query)).toEqual([
+      'SELECT * FROM `shop`.`items` ORDER BY `id` ASC LIMIT 100 OFFSET 100;',
+    ]);
+  });
+});
+
 describe('sorting', () => {
   test('marks the key the rows come in by, before any click', async () => {
     await render();
 
-    expect(lastQuery()).toContain('ORDER BY `id` LIMIT 100 OFFSET 0');
+    expect(lastQuery()).toContain('ORDER BY `id` ASC LIMIT 100 OFFSET 0');
     expect(header('id').getAttribute('aria-sort')).toBe('ascending');
   });
 
   test('a click on a header fetches the first page in its order', async () => {
     await render();
 
-    await click(
-      [...container.querySelectorAll('button')].find(
-        (button) => button.textContent === 'Load more…'
-      )
-    );
+    await clickLoadMore();
     expect(lastQuery()).toContain('OFFSET 100');
 
     await click(header('name').querySelector('button'));

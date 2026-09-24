@@ -1,7 +1,9 @@
 /**
  * @vitest-environment happy-dom
  */
-import { type ReactElement, act, useState } from 'react';
+import { type ReactElement, act } from 'react';
+import { type Atom, createAtom } from '@tanstack/react-store';
+import type { SortingState } from '@tanstack/react-table';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
@@ -12,7 +14,6 @@ import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import { mysqlDialect } from '../../sql/dialect/mysql';
 import { FieldKind } from '../../sql/resultField';
-import { SortDirection, type SortOrder } from '../../sql/sortOrder';
 import TableGrid from './TableGrid';
 
 vi.mock('../hooks/useDialect', () => ({ useDialect: () => mysqlDialect }));
@@ -39,28 +40,19 @@ afterEach(() => {
   container.remove();
 });
 
-function SortableGrid({
-  onSortChange,
-}: {
-  onSortChange: (sort: SortOrder) => void;
-}) {
-  const [sort, setSort] = useState<SortOrder | null>({
-    column: 'id',
-    direction: SortDirection.Asc,
-  });
+function renderSortable(): Atom<SortingState> {
+  const sortingAtom = createAtom<SortingState>([{ id: 'id', desc: false }]);
 
-  return (
+  render(
     <TableGrid
       fields={FIELDS}
       result={ROWS}
       primaryKeys={['id']}
-      sort={sort}
-      onSortChange={(next) => {
-        onSortChange(next);
-        setSort(next);
-      }}
+      sortingAtom={sortingAtom}
     />
   );
+
+  return sortingAtom;
 }
 
 function render(element: ReactElement): void {
@@ -109,50 +101,60 @@ function click(name: string): void {
 
 describe('sorting', () => {
   test('ascending first, then each click on the same header flips it', () => {
-    const onSortChange = vi.fn();
-    render(<SortableGrid onSortChange={onSortChange} />);
+    const sortingAtom = renderSortable();
 
     expect(header('id').getAttribute('aria-sort')).toBe('ascending');
     expect(header('name').hasAttribute('aria-sort')).toBe(false);
 
+    const written: Array<SortingState> = [];
+    sortingAtom.subscribe((sorting) => written.push(sorting));
+
     click('name');
     click('name');
     click('name');
 
-    expect(onSortChange.mock.calls).toEqual([
-      [{ column: 'name', direction: SortDirection.Asc }],
-      [{ column: 'name', direction: SortDirection.Desc }],
-      [{ column: 'name', direction: SortDirection.Asc }],
+    expect(written).toEqual([
+      [{ id: 'name', desc: false }],
+      [{ id: 'name', desc: true }],
+      [{ id: 'name', desc: false }],
     ]);
     expect(header('name').getAttribute('aria-sort')).toBe('ascending');
     expect(header('id').hasAttribute('aria-sort')).toBe(false);
   });
 
   test('a newly clicked column is sorted ascending, whatever the last direction', () => {
-    const onSortChange = vi.fn();
-    render(<SortableGrid onSortChange={onSortChange} />);
+    const sortingAtom = renderSortable();
 
     click('id');
     expect(header('id').getAttribute('aria-sort')).toBe('descending');
 
     click('name');
-    expect(onSortChange).toHaveBeenLastCalledWith({
-      column: 'name',
-      direction: SortDirection.Asc,
-    });
+    expect(sortingAtom.get()).toEqual([{ id: 'name', desc: false }]);
 
     // TanStack would start a column of numbers descending
     click('name');
     click('id');
-    expect(onSortChange).toHaveBeenLastCalledWith({
-      column: 'id',
-      direction: SortDirection.Asc,
-    });
+    expect(sortingAtom.get()).toEqual([{ id: 'id', desc: false }]);
   });
 
-  test('a grid given no `onSortChange` has no header to click', () => {
+  test('a grid given no atom has no header to click', () => {
     render(<TableGrid fields={FIELDS} result={ROWS} primaryKeys={['id']} />);
 
     expect(container.querySelector('th button')).toBeNull();
+  });
+
+  test('a disabled sort neither clicks nor marks its column', () => {
+    render(
+      <TableGrid
+        fields={FIELDS}
+        result={ROWS}
+        primaryKeys={['id']}
+        sortingAtom={createAtom<SortingState>([{ id: 'id', desc: false }])}
+        enableSorting={false}
+      />
+    );
+
+    expect(container.querySelector('th button')).toBeNull();
+    expect(header('id').hasAttribute('aria-sort')).toBe(false);
   });
 });

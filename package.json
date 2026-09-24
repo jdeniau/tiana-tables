@@ -48,6 +48,7 @@
     "@nivo/bar": "^0.99.0",
     "@nivo/line": "^0.99.0",
     "@nivo/theming": "^0.99.0",
+    "@tanstack/react-store": "^0.11.1",
     "@tanstack/react-table": "^9.1.2",
     "@tanstack/react-virtual": "^3.14.9",
     "antd": "^6.4.2",

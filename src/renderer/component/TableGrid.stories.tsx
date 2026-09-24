@@ -1,6 +1,8 @@
 import { ComponentProps, useEffect, useState } from 'react';
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
+import { useCreateAtom } from '@tanstack/react-store';
+import type { SortingState } from '@tanstack/react-table';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
@@ -8,7 +10,6 @@ import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
 import { FieldKind, type ResultField } from '../../sql/resultField';
-import { SortDirection, type SortOrder } from '../../sql/sortOrder';
 import type { ResultRow } from '../../sql/types';
 import { type UpdateCellRequest, UpdateCellStatus } from '../../sql/updateCell';
 import {
@@ -264,21 +265,15 @@ export const WithoutPrimaryKey: Story = {
 };
 
 function SortableGrid(args: ComponentProps<typeof TableGrid<ResultRow>>) {
-  const [sort, setSort] = useState<SortOrder>({
-    column: 'id',
-    direction: SortDirection.Asc,
-  });
+  const sortingAtom = useCreateAtom<SortingState>([{ id: 'id', desc: false }]);
 
-  return (
-    <TableGrid
-      {...args}
-      sort={sort}
-      onSortChange={(next) => {
-        action('onSortChange')(next);
-        setSort(next);
-      }}
-    />
-  );
+  useEffect(() => {
+    const sorts = sortingAtom.subscribe(action('sorting'));
+
+    return () => sorts.unsubscribe();
+  }, [sortingAtom]);
+
+  return <TableGrid {...args} sortingAtom={sortingAtom} />;
 }
 
 // the rows stay as they are: the order is the server's to apply, the grid only marks it

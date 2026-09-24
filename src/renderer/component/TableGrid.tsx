@@ -3,19 +3,20 @@ import {
   ReactNode,
   memo,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
 import { CaretDownFilled, CaretUpFilled } from '@ant-design/icons';
+import type { Atom } from '@tanstack/react-store';
 import {
   columnOrderingFeature,
   columnPinningFeature,
   columnResizingFeature,
   columnSizingFeature,
   createColumnHelper,
-  functionalUpdate,
   rowSortingFeature,
   tableFeatures,
   useTable,
@@ -24,7 +25,6 @@ import type {
   ReactTable,
   SortingState,
   Row as TanstackRow,
-  Updater,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Empty } from 'antd';
@@ -37,7 +37,6 @@ import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
 import type { Dialect } from '../../sql/dialect/types';
 import { FieldKind, type ResultField } from '../../sql/resultField';
-import { SortDirection, type SortOrder } from '../../sql/sortOrder';
 import type { ResultRow } from '../../sql/types';
 import { type PrimaryKeyPart, UpdateCellStatus } from '../../sql/updateCell';
 import { useDialect } from '../hooks/useDialect';
@@ -120,14 +119,14 @@ interface TableGridProps<R extends ResultRow> {
    */
   onColumnResized?: (columnName: string, width: number) => void;
 
-  /** the column the rows are ordered by, marked in its header */
-  sort?: SortOrder | null;
-
   /**
-   * Called with the order a click on a header asks for: ascending first, flipped by each click after.
-   * Providing it is what makes the headers clickable; the caller fetches the rows in that order.
+   * The order a click on a header writes: one column, ascending first, flipped by each click after.
+   * The caller fetches the rows in that order; it must be the same atom for the grid's whole life.
    */
-  onSortChange?: (sort: SortOrder) => void;
+  sortingAtom?: Atom<SortingState>;
+
+  /** off leaves the headers inert, even with a `sortingAtom` */
+  enableSorting?: boolean;
 }
 
 /**
@@ -212,8 +211,8 @@ function TableGrid<Row extends ResultRow>({
   extraColumns = NO_EXTRA_COLUMNS,
   columnWidths,
   onColumnResized,
-  sort,
-  onSortChange,
+  sortingAtom,
+  enableSorting = sortingAtom !== undefined,
 }: TableGridProps<Row>): ReactElement {
   // the table element the column widths are written on
   const tableRef = useRef<HTMLTableElement>(null);
@@ -333,29 +332,6 @@ function TableGrid<Row extends ResultRow>({
     [primaryKeys]
   );
 
-  const sorting = useMemo(
-    (): SortingState =>
-      sort
-        ? [{ id: sort.column, desc: sort.direction === SortDirection.Desc }]
-        : [],
-    [sort]
-  );
-
-  const onSortingChange = useCallback(
-    (updater: Updater<SortingState>) => {
-      const [next] = functionalUpdate(updater, sorting);
-
-      if (next) {
-        scrollElement?.scrollTo({ top: 0 });
-        onSortChange?.({
-          column: next.id,
-          direction: next.desc ? SortDirection.Desc : SortDirection.Asc,
-        });
-      }
-    },
-    [sorting, scrollElement, onSortChange]
-  );
-
   const table = useTable(
     {
       features,
@@ -364,15 +340,15 @@ function TableGrid<Row extends ResultRow>({
       // the columns dragged before; the others open at the width their type gives them
       initialState: { columnSizing: columnWidths ?? {} },
       columnResizeMode: 'onChange' as const,
-      state: { columnPinning, sorting },
+      state: { columnPinning },
       onColumnPinningChange: () => undefined,
+      atoms: sortingAtom ? { sorting: sortingAtom } : undefined,
       // the rows arrive sorted by the server, one column at a time, and always in some order
       manualSorting: true,
-      enableSorting: onSortChange !== undefined,
+      enableSorting,
       enableMultiSort: false,
       enableSortingRemoval: false,
       sortDescFirst: false,
-      onSortingChange,
       ...(primaryKeys && primaryKeys.length > 0
         ? {
             getRowId: (row: Row) =>
@@ -467,69 +443,85 @@ function TableGrid<Row extends ResultRow>({
     };
   }, [table, columns, columnPinning, onColumnResized]);
 
+  // a new order starts from the first row
+  useEffect(() => {
+    const sorts = table.atoms.sorting.subscribe(() => {
+      scrollElement?.scrollTo({ top: 0 });
+    });
+
+    return () => sorts.unsubscribe();
+  }, [table, scrollElement]);
+
   return (
     <Wrapper>
       <ScrollContainer ref={setScrollElement}>
         <StyledTable ref={tableRef}>
           <StyledThead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <HeaderRow key={headerGroup.id}>
-                {headerGroup.headers.map((header, index) => {
-                  const isPinned = header.column.getIsPinned();
-                  const sorted = header.column.getIsSorted();
+            {/* the heads alone follow the order: the grid itself subscribes to no table state */}
+            <table.Subscribe selector={(state) => state.sorting}>
+              {() =>
+                table.getHeaderGroups().map((headerGroup) => (
+                  <HeaderRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header, index) => {
+                      const isPinned = header.column.getIsPinned();
+                      const sorted =
+                        header.column.getCanSort() &&
+                        header.column.getIsSorted();
 
-                  return (
-                    <HeaderCell
-                      key={header.id}
-                      aria-sort={
-                        sorted
-                          ? sorted === 'asc'
-                            ? 'ascending'
-                            : 'descending'
-                          : undefined
-                      }
-                      data-last-pinned={
-                        (isPinned === 'start' &&
-                          header.column.getIsLastColumn('start')) ||
-                        undefined
-                      }
-                      style={{
-                        width: `var(${widthVar(index)})`,
-                        left:
-                          isPinned === 'start'
-                            ? `var(${leftVar(index)})`
-                            : undefined,
-                        position: isPinned ? 'sticky' : undefined,
-                        zIndex: isPinned ? 3 : undefined,
-                      }}
-                    >
-                      {header.column.getCanSort() ? (
-                        <SortButton
-                          type="button"
-                          data-sorted={sorted || undefined}
-                          onClick={header.column.getToggleSortingHandler()}
+                      return (
+                        <HeaderCell
+                          key={header.id}
+                          aria-sort={
+                            sorted
+                              ? sorted === 'asc'
+                                ? 'ascending'
+                                : 'descending'
+                              : undefined
+                          }
+                          data-last-pinned={
+                            (isPinned === 'start' &&
+                              header.column.getIsLastColumn('start')) ||
+                            undefined
+                          }
+                          style={{
+                            width: `var(${widthVar(index)})`,
+                            left:
+                              isPinned === 'start'
+                                ? `var(${leftVar(index)})`
+                                : undefined,
+                            position: isPinned ? 'sticky' : undefined,
+                            zIndex: isPinned ? 3 : undefined,
+                          }}
                         >
-                          <HeaderLabel>
+                          {header.column.getCanSort() ? (
+                            <SortButton
+                              type="button"
+                              data-sorted={sorted || undefined}
+                              onClick={header.column.getToggleSortingHandler()}
+                            >
+                              <HeaderLabel>
+                                <table.FlexRender header={header} />
+                              </HeaderLabel>
+                              {sorted === 'asc' && <CaretUpFilled />}
+                              {sorted === 'desc' && <CaretDownFilled />}
+                            </SortButton>
+                          ) : (
                             <table.FlexRender header={header} />
-                          </HeaderLabel>
-                          {sorted === 'asc' && <CaretUpFilled />}
-                          {sorted === 'desc' && <CaretDownFilled />}
-                        </SortButton>
-                      ) : (
-                        <table.FlexRender header={header} />
-                      )}
+                          )}
 
-                      {header.column.getCanResize() && (
-                        <ResizeHandle
-                          onMouseDown={header.getResizeHandler()}
-                          onTouchStart={header.getResizeHandler()}
-                        />
-                      )}
-                    </HeaderCell>
-                  );
-                })}
-              </HeaderRow>
-            ))}
+                          {header.column.getCanResize() && (
+                            <ResizeHandle
+                              onMouseDown={header.getResizeHandler()}
+                              onTouchStart={header.getResizeHandler()}
+                            />
+                          )}
+                        </HeaderCell>
+                      );
+                    })}
+                  </HeaderRow>
+                ))
+              }
+            </table.Subscribe>
           </StyledThead>
 
           <TableBody
