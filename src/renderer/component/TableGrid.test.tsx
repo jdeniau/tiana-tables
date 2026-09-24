@@ -41,7 +41,7 @@ afterEach(() => {
 });
 
 function renderSortable(): Atom<SortingState> {
-  const sortingAtom = createAtom<SortingState>([{ id: 'id', desc: false }]);
+  const sortingAtom = createAtom<SortingState>([]);
 
   render(
     <TableGrid
@@ -82,8 +82,9 @@ function render(element: ReactElement): void {
 }
 
 function header(name: string): HTMLTableCellElement {
+  // a sortable head holds its label in a span, next to the caret and the rank
   const cell = [...container.querySelectorAll('th')].find(
-    (th) => th.textContent === name
+    (th) => (th.querySelector('button > span') ?? th).textContent === name
   );
 
   if (!cell) {
@@ -93,48 +94,85 @@ function header(name: string): HTMLTableCellElement {
   return cell;
 }
 
-function click(name: string): void {
+function click(name: string, { shiftKey = false } = {}): void {
   act(() => {
-    header(name).querySelector('button')?.click();
+    header(name)
+      .querySelector('button')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey }));
   });
 }
 
+/** what the head shows after its label: the caret, then the rank when several columns sort */
+function mark(name: string): string {
+  const button = header(name).querySelector('button');
+  const caret = button?.querySelector('[aria-label="caret-up"]')
+    ? '▲'
+    : button?.querySelector('[aria-label="caret-down"]')
+      ? '▼'
+      : '';
+
+  return (
+    caret +
+    (button?.lastChild?.nodeType === Node.TEXT_NODE
+      ? button.lastChild.textContent
+      : '')
+  );
+}
+
 describe('sorting', () => {
-  test('ascending first, then each click on the same header flips it', () => {
+  test('ascending, then descending, then back to no sort', () => {
     const sortingAtom = renderSortable();
-
-    expect(header('id').getAttribute('aria-sort')).toBe('ascending');
-    expect(header('name').hasAttribute('aria-sort')).toBe(false);
-
     const written: Array<SortingState> = [];
     sortingAtom.subscribe((sorting) => written.push(sorting));
 
     click('name');
-    click('name');
-    click('name');
+    expect(header('name').getAttribute('aria-sort')).toBe('ascending');
+    expect(mark('name')).toBe('▲');
 
+    click('name');
+    expect(mark('name')).toBe('▼');
+
+    click('name');
     expect(written).toEqual([
       [{ id: 'name', desc: false }],
       [{ id: 'name', desc: true }],
-      [{ id: 'name', desc: false }],
+      [],
     ]);
-    expect(header('name').getAttribute('aria-sort')).toBe('ascending');
-    expect(header('id').hasAttribute('aria-sort')).toBe(false);
+    expect(header('name').hasAttribute('aria-sort')).toBe(false);
+    expect(mark('name')).toBe('');
   });
 
-  test('a newly clicked column is sorted ascending, whatever the last direction', () => {
+  test('a plain click on another column sorts by it alone, ascending', () => {
     const sortingAtom = renderSortable();
 
-    click('id');
-    expect(header('id').getAttribute('aria-sort')).toBe('descending');
-
     click('name');
-    expect(sortingAtom.get()).toEqual([{ id: 'name', desc: false }]);
-
+    click('name');
     // TanStack would start a column of numbers descending
-    click('name');
     click('id');
+
     expect(sortingAtom.get()).toEqual([{ id: 'id', desc: false }]);
+  });
+
+  test('Shift adds a column to the order, and ranks the heads', () => {
+    const sortingAtom = renderSortable();
+
+    click('name');
+    click('id', { shiftKey: true });
+
+    expect(sortingAtom.get()).toEqual([
+      { id: 'name', desc: false },
+      { id: 'id', desc: false },
+    ]);
+    expect(mark('name')).toBe('▲1');
+    expect(mark('id')).toBe('▲2');
+    expect(header('name').getAttribute('aria-sort')).toBe('ascending');
+    expect(header('id').hasAttribute('aria-sort')).toBe(false);
+
+    click('id', { shiftKey: true });
+    click('id', { shiftKey: true });
+
+    expect(sortingAtom.get()).toEqual([{ id: 'name', desc: false }]);
+    expect(mark('name')).toBe('▲');
   });
 
   test('a grid given no atom has no header to click', () => {

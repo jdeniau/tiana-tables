@@ -83,7 +83,7 @@ async function render(where?: string): Promise<void> {
 
 function header(name: string): HTMLTableCellElement {
   const cell = [...container.querySelectorAll('th')].find(
-    (th) => th.textContent === name
+    (th) => (th.querySelector('button > span') ?? th).textContent === name
   );
 
   if (!cell) {
@@ -93,9 +93,14 @@ function header(name: string): HTMLTableCellElement {
   return cell;
 }
 
-async function click(element: HTMLElement | null | undefined): Promise<void> {
+async function click(
+  element: HTMLElement | null | undefined,
+  { shiftKey = false } = {}
+): Promise<void> {
   await act(async () => {
-    element?.click();
+    element?.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, shiftKey })
+    );
   });
 }
 
@@ -116,17 +121,17 @@ describe('load more', () => {
     await clickLoadMore();
 
     expect(executeQuery.mock.calls.map(([query]) => query)).toEqual([
-      'SELECT * FROM `shop`.`items` ORDER BY `id` ASC LIMIT 100 OFFSET 100;',
+      'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 100;',
     ]);
   });
 });
 
 describe('sorting', () => {
-  test('marks the key the rows come in by, before any click', async () => {
+  test('pages in the order of the key before any click, marking no column', async () => {
     await render();
 
-    expect(lastQuery()).toContain('ORDER BY `id` ASC LIMIT 100 OFFSET 0');
-    expect(header('id').getAttribute('aria-sort')).toBe('ascending');
+    expect(lastQuery()).toContain('ORDER BY `id` LIMIT 100 OFFSET 0');
+    expect(container.querySelector('th[aria-sort]')).toBeNull();
   });
 
   test('a click on a header fetches the first page in its order', async () => {
@@ -144,6 +149,22 @@ describe('sorting', () => {
     expect(lastQuery()).toContain(
       'ORDER BY `name` DESC, `id` LIMIT 100 OFFSET 0'
     );
+
+    await click(header('id').querySelector('button'), { shiftKey: true });
+    expect(lastQuery()).toContain(
+      'ORDER BY `name` DESC, `id` ASC LIMIT 100 OFFSET 0'
+    );
+  });
+
+  test('a sort removed goes back to the order of the key', async () => {
+    await render();
+
+    const name = header('name').querySelector('button');
+    await click(name);
+    await click(name);
+    await click(name);
+
+    expect(lastQuery()).toContain('ORDER BY `id` LIMIT 100 OFFSET 0');
   });
 
   test('a failed sort leaves the headers to pick another one', async () => {

@@ -34,10 +34,10 @@ import type { ColumnWidthByColumn } from '../../configuration/type';
 import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
+import { useTranslation } from '../../i18n';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
 import type { Dialect } from '../../sql/dialect/types';
 import { FieldKind, type ResultField } from '../../sql/resultField';
-import { SortDirection } from '../../sql/sortOrder';
 import type { ResultRow } from '../../sql/types';
 import { type PrimaryKeyPart, UpdateCellStatus } from '../../sql/updateCell';
 import { useDialect } from '../hooks/useDialect';
@@ -87,6 +87,12 @@ const NO_TABLE_STATE = (): Record<string, never> => ({});
 
 const EMPTY_DATA: ResultRow[] = [];
 
+/** TanStack's values, as `getIsSorted()` answers */
+enum SortDirection {
+  Asc = 'asc',
+  Desc = 'desc',
+}
+
 interface TableGridProps<R extends ResultRow> {
   rowsAsArray?: boolean;
   result: null | R[];
@@ -121,7 +127,7 @@ interface TableGridProps<R extends ResultRow> {
   onColumnResized?: (columnName: string, width: number) => void;
 
   /**
-   * The order a click on a header writes: one column, ascending first, flipped by each click after.
+   * The order the headers write: a click sorts ascending, then descending, then not at all; Shift adds the column to the order.
    * The caller fetches the rows in that order; it must be the same atom for the grid's whole life.
    */
   sortingAtom?: Atom<SortingState>;
@@ -215,6 +221,8 @@ function TableGrid<Row extends ResultRow>({
   sortingAtom,
   enableSorting = sortingAtom !== undefined,
 }: TableGridProps<Row>): ReactElement {
+  const { t } = useTranslation();
+
   // the table element the column widths are written on
   const tableRef = useRef<HTMLTableElement>(null);
 
@@ -347,8 +355,6 @@ function TableGrid<Row extends ResultRow>({
       // the rows arrive sorted by the server, one column at a time, and always in some order
       manualSorting: true,
       enableSorting,
-      enableMultiSort: false,
-      enableSortingRemoval: false,
       sortDescFirst: false,
       ...(primaryKeys && primaryKeys.length > 0
         ? {
@@ -460,7 +466,7 @@ function TableGrid<Row extends ResultRow>({
           <StyledThead>
             {/* the heads alone follow the order: the grid itself subscribes to no table state */}
             <table.Subscribe selector={(state) => state.sorting}>
-              {() =>
+              {(sorting) =>
                 table.getHeaderGroups().map((headerGroup) => (
                   <HeaderRow key={headerGroup.id}>
                     {headerGroup.headers.map((header, index) => {
@@ -468,12 +474,14 @@ function TableGrid<Row extends ResultRow>({
                       const sorted =
                         header.column.getCanSort() &&
                         header.column.getIsSorted();
+                      const sortIndex = header.column.getSortIndex();
 
                       return (
                         <HeaderCell
                           key={header.id}
+                          // ARIA marks one sorted header at a time: the first of the order
                           aria-sort={
-                            sorted
+                            sorted && sortIndex === 0
                               ? sorted === SortDirection.Asc
                                 ? 'ascending'
                                 : 'descending'
@@ -497,6 +505,7 @@ function TableGrid<Row extends ResultRow>({
                           {header.column.getCanSort() ? (
                             <SortButton
                               type="button"
+                              title={t('table.sort.hint')}
                               data-sorted={sorted || undefined}
                               onClick={header.column.getToggleSortingHandler()}
                             >
@@ -509,6 +518,7 @@ function TableGrid<Row extends ResultRow>({
                               {sorted === SortDirection.Desc && (
                                 <CaretDownFilled />
                               )}
+                              {sorted && sorting.length > 1 && sortIndex + 1}
                             </SortButton>
                           ) : (
                             <table.FlexRender header={header} />
@@ -930,6 +940,8 @@ const SortButton = styled.button`
   text-transform: inherit;
   color: inherit;
   cursor: pointer;
+  /* a Shift+click would otherwise select the text up to the last click */
+  user-select: none;
 
   &:hover,
   &[data-sorted] {

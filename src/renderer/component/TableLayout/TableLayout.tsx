@@ -11,7 +11,6 @@ import { PANEL } from '../../../configuration/panels';
 import type { ColumnWidthByColumn } from '../../../configuration/type';
 import { useTranslation } from '../../../i18n';
 import type { ResultField } from '../../../sql/resultField';
-import { SortDirection } from '../../../sql/sortOrder';
 import type { ResultRow } from '../../../sql/types';
 import { useDialect } from '../../hooks/useDialect';
 import { usePanelSize } from '../../hooks/usePanelSize';
@@ -66,11 +65,9 @@ export function TableLayout({
   const [fields, setFields] = useState<null | ResultField[]>(null);
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
-  // the rows come in the order of the key until a header is clicked, which one column can show
-  const sortingAtom = useCreateAtom<SortingState>(
-    primaryKeys.length === 1 ? [{ id: primaryKeys[0], desc: false }] : []
-  );
-  const sorted = useSelector(sortingAtom, ([column]) => column);
+  // empty until a header is clicked, and again once its sort is removed: the key's order
+  const sortingAtom = useCreateAtom<SortingState>([]);
+  const sorting = useSelector(sortingAtom);
 
   const fetchTableData = useCallback(
     (offset: number) => {
@@ -79,10 +76,7 @@ export function TableLayout({
         tableName,
         primaryKeys,
         where,
-        sort: sorted && {
-          column: sorted.id,
-          direction: sorted.desc ? SortDirection.Desc : SortDirection.Asc,
-        },
+        sorting,
         limit: DEFAULT_LIMIT,
         offset,
       });
@@ -102,7 +96,7 @@ export function TableLayout({
           setResult(null);
         });
     },
-    [dialect, database, tableName, primaryKeys, where, sorted]
+    [dialect, database, tableName, primaryKeys, where, sorting]
   );
 
   // a new query starts over from the first page; the next ones are fetched by "load more"

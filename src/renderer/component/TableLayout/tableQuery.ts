@@ -1,6 +1,6 @@
+import type { SortingState } from '@tanstack/react-table';
 import type { Dialect } from '../../../sql/dialect/types';
 import { getParser } from '../../../sql/parser';
-import type { SortOrder } from '../../../sql/sortOrder';
 
 interface TablePage {
   database: string;
@@ -8,8 +8,8 @@ interface TablePage {
   primaryKeys: string[];
   /** the body of a `WHERE`, as the user wrote it */
   where?: string;
-  /** the column the user sorted on, the primary key's order when absent */
-  sort?: SortOrder | null;
+  /** the columns the user sorted on, in order; the primary key's order when empty */
+  sorting: SortingState;
   limit: number;
   offset: number;
 }
@@ -30,34 +30,33 @@ export function hasOrderByToken(
 function orderTerms(
   dialect: Dialect,
   primaryKeys: string[],
-  sort: SortOrder | null | undefined
+  sorting: SortingState
 ): string[] {
+  const sorted = sorting.map(
+    ({ id, desc }) => `${dialect.escapeIdentifier(id)} ${desc ? 'DESC' : 'ASC'}`
+  );
+  // the key breaks the ties of the sorted columns, or equal values would page in no fixed order
   const keys = primaryKeys
-    .filter((key) => key !== sort?.column)
+    .filter((key) => !sorting.some(({ id }) => id === key))
     .map(dialect.escapeIdentifier);
 
-  // the key breaks the ties of the sorted column, or equal values would page in no fixed order
-  return sort
-    ? [
-        `${dialect.escapeIdentifier(sort.column)} ${sort.direction.toUpperCase()}`,
-        ...keys,
-      ]
-    : keys;
+  return [...sorted, ...keys];
 }
 
 /**
  * One page of a table.
  *
- * Ordered by the sorted column, then by the primary key:
+ * Ordered by the sorted columns, then by the primary key:
  * without an order, `LIMIT … OFFSET` pages whatever order the server scans in —
  * PostgreSQL's heap moves an updated row to its end, so a row could show on two pages, or on none.
  * A filter holding its own `ORDER BY` keeps it, and a table without a key keeps the server's.
  */
 export function buildTableQuery(dialect: Dialect, page: TablePage): string {
-  const { where, primaryKeys, sort, limit, offset, database, tableName } = page;
+  const { where, primaryKeys, sorting, limit, offset, database, tableName } =
+    page;
   const terms = hasOrderByToken(dialect, where)
     ? []
-    : orderTerms(dialect, primaryKeys, sort);
+    : orderTerms(dialect, primaryKeys, sorting);
   const order = terms.length > 0 ? ` ORDER BY ${terms.join(', ')}` : '';
 
   // the identifiers are escaped, the filter is not: it is SQL the user wrote, and is sent as written
