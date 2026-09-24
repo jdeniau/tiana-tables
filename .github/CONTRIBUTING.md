@@ -16,23 +16,22 @@ Then, you can install the dependencies with:
 yarn install
 ```
 
-## A database to work against
+## Databases to work against
 
-Running the app means pointing it at a real server. [`dev/fixtures/`](../dev/fixtures/) holds a development dataset — "Le Fil", a news site with its articles, readers, subscriptions and comments — and the script that loads it into a local MariaDB container:
+Running the app means pointing it at a real server. `compose.yaml` starts two, a MariaDB and a PostgreSQL, each filled with a development dataset from [`dev/fixtures/`](../dev/fixtures/) the first time it is created:
 
 ```sh
-docker run -d --name tiana-dev-mysql --restart unless-stopped \
-  -p 13306:3306 -v tiana-dev-mysql:/var/lib/mysql \
-  -e MARIADB_ROOT_PASSWORD=devpassword -e MARIADB_DATABASE=tiana_dev \
-  mariadb:11
-dev/fixtures/mysql/load.sh
+docker compose up -d --wait
 ```
 
-Then add a connection to `127.0.0.1:13306`, user `root`, password `devpassword`.
+| Server        | Address           | User / password            | Database    |
+| ------------- | ----------------- | -------------------------- | ----------- |
+| MariaDB 11    | `127.0.0.1:13306` | `root` / `devpassword`     | `tiana_dev` |
+| PostgreSQL 18 | `127.0.0.1:15432` | `postgres` / `devpassword` | `tiana_dev` |
 
-It is 25 tables and 2 views, around 14 000 rows, written to exercise what the app has to render: composite primary keys, self-referencing foreign keys, a generated column, `JSON`, `ENUM`, `DECIMAL`, `TIMESTAMP … ON UPDATE`, column comments, nullable columns everywhere, long `TEXT` and views next to base tables. The rows hold together in time, so a screenshot of any table reads like real data.
+The MariaDB one holds "Le Fil", a news site with its articles, readers, subscriptions and comments: 25 tables and 2 views, around 14 000 rows, written to exercise what the app has to render — composite primary keys, self-referencing foreign keys, a generated column, `JSON`, `ENUM`, `DECIMAL`, `TIMESTAMP … ON UPDATE`, column comments, nullable columns everywhere, long `TEXT` and views next to base tables. The rows hold together in time, so a screenshot of any table reads like real data. The PostgreSQL one is a verification schema: several schemas, a composite and a cross-schema foreign key, an enum, `jsonb`, arrays, a materialised view, a partitioned table, odd identifiers.
 
-Loading is repeatable: the script drops and recreates its own tables, leaves anything else in the database alone, and the generator is seeded, so you always get the same rows. [`dev/fixtures/README.md`](../dev/fixtures/README.md) describes the dataset.
+The data survives `docker compose down` and is only loaded into an empty volume; `docker compose down -v` starts over. [`dev/fixtures/README.md`](../dev/fixtures/README.md) describes both datasets and how to reload one in place.
 
 ## Understand the project
 

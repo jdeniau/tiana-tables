@@ -1,0 +1,63 @@
+# The development databases, a MariaDB and a PostgreSQL: `docker compose up -d --wait`.
+# Each is filled with its dataset (dev/fixtures/) the first time its volume is created, and never touched after.
+name: tiana-tables-dev
+
+services:
+  # Writes the MariaDB dataset where its first start reads it: the image has no python to run the generator itself.
+  mysql-fixtures:
+    image: python:3-alpine
+    volumes:
+      - ./dev/fixtures/mysql:/fixtures:ro,z
+      - mysql-init:/out
+    command:
+      - sh
+      - -ec
+      - |
+        cp /fixtures/schema.sql /out/1-schema.sql
+        python3 /fixtures/generate.py > /out/2-rows.sql.tmp
+        mv /out/2-rows.sql.tmp /out/2-rows.sql
+
+  mysql:
+    image: mariadb:11
+    container_name: tiana-dev-mysql
+    restart: unless-stopped
+    ports:
+      - 13306:3306
+    environment:
+      MARIADB_ROOT_PASSWORD: devpassword
+      MARIADB_DATABASE: tiana_dev
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - mysql-init:/docker-entrypoint-initdb.d:ro
+    depends_on:
+      mysql-fixtures:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 2s
+      retries: 60
+
+  postgres:
+    image: postgres:18
+    container_name: tiana-dev-postgres
+    restart: unless-stopped
+    ports:
+      - 15432:5432
+    environment:
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: tiana_dev
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./dev/fixtures/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro,z
+    healthcheck:
+      # over TCP: the server that runs the init scripts only listens on its socket
+      test: [CMD, pg_isready, -h, 127.0.0.1, -U, postgres, -d, tiana_dev]
+      interval: 2s
+      retries: 60
+
+volumes:
+  mysql-data:
+    name: tiana-dev-mysql
+  postgres-data:
+    name: tiana-dev-postgres
+  mysql-init:

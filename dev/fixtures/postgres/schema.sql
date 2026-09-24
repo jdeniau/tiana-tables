@@ -1,6 +1,5 @@
--- Verification schema of the `tiana-dev-postgres` container (database `tiana_dev`).
--- Each object is here for a case the PostgreSQL dialect must get right.
---   docker exec -i tiana-dev-postgres psql -U postgres -d tiana_dev < .ai/postgres-dev-schema.sql
+-- Verification schema of the PostgreSQL development database (`tiana-dev-postgres`, database `tiana_dev`).
+-- Each object is here for a case the PostgreSQL dialect must get right. Rebuild it with dev/fixtures/postgres/load.sh.
 
 DROP SCHEMA IF EXISTS app, "Zeta", "a.b""c" CASCADE;
 DROP TABLE IF EXISTS public.users, public.never_analyzed CASCADE;
