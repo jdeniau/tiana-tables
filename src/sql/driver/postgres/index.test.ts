@@ -1,9 +1,11 @@
 import pg from 'pg';
 import { describe, expect, test } from 'vitest';
 import { FieldKind } from '../../resultField';
+import { SslMode } from '../../sslMode';
 import { postgresDriver, testables } from './index';
 
 const {
+  SSL_OPTIONS,
   asServerError,
   asTimeout,
   isConnectionLost,
@@ -210,9 +212,30 @@ describe('postgresDriver', () => {
   test('refuses to connect without a database', async () => {
     await expect(
       postgresDriver.connect(
-        { host: 'localhost', port: 5432, user: 'postgres', password: '' },
+        {
+          host: 'localhost',
+          port: 5432,
+          user: 'postgres',
+          password: '',
+          ssl: SslMode.Disable,
+        },
         { connectTimeoutMs: 1000, onClosed: () => {} }
       )
     ).rejects.toThrow('names a database');
+  });
+});
+
+/** measured on PostgreSQL 18 accepting TLS only, with a self-signed certificate: `require` encrypts, `verify-full` refuses it */
+describe('the TLS options of a mode', () => {
+  test('connect in the clear by default', () => {
+    expect(SSL_OPTIONS[SslMode.Disable]).toBe(false);
+  });
+
+  test('take the certificate as it comes on require', () => {
+    expect(SSL_OPTIONS[SslMode.Require]).toEqual({ rejectUnauthorized: false });
+  });
+
+  test("leave Node's check of the chain and the host on verify-full", () => {
+    expect(SSL_OPTIONS[SslMode.VerifyFull]).toBe(true);
   });
 });

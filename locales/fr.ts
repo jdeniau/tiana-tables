@@ -69,6 +69,10 @@ const fr: Translation = {
     ' accessDenied {Le serveur a rejeté ces identifiants.}' +
     ' unknownDatabase {Le serveur n’a pas de base de données de ce nom.}' +
     ' tooManyConnections {Le serveur n’accepte plus de connexion pour l’instant, de cet utilisateur ou de personne.}' +
+    ' encryptionRequired {Le serveur n’accepte que les connexions chiffrées. Passez SSL à Requis dans le formulaire de connexion.}' +
+    ' encryptionUnsupported {Le serveur n’accepte pas les connexions chiffrées. Passez SSL à Désactivé dans le formulaire de connexion.}' +
+    ' certificateRejected {Le certificat du serveur n’a pas pu être vérifié. Passez SSL à Requis pour chiffrer sans le vérifier.}' +
+    ' reset {Le serveur a fermé la connexion pendant son ouverture. C’est ce que fait un serveur qui n’accepte que les connexions chiffrées : essayez de passer SSL à Requis dans le formulaire de connexion.}' +
     ' keyringLocked {Votre trousseau est verrouillé, le mot de passe enregistré n’a donc pas pu être lu. Déverrouillez-le, puis réessayez.}' +
     ' passwordUnreadable {Le mot de passe enregistré a été chiffré avec une clé que cette machine n’a plus. Saisissez-le à nouveau dans le formulaire de connexion.}' +
     " other {La connexion n'a pas pu être ouverte.}}",
@@ -88,6 +92,15 @@ const fr: Translation = {
   'connection.form.password.placeholder':
     'Laissez vide pour conserver le mot de passe enregistré',
   'connection.form.port.label': 'Port',
+  'connection.form.ssl.help':
+    '{mode, select,' +
+    ' disable {En clair.}' +
+    ' require {Chiffrée, le certificat du serveur pris tel quel.}' +
+    ' verifyFull {Chiffrée, vers un certificat reconnu par votre système et au nom de cet hôte.}' +
+    ' other {}}',
+  'connection.form.ssl.label': 'SSL',
+  'connection.form.ssl.mode':
+    '{mode, select, disable {Désactivé} require {Requis} verifyFull {Vérifié} other {{mode}}}',
   'connection.form.title.create': 'Nouvelle connexion',
   'connection.form.title.edit': 'Modifier {name}',
   'connection.form.user.label': 'Utilisateur',

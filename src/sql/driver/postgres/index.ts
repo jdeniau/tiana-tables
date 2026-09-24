@@ -4,6 +4,7 @@ import invariant from 'tiny-invariant';
 import type { Driver } from '..';
 import type { ResultField } from '../../resultField';
 import { asSqlError } from '../../sqlError';
+import { SslMode } from '../../sslMode';
 import type { QueryReturnType, ResultRow, SqlBoundValue } from '../../types';
 import { toFieldKind } from './fieldKind';
 import { toPositional } from './namedPlaceholders';
@@ -108,6 +109,13 @@ const types = {
       : (value: string) => value) as typeof pg.types.getTypeParser,
 };
 
+/** The TLS options of each mode: `true` is Node's own check, of the chain and of the host name. */
+const SSL_OPTIONS: Readonly<Record<SslMode, pg.ClientConfig['ssl']>> = {
+  [SslMode.Disable]: false,
+  [SslMode.Require]: { rejectUnauthorized: false },
+  [SslMode.VerifyFull]: true,
+};
+
 export const postgresDriver: Driver = {
   async connect(params, options) {
     // a PostgreSQL connection opens one database, and browses its schemas
@@ -119,6 +127,7 @@ export const postgresDriver: Driver = {
       user: params.user,
       password: params.password,
       database: params.database,
+      ssl: SSL_OPTIONS[params.ssl],
       connectionTimeoutMillis: options.connectTimeoutMs,
       types,
     });
@@ -188,6 +197,7 @@ export const postgresDriver: Driver = {
 };
 
 export const testables = {
+  SSL_OPTIONS,
   asServerError,
   asTimeout,
   isConnectionLost,

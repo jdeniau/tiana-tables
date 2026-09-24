@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { FieldKind } from '../../resultField';
+import { SslMode } from '../../sslMode';
 import { testables } from './index';
 
-const { asServerError, toResultFields } = testables;
+const { SSL_OPTIONS, asServerError, toResultFields } = testables;
 
 /** the four fields the conversion reads, which the driver keeps to itself */
 function column(overrides: {
@@ -117,5 +118,24 @@ describe('toResultFields', () => {
     const [field] = toResultFields([column({ characterSet: 63 })]);
 
     expect(field.kind).toBe(FieldKind.Binary);
+  });
+});
+
+/** measured on MariaDB 11.8, whose certificate is self-signed: `require` encrypts, `verify-full` refuses it */
+describe('the TLS options of a mode', () => {
+  test('connect in the clear by default', () => {
+    expect(SSL_OPTIONS[SslMode.Disable]).toBeUndefined();
+  });
+
+  test('take the certificate as it comes on require', () => {
+    expect(SSL_OPTIONS[SslMode.Require]).toEqual({ rejectUnauthorized: false });
+  });
+
+  // mysql2 checks the chain alone unless told otherwise
+  test('check the host name too on verify-full', () => {
+    expect(SSL_OPTIONS[SslMode.VerifyFull]).toEqual({
+      rejectUnauthorized: true,
+      verifyIdentity: true,
+    });
   });
 });

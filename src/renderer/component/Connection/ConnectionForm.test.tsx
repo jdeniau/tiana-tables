@@ -63,7 +63,7 @@ async function renderForm() {
   const field = (id: string) =>
     container.querySelector<HTMLInputElement>(`#${id}`);
 
-  const chooseEngine = async (label: string) => {
+  const choose = async (label: string) => {
     const option = [...container.querySelectorAll('label')].find(
       (element) => element.textContent === label
     );
@@ -83,7 +83,7 @@ async function renderForm() {
     return addConnectionToConfig.mock.lastCall?.[0];
   };
 
-  return { field, chooseEngine, submit };
+  return { container, field, choose, submit };
 }
 
 describe('ConnectionForm', () => {
@@ -119,9 +119,9 @@ describe('ConnectionForm', () => {
   });
 
   test('PostgreSQL brings its own port, superuser and database', async () => {
-    const { field, chooseEngine, submit } = await renderForm();
+    const { field, choose, submit } = await renderForm();
 
-    await chooseEngine('PostgreSQL');
+    await choose('PostgreSQL');
 
     expect(field('port')?.value).toBe('5432');
     expect(field('user')?.value).toBe('postgres');
@@ -141,14 +141,14 @@ describe('ConnectionForm', () => {
 
   // only a value that is still the other engine's default follows the engine
   test('keeps a port and a user the user typed', async () => {
-    const { field, chooseEngine } = await renderForm();
+    const { field, choose } = await renderForm();
 
     await act(async () => {
       type(field('port')!, '15432');
       type(field('user')!, 'admin');
     });
 
-    await chooseEngine('PostgreSQL');
+    await choose('PostgreSQL');
 
     expect(field('port')?.value).toBe('15432');
     expect(field('user')?.value).toBe('admin');
@@ -156,10 +156,10 @@ describe('ConnectionForm', () => {
 
   // the database is dropped with its field, not carried into a MySQL connection
   test('forgets the database when going back to MySQL', async () => {
-    const { field, chooseEngine, submit } = await renderForm();
+    const { field, choose, submit } = await renderForm();
 
-    await chooseEngine('PostgreSQL');
-    await chooseEngine('MySQL / MariaDB');
+    await choose('PostgreSQL');
+    await choose('MySQL / MariaDB');
 
     expect(field('database')).toBeNull();
     expect(field('port')?.value).toBe('3306');
@@ -169,5 +169,32 @@ describe('ConnectionForm', () => {
     });
 
     expect(await submit()).not.toHaveProperty('database');
+  });
+
+  test('connects in the clear unless told otherwise', async () => {
+    const { field, submit } = await renderForm();
+
+    await act(async () => {
+      type(field('name')!, 'docker (dev)');
+    });
+
+    expect(await submit()).toMatchObject({ ssl: 'disable' });
+  });
+
+  // what libpq calls `sslmode=require`, as a connection string hands it over
+  test('submits the SSL mode chosen, and says what it does', async () => {
+    const { container, field, choose, submit } = await renderForm();
+
+    await choose('Required');
+
+    expect(container.textContent).toContain(
+      'Encrypted, the server certificate taken as it comes.'
+    );
+
+    await act(async () => {
+      type(field('name')!, 'prisma');
+    });
+
+    expect(await submit()).toMatchObject({ ssl: 'require' });
   });
 });

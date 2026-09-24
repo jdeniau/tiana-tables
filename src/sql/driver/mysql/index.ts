@@ -1,8 +1,13 @@
 import log from 'electron-log';
-import type { FieldPacket, QueryResult as MySqlResult } from 'mysql2/promise';
+import type {
+  FieldPacket,
+  QueryResult as MySqlResult,
+  SslOptions,
+} from 'mysql2/promise';
 import type { Driver } from '..';
 import type { ResultField } from '../../resultField';
 import { asSqlError } from '../../sqlError';
+import { SslMode } from '../../sslMode';
 import type { QueryReturnType, ResultRow } from '../../types';
 import { toFieldKind } from './fieldKind';
 
@@ -63,6 +68,16 @@ function asServerError(error: unknown): unknown {
   });
 }
 
+/**
+ * The TLS options of each mode. mysql2 checks the chain alone unless told to
+ * check the host too, which `verify-full` means.
+ */
+const SSL_OPTIONS: Readonly<Record<SslMode, SslOptions | undefined>> = {
+  [SslMode.Disable]: undefined,
+  [SslMode.Require]: { rejectUnauthorized: false },
+  [SslMode.VerifyFull]: { rejectUnauthorized: true, verifyIdentity: true },
+};
+
 export const mysqlDriver: Driver = {
   async connect(params, options) {
     // loaded only when a connection is actually opened, to keep app startup light
@@ -76,6 +91,7 @@ export const mysqlDriver: Driver = {
       port: params.port,
       user: params.user,
       password: params.password,
+      ssl: SSL_OPTIONS[params.ssl],
       connectTimeout: options.connectTimeoutMs,
     });
 
@@ -119,6 +135,7 @@ export const mysqlDriver: Driver = {
 };
 
 export const testables = {
+  SSL_OPTIONS,
   asServerError,
   toResultFields,
 };

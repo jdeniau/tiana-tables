@@ -32,11 +32,38 @@ describe('classifyConnectionError', () => {
     ['53300', ConnectionFailure.tooManyConnections],
     ['ER_USER_LIMIT_REACHED', ConnectionFailure.tooManyConnections],
     ['ER_CON_COUNT_ERROR', ConnectionFailure.tooManyConnections],
+    ['ER_SECURE_TRANSPORT_REQUIRED', ConnectionFailure.encryptionRequired],
+    ['HANDSHAKE_NO_SSL_SUPPORT', ConnectionFailure.encryptionUnsupported],
+    // measured on MariaDB 11.8 and PostgreSQL 18, self-signed, on verify-full
+    ['HANDSHAKE_SSL_ERROR', ConnectionFailure.certificateRejected],
+    ['DEPTH_ZERO_SELF_SIGNED_CERT', ConnectionFailure.certificateRejected],
+    ['ERR_TLS_CERT_ALTNAME_INVALID', ConnectionFailure.certificateRejected],
+    ['ECONNRESET', ConnectionFailure.reset],
     ['EHOSTUNREACH', ConnectionFailure.other],
   ])('%s is a %s', (code, reason) => {
     expect(
       classifyConnectionError(Object.assign(new Error('nope'), { code }))
     ).toBe(reason);
+  });
+
+  // both measured on PostgreSQL 18, the first with `pg`'s own words
+  test('an encryption the PostgreSQL server refuses is told from its message', () => {
+    expect(
+      classifyConnectionError(
+        new Error('The server does not support SSL connections')
+      )
+    ).toBe(ConnectionFailure.encryptionUnsupported);
+
+    expect(
+      classifyConnectionError(
+        Object.assign(
+          new Error(
+            'no pg_hba.conf entry for host "172.17.0.1", user "postgres", database "postgres", no encryption'
+          ),
+          { code: '28000' }
+        )
+      )
+    ).toBe(ConnectionFailure.encryptionRequired);
   });
 
   test('an error without a code is not guessed at', () => {

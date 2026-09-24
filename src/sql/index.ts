@@ -24,6 +24,7 @@ import {
   ResultOrError,
   encodeError,
 } from './errorSerializer';
+import { SslMode } from './sslMode';
 import { toTableStructure } from './tableStructure';
 import {
   QueryResult,
@@ -388,7 +389,16 @@ class ConnectionStack {
   async #connect(
     params: Omit<EncryptedConnectionObject, 'appState'>
   ): Promise<DriverConnection> {
-    const { slug, engine, host, port, user, password, database } = params;
+    const {
+      slug,
+      engine,
+      host,
+      port,
+      user,
+      password,
+      database,
+      ssl = SslMode.Disable,
+    } = params;
 
     log.debug(`Open connection to "${slug}"`);
 
@@ -412,7 +422,7 @@ class ConnectionStack {
       }
 
       return await driver.connect(
-        { host, port, user, password: decrypted.password, database },
+        { host, port, user, password: decrypted.password, database, ssl },
         {
           connectTimeoutMs: CONNECT_TIMEOUT_MS,
           onClosed: () => {
