@@ -107,7 +107,7 @@ async function render(color?: ConnectionColor): Promise<void> {
   });
 }
 
-function ruleOf(name: string): string {
+function borderOf(name: string): string {
   const link = [...container.querySelectorAll('a')].find(
     (anchor) => anchor.textContent === name
   );
@@ -120,23 +120,23 @@ function ruleOf(name: string): string {
 }
 
 describe('TableList', () => {
-  test('the selected table carries the accent rule without a connection colour', async () => {
+  test('the selected table carries the accent border without a connection colour', async () => {
     await render();
 
-    expect(ruleOf('bar')).toBe(`3px solid ${DEFAULT_THEME.palette.base0D}`);
-    expect(ruleOf('foo')).toBe('3px solid transparent');
+    expect(borderOf('bar')).toBe(`3px solid ${DEFAULT_THEME.palette.base0D}`);
+    expect(borderOf('foo')).toBe('3px solid transparent');
   });
 
   test('the selected table carries the colour of its connection', async () => {
     await render({ kind: ConnectionColorKind.Palette, slot: 'base08' });
 
-    expect(ruleOf('bar')).toBe(`3px solid ${DEFAULT_THEME.palette.base08}`);
-    expect(ruleOf('foo')).toBe('3px solid transparent');
+    expect(borderOf('bar')).toBe(`3px solid ${DEFAULT_THEME.palette.base08}`);
+    expect(borderOf('foo')).toBe('3px solid transparent');
   });
 
   test('a custom colour is taken as it is', async () => {
     await render({ kind: ConnectionColorKind.Custom, hex: '#123456' });
 
-    expect(ruleOf('bar')).toBe('3px solid #123456');
+    expect(borderOf('bar')).toBe('3px solid #123456');
   });
 });

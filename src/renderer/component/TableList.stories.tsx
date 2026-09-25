@@ -51,7 +51,7 @@ function OnTableBar(Story: () => React.ReactElement) {
   );
 }
 
-/** the route names a table: its row gets the fill and the accent rule */
+/** the route names a table: its row gets the fill and the accent border */
 export const Selected: Story = {
   args: { tableList: TABLES },
   decorators: [openTablesDecorator([]), OnTableBar],
@@ -81,7 +81,7 @@ function WithColouredConnection(Story: () => React.ReactElement) {
   );
 }
 
-/** on a connection with a colour, the rule of the selected row takes it */
+/** on a connection with a colour, the border of the selected row takes it */
 export const SelectedOnColouredConnection: Story = {
   args: { tableList: TABLES },
   decorators: [
