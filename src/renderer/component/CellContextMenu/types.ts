@@ -1,9 +1,10 @@
-import type { ColumnMeta } from '../TableGrid';
+import type { CellDetail } from '../CellDetailModal';
 
-/** What a secondary click on a body cell offers to filter on. */
-export interface CellFilterTarget {
-  column: ColumnMeta;
-  value: unknown;
+/**
+ * The cell a secondary click was made on: what the detail modal would open on,
+ * plus where the menu opens.
+ */
+export interface CellMenuTarget extends CellDetail {
   /** viewport coordinates of the click, where the menu opens */
   x: number;
   y: number;

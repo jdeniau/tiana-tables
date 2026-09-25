@@ -52,8 +52,13 @@ import {
   space,
 } from '../theme';
 import Cell from './Cell';
-import CellContextMenu, { CellFilterTarget } from './CellContextMenu';
-import CellDetailModal, { CellDetail, SaveCellParams } from './CellDetailModal';
+import CellContextMenu, { CellMenuTarget } from './CellContextMenu';
+import CellDetailModal, {
+  CellDetail,
+  Conflict,
+  SaveCellParams,
+  conflictOf,
+} from './CellDetailModal';
 import { toBoundValue } from './CellEditor/editableValue';
 import ForeignKeyLink from './ForeignKeyLink';
 import { fill } from './Style/fill';
@@ -110,8 +115,8 @@ interface TableGridProps<R extends ResultRow> {
   ) => void;
   /**
    * Called with the `WHERE` clause a secondary click built, which replaces the
-   * current filter. Providing it is what gives the grid its context menu: a raw
-   * query result has no filter to feed.
+   * current filter. Providing it is what gives the context menu its filter
+   * entry: a raw query result has no filter to feed.
    */
   onFilterChange?: (where: string) => void;
   /** columns of the caller's own, holding no value of the row */
@@ -246,12 +251,17 @@ function TableGrid<Row extends ResultRow>({
   );
 
   // the cell the context menu is open on, `null` when it is closed
-  const [filterTarget, setFilterTarget] = useState<CellFilterTarget | null>(
-    null
-  );
+  const [menuTarget, setMenuTarget] = useState<CellMenuTarget | null>(null);
 
-  // a stable reference either way, so that the `memo` of `BodyRow` still holds
-  const onCellContextMenu = onFilterChange ? setFilterTarget : undefined;
+  // stable, so that the `memo` of `BodyRow` still holds
+  const openCellMenu = useCallback<OpenCellMenu>(
+    (target, cell) => {
+      // the menu can write the cell too, which then flashes like any write
+      rememberCell(cell);
+      setMenuTarget(target);
+    },
+    [rememberCell]
+  );
 
   const foreignKeys = useForeignKeysContext();
   const allColumns = useAllColumnsContext();
@@ -285,6 +295,43 @@ function TableGrid<Row extends ResultRow>({
       return outcome;
     },
     [database, flashCell, onValueUpdated]
+  );
+
+  // written straight from the menu, guarded like any other write; what stops
+  // it is settled in the detail modal, which knows how to reload or overwrite
+  const setCellNull = useCallback(
+    async (detail: CellDetail) => {
+      const openUnsettled = (
+        conflict: Conflict | null,
+        error: string | null
+      ): void => {
+        setCellDetail({
+          ...detail,
+          unsettledWrite: { newValue: null, conflict, error },
+        });
+      };
+
+      try {
+        const conflict = conflictOf(
+          await saveCell({
+            detail,
+            newValue: null,
+            originalValue: detail.value,
+            force: false,
+          })
+        );
+
+        if (conflict) {
+          openUnsettled(conflict, null);
+        }
+      } catch (error) {
+        openUnsettled(
+          null,
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    },
+    [saveCell]
   );
 
   // both the table and `columnsMeta` are built from this one list, so the two always agree on what the nth column is
@@ -546,7 +593,7 @@ function TableGrid<Row extends ResultRow>({
             primaryKeys={primaryKeys}
             scrollElement={scrollElement}
             onShowCellDetail={showCellDetail}
-            onCellContextMenu={onCellContextMenu}
+            onCellContextMenu={openCellMenu}
           />
         </StyledTable>
 
@@ -565,15 +612,14 @@ function TableGrid<Row extends ResultRow>({
         }}
       />
 
-      {onFilterChange && (
-        <CellContextMenu
-          target={filterTarget}
-          onFilterChange={onFilterChange}
-          onClose={() => {
-            setFilterTarget(null);
-          }}
-        />
-      )}
+      <CellContextMenu
+        target={menuTarget}
+        onFilterChange={onFilterChange}
+        onSetNull={(target) => void setCellNull(target)}
+        onClose={() => {
+          setMenuTarget(null);
+        }}
+      />
     </Wrapper>
   );
 }
@@ -610,6 +656,12 @@ export interface ColumnMeta {
 /** opens the detail modal on a cell, from the `<td>` that was double-clicked */
 type ShowCellDetail = (detail: CellDetail, cell: HTMLTableCellElement) => void;
 
+/** opens the context menu on a cell, from the `<td>` that was secondary-clicked */
+type OpenCellMenu = (
+  target: CellMenuTarget,
+  cell: HTMLTableCellElement
+) => void;
+
 interface TableBodyProps<Row extends ResultRow> {
   table: ReactTable<typeof features, Row, ReturnType<typeof NO_TABLE_STATE>>;
   columnsMeta: Array<ColumnMeta>;
@@ -617,7 +669,7 @@ interface TableBodyProps<Row extends ResultRow> {
   primaryKeys: Array<string> | undefined;
   scrollElement: HTMLDivElement | null;
   onShowCellDetail: ShowCellDetail;
-  onCellContextMenu: ((target: CellFilterTarget) => void) | undefined;
+  onCellContextMenu: OpenCellMenu;
 }
 
 // keep the virtualizer in the lowest component possible: it re-renders on
@@ -669,7 +721,7 @@ interface BodyRowProps<Row extends ResultRow> {
   rowsAsArray: boolean;
   primaryKeys: Array<string> | undefined;
   onShowCellDetail: ShowCellDetail;
-  onCellContextMenu: ((target: CellFilterTarget) => void) | undefined;
+  onCellContextMenu: OpenCellMenu;
 }
 
 function BodyRowInner<Row extends ResultRow>({
@@ -698,7 +750,7 @@ function BodyRowInner<Row extends ResultRow>({
           .filter(Boolean)
           .join(' ');
 
-        // no value, so no detail modal and no filter menu
+        // no value, so no detail modal and no context menu
         if (column.render) {
           return (
             <td
@@ -711,6 +763,16 @@ function BodyRowInner<Row extends ResultRow>({
           );
         }
 
+        // what both gestures open on, built only when one happens
+        const detailOf = (): CellDetail => ({
+          column,
+          value,
+          // a raw query result is a list of values, with no column to read a key from
+          // TODO later: handle raw query with possible primary key columns (e.g. `SELECT id, name FROM table`) and use them to identify the row
+          rowKey: rowsAsArray ? null : buildRowKey(original, primaryKeys),
+          rowIndex: row.index,
+        });
+
         return (
           <td
             key={column.id}
@@ -721,32 +783,15 @@ function BodyRowInner<Row extends ResultRow>({
               left: column.pinnedLeft ?? undefined,
             }}
             onDoubleClick={(event) => {
-              onShowCellDetail(
-                {
-                  column,
-                  value,
-                  // a raw query result is a list of values, with no column to read a key from
-                  // TODO later: handle raw query with possible primary key columns (e.g. `SELECT id, name FROM table`) and use them to identify the row
-                  rowKey: rowsAsArray
-                    ? null
-                    : buildRowKey(original, primaryKeys),
-                  rowIndex: row.index,
-                },
+              onShowCellDetail(detailOf(), event.currentTarget);
+            }}
+            onContextMenu={(event) => {
+              event.preventDefault();
+              onCellContextMenu(
+                { ...detailOf(), x: event.clientX, y: event.clientY },
                 event.currentTarget
               );
             }}
-            onContextMenu={
-              onCellContextMenu &&
-              ((event) => {
-                event.preventDefault();
-                onCellContextMenu({
-                  column,
-                  value,
-                  x: event.clientX,
-                  y: event.clientY,
-                });
-              })
-            }
           >
             <GridCell column={column} value={value} />
           </td>

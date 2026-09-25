@@ -5,7 +5,7 @@ import {
   NotEditableReason,
   getCellEditability,
 } from '../../../sql/columnEditing';
-import { ConflictReason, UpdateCellStatus } from '../../../sql/updateCell';
+import { ConflictReason } from '../../../sql/updateCell';
 import CellEditor from '../CellEditor/CellEditor';
 import {
   findValidationError,
@@ -16,7 +16,12 @@ import {
 import CellChangedAlert from './CellChangedAlert';
 import ReadOnlyCellValue from './ReadOnlyCellValue';
 import RowDeletedAlert from './RowDeletedAlert';
-import type { CellDetail, Conflict, SaveCell } from './types';
+import {
+  type CellDetail,
+  type Conflict,
+  type SaveCell,
+  conflictOf,
+} from './types';
 
 interface CellDetailFormProps {
   detail: CellDetail;
@@ -50,10 +55,19 @@ export default function CellDetailForm({
     [baseValue, fieldKind]
   );
 
-  const [edited, setEdited] = useState(baseEditable);
+  // a write that failed outside the modal reopens as the draft it wrote, with
+  // what stopped it
+  const unsettled = detail.unsettledWrite;
+  const [edited, setEdited] = useState(() =>
+    unsettled ? toEditableValue(unsettled.newValue, fieldKind) : baseEditable
+  );
   const [isSaving, setIsSaving] = useState(false);
-  const [conflict, setConflict] = useState<Conflict | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [conflict, setConflict] = useState<Conflict | null>(
+    unsettled?.conflict ?? null
+  );
+  const [saveError, setSaveError] = useState<string | null>(
+    unsettled?.error ?? null
+  );
 
   const editability = getCellEditability(columnDetail, detail.rowKey !== null);
 
@@ -98,20 +112,15 @@ export default function CellDetailForm({
         force,
       });
 
-      if (outcome.status === UpdateCellStatus.Updated) {
+      const outcomeConflict = conflictOf(outcome);
+
+      if (!outcomeConflict) {
         onClose();
 
         return;
       }
 
-      setConflict(
-        outcome.reason === ConflictReason.Deleted
-          ? { reason: ConflictReason.Deleted }
-          : {
-              reason: ConflictReason.Changed,
-              currentValue: outcome.currentValue,
-            }
-      );
+      setConflict(outcomeConflict);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : String(error));
     } finally {

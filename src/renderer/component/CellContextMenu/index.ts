@@ -1,2 +1,2 @@
 export { default } from './CellContextMenu';
-export type { CellFilterTarget } from './types';
+export type { CellMenuTarget } from './types';
