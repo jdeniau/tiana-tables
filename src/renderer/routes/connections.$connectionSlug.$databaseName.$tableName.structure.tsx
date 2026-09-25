@@ -7,6 +7,7 @@ import {
   useRevalidator,
 } from 'react-router';
 import invariant from 'tiny-invariant';
+import { getDatabaseAppState } from '../../configuration/appState';
 import type { DisplayAfterByColumn } from '../../configuration/columnOrder';
 import { useTranslation } from '../../i18n';
 import type { TableStructureRow } from '../../sql/dialect/metadata';
@@ -42,9 +43,9 @@ export async function loader({ params }: RouteParams) {
   const configuration = await window.config.getConfiguration();
 
   const displayAfterByColumn: DisplayAfterByColumn =
-    configuration.connections[connectionSlug]?.appState?.configByDatabase?.[
-      databaseName
-    ]?.tables[tableName]?.displayAfterByColumn ?? {};
+    getDatabaseAppState(configuration, connectionSlug, databaseName)?.tables[
+      tableName
+    ]?.displayAfterByColumn ?? {};
 
   return {
     data,
