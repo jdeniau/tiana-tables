@@ -1,5 +1,6 @@
 import { LoaderFunctionArgs, Params, useLoaderData } from 'react-router';
 import invariant from 'tiny-invariant';
+import { getDatabaseAppState } from '../../configuration/appState';
 import type { DisplayAfterByColumn } from '../../configuration/columnOrder';
 import type { ColumnWidthByColumn } from '../../configuration/type';
 import TableLayout from '../component/TableLayout';
@@ -24,10 +25,11 @@ export async function loader({ params, request }: RouteParams) {
 
   const configuration = await window.config.getConfiguration();
 
-  const tableConfig =
-    configuration.connections[connectionSlug]?.appState?.configByDatabase?.[
-      databaseName
-    ]?.tables[tableName];
+  const tableConfig = getDatabaseAppState(
+    configuration,
+    connectionSlug,
+    databaseName
+  )?.tables[tableName];
 
   const storedFilter = tableConfig?.currentFilter || '';
   const displayAfterByColumn: DisplayAfterByColumn =

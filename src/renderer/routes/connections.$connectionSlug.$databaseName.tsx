@@ -1,5 +1,6 @@
 import { LoaderFunctionArgs, Outlet, Params, redirect } from 'react-router';
 import invariant from 'tiny-invariant';
+import { getDatabaseAppState } from '../../configuration/appState';
 
 interface RouteParams extends LoaderFunctionArgs {
   params: Params<'connectionSlug' | 'databaseName'>;
@@ -17,10 +18,11 @@ export async function loader({ params, request }: RouteParams) {
 
   window.config.setActiveDatabase(connectionSlug, databaseName);
 
-  const { configByDatabase } =
-    configuration.connections[connectionSlug]?.appState || {};
-
-  const openedTable = configByDatabase?.[databaseName]?.activeTable;
+  const openedTable = getDatabaseAppState(
+    configuration,
+    connectionSlug,
+    databaseName
+  )?.activeTable;
 
   // redirect to the current database if we are not on a "database" root page
   if (openedTable) {

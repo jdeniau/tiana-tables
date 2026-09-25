@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
+import { getConnectionAppState } from '../../configuration/appState';
 import { PANEL } from '../../configuration/panels';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
@@ -84,7 +85,7 @@ export async function loader({ params, request }: RouteParams) {
   const configuration = await window.config.getConfiguration();
 
   const { activeDatabase: configDatabase, configByDatabase } =
-    configuration.connections[connectionSlug]?.appState || {};
+    getConnectionAppState(configuration, connectionSlug) || {};
 
   const databaseConfig = configDatabase
     ? configByDatabase?.[configDatabase]
