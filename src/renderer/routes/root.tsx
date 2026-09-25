@@ -1,11 +1,8 @@
 import { Layout } from 'antd';
 import { Outlet, useMatch, useNavigate } from 'react-router';
-import { styled, useTheme } from 'styled-components';
+import { styled } from 'styled-components';
 import packageJson from '../../../package.json';
-import {
-  ConfigurationContextProvider,
-  useConfiguration,
-} from '../../contexts/ConfigurationContext';
+import { ConfigurationContextProvider } from '../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { ThemeContextProvider } from '../../contexts/ThemeContext';
@@ -23,10 +20,10 @@ import {
   TitleGroup,
 } from '../component/Style/TitleBar';
 import UpdateDot from '../component/UpdateDot';
+import { useCurrentConnectionTint } from '../hooks/useCurrentConnectionTint';
 import useEffectOnce from '../hooks/useEffectOnce';
 import useUpdateStatus from '../hooks/useUpdateStatus';
 import { background } from '../theme';
-import { ConnectionTint, resolveConnectionTint } from '../theme/connectionTint';
 
 const Content = styled(Layout.Content)`
   display: flex;
@@ -61,23 +58,6 @@ function ToggleRawSqlButton() {
       </KeyboardShortcutTooltip>
     </TabStrip>
   );
-}
-
-/**
- * The colour the current connection is marked with, resolved against the
- * theme. Without a current connection, or without a colour on it, the frame
- * keeps the palette.
- */
-function useCurrentConnectionTint(): ConnectionTint | undefined {
-  const { currentConnectionSlug } = useConnectionContext();
-  const { configuration } = useConfiguration();
-  const theme = useTheme();
-
-  const connection = currentConnectionSlug
-    ? configuration.connections[currentConnectionSlug]
-    : undefined;
-
-  return resolveConnectionTint(connection?.color, theme);
 }
 
 /** The frame: the brand, the settings and the connections left, the SQL toggle right. */
