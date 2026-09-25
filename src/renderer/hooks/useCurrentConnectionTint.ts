@@ -1,7 +1,6 @@
 import { useTheme } from 'styled-components';
-import { useConfiguration } from '../../contexts/ConfigurationContext';
-import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { ConnectionTint, resolveConnectionTint } from '../theme/connectionTint';
+import { useCurrentConnection } from './useCurrentConnection';
 
 /**
  * The colour the current connection is marked with, resolved against the
@@ -9,13 +8,8 @@ import { ConnectionTint, resolveConnectionTint } from '../theme/connectionTint';
  * keeps the palette.
  */
 export function useCurrentConnectionTint(): ConnectionTint | undefined {
-  const { currentConnectionSlug } = useConnectionContext();
-  const { configuration } = useConfiguration();
+  const connection = useCurrentConnection();
   const theme = useTheme();
-
-  const connection = currentConnectionSlug
-    ? configuration.connections[currentConnectionSlug]
-    : undefined;
 
   return resolveConnectionTint(connection?.color, theme);
 }
