@@ -329,6 +329,43 @@ describe('context menu', () => {
     expect(writeText).toHaveBeenCalledWith('b');
   });
 
+  test('copies the whole row', async () => {
+    renderGrid();
+
+    openMenu('b');
+    // a submenu opens on hover, after antd's delay
+    await act(async () => {
+      document
+        .querySelector('[role="menuitem"][aria-haspopup="true"]')
+        ?.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+    await choose('JSON');
+
+    expect(writeText).toHaveBeenCalledWith(
+      JSON.stringify({ id: 2, name: 'b' }, null, 2)
+    );
+  });
+
+  test('opens the detail modal, as a double click does', async () => {
+    renderGrid();
+
+    openMenu('b');
+    await choose('Edit…');
+
+    expect(document.querySelector('.ant-modal-title')?.textContent).toBe(
+      'name'
+    );
+  });
+
+  test('offers to view what it cannot edit', () => {
+    renderGrid({ primaryKeys: [] });
+
+    openMenu('b');
+    expect(menuItem('Edit…')).toBeUndefined();
+    expect(menuItem('View…')).toBeDefined();
+  });
+
   test('sets a nullable cell to NULL, guarded on what was loaded', async () => {
     const onValueUpdated = vi.fn();
     renderGrid({ onValueUpdated });

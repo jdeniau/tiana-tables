@@ -152,6 +152,12 @@ const fr: Translation = {
   'sqlPanel.callerButton': 'SQL',
   'table.columns.count': '{count, plural, one {# colonne} other {# colonnes}}',
   'table.contextMenu.copy': 'Copier la valeur',
+  'table.contextMenu.copyRow': 'Copier la ligne en',
+  'table.contextMenu.copyRow.csv': 'CSV',
+  'table.contextMenu.copyRow.json': 'JSON',
+  'table.contextMenu.copyRow.sqlInsert': 'INSERT SQL',
+  'table.contextMenu.edit':
+    '{editable, select, true {Modifier…} other {Afficher…}}',
   'table.contextMenu.filter': 'Filtre',
   'table.contextMenu.filter.cellValue': 'Valeur de la cellule',
   'table.contextMenu.filter.clipboard': 'Presse-papier',

@@ -615,6 +615,8 @@ function TableGrid<Row extends ResultRow>({
       <CellContextMenu
         target={menuTarget}
         onFilterChange={onFilterChange}
+        // the cell was remembered on the secondary click, so a save still flashes it
+        onEdit={setCellDetail}
         onSetNull={(target) => void setCellNull(target)}
         onClose={() => {
           setMenuTarget(null);
@@ -734,13 +736,15 @@ function BodyRowInner<Row extends ResultRow>({
   onCellContextMenu,
 }: BodyRowProps<Row>): ReactElement {
   const original = row.original;
+  const valueOf = (column: ColumnMeta): unknown =>
+    rowsAsArray
+      ? (original as unknown as Array<unknown>)[column.fieldIndex]
+      : original[column.name];
 
   return (
     <tr className="tg-row" style={{ transform: `translateY(${start}px)` }}>
       {columnsMeta.map((column) => {
-        const value = rowsAsArray
-          ? (original as unknown as Array<unknown>)[column.fieldIndex]
-          : original[column.name];
+        const value = valueOf(column);
         const pinned = column.pinnedLeft !== null;
         const className = [
           'tg-cell',
@@ -788,7 +792,15 @@ function BodyRowInner<Row extends ResultRow>({
             onContextMenu={(event) => {
               event.preventDefault();
               onCellContextMenu(
-                { ...detailOf(), x: event.clientX, y: event.clientY },
+                {
+                  ...detailOf(),
+                  // the columns of the result, without the caller's own
+                  row: columnsMeta
+                    .filter((other) => !other.render)
+                    .map((other) => ({ column: other, value: valueOf(other) })),
+                  x: event.clientX,
+                  y: event.clientY,
+                },
                 event.currentTarget
               );
             }}

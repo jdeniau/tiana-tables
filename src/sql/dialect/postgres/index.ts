@@ -1,4 +1,5 @@
 import { DatabaseEngine } from '../../engine';
+import { toHexDigits } from '../hex';
 import type { Dialect } from '../types';
 import { escapeIdentifier, escapeLiteral } from './escape';
 import { postgresGuardedUpdate } from './guardedUpdate';
@@ -21,6 +22,10 @@ export const postgresDialect: Dialect = {
   escapeLiteral,
 
   booleanLiteral: (value) => (value ? 'TRUE' : 'FALSE'),
+
+  // `decode` and not `'\x…'::bytea`: the latter reads differently when
+  // `standard_conforming_strings` is off, and hex digits need no escaping
+  bytesLiteral: (bytes) => `decode('${toHexDigits(bytes)}', 'hex')`,
 
   metadata: postgresMetadata,
 
