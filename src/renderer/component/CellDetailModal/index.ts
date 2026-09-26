@@ -1,2 +1,3 @@
 export { default } from './CellDetailModal';
-export type { CellDetail, SaveCellParams } from './types';
+export { conflictOf } from './types';
+export type { CellDetail, Conflict, SaveCellParams } from './types';

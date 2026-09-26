@@ -132,4 +132,17 @@ describe.each(DIALECTS)('the %s dialect', (_engine, dialect) => {
       dialect.booleanLiteral(false)
     );
   });
+
+  describe('bytesLiteral', () => {
+    // a copied row must paste back the bytes it holds, not their decoding
+    it('writes every byte, in hexadecimal', () => {
+      const literal = dialect.bytesLiteral(new Uint8Array([0xca, 0xfe, 0x00]));
+
+      expect(literal.toUpperCase()).toContain('CAFE00');
+    });
+
+    it('writes an empty value as a literal still', () => {
+      expect(dialect.bytesLiteral(new Uint8Array())).not.toBe('');
+    });
+  });
 });

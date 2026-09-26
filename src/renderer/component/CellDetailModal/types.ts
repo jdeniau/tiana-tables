@@ -2,6 +2,7 @@ import {
   ConflictReason,
   type PrimaryKeyPart,
   type UpdateCellOutcome,
+  UpdateCellStatus,
 } from '../../../sql/updateCell';
 import type { ColumnMeta } from '../TableGrid';
 
@@ -16,6 +17,19 @@ export interface CellDetail {
   rowKey: Array<PrimaryKeyPart> | null;
   /** where the row sits in the loaded result, to refresh it after a write */
   rowIndex: number;
+  /** a write made outside the modal that did not land: the modal opens on it */
+  unsettledWrite?: UnsettledWrite;
+}
+
+/**
+ * A write the grid attempted on its own — the context menu's "Set to NULL" —
+ * and could not complete. It is settled in the modal, the one place that knows
+ * how to reload a conflict or overwrite it.
+ */
+interface UnsettledWrite {
+  newValue: string | null;
+  conflict: Conflict | null;
+  error: string | null;
 }
 
 export interface SaveCellParams {
@@ -35,3 +49,14 @@ export type SaveCell = (params: SaveCellParams) => Promise<UpdateCellOutcome>;
 export type Conflict =
   | { reason: ConflictReason.Changed; currentValue: unknown }
   | { reason: ConflictReason.Deleted };
+
+/** The conflict an outcome reports, `null` when the write landed. */
+export function conflictOf(outcome: UpdateCellOutcome): Conflict | null {
+  if (outcome.status === UpdateCellStatus.Updated) {
+    return null;
+  }
+
+  return outcome.reason === ConflictReason.Deleted
+    ? { reason: ConflictReason.Deleted }
+    : { reason: ConflictReason.Changed, currentValue: outcome.currentValue };
+}

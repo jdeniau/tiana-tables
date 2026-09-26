@@ -133,10 +133,32 @@ const ALL_COLUMNS: ColumnDetail[] = (
   multiValued: false,
 }));
 
+/**
+ * The real clipboard goes through the main process, which Storybook has none
+ * of: this one holds what "Copy value" wrote, and the filter reads it back.
+ */
+function stubClipboard(initialText: string): void {
+  let text = initialText;
+
+  window.clipboard = {
+    readText: async () => text,
+    writeText: async (written) => {
+      action('clipboard.writeText')(written);
+      text = written;
+    },
+  };
+}
+
 const meta: Meta<typeof TableGrid> = {
   component: TableGrid,
   decorators: [
     reactRouterDecorator,
+    (Story) => {
+      // every grid has a context menu, and its first entry copies
+      stubClipboard('');
+
+      return <Story />;
+    },
     (Story) => (
       <ConnectionContext.Provider
         value={{
@@ -286,15 +308,14 @@ export const Sortable: Story = {
   render: (args) => <SortableGrid {...args} />,
 };
 
-// `onFilterChange` is what turns the secondary click on: right-click a cell to
-// get the filter menu. Try a number, a string, a date and a NULL `payload` —
-// each offers a different literal, and NULL offers none but `IS (NOT) NULL`.
+// `onFilterChange` is what adds the filter to the secondary click: right-click
+// a cell to get the filter menu. Try a number, a string, a date and a NULL
+// `payload` — each offers a different literal, and NULL offers none but
+// `IS (NOT) NULL`.
 export const WithFilterContextMenu: Story = {
   decorators: [
     (Story) => {
-      // the real clipboard is read through the main process, which Storybook
-      // has none of
-      window.clipboard = { readText: async () => 'lorem-2' };
+      stubClipboard('lorem-2');
 
       return <Story />;
     },
@@ -338,7 +359,8 @@ function readBack(
  * A grid whose writes land: `window.sql.updateCell` answers as the server
  * would, and the rows are held here as `TableLayout` holds them, so that the
  * written cell shows its new value — and the flash that marks the write.
- * Double-click a cell, change it, save.
+ * Double-click a cell, change it, save; or right-click a nullable one and set
+ * it to NULL.
  */
 function EditableGrid(props: ComponentProps<typeof TableGrid>) {
   const { fields, result } = props;
