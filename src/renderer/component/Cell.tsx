@@ -3,6 +3,7 @@ import { styled } from 'styled-components';
 import { FieldKind } from '../../sql/resultField';
 import { constantForeground, foreground, stringForeground } from '../theme';
 import { formatDate, formatDateTime } from '../utils/dateFormatter';
+import { isNullish } from '../utils/isNullish';
 import toHexLiteral from './hexLiteral';
 
 interface TableCellFactoryProps {
@@ -178,7 +179,7 @@ const TableCellFactory = memo(function TableCellFactory({
   kind,
   value,
 }: TableCellFactoryProps) {
-  if (value === null || value === undefined) {
+  if (isNullish(value)) {
     return <NullCell />;
   }
 

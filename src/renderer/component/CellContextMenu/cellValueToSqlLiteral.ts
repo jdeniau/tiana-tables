@@ -1,6 +1,7 @@
 import type { Dialect } from '../../../sql/dialect/types';
 import { FieldKind } from '../../../sql/resultField';
 import { formatDate, formatDateTime } from '../../utils/dateFormatter';
+import { isNullish } from '../../utils/isNullish';
 
 /**
  * A cell value, turned into the SQL literal that compares to it.
@@ -21,7 +22,7 @@ export function cellValueToSqlLiteral(
   value: unknown,
   kind: FieldKind
 ): string | undefined {
-  if (value === null || value === undefined) {
+  if (isNullish(value)) {
     return undefined;
   }
 
