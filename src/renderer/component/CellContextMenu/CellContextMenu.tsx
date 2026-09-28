@@ -21,6 +21,7 @@ import {
 import type { FieldKind } from '../../../sql/resultField';
 import { useDialect } from '../../hooks/useDialect';
 import { commentForeground } from '../../theme';
+import { isNullish } from '../../utils/isNullish';
 import cellValueToText from '../cellValueToText';
 import toHexLiteral from '../hexLiteral';
 import FreeTextFilterModal, {
@@ -267,10 +268,6 @@ function buildMenuItems({
   }
 
   return items;
-}
-
-function isNullish(value: unknown): boolean {
-  return value === null || value === undefined;
 }
 
 /**

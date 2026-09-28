@@ -1,6 +1,7 @@
 import type { Dialect } from '../../../sql/dialect/types';
 import { FieldKind } from '../../../sql/resultField';
-import { formatDate, formatDateTime } from '../../utils/dateFormatter';
+import { formatDate } from '../../utils/dateFormatter';
+import { isNullish } from '../../utils/isNullish';
 import type { ColumnMeta } from '../TableGrid';
 import toHexLiteral from '../hexLiteral';
 import { cellValueToSqlLiteral } from './cellValueToSqlLiteral';
@@ -18,13 +19,12 @@ export enum RowFormat {
   SqlInsert = 'sqlInsert',
 }
 
-function isNullish(value: unknown): value is null | undefined {
-  return value === null || value === undefined;
-}
-
-/** A date as the wall clock the grid displays, not the UTC instant `toJSON` writes. */
+/**
+ * A point in time in UTC, offset included, so that it reads as the same instant anywhere.
+ * A `DATE` has no time, hence no offset: it stays the calendar day.
+ */
 function dateText(value: Date, kind: FieldKind): string {
-  return kind === FieldKind.Date ? formatDate(value) : formatDateTime(value);
+  return kind === FieldKind.Date ? formatDate(value) : value.toISOString();
 }
 
 /** Bytes as a hexadecimal literal, every one of them: a copy is never cut short. */
@@ -36,8 +36,8 @@ function bytesText(bytes: Uint8Array): string {
  * The row as one JSON object, keyed by column name.
  *
  * Values keep their JSON type — a number stays a number, a JSON column stays
- * nested — except what JSON has no type for: a date is written as the grid
- * shows it, bytes as their hexadecimal literal. Two columns of a raw query may
+ * nested — except what JSON has no type for: a date is written in ISO 8601,
+ * bytes as their hexadecimal literal. Two columns of a raw query may
  * share a name; the last one wins, as it does in the rows the driver hands
  * over as objects.
  */
