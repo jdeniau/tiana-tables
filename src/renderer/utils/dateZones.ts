@@ -9,7 +9,7 @@ export interface ServerZone {
 }
 
 /** One segment of the date switch: the zone it names, and whether it can be picked. */
-export interface DateDisplayOption {
+export interface DateDisplaySegment {
   display: DateDisplay;
   zoneLabel: string | null;
   disabled: boolean;
@@ -51,40 +51,42 @@ export function resolveServerZone({
  * The segments of the date switch, each zone once: a UTC server leaves no UTC segment, a machine in the server's zone or in UTC no local one.
  * Converting needs the server's rules, so without them only the server's own text can be shown.
  */
-export function dateDisplayOptions(
+export function dateDisplaySegments(
   server: ServerZone,
   localZone: string
-): DateDisplayOption[] {
+): DateDisplaySegment[] {
   const disabled = server.zone === null;
-  const options: DateDisplayOption[] = [
+  const segments: DateDisplaySegment[] = [
     { display: DateDisplay.Server, zoneLabel: server.label, disabled: false },
   ];
 
   if (server.zone === null || !isUtc(server.zone)) {
-    options.push({ display: DateDisplay.Utc, zoneLabel: null, disabled });
+    segments.push({ display: DateDisplay.Utc, zoneLabel: null, disabled });
   }
 
   if (
     !isUtc(localZone) &&
     (server.zone === null || !isSameZone(localZone, server.zone))
   ) {
-    options.push({
+    segments.push({
       display: DateDisplay.Local,
       zoneLabel: localZone,
       disabled,
     });
   }
 
-  return options;
+  return segments;
 }
 
 /** The display a preference comes to among these segments: a zone left out is the same as the one that shows it. */
 export function effectiveDateDisplay(
   preferred: DateDisplay,
-  options: ReadonlyArray<DateDisplayOption>
+  segments: ReadonlyArray<DateDisplaySegment>
 ): DateDisplay {
   const pickable = (display: DateDisplay) =>
-    options.some((option) => option.display === display && !option.disabled);
+    segments.some(
+      (segment) => segment.display === display && !segment.disabled
+    );
 
   if (pickable(preferred)) {
     return preferred;

@@ -16,9 +16,11 @@ import {
   test,
   vi,
 } from 'vitest';
+import { DateDisplay } from '../../configuration/dateDisplay';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
+import { testables as dateDisplayTestables } from '../../contexts/DateDisplayContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
 import { mysqlDialect } from '../../sql/dialect/mysql';
@@ -553,5 +555,58 @@ describe('context menu', () => {
         modal.textContent?.includes('Column cannot be null')
       )
     ).toBe(true);
+  });
+});
+
+describe('the head of a date-time column', () => {
+  const { DateDisplayContext } = dateDisplayTestables;
+  const SERVER = {
+    display: DateDisplay.Server,
+    zoneLabel: 'UTC',
+    disabled: false,
+  };
+  const LOCAL = {
+    display: DateDisplay.Local,
+    zoneLabel: 'Europe/Paris',
+    disabled: false,
+  };
+
+  function heads(segments: Array<typeof SERVER>): string[] {
+    render(
+      <DateDisplayContext.Provider
+        value={{
+          display: DateDisplay.Local,
+          segments,
+          shift: null,
+          serverZone: { label: 'UTC', zone: 'UTC' },
+          setDisplay: () => {},
+        }}
+      >
+        <TableGrid
+          fields={[
+            ...FIELDS,
+            { name: 'at', kind: FieldKind.DateTime, table: 'items' },
+            { name: 'day', kind: FieldKind.Date, table: 'items' },
+          ]}
+          result={[
+            { id: 1, name: 'a', at: '2025-12-23 01:02:26', day: '2025-12-23' },
+          ]}
+          primaryKeys={['id']}
+        />
+      </DateDisplayContext.Provider>
+    );
+
+    return [...container.querySelectorAll('th')].map(
+      (th) => th.textContent ?? ''
+    );
+  }
+
+  // a `DATE` is never moved to another zone, so it names none
+  test('names the zone shown when there is a choice', () => {
+    expect(heads([SERVER, LOCAL])).toEqual(['id', 'name', 'atLocal', 'day']);
+  });
+
+  test('names nothing when every zone is the same one', () => {
+    expect(heads([SERVER])).toEqual(['id', 'name', 'at', 'day']);
   });
 });

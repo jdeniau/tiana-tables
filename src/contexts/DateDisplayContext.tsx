@@ -2,9 +2,9 @@ import { createContext, useContext, useMemo } from 'react';
 import { DateDisplay } from '../configuration/dateDisplay';
 import type { ZoneShift } from '../renderer/utils/dateFormatter';
 import {
-  type DateDisplayOption,
+  type DateDisplaySegment,
   type ServerZone,
-  dateDisplayOptions,
+  dateDisplaySegments,
   effectiveDateDisplay,
   resolveServerZone,
   zoneShiftOf,
@@ -13,10 +13,10 @@ import type { ServerTimeZoneName } from '../sql/dialect/metadata';
 import { useConfiguration } from './ConfigurationContext';
 
 interface DateDisplayContextValue {
-  /** the one shown, which the preference comes to among `options` */
+  /** the one shown, which the preference comes to among `segments` */
   display: DateDisplay;
   /** the switch's segments: a single one leaves nothing to switch */
-  options: ReadonlyArray<DateDisplayOption>;
+  segments: ReadonlyArray<DateDisplaySegment>;
   shift: ZoneShift | null;
   /** `null` outside a connection */
   serverZone: ServerZone | null;
@@ -26,7 +26,7 @@ interface DateDisplayContextValue {
 // outside a connection, and in a story: the server's text, and no switch
 const DateDisplayContext = createContext<DateDisplayContextValue>({
   display: DateDisplay.Server,
-  options: [],
+  segments: [],
   shift: null,
   serverZone: null,
   setDisplay: () => {},
@@ -45,12 +45,12 @@ export function DateDisplayContextProvider({
   const value = useMemo((): DateDisplayContextValue => {
     const localZone = Temporal.Now.timeZoneId();
     const serverZone = resolveServerZone(serverTimeZone);
-    const options = dateDisplayOptions(serverZone, localZone);
-    const display = effectiveDateDisplay(preferred, options);
+    const segments = dateDisplaySegments(serverZone, localZone);
+    const display = effectiveDateDisplay(preferred, segments);
 
     return {
       display,
-      options,
+      segments,
       shift: zoneShiftOf(display, serverZone, localZone),
       serverZone,
       setDisplay: setDateDisplay,

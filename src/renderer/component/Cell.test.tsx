@@ -116,7 +116,7 @@ describe('the order of the tiers', () => {
           <DateDisplayContext.Provider
             value={{
               display,
-              options: [],
+              segments: [],
               shift: { from: 'UTC', to },
               serverZone: { label: 'UTC', zone: 'UTC' },
               setDisplay: () => {},

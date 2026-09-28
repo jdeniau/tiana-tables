@@ -115,7 +115,7 @@ const fr: Translation = {
     '{count, plural, one {# enregistrée} other {# enregistrées}}',
   'connection.list.title': 'Connexions',
   'dateDisplay.assumed':
-    'Un DATETIME ou un timestamp ne porte pas de fuseau : il est lu comme l’heure du serveur ({zone}).',
+    'Les dates sans fuseau (DATETIME, timestamp) sont lues comme l’heure du serveur ({zone}), puis converties.',
   'dateDisplay.label': 'Dates',
   'dateDisplay.option':
     '{display, select, server {Serveur} utc {UTC} local {Local} other {Serveur}}',

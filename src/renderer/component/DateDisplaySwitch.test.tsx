@@ -10,6 +10,7 @@ import { DateDisplay } from '../../configuration/dateDisplay';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { testables } from '../../contexts/DateDisplayContext';
 import { FieldKind, type ResultField } from '../../sql/resultField';
+import type { ServerZone } from '../utils/dateZones';
 import DateDisplaySwitch from './DateDisplaySwitch';
 
 const { DateDisplayContext } = testables;
@@ -19,37 +20,43 @@ const { DateDisplayContext } = testables;
   globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
-interface Option {
+interface Segment {
   display: DateDisplay;
   zoneLabel: string | null;
   disabled: boolean;
 }
 
-const SERVER: Option = {
+const SERVER: Segment = {
   display: DateDisplay.Server,
   zoneLabel: 'UTC',
   disabled: false,
 };
-const UTC: Option = {
+const UTC: Segment = {
   display: DateDisplay.Utc,
   zoneLabel: null,
   disabled: false,
 };
-const LOCAL: Option = {
+const LOCAL: Segment = {
   display: DateDisplay.Local,
   zoneLabel: 'Europe/Paris',
   disabled: false,
 };
 
-function switchOf(options: Option[], fields: ResultField[]) {
+const UTC_SERVER: ServerZone = { label: 'UTC', zone: 'UTC' };
+
+function switchOf(
+  segments: Segment[],
+  fields: ResultField[],
+  serverZone = UTC_SERVER
+) {
   return (
     <ThemeProvider theme={DEFAULT_THEME}>
       <DateDisplayContext.Provider
         value={{
           display: DateDisplay.Server,
-          options,
+          segments,
           shift: null,
-          serverZone: { label: 'UTC', zone: 'UTC' },
+          serverZone,
           setDisplay: () => {},
         }}
       >
@@ -59,8 +66,8 @@ function switchOf(options: Option[], fields: ResultField[]) {
   );
 }
 
-function renderSwitch(options: Option[], fields: ResultField[]): string {
-  return renderToStaticMarkup(switchOf(options, fields));
+function renderSwitch(segments: Segment[], fields: ResultField[]): string {
+  return renderToStaticMarkup(switchOf(segments, fields));
 }
 
 const DATETIME: ResultField = {
@@ -98,13 +105,17 @@ describe('the tooltip of a segment', () => {
   });
 
   // antd opens a tooltip on hover, after its delay
-  async function hover(label: string): Promise<string | undefined> {
+  async function hover(
+    label: string,
+    segments = [SERVER, UTC, LOCAL],
+    serverZone = UTC_SERVER
+  ): Promise<string | undefined> {
     const container = document.createElement('div');
     document.body.append(container);
     const root = createRoot(container);
     unmount = () => root.unmount();
 
-    act(() => root.render(switchOf([SERVER, UTC, LOCAL], [DATETIME])));
+    act(() => root.render(switchOf(segments, [DATETIME], serverZone)));
 
     await act(async () => {
       [...container.querySelectorAll('.ant-segmented-item')]
@@ -119,11 +130,26 @@ describe('the tooltip of a segment', () => {
   // a DATETIME holds no zone: converting it takes the server's
   test("UTC and local time say they read a zoneless date-time in the server's zone", async () => {
     expect(await hover('Local')).toBe(
-      'A DATETIME or a timestamp holds no zone: it is taken as the server’s time (UTC).'
+      'Dates with no time zone (DATETIME, timestamp) are read as the server’s time (UTC), then converted.'
     );
   });
 
   test("the server's time converts nothing, so it says nothing", async () => {
     expect(await hover('Server')).toBeUndefined();
+  });
+
+  // a MariaDB whose machine runs in New York names its zone `EDT`
+  test("a greyed segment says why the server's zone converts nothing", async () => {
+    const greyed = (segment: Segment) => ({ ...segment, disabled: true });
+
+    expect(
+      await hover(
+        'Local',
+        [{ ...SERVER, zoneLabel: 'EDT' }, greyed(UTC), greyed(LOCAL)],
+        { label: 'EDT', zone: null }
+      )
+    ).toBe(
+      'The server names its zone “EDT”, which gives no rules to convert dates with, summer time included. Set its time zone to a name, such as America/New_York.'
+    );
   });
 });

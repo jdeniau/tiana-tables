@@ -114,7 +114,7 @@ export default {
   'connection.list.count': '{count, plural, one {# saved} other {# saved}}',
   'connection.list.title': 'Connections',
   'dateDisplay.assumed':
-    'A DATETIME or a timestamp holds no zone: it is taken as the server’s time ({zone}).',
+    'Dates with no time zone (DATETIME, timestamp) are read as the server’s time ({zone}), then converted.',
   'dateDisplay.label': 'Dates',
   // ICU select on the `DateDisplay` enum
   'dateDisplay.option':

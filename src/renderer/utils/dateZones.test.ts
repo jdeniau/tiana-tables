@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { DateDisplay } from '../../configuration/dateDisplay';
 import {
-  dateDisplayOptions,
+  dateDisplaySegments,
   effectiveDateDisplay,
   resolveServerZone,
   zoneShiftOf,
@@ -39,9 +39,9 @@ describe('resolveServerZone', () => {
   });
 });
 
-describe('dateDisplayOptions', () => {
+describe('dateDisplaySegments', () => {
   const displays = (zone: string | null, localZone: string) =>
-    dateDisplayOptions({ label: zone ?? 'EDT', zone }, localZone).map(
+    dateDisplaySegments({ label: zone ?? 'EDT', zone }, localZone).map(
       ({ display, disabled }) => [display, disabled]
     );
 
@@ -90,7 +90,7 @@ describe('dateDisplayOptions', () => {
 });
 
 describe('effectiveDateDisplay', () => {
-  const options = (displays: Array<[DateDisplay, boolean]>) =>
+  const segments = (displays: Array<[DateDisplay, boolean]>) =>
     displays.map(([display, disabled]) => ({
       display,
       zoneLabel: null,
@@ -101,7 +101,7 @@ describe('effectiveDateDisplay', () => {
     expect(
       effectiveDateDisplay(
         DateDisplay.Utc,
-        options([
+        segments([
           [DateDisplay.Server, false],
           [DateDisplay.Utc, false],
         ])
@@ -113,7 +113,7 @@ describe('effectiveDateDisplay', () => {
     expect(
       effectiveDateDisplay(
         DateDisplay.Local,
-        options([
+        segments([
           [DateDisplay.Server, false],
           [DateDisplay.Utc, false],
         ])
@@ -125,13 +125,13 @@ describe('effectiveDateDisplay', () => {
     expect(
       effectiveDateDisplay(
         DateDisplay.Utc,
-        options([[DateDisplay.Server, false]])
+        segments([[DateDisplay.Server, false]])
       )
     ).toBe(DateDisplay.Server);
     expect(
       effectiveDateDisplay(
         DateDisplay.Local,
-        options([
+        segments([
           [DateDisplay.Server, false],
           [DateDisplay.Utc, true],
           [DateDisplay.Local, true],

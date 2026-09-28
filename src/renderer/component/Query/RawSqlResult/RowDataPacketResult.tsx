@@ -1,5 +1,5 @@
 import { ReactElement, useEffect, useState } from 'react';
-import { Empty, Segmented, Spin, theme as antdTheme } from 'antd';
+import { Empty, Spin } from 'antd';
 import { Fetcher } from 'react-router';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../../i18n';
@@ -17,7 +17,9 @@ import {
   RegionHeader,
   RegionMeta,
   RegionName,
+  RegionTools,
 } from '../../Style/Region';
+import { RegionSegmented } from '../../Style/RegionSegmented';
 import { TabStrip, TabStripItem } from '../../Style/TabStrip';
 import { fill } from '../../Style/fill';
 import TableGrid from '../../TableGrid';
@@ -159,7 +161,6 @@ function OutcomePane({
  */
 export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
   const { t } = useTranslation();
-  const { token } = antdTheme.useToken();
   const { data, state } = fetcher;
   const outcomes = data?.outcomes ?? NO_OUTCOMES;
 
@@ -252,23 +253,13 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
         </RegionGroup>
 
         {outcome && !outcome.error && (
-          <RegionGroup style={{ gap: space.md }}>
+          <RegionTools>
             {meta && <RegionMeta>{meta}</RegionMeta>}
             {rows && <DateDisplaySwitch fields={outcome.result?.[1] ?? []} />}
             {rows && (
-              // the Data / Chart switch: its tokens give the flat track and the
-              // filled segment, its own parts take the frame and the caps
-              <Segmented<View>
-                size="small"
+              <RegionSegmented<View>
                 value={shownView}
                 onChange={setView}
-                styles={{
-                  root: { border: `1px solid ${token.colorBorderSecondary}` },
-                  label: {
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                  },
-                }}
                 options={[
                   { label: t('chart.tab.data'), value: View.Data },
                   {
@@ -285,7 +276,7 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
                 ]}
               />
             )}
-          </RegionGroup>
+          </RegionTools>
         )}
       </RegionHeader>
 

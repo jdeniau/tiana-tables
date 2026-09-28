@@ -1,12 +1,12 @@
 import { type ReactElement } from 'react';
-import { Segmented, theme as antdTheme } from 'antd';
 import { styled } from 'styled-components';
 import { DateDisplay } from '../../configuration/dateDisplay';
 import { useDateDisplay } from '../../contexts/DateDisplayContext';
 import { useTranslation } from '../../i18n';
 import { FieldKind, type ResultField } from '../../sql/resultField';
 import { fontSize, mutedForeground, space } from '../theme';
-import type { DateDisplayOption } from '../utils/dateZones';
+import type { DateDisplaySegment } from '../utils/dateZones';
+import { RegionSegmented } from './Style/RegionSegmented';
 
 const Switch = styled.div`
   display: flex;
@@ -38,22 +38,21 @@ export default function DateDisplaySwitch({
   fields: ReadonlyArray<ResultField>;
 }): ReactElement | null {
   const { t } = useTranslation();
-  const { token } = antdTheme.useToken();
-  const { display, options, serverZone, setDisplay } = useDateDisplay();
+  const { display, segments, serverZone, setDisplay } = useDateDisplay();
 
   // UTC and local time take a zoneless date-time in the server's zone, and say so
-  const tooltipOf = (option: DateDisplayOption) => {
-    if (option.disabled) {
+  const tooltipOf = (segment: DateDisplaySegment) => {
+    if (segment.disabled) {
       return t('dateDisplay.unresolved', { zone: serverZone?.label });
     }
 
-    return option.display === DateDisplay.Server
+    return segment.display === DateDisplay.Server
       ? undefined
       : t('dateDisplay.assumed', { zone: serverZone?.label });
   };
 
   if (
-    options.length < 2 ||
+    segments.length < 2 ||
     !fields.some((field) => field.kind === FieldKind.DateTime)
   ) {
     return null;
@@ -62,27 +61,21 @@ export default function DateDisplaySwitch({
   return (
     <Switch>
       <Label>{t('dateDisplay.label')}</Label>
-      {/* the tokens and parts of the SQL page's Data / Chart switch */}
-      <Segmented<DateDisplay>
-        size="small"
+      <RegionSegmented<DateDisplay>
         value={display}
         onChange={setDisplay}
-        styles={{
-          root: { border: `1px solid ${token.colorBorderSecondary}` },
-          label: { textTransform: 'uppercase', letterSpacing: '0.06em' },
-        }}
-        options={options.map((option) => ({
-          value: option.display,
+        options={segments.map((segment) => ({
+          value: segment.display,
           label: (
             <>
-              {t('dateDisplay.option', { display: option.display })}
-              {option.zoneLabel !== null && (
-                <ZoneName> · {option.zoneLabel}</ZoneName>
+              {t('dateDisplay.option', { display: segment.display })}
+              {segment.zoneLabel !== null && (
+                <ZoneName> · {segment.zoneLabel}</ZoneName>
               )}
             </>
           ),
-          disabled: option.disabled,
-          tooltip: tooltipOf(option),
+          disabled: segment.disabled,
+          tooltip: tooltipOf(segment),
         }))}
       />
     </Switch>

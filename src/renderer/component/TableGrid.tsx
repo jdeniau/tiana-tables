@@ -978,12 +978,12 @@ const DateSuffix = styled.span`
 /** A date-time column's name, and the zone its values are shown in when there is a choice. */
 function DateColumnHeader({ name }: { name: string }): ReactNode {
   const { t } = useTranslation();
-  const { display, options } = useDateDisplay();
+  const { display, segments } = useDateDisplay();
 
   return (
     <>
       {name}
-      {options.length > 1 && (
+      {segments.length > 1 && (
         <DateSuffix>{t('dateDisplay.option', { display })}</DateSuffix>
       )}
     </>

@@ -70,15 +70,18 @@ describe('formatDateText, moved to another zone', () => {
     ).toEqual({ text: '2025-12-23 01:02:26', offset: 'UTC+00:00' });
   });
 
-  test('a timestamptz is moved from its own offset', () => {
-    expect(
-      formatDateText(
-        '2025-12-22 20:02:26-05',
-        FieldKind.DateTime,
-        fromUtc('Asia/Kolkata')
-      )
-    ).toEqual({ text: '2025-12-23 06:32:26', offset: 'UTC+05:30' });
-  });
+  test.each([
+    ['2025-12-22 20:02:26-05', '2025-12-23 06:32:26', 'UTC+05:30'],
+    // the local mean time of a zone before 1900 has seconds
+    ['1850-01-01 00:09:21+00:09:21', '1850-01-01 05:53:28', 'UTC+05:53:28'],
+  ])(
+    'a timestamptz %s is moved from its own offset',
+    (text, expected, offset) => {
+      expect(
+        formatDateText(text, FieldKind.DateTime, fromUtc('Asia/Kolkata'))
+      ).toEqual({ text: expected, offset });
+    }
+  );
 
   test('a date stays the calendar day', () => {
     expect(
