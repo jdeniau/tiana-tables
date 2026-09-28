@@ -9,6 +9,7 @@ import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { styled } from 'styled-components';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
+import { useDateDisplay } from '../../../contexts/DateDisplayContext';
 import { useTranslation } from '../../../i18n';
 import { getCellEditability } from '../../../sql/columnEditing';
 import type { Dialect } from '../../../sql/dialect/types';
@@ -103,10 +104,13 @@ export default function CellContextMenu({
     [onFilterChange, onClose]
   );
 
+  const serverZone = useDateDisplay().serverZone?.zone ?? null;
+
   const items = target
     ? buildMenuItems({
         dialect,
         databaseName: database,
+        serverZone,
         target,
         clipboardText,
         t,
@@ -183,6 +187,8 @@ export default function CellContextMenu({
 interface MenuItemsParams {
   dialect: Dialect;
   databaseName: string | null;
+  /** the zone a JSON / CSV copy takes a wall clock in, `null` when the server's is unknown */
+  serverZone: string | null;
   target: CellMenuTarget;
   clipboardText: string;
   t: ReturnType<typeof useTranslation>['t'];
@@ -199,6 +205,7 @@ interface MenuItemsParams {
 function buildMenuItems({
   dialect,
   databaseName,
+  serverZone,
   target,
   clipboardText,
   t,
@@ -247,12 +254,12 @@ function buildMenuItems({
         {
           key: RowFormat.Json,
           label: t('table.contextMenu.copyRow.json'),
-          onClick: () => onCopy(rowToJson(row)),
+          onClick: () => onCopy(rowToJson(row, serverZone)),
         },
         {
           key: RowFormat.Csv,
           label: t('table.contextMenu.copyRow.csv'),
-          onClick: () => onCopy(rowToCsv(row)),
+          onClick: () => onCopy(rowToCsv(row, serverZone)),
         },
         {
           key: RowFormat.SqlInsert,

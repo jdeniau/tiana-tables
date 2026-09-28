@@ -50,6 +50,13 @@ export interface TableStructureRow extends DescribedColumn, ResultRow {
   References: string | null;
 }
 
+/** The zone a server writes its date-times in, as it names it. */
+export interface ServerTimeZoneName {
+  name: string;
+  /** MySQL's `SYSTEM`: the name is the machine's abbreviation (`CEST`), which says nothing of summer time */
+  isAbbreviation: boolean;
+}
+
 /** What the app asks a server about itself. */
 export interface DialectMetadata {
   /** The databases, which are the schemas on PostgreSQL, in no particular order. */
@@ -74,4 +81,7 @@ export interface DialectMetadata {
     databaseName: string,
     tableName: string
   ): ReadQuery<DescribedColumn[]>;
+
+  /** The zone of this session, in which the server writes a date-time without an offset. */
+  serverTimeZone(): ReadQuery<ServerTimeZoneName>;
 }

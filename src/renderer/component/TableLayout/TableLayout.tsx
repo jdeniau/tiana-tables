@@ -3,6 +3,7 @@ import { useCreateAtom, useSelector } from '@tanstack/react-store';
 import type { SortingState } from '@tanstack/react-table';
 import { Button, Splitter } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import { styled } from 'styled-components';
 import {
   DisplayAfterByColumn,
   applyColumnOrder,
@@ -14,6 +15,8 @@ import type { ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import { useDialect } from '../../hooks/useDialect';
 import { usePanelSize } from '../../hooks/usePanelSize';
+import { space } from '../../theme';
+import DateDisplaySwitch from '../DateDisplaySwitch';
 import SqlErrorComponent from '../Query/SqlErrorComponent';
 import WhereFilter from '../Query/WhereFilter';
 import {
@@ -46,6 +49,11 @@ interface TableNameProps {
   columnWidths: ColumnWidthByColumn;
 }
 const DEFAULT_LIMIT = 100;
+
+// the gap the SQL page leaves between its row count and its switch
+const HeaderTools = styled(RegionGroup)`
+  gap: ${space.md};
+`;
 
 export function TableLayout({
   connectionSlug,
@@ -191,7 +199,10 @@ export function TableLayout({
               )}
             </RegionGroup>
 
-            <TableViewSwitch />
+            <HeaderTools>
+              {fields && <DateDisplaySwitch fields={fields} />}
+              <TableViewSwitch />
+            </HeaderTools>
           </RegionHeader>
 
           {/* the grid stays under an error: its headers are how a failed sort is left */}

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
 import { postgresDialect } from '../../../sql/dialect/postgres';
@@ -49,14 +49,8 @@ function cell(
 // a `DATETIME`, a wall clock: the INSERT writes it back as is
 const CREATED_AT = '2026-09-25 12:03:07';
 
-// JSON and CSV take the wall clock in the machine's zone, here UTC+12:00
-beforeEach(() => {
-  vi.spyOn(Temporal.Now, 'timeZoneId').mockReturnValue('Pacific/Auckland');
-});
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
+// JSON and CSV take the wall clock in the server's zone, here UTC+12:00
+const SERVER_ZONE = 'Pacific/Auckland';
 
 const ROW: RowCell[] = [
   cell('id', FieldKind.Number, 42),
@@ -69,7 +63,7 @@ const ROW: RowCell[] = [
 
 describe('rowToJson', () => {
   it('keeps the JSON types, and writes what JSON has none for as text', () => {
-    expect(JSON.parse(rowToJson(ROW))).toEqual({
+    expect(JSON.parse(rowToJson(ROW, SERVER_ZONE))).toEqual({
       id: 42,
       name: 'Le "bon", coin',
       note: null,
@@ -82,20 +76,33 @@ describe('rowToJson', () => {
   // midnight local time is the evening before in UTC: a day has no time to shift
   it('writes a DATE as its calendar day', () => {
     expect(
-      JSON.parse(rowToJson([cell('birthday', FieldKind.Date, '2026-09-25')]))
+      JSON.parse(
+        rowToJson([cell('birthday', FieldKind.Date, '2026-09-25')], SERVER_ZONE)
+      )
     ).toEqual({ birthday: '2026-09-25' });
+  });
+
+  // a zone the server gives no rules for leaves no instant to write
+  it("writes a wall clock as is when the server's zone is unknown", () => {
+    expect(
+      JSON.parse(
+        rowToJson([cell('createdAt', FieldKind.DateTime, CREATED_AT)], null)
+      )
+    ).toEqual({ createdAt: '2026-09-25T12:03:07' });
   });
 
   it('writes a bigint as text rather than throwing', () => {
     expect(
-      JSON.parse(rowToJson([cell('id', FieldKind.Number, 2n ** 64n)]))
+      JSON.parse(
+        rowToJson([cell('id', FieldKind.Number, 2n ** 64n)], SERVER_ZONE)
+      )
     ).toEqual({ id: '18446744073709551616' });
   });
 });
 
 describe('rowToCsv', () => {
   it('writes the column names, then the values, quoting only what must be', () => {
-    expect(rowToCsv(ROW)).toBe(
+    expect(rowToCsv(ROW, SERVER_ZONE)).toBe(
       'id,name,note,createdAt,payload,hash\n' +
         '42,"Le ""bon"", coin",,2026-09-25T00:03:07Z,"{""tags"":[""a"",""b""]}",0xCAFE'
     );
@@ -103,15 +110,17 @@ describe('rowToCsv', () => {
 
   it('tells an empty string from NULL', () => {
     expect(
-      rowToCsv([
-        cell('a', FieldKind.String, ''),
-        cell('b', FieldKind.String, null),
-      ])
+      rowToCsv(
+        [cell('a', FieldKind.String, ''), cell('b', FieldKind.String, null)],
+        SERVER_ZONE
+      )
     ).toBe('a,b\n,');
   });
 
   it('quotes a value holding a line break', () => {
-    expect(rowToCsv([cell('a', FieldKind.String, 'x\ny')])).toBe('a\n"x\ny"');
+    expect(rowToCsv([cell('a', FieldKind.String, 'x\ny')], SERVER_ZONE)).toBe(
+      'a\n"x\ny"'
+    );
   });
 });
 

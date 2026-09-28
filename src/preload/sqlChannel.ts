@@ -7,6 +7,7 @@ export enum SQL_CHANNEL {
   GET_ALL_COLUMNS = 'sql:getAllColumns',
   GET_TABLE_STRUCTURE = 'sql:getTableStructure',
   GET_PRIMARY_KEY_COLUMNS = 'sql:getPrimaryKeyColumns',
+  GET_SERVER_TIME_ZONE = 'sql:getServerTimeZone',
   CLOSE = 'sql:close',
   CLOSE_ALL = 'sql:closeAll',
   ON_CONNECTION_CHANGED = 'sql:onConnectionChanged',

@@ -43,6 +43,9 @@ const meta: Meta<typeof ConnectionForm> = {
           setPanelSize: (panel, size) => {
             action('setPanelSize')(panel, size);
           },
+          setDateDisplay: (dateDisplay) => {
+            action('setDateDisplay')(dateDisplay);
+          },
           editConnection: (name, connection) => {
             action('editConnection')(name, connection);
           },

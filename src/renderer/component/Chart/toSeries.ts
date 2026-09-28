@@ -1,6 +1,10 @@
 import { FieldKind, type ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
-import { formatDateText, isDateKind } from '../../utils/dateFormatter';
+import {
+  type ZoneShift,
+  formatDateText,
+  isDateKind,
+} from '../../utils/dateFormatter';
 import { isNullish } from '../../utils/isNullish';
 import type { ChartConfig } from './chartConfig';
 
@@ -77,13 +81,17 @@ export function toNumber(value: unknown): number | null {
  * Both scales are categorical (`point` for lines, the index for bars), so every
  * X is a string. A date is written as the grid shows it, not in its ISO form.
  */
-export function toAxisLabel(value: unknown, kind: FieldKind): string {
+export function toAxisLabel(
+  value: unknown,
+  kind: FieldKind,
+  dateShift: ZoneShift | null
+): string {
   if (isNullish(value)) {
     return '';
   }
 
   if (typeof value === 'string' && isDateKind(kind)) {
-    return formatDateText(value, kind);
+    return formatDateText(value, kind, dateShift).text;
   }
 
   return String(value);
@@ -94,9 +102,11 @@ interface Input {
   fields: readonly ResultField[];
   config: ChartConfig;
   rowsAsArray: boolean;
+  /** the zone of the date switch, which the X axis follows as the grid does */
+  dateShift: ZoneShift | null;
 }
 
-function axisLabels({ rows, fields, config, rowsAsArray }: Input): {
+function axisLabels({ rows, fields, config, rowsAsArray, dateShift }: Input): {
   labels: Array<string>;
   isTruncated: boolean;
 } {
@@ -106,7 +116,11 @@ function axisLabels({ rows, fields, config, rowsAsArray }: Input): {
 
   return {
     labels: kept.map((row) =>
-      toAxisLabel(readCell(row, config.x, xField, rowsAsArray), xKind)
+      toAxisLabel(
+        readCell(row, config.x, xField, rowsAsArray),
+        xKind,
+        dateShift
+      )
     ),
     isTruncated: rows.length > MAX_POINTS,
   };

@@ -13,6 +13,7 @@ import { getDialect } from './dialect';
 import {
   type ColumnDetail,
   type ForeignKey,
+  type ServerTimeZoneName,
   type TableStructureRow,
 } from './dialect/metadata';
 import type { ReadQuery } from './dialect/readQuery';
@@ -73,6 +74,7 @@ class ConnectionStack {
     [SQL_CHANNEL.GET_PRIMARY_KEY_COLUMNS]: this.getPrimaryKeyColumns,
     [SQL_CHANNEL.GET_ALL_COLUMNS]: this.getAllColumns,
     [SQL_CHANNEL.GET_TABLE_STRUCTURE]: this.getTableStructure,
+    [SQL_CHANNEL.GET_SERVER_TIME_ZONE]: this.getServerTimeZone,
     [SQL_CHANNEL.UPDATE_CELL]: this.updateCell,
     [SQL_CHANNEL.CLOSE]: this.closeConnection,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
@@ -223,6 +225,13 @@ class ConnectionStack {
 
       return toTableStructure(tableName, columns, foreignKeys);
     });
+  }
+
+  /** The zone of the session, which a statement run later may change (`SET time_zone`). */
+  async getServerTimeZone(): ResultOrError<ServerTimeZoneName> {
+    return this.#ask(() =>
+      this.#answer(this.#dialect().metadata.serverTimeZone())
+    );
   }
 
   /**

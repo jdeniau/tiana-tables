@@ -278,3 +278,27 @@ describe('listColumns', () => {
     expect(detail('genre').nullable).toBe(true);
   });
 });
+
+/** The rows measured on `tiana-dev-mysql` and on a MariaDB whose machine runs in New York. */
+describe('serverTimeZone', () => {
+  const answer = (session: string, system: string) =>
+    mysqlMetadata
+      .serverTimeZone()
+      .answer([
+        { '@@session.time_zone': session, '@@system_time_zone': system },
+      ]);
+
+  test('a session zone of its own is a name', () => {
+    expect(answer('Europe/Paris', 'UTC')).toEqual({
+      name: 'Europe/Paris',
+      isAbbreviation: false,
+    });
+  });
+
+  test("`SYSTEM` is the machine's zone, known by its abbreviation", () => {
+    expect(answer('SYSTEM', 'EDT')).toEqual({
+      name: 'EDT',
+      isAbbreviation: true,
+    });
+  });
+});

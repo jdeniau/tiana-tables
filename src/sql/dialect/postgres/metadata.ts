@@ -1,3 +1,4 @@
+import invariant from 'tiny-invariant';
 import { z } from 'zod';
 import type { DialectMetadata } from '../metadata';
 import { readQuery } from '../readQuery';
@@ -36,6 +37,8 @@ const columnRow = z.object({
   /** in their declared order, `null` when the type is no enum */
   enum_labels: z.array(z.string()).nullable(),
 });
+
+const timeZoneRow = z.object({ current_setting: z.string() });
 
 const describedColumnRow = z.object({
   attname: z.string(),
@@ -284,5 +287,17 @@ export const postgresMetadata: DialectMetadata = {
           Collation: row.collname,
           Comment: row.comment ?? '',
         })),
+    }),
+
+  serverTimeZone: () =>
+    readQuery('serverTimeZone', {
+      sql: "SELECT current_setting('TimeZone')",
+      values: {},
+      row: timeZoneRow,
+      read: ([row]) => {
+        invariant(row, 'A SELECT of one setting answers one row');
+
+        return { name: row.current_setting, isAbbreviation: false };
+      },
     }),
 };

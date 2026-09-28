@@ -1,6 +1,7 @@
 import { WindowState } from '../main-process/windowState';
 import { ConnectionObject } from '../sql/types';
 import { DisplayAfterByColumn } from './columnOrder';
+import type { DateDisplay } from './dateDisplay';
 import { PANEL } from './panels';
 
 export type Configuration = {
@@ -10,6 +11,8 @@ export type Configuration = {
   connections: Record<string, EncryptedConnectionObject>;
   windowState?: WindowState;
   panelSizes?: PanelSizes;
+  /** absent until the user picks one: the server's zone */
+  dateDisplay?: DateDisplay;
 };
 
 /**

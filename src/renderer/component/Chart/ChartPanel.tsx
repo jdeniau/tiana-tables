@@ -8,6 +8,7 @@ import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
 import { Alert, Button, Select, Space } from 'antd';
 import { styled, useTheme } from 'styled-components';
+import { useDateDisplay } from '../../../contexts/DateDisplayContext';
 import { useTranslation } from '../../../i18n';
 import type { ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
@@ -164,17 +165,19 @@ function ChartPanel({
     [fields]
   );
 
+  const dateShift = useDateDisplay().shift;
+
   const rendered = useMemo(() => {
     if (!config) {
       return null;
     }
 
-    const input = { rows: result, fields, config, rowsAsArray };
+    const input = { rows: result, fields, config, rowsAsArray, dateShift };
 
     return config.kind === 'line'
       ? { kind: 'line' as const, ...toLineSeries(input) }
       : { kind: 'bar' as const, ...toBarData(input) };
-  }, [result, fields, config, rowsAsArray]);
+  }, [result, fields, config, rowsAsArray, dateShift]);
 
   // `chartUnavailableReason` already gated the tab, so this is only reachable
   // while the user is between two selections

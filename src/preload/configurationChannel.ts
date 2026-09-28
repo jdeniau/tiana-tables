@@ -11,4 +11,5 @@ export enum CONFIGURATION_CHANNEL {
   SET_COLUMN_DISPLAY_AFTER = 'config:connection:setColumnDisplayAfter',
   SET_COLUMN_WIDTH = 'config:connection:setColumnWidth',
   SET_PANEL_SIZE = 'config:panel:setSize',
+  SET_DATE_DISPLAY = 'config:dateDisplay:set',
 }

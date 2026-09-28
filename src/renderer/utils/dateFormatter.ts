@@ -3,6 +3,19 @@ import { FieldKind } from '../../sql/resultField';
 /** The offset PostgreSQL appends to a `timestamptz`: `+05:30`, `-05`, `+00:09:21`. */
 const TRAILING_OFFSET = /[+-]\d{2}(?::\d{2}){0,2}$/;
 
+/** A wall clock the server wrote in `from`, shown in `to`. */
+export interface ZoneShift {
+  from: string;
+  to: string;
+}
+
+/** A date as the grid shows it, and the offset of the zone it was moved to. */
+export interface DateText {
+  text: string;
+  /** `UTC+01:00`, `null` for a date shown as the server wrote it */
+  offset: string | null;
+}
+
 /** Whether a column holds dates, which both drivers hand over as the server's text. */
 export function isDateKind(kind: FieldKind): boolean {
   return kind === FieldKind.Date || kind === FieldKind.DateTime;
@@ -30,45 +43,67 @@ function parseDate(
   }
 }
 
-/**
- * A date as the grid shows it: `YYYY-MM-DD`, with `HH:mm:ss` when it has a time.
- * A `timestamptz` shows in the machine's zone, the fraction of a second is left out.
- */
-export function formatDateText(text: string, kind: FieldKind): string {
-  const date = parseDate(text, kind);
-
-  if (date === null) {
-    return text;
-  }
-
-  if (date instanceof Temporal.PlainDate) {
-    return date.toString();
-  }
-
-  const dateTime =
-    date instanceof Temporal.Instant
-      ? date.toZonedDateTimeISO(Temporal.Now.timeZoneId()).toPlainDateTime()
-      : date;
-
+/** `YYYY-MM-DD HH:mm:ss`, the fraction of a second left out. */
+function formatWallClock(dateTime: Temporal.PlainDateTime): string {
   return dateTime.toString({ smallestUnit: 'second' }).replace('T', ' ');
 }
 
 /**
- * A date as a program reads it: ISO 8601, a point in time as an instant,
- * a wall clock taken in the machine's zone. A `DATE` has no time, hence no offset.
+ * A date as the grid shows it: `YYYY-MM-DD`, with `HH:mm:ss` when it has a time.
+ * Without a shift, a date-time is the server's own wall clock — a `timestamptz` is written in the session's zone.
  */
-export function dateTextToIso(text: string, kind: FieldKind): string {
+export function formatDateText(
+  text: string,
+  kind: FieldKind,
+  shift: ZoneShift | null
+): DateText {
+  const date = parseDate(text, kind);
+
+  if (date === null) {
+    return { text, offset: null };
+  }
+
+  if (date instanceof Temporal.PlainDate) {
+    return { text: date.toString(), offset: null };
+  }
+
+  if (shift === null) {
+    const wallClock =
+      date instanceof Temporal.Instant
+        ? Temporal.PlainDateTime.from(text)
+        : date;
+
+    return { text: formatWallClock(wallClock), offset: null };
+  }
+
+  const zoned =
+    date instanceof Temporal.Instant
+      ? date.toZonedDateTimeISO(shift.to)
+      : date.toZonedDateTime(shift.from).withTimeZone(shift.to);
+
+  return {
+    text: formatWallClock(zoned.toPlainDateTime()),
+    offset: `UTC${zoned.offset}`,
+  };
+}
+
+/**
+ * A date as a program reads it: ISO 8601, a point in time as an instant in UTC.
+ * A wall clock is taken in the server's zone, and stays one when that zone is unknown; a `DATE` has no time.
+ */
+export function dateTextToIso(
+  text: string,
+  kind: FieldKind,
+  serverZone: string | null
+): string {
   const date = parseDate(text, kind);
 
   if (date === null) {
     return text;
   }
 
-  if (date instanceof Temporal.PlainDateTime) {
-    return date
-      .toZonedDateTime(Temporal.Now.timeZoneId())
-      .toInstant()
-      .toString();
+  if (date instanceof Temporal.PlainDateTime && serverZone !== null) {
+    return date.toZonedDateTime(serverZone).toInstant().toString();
   }
 
   return date.toString();

@@ -1,3 +1,4 @@
+import type { DateDisplay } from '../configuration/dateDisplay';
 import { PANEL } from '../configuration/panels';
 import type { Configuration } from '../configuration/type';
 import type { ConnectionObjectWithoutSlug } from '../sql/types';
@@ -58,6 +59,8 @@ interface Config {
 
   setPanelSize(panel: PANEL, size: string): Promise<Configuration>;
 
+  setDateDisplay(dateDisplay: DateDisplay): Promise<Configuration>;
+
   editConnection(
     connectionSlug: string,
     connection: ConnectionObjectWithoutSlug
@@ -78,5 +81,6 @@ export const config: Config = {
   ),
   setColumnWidth: bindChannel(CONFIGURATION_CHANNEL.SET_COLUMN_WIDTH),
   setPanelSize: bindChannel(CONFIGURATION_CHANNEL.SET_PANEL_SIZE),
+  setDateDisplay: bindChannel(CONFIGURATION_CHANNEL.SET_DATE_DISPLAY),
   editConnection: bindChannel(CONFIGURATION_CHANNEL.EDIT_CONNECTION),
 };

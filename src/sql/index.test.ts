@@ -118,6 +118,11 @@ describe('database-scoped queries', () => {
       () => connectionStack.getTableStructure('some-database', 'some-table'),
       'INFORMATION_SCHEMA.COLUMNS',
     ],
+    [
+      'the time zone',
+      () => connectionStack.getServerTimeZone(),
+      '@@session.time_zone',
+    ],
   ])(
     '%s is asked of the dialect of the connection',
     async (_label, ask, marker) => {
@@ -371,6 +376,21 @@ describe('database-scoped queries on PostgreSQL', () => {
     expect(
       query.mock.calls.map(([statement]) => statement.text).join('\n')
     ).toContain(marker);
+  });
+
+  test('the time zone is asked of the PostgreSQL dialect', async () => {
+    query.mockResolvedValue({
+      fields: [{ name: 'current_setting', dataTypeID: 25 }],
+      rows: [{ current_setting: 'Etc/UTC' }],
+      rowCount: 1,
+    });
+
+    const { result } = await connectionStack.getServerTimeZone();
+
+    expect(result).toEqual({ name: 'Etc/UTC', isAbbreviation: false });
+    expect(query.mock.calls[0][0].text).toContain(
+      "current_setting('TimeZone')"
+    );
   });
 
   // the placeholders are numbered on the way to `pg`, which knows no `:name`

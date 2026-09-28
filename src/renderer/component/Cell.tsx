@@ -1,7 +1,16 @@
 import { MouseEvent, ReactNode, memo } from 'react';
 import { styled } from 'styled-components';
+import { DateDisplay } from '../../configuration/dateDisplay';
+import { useDateDisplay } from '../../contexts/DateDisplayContext';
 import { FieldKind } from '../../sql/resultField';
-import { constantForeground, foreground, stringForeground } from '../theme';
+import {
+  commentForeground,
+  constantForeground,
+  fontSize,
+  foreground,
+  space,
+  stringForeground,
+} from '../theme';
 import { formatDateText } from '../utils/dateFormatter';
 import { isNullish } from '../utils/isNullish';
 import toHexLiteral from './hexLiteral';
@@ -38,6 +47,8 @@ function setTitleIfTruncated(event: MouseEvent<HTMLElement>): void {
  */
 type CellShellType = {
   className?: string;
+  /** drawn after the value by a styled variant, from the `data-offset` attribute */
+  offset?: string;
 } & (
   | {
       children: ReactNode;
@@ -49,14 +60,19 @@ type CellShellType = {
     }
 );
 
-function CellShell({ className, children, hasTitle }: CellShellType) {
+function CellShell({ className, children, hasTitle, offset }: CellShellType) {
   const title =
     hasTitle && String(children).length < MAX_TITLE_LENGTH
       ? String(children)
       : undefined;
 
   return (
-    <div className={className} onMouseEnter={setTitleIfTruncated} title={title}>
+    <div
+      className={className}
+      onMouseEnter={setTitleIfTruncated}
+      title={title}
+      data-offset={offset}
+    >
       {children}
     </div>
   );
@@ -87,8 +103,26 @@ const ForegroundSpan = styled(BaseCell)`
   color: ${foreground};
 `;
 
+// the offset is drawn from an attribute: a span of its own would be one more element per cell
+const DateSpan = styled(ForegroundSpan)`
+  &[data-offset]::after {
+    content: attr(data-offset);
+    margin-inline-start: ${space.sm};
+    font-size: ${fontSize.sm};
+    color: ${commentForeground};
+  }
+`;
+
+/** Shown in the zone of the date switch, with the offset in local time: it changes with summer time. */
 function DateCell({ value, kind }: CellProps<string> & { kind: FieldKind }) {
-  return <ForegroundSpan>{formatDateText(value, kind)}</ForegroundSpan>;
+  const { display, shift } = useDateDisplay();
+  const { text, offset } = formatDateText(value, kind, shift);
+
+  return (
+    <DateSpan offset={(display === DateDisplay.Local && offset) || undefined}>
+      {text}
+    </DateSpan>
+  );
 }
 
 const StringSpan = styled(BaseCell)`

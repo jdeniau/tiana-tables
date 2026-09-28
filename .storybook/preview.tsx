@@ -83,6 +83,9 @@ const preview: Preview = {
             editConnection: (name, connection) => {
               action('editConnection')(name, connection);
             },
+            setDateDisplay: (dateDisplay) => {
+              action('setDateDisplay')(dateDisplay);
+            },
           }}
         >
           <ThemeContextProvider>

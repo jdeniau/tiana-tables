@@ -8,6 +8,7 @@ import { QueryResult, isWriteResult } from '../../../../sql/types';
 import { space } from '../../../theme';
 import ChartPanel from '../../Chart/ChartPanel';
 import { chartUnavailableReason } from '../../Chart/chartConfig';
+import DateDisplaySwitch from '../../DateDisplaySwitch';
 import {
   Centered,
   Region,
@@ -253,6 +254,7 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
         {outcome && !outcome.error && (
           <RegionGroup style={{ gap: space.md }}>
             {meta && <RegionMeta>{meta}</RegionMeta>}
+            {rows && <DateDisplaySwitch fields={outcome.result?.[1] ?? []} />}
             {rows && (
               // the Data / Chart switch: its tokens give the flat track and the
               // filled segment, its own parts take the frame and the caps

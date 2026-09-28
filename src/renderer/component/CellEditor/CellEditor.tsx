@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
-import { Input, InputNumber, Select } from 'antd';
+import { Alert, Flex, Input, InputNumber, Select } from 'antd';
+import { useDateDisplay } from '../../../contexts/DateDisplayContext';
+import { useTranslation } from '../../../i18n';
 import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { FieldKind } from '../../../sql/resultField';
 import JsonCellEditor from './JsonCellEditor';
@@ -33,6 +35,8 @@ export default function CellEditor({
   onChange,
   disabled,
 }: CellEditorProps) {
+  const { t } = useTranslation();
+  const { serverZone } = useDateDisplay();
   const kind = resolveEditorKind(column, fieldKind, value.text);
   const nullable = column.nullable;
 
@@ -87,11 +91,11 @@ export default function CellEditor({
     case EditorKind.DateTime: {
       const withTime = kind === EditorKind.DateTime;
 
-      return (
-        // the calendar of the platform, through an antd-styled input: a MySQL
-        // date is a wall clock, and going through no date library at all is
-        // what keeps it from being reinterpreted in a time zone (see
-        // `dateTimeText`)
+      // the calendar of the platform, through an antd-styled input: a MySQL
+      // date is a wall clock, and going through no date library at all is
+      // what keeps it from being reinterpreted in a time zone (see
+      // `dateTimeText`)
+      const input = (
         <Input
           type={withTime ? 'datetime-local' : 'date'}
           // without it the input hides the seconds, and a DATETIME has them
@@ -104,6 +108,23 @@ export default function CellEditor({
               : setText(fromDateInputValue(event.target.value, withTime))
           }
         />
+      );
+
+      // a date has no time to be in a zone; a date-time is edited in the
+      // server's, whichever the grid shows it in
+      return withTime ? (
+        <Flex vertical gap="small">
+          <Alert
+            type="info"
+            showIcon
+            title={t('cell.detail.serverTime', {
+              zone: serverZone?.label ?? 'none',
+            })}
+          />
+          {input}
+        </Flex>
+      ) : (
+        input
       );
     }
 

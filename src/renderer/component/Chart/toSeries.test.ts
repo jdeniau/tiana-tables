@@ -51,25 +51,35 @@ describe('toNumber', () => {
 
 describe('toAxisLabel', () => {
   test('a date is written as the grid shows it', () => {
-    expect(toAxisLabel('2026-01-02 15:04:05.123456', FieldKind.DateTime)).toBe(
-      '2026-01-02 15:04:05'
-    );
+    expect(
+      toAxisLabel('2026-01-02 15:04:05.123456', FieldKind.DateTime, null)
+    ).toBe('2026-01-02 15:04:05');
+  });
+
+  test('a date follows the zone of the date switch', () => {
+    expect(
+      toAxisLabel('2026-01-02 15:04:05', FieldKind.DateTime, {
+        from: 'UTC',
+        to: 'Asia/Kolkata',
+      })
+    ).toBe('2026-01-02 20:34:05');
   });
 
   test('a string of another kind is left alone', () => {
-    expect(toAxisLabel('2026-01-02 15:04:05.123456', FieldKind.String)).toBe(
-      '2026-01-02 15:04:05.123456'
-    );
+    expect(
+      toAxisLabel('2026-01-02 15:04:05.123456', FieldKind.String, null)
+    ).toBe('2026-01-02 15:04:05.123456');
   });
 
   test('a NULL label is empty, never the string "null"', () => {
-    expect(toAxisLabel(null, FieldKind.DateTime)).toBe('');
+    expect(toAxisLabel(null, FieldKind.DateTime, null)).toBe('');
   });
 });
 
 describe('toLineSeries', () => {
   test('one series per plotted column, DECIMAL coerced', () => {
     const { series, isTruncated } = toLineSeries({
+      dateShift: null,
       rows: ROWS,
       fields: FIELDS,
       config: CONFIG,
@@ -105,6 +115,7 @@ describe('toLineSeries', () => {
     ] as unknown as ResultRow[];
 
     const { series } = toLineSeries({
+      dateShift: null,
       rows,
       fields: FIELDS,
       config: CONFIG,
@@ -121,6 +132,7 @@ describe('toLineSeries', () => {
     ] as unknown as ResultRow[];
 
     const { series } = toLineSeries({
+      dateShift: null,
       rows,
       fields: FIELDS,
       config: CONFIG,
@@ -139,6 +151,7 @@ describe('toLineSeries', () => {
     ]) as unknown as ResultRow[];
 
     const { series, isTruncated } = toLineSeries({
+      dateShift: null,
       rows,
       fields: FIELDS,
       config: CONFIG,
@@ -154,6 +167,7 @@ describe('toBarData', () => {
   test('flat rows keyed by column name', () => {
     expect(
       toBarData({
+        dateShift: null,
         rows: ROWS,
         fields: FIELDS,
         config: { ...CONFIG, kind: 'bar' },
@@ -174,6 +188,7 @@ describe('toBarData', () => {
     const rows = [['2026-01-01', null, '1']] as unknown as ResultRow[];
 
     const { data } = toBarData({
+      dateShift: null,
       rows,
       fields: FIELDS,
       config: { ...CONFIG, kind: 'bar' },

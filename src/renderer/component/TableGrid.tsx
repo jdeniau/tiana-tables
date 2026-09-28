@@ -30,9 +30,11 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Empty } from 'antd';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
+import { DateDisplay } from '../../configuration/dateDisplay';
 import type { ColumnWidthByColumn } from '../../configuration/type';
 import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
+import { useDateDisplay } from '../../contexts/DateDisplayContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import { useTranslation } from '../../i18n';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
@@ -47,6 +49,7 @@ import {
   commentForeground,
   fontSize,
   foreground,
+  mutedForeground,
   selection,
   size,
   space,
@@ -309,6 +312,9 @@ function TableGrid<Row extends ResultRow>({
     return sources;
   }, [fields, extraColumns]);
 
+  // local time is followed by its offset, which the column opens wide enough for
+  const showsOffset = useDateDisplay().display === DateDisplay.Local;
+
   const columns = useMemo(() => {
     const columnHelper = createColumnHelper<typeof features, Row>();
 
@@ -326,13 +332,16 @@ function TableGrid<Row extends ResultRow>({
                 // raw SQL results can contain duplicated column names: suffix with the index to keep ids unique
                 // (browsing mode keeps plain names so that column pinning can match primary key names)
                 id: rowsAsArray ? `${fieldIndex}:${field.name}` : field.name,
-                header: field.name,
-                size: getColumnWidth(field.kind),
+                header:
+                  field.kind === FieldKind.DateTime
+                    ? () => <DateColumnHeader name={field.name} />
+                    : field.name,
+                size: getColumnWidth(field.kind, showsOffset),
               }
             )
       )
     );
-  }, [columnSources, rowsAsArray]);
+  }, [columnSources, rowsAsArray, showsOffset]);
 
   // pin primary key columns to the left, like the previous `fixed: 'left'`
   const columnPinning = useMemo(
@@ -960,6 +969,26 @@ const HeaderLabel = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
 `;
+
+const DateSuffix = styled.span`
+  margin-inline-start: ${space.xs};
+  color: ${mutedForeground};
+`;
+
+/** A date-time column's name, and the zone its values are shown in when there is a choice. */
+function DateColumnHeader({ name }: { name: string }): ReactNode {
+  const { t } = useTranslation();
+  const { display, options } = useDateDisplay();
+
+  return (
+    <>
+      {name}
+      {options.length > 1 && (
+        <DateSuffix>{t('dateDisplay.option', { display })}</DateSuffix>
+      )}
+    </>
+  );
+}
 
 // the rule between two column heads is what one grabs to resize: the zone is
 // wider than the line it draws, and the line takes the accent under the cursor

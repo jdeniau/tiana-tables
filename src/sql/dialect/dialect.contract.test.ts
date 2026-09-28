@@ -48,6 +48,7 @@ function statements(dialect: Dialect): Array<[string, BuiltQuery]> {
     ['listPrimaryKeyColumns', metadata.listPrimaryKeyColumns(DATABASE, TABLE)],
     ['listColumns', metadata.listColumns(DATABASE)],
     ['describeTable', metadata.describeTable(DATABASE, TABLE)],
+    ['serverTimeZone', metadata.serverTimeZone()],
     ['a guarded write', guardedUpdate(request()).write],
     ['a forced write', guardedUpdate(request({ force: true })).write],
     [

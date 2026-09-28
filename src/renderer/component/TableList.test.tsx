@@ -71,6 +71,7 @@ async function render(color?: ConnectionColor): Promise<void> {
             setActiveDatabase: vi.fn(),
             setActiveTable: vi.fn(),
             setPanelSize: vi.fn(),
+            setDateDisplay: vi.fn(),
             changeLanguage: vi.fn(),
           }}
         >
