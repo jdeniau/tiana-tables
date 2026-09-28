@@ -2,12 +2,13 @@
 
 ## Installation
 
-This application is an electron app, so you need to have [Node.js](https://nodejs.org/fr) installed on your computer.
+This application is an electron app, so you need to have [Node.js](https://nodejs.org/fr) 26 installed on your computer.
 
-It does also use yarn 4+, which is built-in with Node.js, but you may need to activate corepack doing this:
+It does also use yarn 4+, through corepack, which Node.js ships no more since version 25:
 
 ```sh
-corepack enable
+npm install -g corepack
+corepack enable yarn
 ```
 
 Then, you can install the dependencies with:

@@ -5,7 +5,7 @@ name: tiana-tables-dev
 services:
   # Writes each server's init scripts, read on its first start: neither image has node to run the generator.
   fixtures:
-    image: node:22-alpine
+    image: node:26-alpine
     volumes:
       - ./dev/fixtures:/fixtures:ro,z
       - mysql-init:/out/mysql

@@ -10,7 +10,7 @@ The project's recurring lesson: **a claim is measured before code is built on it
 
 ## Driving the app over CDP
 
-Wayland session, no xdotool: launch the app with a debugging port and drive it through a CDP WebSocket (`node` ≥ 22 has a global `WebSocket`, nothing to install).
+Wayland session, no xdotool: launch the app with a debugging port and drive it through a CDP WebSocket (Node 26 has a global `WebSocket`, nothing to install).
 
 ```sh
 tmux new-session -d -s tiana -x 200 -y 50
