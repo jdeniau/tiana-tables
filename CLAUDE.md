@@ -24,7 +24,7 @@ The mistake made most often here. Before code is built on a claim, or a sentence
 
 ### Git
 
-- **Never commit or push without being told to, in that very message.** Staging is fine. A review is walked hunk by hunk: contract → implementation → main process → IPC → renderer → fixtures → docs.
+- **Never commit or push without being told to, in that very message.** Staging is fine. A review is walked hunk by hunk: contract → implementation → main process → IPC → renderer → fixtures → docs (the `interactive-review` skill stages the approved hunks, or marks a PR's files as viewed).
 - **Markdown is never hard-wrapped** — `.md` files, PR descriptions, issues, review comments: one paragraph, or one list item, per line. Every renderer reflows it, and a wrapped sentence escapes `grep` and turns a one-word edit into a reflowed paragraph. Only commit messages wrap, at 72 columns: `git log` is a terminal.
 - `eslint --fix` only on files named explicitly, checking it moved imports and nothing else. Never `prettier --write` a whole directory.
 
@@ -147,15 +147,15 @@ Monaco, with `monaco-sql-languages` for the `mysql` / `pgsql` languages and thei
 
 ## Where knowledge lives
 
-| Place                           | Loaded                                               | Holds                                                                                   |
-| ------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| this file                       | every session                                        | how to work, architecture, invariants, cross-cutting rules                              |
-| `DESIGN.md`                     | when working on layout                               | the design rules                                                                        |
-| `.claude/rules/ui.md`           | reading `src/renderer/`, `src/contexts/`, `locales/` | styling, antd, state, navigation, translations                                          |
-| `.claude/rules/table-grid.md`   | reading the grid, cells, cell editor                 | TanStack v9, per-cell performance, copy formats                                         |
-| `.claude/rules/routing.md`      | reading routes, `app.tsx`                            | loaders, derived state, React Router v6                                                 |
-| `.claude/rules/sql.md`          | reading `src/sql/`                                   | binding, escaping, enums, casts, parsing answers                                        |
-| `.claude/rules/main-process.md` | reading main, preload, configuration                 | IPC, encryption, dev tooling                                                            |
-| `.claude/rules/tests.md`        | reading tests and stories                            | what a test must prove                                                                  |
-| `.claude/rules/build.md`        | reading `package.json`, patches, build config        | dependencies, knip, the RPM patches                                                     |
-| `.claude/skills/*`              | on demand                                            | `sql-engines`, `sql-editor`, `base16-themes`, `verify-live`, `antd`, `github-pr-review` |
+| Place                           | Loaded                                               | Holds                                                                                                         |
+| ------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| this file                       | every session                                        | how to work, architecture, invariants, cross-cutting rules                                                    |
+| `DESIGN.md`                     | when working on layout                               | the design rules                                                                                              |
+| `.claude/rules/ui.md`           | reading `src/renderer/`, `src/contexts/`, `locales/` | styling, antd, state, navigation, translations                                                                |
+| `.claude/rules/table-grid.md`   | reading the grid, cells, cell editor                 | TanStack v9, per-cell performance, copy formats                                                               |
+| `.claude/rules/routing.md`      | reading routes, `app.tsx`                            | loaders, derived state, React Router v6                                                                       |
+| `.claude/rules/sql.md`          | reading `src/sql/`                                   | binding, escaping, enums, casts, parsing answers                                                              |
+| `.claude/rules/main-process.md` | reading main, preload, configuration                 | IPC, encryption, dev tooling                                                                                  |
+| `.claude/rules/tests.md`        | reading tests and stories                            | what a test must prove                                                                                        |
+| `.claude/rules/build.md`        | reading `package.json`, patches, build config        | dependencies, knip, the RPM patches                                                                           |
+| `.claude/skills/*`              | on demand                                            | `sql-engines`, `sql-editor`, `base16-themes`, `verify-live`, `antd`, `github-pr-review`, `interactive-review` |

@@ -9,7 +9,8 @@
     "vite.preload.config.ts",
     "vite.renderer.config.ts",
     "docs/screenshots/sql-editor-shot.mjs",
-    "dev/fixtures/generate.mjs"
+    "dev/fixtures/generate.mjs",
+    ".claude/skills/interactive-review/review.mjs"
   ],
   "project": ["**/*.{ts,tsx,js,mjs,mdx}"],
   "ignoreDependencies": [
