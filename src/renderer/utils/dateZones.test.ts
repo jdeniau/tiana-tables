@@ -26,6 +26,8 @@ describe('resolveServerZone', () => {
     ['EDT', true],
     // a zone of its own with no summer time, which a New York server named so in winter has
     ['EST', true],
+    // London's and Dublin's winter, which Temporal takes for UTC
+    ['GMT', true],
     ['localtime', false],
     // POSIX, where UTC+3 is three hours behind
     ['UTC+3', false],

@@ -113,6 +113,8 @@ export default {
   'connection.form.user.label': 'User',
   'connection.list.count': '{count, plural, one {# saved} other {# saved}}',
   'connection.list.title': 'Connections',
+  'dateDisplay.assumed':
+    'A DATETIME or a timestamp holds no zone: it is taken as the server’s time ({zone}).',
   'dateDisplay.label': 'Dates',
   // ICU select on the `DateDisplay` enum
   'dateDisplay.option':

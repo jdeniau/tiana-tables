@@ -1,11 +1,12 @@
 import { type ReactElement } from 'react';
 import { Segmented, theme as antdTheme } from 'antd';
 import { styled } from 'styled-components';
-import type { DateDisplay } from '../../configuration/dateDisplay';
+import { DateDisplay } from '../../configuration/dateDisplay';
 import { useDateDisplay } from '../../contexts/DateDisplayContext';
 import { useTranslation } from '../../i18n';
 import { FieldKind, type ResultField } from '../../sql/resultField';
 import { fontSize, mutedForeground, space } from '../theme';
+import type { DateDisplayOption } from '../utils/dateZones';
 
 const Switch = styled.div`
   display: flex;
@@ -40,6 +41,17 @@ export default function DateDisplaySwitch({
   const { token } = antdTheme.useToken();
   const { display, options, serverZone, setDisplay } = useDateDisplay();
 
+  // UTC and local time take a zoneless date-time in the server's zone, and say so
+  const tooltipOf = (option: DateDisplayOption) => {
+    if (option.disabled) {
+      return t('dateDisplay.unresolved', { zone: serverZone?.label });
+    }
+
+    return option.display === DateDisplay.Server
+      ? undefined
+      : t('dateDisplay.assumed', { zone: serverZone?.label });
+  };
+
   if (
     options.length < 2 ||
     !fields.some((field) => field.kind === FieldKind.DateTime)
@@ -70,9 +82,7 @@ export default function DateDisplaySwitch({
             </>
           ),
           disabled: option.disabled,
-          tooltip: option.disabled
-            ? t('dateDisplay.unresolved', { zone: serverZone?.label })
-            : undefined,
+          tooltip: tooltipOf(option),
         }))}
       />
     </Switch>

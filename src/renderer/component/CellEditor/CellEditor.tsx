@@ -110,8 +110,7 @@ export default function CellEditor({
         />
       );
 
-      // a date has no time to be in a zone; a date-time is edited in the
-      // server's, whichever the grid shows it in
+      // a date has no time to be in a zone; a date-time is edited in the server's, whichever the grid shows it in
       return withTime ? (
         <Flex vertical gap="small">
           <Alert

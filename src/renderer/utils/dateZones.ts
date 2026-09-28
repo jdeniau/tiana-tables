@@ -28,7 +28,7 @@ function isUtc(zone: string): boolean {
 
 /**
  * The zone a server names, as rules to convert with.
- * An abbreviation resolves only when it is UTC: `EST` is a zone of its own, with no summer time, which a New York server named so in winter does have.
+ * An abbreviation resolves only when it is `UTC`: `GMT` is also London's winter, and `EST` a zone of its own, with no summer time, which a New York server named so in winter does have.
  */
 export function resolveServerZone({
   name,
@@ -37,7 +37,10 @@ export function resolveServerZone({
   try {
     const zone = Temporal.Now.zonedDateTimeISO(name).timeZoneId;
 
-    return { label: name, zone: isAbbreviation && !isUtc(zone) ? null : zone };
+    return {
+      label: name,
+      zone: isAbbreviation && name !== 'UTC' ? null : zone,
+    };
   } catch {
     // `EDT`, PostgreSQL's `localtime` or POSIX `UTC+3`, which means UTC−3
     return { label: name, zone: null };
