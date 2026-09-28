@@ -6,7 +6,6 @@ import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import type { Dialect } from '../../sql/dialect/types';
 import { FilterOperator, buildFilterClause } from '../../sql/filterClause';
-import { FieldKind } from '../../sql/resultField';
 import { foreground, supportForeground } from '../theme';
 import { cellValueToSqlLiteral } from './CellContextMenu/cellValueToSqlLiteral';
 
@@ -15,8 +14,6 @@ type Props = {
   dialect: Dialect;
   tableName: string;
   columnName: string;
-  /** what the column holds, which decides the form of the literal */
-  fieldKind: FieldKind;
   value: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
@@ -33,7 +30,6 @@ const ForeignKeyLink = memo(function ForeignKeyLink({
   dialect,
   tableName,
   columnName,
-  fieldKind,
   value,
 }: Props): JSX.Element | null {
   const { currentConnectionSlug } = useConnectionContext();
@@ -47,7 +43,7 @@ const ForeignKeyLink = memo(function ForeignKeyLink({
     return null;
   }
 
-  const literal = cellValueToSqlLiteral(dialect, value, fieldKind);
+  const literal = cellValueToSqlLiteral(dialect, value);
 
   // a key with no literal to compare to points at no row: NULL, or bytes the
   // grid only ever shows decoded

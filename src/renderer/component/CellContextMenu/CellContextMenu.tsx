@@ -9,6 +9,7 @@ import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { styled } from 'styled-components';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
+import { useDateDisplay } from '../../../contexts/DateDisplayContext';
 import { useTranslation } from '../../../i18n';
 import { getCellEditability } from '../../../sql/columnEditing';
 import type { Dialect } from '../../../sql/dialect/types';
@@ -18,7 +19,6 @@ import {
   buildFilterClause,
   operatorTakesValue,
 } from '../../../sql/filterClause';
-import type { FieldKind } from '../../../sql/resultField';
 import { useDialect } from '../../hooks/useDialect';
 import { commentForeground } from '../../theme';
 import { isNullish } from '../../utils/isNullish';
@@ -104,10 +104,13 @@ export default function CellContextMenu({
     [onFilterChange, onClose]
   );
 
+  const serverZone = useDateDisplay().serverZone?.zone ?? null;
+
   const items = target
     ? buildMenuItems({
         dialect,
         databaseName: database,
+        serverZone,
         target,
         clipboardText,
         t,
@@ -184,6 +187,8 @@ export default function CellContextMenu({
 interface MenuItemsParams {
   dialect: Dialect;
   databaseName: string | null;
+  /** the zone a JSON / CSV copy takes a wall clock in, `null` when the server's is unknown */
+  serverZone: string | null;
   target: CellMenuTarget;
   clipboardText: string;
   t: ReturnType<typeof useTranslation>['t'];
@@ -200,6 +205,7 @@ interface MenuItemsParams {
 function buildMenuItems({
   dialect,
   databaseName,
+  serverZone,
   target,
   clipboardText,
   t,
@@ -239,7 +245,7 @@ function buildMenuItems({
       // there is no text to a NULL, and copying an empty one would silently
       // wipe what the clipboard held
       disabled: isNullish(value),
-      onClick: () => onCopy(toCopiedText(value, column.kind)),
+      onClick: () => onCopy(toCopiedText(value)),
     },
     {
       key: 'copyRow',
@@ -248,12 +254,12 @@ function buildMenuItems({
         {
           key: RowFormat.Json,
           label: t('table.contextMenu.copyRow.json'),
-          onClick: () => onCopy(rowToJson(row)),
+          onClick: () => onCopy(rowToJson(row, serverZone)),
         },
         {
           key: RowFormat.Csv,
           label: t('table.contextMenu.copyRow.csv'),
-          onClick: () => onCopy(rowToCsv(row)),
+          onClick: () => onCopy(rowToCsv(row, serverZone)),
         },
         {
           key: RowFormat.SqlInsert,
@@ -280,10 +286,10 @@ function buildMenuItems({
  * The whole value, as the detail modal shows it — except bytes, which the
  * modal cuts off after a few kilobytes: a copy must never be truncated.
  */
-function toCopiedText(value: unknown, kind: FieldKind): string {
+function toCopiedText(value: unknown): string {
   return value instanceof Uint8Array
     ? toHexLiteral(value)
-    : cellValueToText(value, kind);
+    : cellValueToText(value);
 }
 
 interface FilterItemParams {
@@ -310,7 +316,7 @@ function buildFilterItem({
   const cellLiteral =
     column.detail?.binary === true
       ? undefined
-      : cellValueToSqlLiteral(dialect, target.value, column.kind);
+      : cellValueToSqlLiteral(dialect, target.value);
 
   const clipboardLiteral =
     clipboardText === '' ? undefined : dialect.escapeLiteral(clipboardText);

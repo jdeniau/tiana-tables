@@ -14,6 +14,7 @@ import type { ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import { useDialect } from '../../hooks/useDialect';
 import { usePanelSize } from '../../hooks/usePanelSize';
+import DateDisplaySwitch from '../DateDisplaySwitch';
 import SqlErrorComponent from '../Query/SqlErrorComponent';
 import WhereFilter from '../Query/WhereFilter';
 import {
@@ -24,6 +25,7 @@ import {
   RegionHeader,
   RegionMeta,
   RegionName,
+  RegionTools,
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
@@ -191,7 +193,10 @@ export function TableLayout({
               )}
             </RegionGroup>
 
-            <TableViewSwitch />
+            <RegionTools>
+              {fields && <DateDisplaySwitch fields={fields} />}
+              <TableViewSwitch />
+            </RegionTools>
           </RegionHeader>
 
           {/* the grid stays under an error: its headers are how a failed sort is left */}

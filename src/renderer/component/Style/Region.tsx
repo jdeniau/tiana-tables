@@ -42,6 +42,11 @@ export const RegionGroup = styled.div`
   min-width: 0;
 `;
 
+/** the controls' side, its meta and switches farther apart than a name and its meta */
+export const RegionTools = styled(RegionGroup)`
+  gap: ${space.md};
+`;
+
 export const RegionName = styled.h2`
   flex: none;
   margin: 0;

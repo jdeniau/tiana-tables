@@ -277,3 +277,12 @@ describe('describeTable', () => {
     }
   );
 });
+
+describe('serverTimeZone', () => {
+  // measured on `tiana-dev-postgres`
+  test('reads the setting as the name of a zone', () => {
+    expect(
+      postgresMetadata.serverTimeZone().answer([{ current_setting: 'Etc/UTC' }])
+    ).toEqual({ name: 'Etc/UTC', isAbbreviation: false });
+  });
+});

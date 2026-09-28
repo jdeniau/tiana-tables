@@ -15,6 +15,11 @@ export default {
     ' noPrimaryKey {Read-only: no primary key identifies this row.}' +
     ' unknownColumn {Read-only: this column belongs to no table of this database.}' +
     ' other {Read-only.}}',
+  // `zone` is `none` outside a connection
+  'cell.detail.serverTime':
+    '{zone, select,' +
+    ' none {Server time: the value is read and written as the server holds it, whichever zone the grid shows dates in.}' +
+    ' other {Server time ({zone}): the value is read and written as the server holds it, whichever zone the grid shows dates in.}}',
   'cell.detail.setNull': 'Set to NULL',
   'cell.write.cancel': 'Cancel my change',
   'cell.write.changed.description':
@@ -108,6 +113,14 @@ export default {
   'connection.form.user.label': 'User',
   'connection.list.count': '{count, plural, one {# saved} other {# saved}}',
   'connection.list.title': 'Connections',
+  'dateDisplay.assumed':
+    'Dates with no time zone (DATETIME, timestamp) are read as the server’s time ({zone}), then converted.',
+  'dateDisplay.label': 'Dates',
+  // ICU select on the `DateDisplay` enum
+  'dateDisplay.option':
+    '{display, select, server {Server} utc {UTC} local {Local} other {Server}}',
+  'dateDisplay.unresolved':
+    'The server names its zone “{zone}”, which gives no rules to convert dates with, summer time included. Set its time zone to a name, such as America/New_York.',
   'error.connection.notFound': 'Connection not found',
   'errorPage.goHome': 'Go back to the home page',
   'errorPage.sorry': 'Sorry, an unexpected error has occurred.',

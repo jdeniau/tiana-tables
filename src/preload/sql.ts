@@ -2,6 +2,7 @@ import { ipcRenderer } from 'electron';
 import type {
   ColumnDetail,
   ForeignKey,
+  ServerTimeZoneName,
   TableStructureRow,
 } from '../sql/dialect/metadata';
 import { decodeError } from '../sql/errorSerializer';
@@ -50,6 +51,8 @@ interface Sql {
     databaseName: string,
     tableName: string
   ): QueryResult<TableStructureRow[]>;
+  /** The zone the server writes its date-times in, read on the current connection. */
+  getServerTimeZone(): Promise<ServerTimeZoneName>;
 }
 
 async function doInvokeQuery(sqlChannel: SQL_CHANNEL, ...params: unknown[]) {
@@ -85,6 +88,9 @@ export const sql: Sql = {
 
   getTableStructure: async (databaseName, tableName) =>
     doInvokeQuery(SQL_CHANNEL.GET_TABLE_STRUCTURE, databaseName, tableName),
+
+  getServerTimeZone: async () =>
+    doInvokeQuery(SQL_CHANNEL.GET_SERVER_TIME_ZONE),
 
   closeConnection: bindChannel(SQL_CHANNEL.CLOSE),
 

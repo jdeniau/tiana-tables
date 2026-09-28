@@ -1,6 +1,10 @@
 import { FieldKind, type ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
-import { formatDate, formatDateTime } from '../../utils/dateFormatter';
+import {
+  type ZoneShift,
+  formatDateText,
+  isDateKind,
+} from '../../utils/dateFormatter';
 import { isNullish } from '../../utils/isNullish';
 import type { ChartConfig } from './chartConfig';
 
@@ -75,16 +79,19 @@ export function toNumber(value: unknown): number | null {
  * The label a value takes on the X axis.
  *
  * Both scales are categorical (`point` for lines, the index for bars), so every
- * X is a string. DATE and DATETIME columns arrive as `Date` objects with the
- * default mysql2 options, and their ISO form makes a poor axis label.
+ * X is a string. A date is written as the grid shows it, not in its ISO form.
  */
-export function toAxisLabel(value: unknown, isDateOnly: boolean): string {
+export function toAxisLabel(
+  value: unknown,
+  kind: FieldKind,
+  dateShift: ZoneShift | null
+): string {
   if (isNullish(value)) {
     return '';
   }
 
-  if (value instanceof Date) {
-    return isDateOnly ? formatDate(value) : formatDateTime(value);
+  if (typeof value === 'string' && isDateKind(kind)) {
+    return formatDateText(value, kind, dateShift).text;
   }
 
   return String(value);
@@ -95,23 +102,25 @@ interface Input {
   fields: readonly ResultField[];
   config: ChartConfig;
   rowsAsArray: boolean;
+  /** the zone of the date switch, which the X axis follows as the grid does */
+  dateShift: ZoneShift | null;
 }
 
-function axisLabels({ rows, fields, config, rowsAsArray }: Input): {
+function axisLabels({ rows, fields, config, rowsAsArray, dateShift }: Input): {
   labels: Array<string>;
   isTruncated: boolean;
 } {
   const xField = fields[config.x];
-  // DATE has no time part to show; every other temporal type does. mysql2 hands
-  // both over as `Date`, so the column type is the only thing that tells them
-  // apart.
-  const isDateOnly = xField?.kind === FieldKind.Date;
-
+  const xKind = xField?.kind ?? FieldKind.Unknown;
   const kept = rows.slice(0, MAX_POINTS);
 
   return {
     labels: kept.map((row) =>
-      toAxisLabel(readCell(row, config.x, xField, rowsAsArray), isDateOnly)
+      toAxisLabel(
+        readCell(row, config.x, xField, rowsAsArray),
+        xKind,
+        dateShift
+      )
     ),
     isTruncated: rows.length > MAX_POINTS,
   };

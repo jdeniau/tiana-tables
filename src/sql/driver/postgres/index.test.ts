@@ -186,12 +186,6 @@ describe('types', () => {
     expect(decode(oid, text)).toEqual(value);
   });
 
-  test('decodes a date into a Date, as mysql2 does', () => {
-    expect(decode(builtins.TIMESTAMPTZ, '2026-09-23 10:00:00+00')).toEqual(
-      new Date('2026-09-23T10:00:00Z')
-    );
-  });
-
   // measured: `text[]` is OID 1009, an enum array has an OID of its own
   test.each([
     ['an array', 1009, '{math,poetry}'],
@@ -201,6 +195,17 @@ describe('types', () => {
       'a bigint, which a number would round',
       builtins.INT8,
       '12345678901234567',
+    ],
+    ['a date', builtins.DATE, '2026-09-23'],
+    [
+      'a timestamp, microseconds included',
+      builtins.TIMESTAMP,
+      '2026-09-23 10:00:00.123456',
+    ],
+    [
+      'a timestamptz, with its offset',
+      builtins.TIMESTAMPTZ,
+      '2026-09-23 15:30:00+05:30',
     ],
   ])('keeps %s as the server spells it', (_label, oid, text) => {
     expect(decode(oid, text)).toBe(text);

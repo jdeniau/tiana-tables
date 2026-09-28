@@ -2,7 +2,7 @@
 
 ## Installation
 
-This application is an electron app, so you need to have [Node.js](https://nodejs.org/fr) 26 installed on your computer.
+This application is an electron app, so you need to have [Node.js](https://nodejs.org/fr) 26 installed on your computer: the code uses its native `Temporal`.
 
 It does also use yarn 4+, through corepack, which Node.js ships no more since version 25:
 

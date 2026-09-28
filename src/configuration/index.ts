@@ -6,6 +6,7 @@ import { WindowState } from '../main-process/windowState';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
 import { DatabaseEngine } from '../sql/engine';
 import { ConnectionObjectWithoutSlug } from '../sql/types';
+import type { DateDisplay } from './dateDisplay';
 import { EncryptionUnavailableError, encryptPassword } from './encryption';
 import {
   createConfigurationFolderIfNotExists,
@@ -431,6 +432,16 @@ export function setPanelSize(panel: PANEL, size: string): Configuration {
   return config;
 }
 
+export function setDateDisplay(dateDisplay: DateDisplay): Configuration {
+  const config = getConfiguration();
+
+  config.dateDisplay = dateDisplay;
+
+  writeConfiguration(config);
+
+  return config;
+}
+
 export function saveWindowState(windowState: WindowState): void {
   const config = getConfiguration();
 
@@ -501,6 +512,7 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.SET_COLUMN_DISPLAY_AFTER]: setColumnDisplayAfter,
   [CONFIGURATION_CHANNEL.SET_COLUMN_WIDTH]: setColumnWidth,
   [CONFIGURATION_CHANNEL.SET_PANEL_SIZE]: setPanelSize,
+  [CONFIGURATION_CHANNEL.SET_DATE_DISPLAY]: setDateDisplay,
 } as const;
 
 export function bindIpcMain(ipcMain: Electron.IpcMain): void {

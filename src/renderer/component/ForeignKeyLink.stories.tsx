@@ -4,7 +4,6 @@ import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDeco
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import { getDialect } from '../../sql/dialect';
 import { DatabaseEngine } from '../../sql/engine';
-import { FieldKind } from '../../sql/resultField';
 import ForeignKeyLink from './ForeignKeyLink';
 
 const meta: Meta<typeof ForeignKeyLink> = {
@@ -42,7 +41,6 @@ export const Primary: Story = {
     dialect: getDialect(DatabaseEngine.MySQL),
     tableName: 'table',
     columnName: 'linkedId',
-    fieldKind: FieldKind.Number,
     value: 1,
   },
 };

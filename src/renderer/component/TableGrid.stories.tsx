@@ -90,9 +90,11 @@ function makeRows(rowCount: number, columnCount: number): ResultRow[] {
           row.price = Math.round(random() * 10000) / 100;
           break;
         case 'createdAt':
-          row.createdAt = new Date(
-            Date.UTC(2026, 0, 1) + rowIndex * 60_000 // one minute per row
-          );
+          // the text mysql2 hands over with `dateStrings`, one minute per row
+          row.createdAt = Temporal.PlainDateTime.from('2026-01-01T00:00:00')
+            .add({ minutes: rowIndex })
+            .toString()
+            .replace('T', ' ');
           break;
         case 'payload':
           // an object, like mysql2 hands JSON columns over
@@ -332,8 +334,7 @@ export const WithFilterContextMenu: Story = {
 
 /**
  * What the server would answer a write with, for the types the story uses:
- * mysql2 hands a `DATETIME` back as a `Date` and a JSON column parsed, not as
- * the text that was sent.
+ * mysql2 hands a JSON column back parsed, not as the text that was sent.
  */
 function readBack(
   fields: ResultField[],
@@ -344,8 +345,6 @@ function readBack(
   }
 
   switch (fields.find((field) => field.name === column)?.kind) {
-    case FieldKind.DateTime:
-      return new Date(newValue);
     case FieldKind.Json:
       return JSON.parse(newValue);
     case FieldKind.Number:

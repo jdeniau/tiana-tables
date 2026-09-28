@@ -12,7 +12,6 @@ import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import type { ForeignKey } from '../../sql/dialect/metadata';
 import { mysqlDialect } from '../../sql/dialect/mysql';
-import { FieldKind } from '../../sql/resultField';
 import ForeignKeyLink from './ForeignKeyLink';
 
 const FOREIGN_KEYS: ForeignKey[] = [
@@ -33,7 +32,7 @@ afterEach(() => {
 });
 
 /** the `?where=` the link would navigate to, decoded */
-function renderLink(value: unknown, fieldKind: FieldKind): string | null {
+function renderLink(value: unknown): string | null {
   container = document.createElement('div');
   document.body.append(container);
 
@@ -60,7 +59,6 @@ function renderLink(value: unknown, fieldKind: FieldKind): string | null {
                   dialect={mysqlDialect}
                   tableName="orders"
                   columnName="customer_label"
-                  fieldKind={fieldKind}
                   value={value}
                 />
               </ForeignKeysContextProvider>
@@ -82,22 +80,20 @@ function renderLink(value: unknown, fieldKind: FieldKind): string | null {
 
 describe('ForeignKeyLink', () => {
   test('compares the referenced column to a quoted literal', () => {
-    expect(renderLink('abc', FieldKind.String)).toBe("`label` = 'abc'");
+    expect(renderLink('abc')).toBe("`label` = 'abc'");
   });
 
   test('escapes a value that would otherwise end the literal', () => {
     // it used to build `label="O'Brien"`: a double-quoted value, unescaped, so
     // an apostrophe in it made the clause a syntax error
-    expect(renderLink("O'Brien", FieldKind.String)).toBe(
-      "`label` = 'O\\'Brien'"
-    );
+    expect(renderLink("O'Brien")).toBe("`label` = 'O\\'Brien'");
   });
 
   test('writes a number bare', () => {
-    expect(renderLink(42, FieldKind.Number)).toBe('`label` = 42');
+    expect(renderLink(42)).toBe('`label` = 42');
   });
 
   test('offers no link for a key holding NULL, which references nothing', () => {
-    expect(renderLink(null, FieldKind.Number)).toBeNull();
+    expect(renderLink(null)).toBeNull();
   });
 });

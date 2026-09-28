@@ -1,4 +1,3 @@
-import { FieldKind } from '../../../sql/resultField';
 import type { SqlBoundValue } from '../../../sql/types';
 import { isNullish } from '../../utils/isNullish';
 import cellValueToText from '../cellValueToText';
@@ -26,13 +25,10 @@ export interface EditableValue {
  * even in a text column, since only a value the user actually changed is ever
  * written.
  */
-export function toEditableValue(
-  value: unknown,
-  fieldKind: FieldKind
-): EditableValue {
+export function toEditableValue(value: unknown): EditableValue {
   return {
     isNull: isNullish(value),
-    text: cellValueToText(value, fieldKind),
+    text: cellValueToText(value),
   };
 }
 
@@ -44,19 +40,14 @@ export function toSqlValue({ isNull, text }: EditableValue): string | null {
 /**
  * A loaded value, turned into something the write can be guarded on.
  *
- * The driver hands rows over already typed — a `Date` for a `DATETIME`, an
- * object for a `JSON` column — and those types are what must go back for the
- * comparison to mean the same thing. A `Date` travels as is (structured clone
- * carries it, mysql2 formats it), an object goes back as the JSON text the
- * server parses again.
+ * A value goes back as what the server compares the same way: a scalar as
+ * the driver answered it — a date is the server's own text, microseconds
+ * included —, an object (a `JSON` column) as the JSON text the server parses
+ * again.
  */
 export function toBoundValue(value: unknown): SqlBoundValue {
   if (isNullish(value)) {
     return null;
-  }
-
-  if (value instanceof Date) {
-    return value;
   }
 
   if (typeof value === 'string' || typeof value === 'number') {

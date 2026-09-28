@@ -1,3 +1,4 @@
+import invariant from 'tiny-invariant';
 import { z } from 'zod';
 import type { DialectMetadata } from '../metadata';
 import { readQuery } from '../readQuery';
@@ -30,6 +31,11 @@ const columnRow = z.object({
   IS_NULLABLE: z.string(),
   // usually the empty string, but the standard allows a NULL
   EXTRA: z.string().nullable(),
+});
+
+const timeZoneRow = z.object({
+  '@@session.time_zone': z.string(),
+  '@@system_time_zone': z.string(),
 });
 
 const describedColumnRow = z.object({
@@ -171,5 +177,22 @@ export const mysqlMetadata: DialectMetadata = {
           Collation: row.COLLATION_NAME,
           Comment: row.COLUMN_COMMENT,
         })),
+    }),
+
+  // `SYSTEM` defers to the machine, whose zone MySQL only knows by its abbreviation
+  serverTimeZone: () =>
+    readQuery('serverTimeZone', {
+      sql: 'SELECT @@session.time_zone, @@system_time_zone',
+      values: {},
+      row: timeZoneRow,
+      read: ([row]) => {
+        invariant(row, 'A SELECT of two variables answers one row');
+
+        const session = row['@@session.time_zone'];
+
+        return session === 'SYSTEM'
+          ? { name: row['@@system_time_zone'], isAbbreviation: true }
+          : { name: session, isAbbreviation: false };
+      },
     }),
 };

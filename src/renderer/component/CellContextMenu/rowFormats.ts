@@ -1,6 +1,6 @@
 import type { Dialect } from '../../../sql/dialect/types';
-import { FieldKind } from '../../../sql/resultField';
-import { formatDate } from '../../utils/dateFormatter';
+import type { FieldKind } from '../../../sql/resultField';
+import { dateTextToIso, isDateKind } from '../../utils/dateFormatter';
 import { isNullish } from '../../utils/isNullish';
 import type { ColumnMeta } from '../TableGrid';
 import toHexLiteral from '../hexLiteral';
@@ -20,39 +20,39 @@ export enum RowFormat {
 }
 
 /**
- * A point in time in UTC, offset included, so that it reads as the same instant anywhere.
- * A `DATE` has no time, hence no offset: it stays the calendar day.
- */
-function dateText(value: Date, kind: FieldKind): string {
-  return kind === FieldKind.Date ? formatDate(value) : value.toISOString();
-}
-
-/**
  * The row as one JSON object, keyed by column name.
  *
  * Values keep their JSON type — a number stays a number, a JSON column stays
- * nested — except what JSON has no type for: a date is written in ISO 8601,
- * bytes as their hexadecimal literal. Two columns of a raw query may
+ * nested — except what JSON has no type for: a date is written in ISO 8601, a
+ * wall clock taken in `serverZone`, bytes as their hexadecimal literal. Two columns of a raw query may
  * share a name; the last one wins, as it does in the rows the driver hands
  * over as objects.
  */
-export function rowToJson(cells: ReadonlyArray<RowCell>): string {
+export function rowToJson(
+  cells: ReadonlyArray<RowCell>,
+  serverZone: string | null
+): string {
   const row: Record<string, unknown> = {};
 
   for (const { column, value } of cells) {
-    row[column.name] = toJsonValue(value, column.kind);
+    row[column.name] = toJsonValue(value, column.kind, serverZone);
   }
 
   return JSON.stringify(row, null, 2);
 }
 
-function toJsonValue(value: unknown, kind: FieldKind): unknown {
+function toJsonValue(
+  value: unknown,
+  kind: FieldKind,
+  serverZone: string | null
+): unknown {
   if (isNullish(value)) {
     return null;
   }
 
-  if (value instanceof Date) {
-    return dateText(value, kind);
+  // a point in time reads as the same instant anywhere
+  if (typeof value === 'string' && isDateKind(kind)) {
+    return dateTextToIso(value, kind, serverZone);
   }
 
   if (value instanceof Uint8Array) {
@@ -74,19 +74,26 @@ function toJsonValue(value: unknown, kind: FieldKind): unknown {
  * a line break —, which also keeps a quoted empty string apart from NULL, left
  * as an empty field.
  */
-export function rowToCsv(cells: ReadonlyArray<RowCell>): string {
+export function rowToCsv(
+  cells: ReadonlyArray<RowCell>,
+  serverZone: string | null
+): string {
   const header = cells.map(({ column }) => csvField(column.name));
   const values = cells.map(({ column, value }) =>
-    isNullish(value) ? '' : csvField(toFlatText(value, column.kind))
+    isNullish(value) ? '' : csvField(toFlatText(value, column.kind, serverZone))
   );
 
   return `${header.join(',')}\n${values.join(',')}`;
 }
 
 /** A value on one line: a JSON column compact, not indented as in the modal. */
-function toFlatText(value: unknown, kind: FieldKind): string {
-  if (value instanceof Date) {
-    return dateText(value, kind);
+function toFlatText(
+  value: unknown,
+  kind: FieldKind,
+  serverZone: string | null
+): string {
+  if (typeof value === 'string' && isDateKind(kind)) {
+    return dateTextToIso(value, kind, serverZone);
   }
 
   if (value instanceof Uint8Array) {
@@ -136,18 +143,12 @@ export function rowToInsert(
   }
 
   const columns = names.map((name) => dialect.escapeIdentifier(name));
-  const values = written.map(({ column, value }) =>
-    toSqlLiteral(dialect, value, column.kind)
-  );
+  const values = written.map(({ value }) => toSqlLiteral(dialect, value));
 
   return `INSERT INTO ${dialect.qualify(databaseName, tableName)} (${columns.join(', ')}) VALUES (${values.join(', ')});`;
 }
 
-function toSqlLiteral(
-  dialect: Dialect,
-  value: unknown,
-  kind: FieldKind
-): string {
+function toSqlLiteral(dialect: Dialect, value: unknown): string {
   if (isNullish(value)) {
     return 'NULL';
   }
@@ -157,5 +158,5 @@ function toSqlLiteral(
   }
 
   // every other value has a literal: only NULL and bytes come back undefined
-  return cellValueToSqlLiteral(dialect, value, kind) ?? 'NULL';
+  return cellValueToSqlLiteral(dialect, value) ?? 'NULL';
 }

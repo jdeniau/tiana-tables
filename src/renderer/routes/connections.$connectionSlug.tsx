@@ -14,6 +14,7 @@ import { PANEL } from '../../configuration/panels';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseListContextProvider } from '../../contexts/DatabaseListContext';
+import { DateDisplayContextProvider } from '../../contexts/DateDisplayContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import { OpenTablesContextProvider } from '../../contexts/OpenTablesContext';
 import { TableListContextProvider } from '../../contexts/TableListContext';
@@ -128,6 +129,7 @@ export async function loader({ params, request }: RouteParams) {
   const tableList = await window.sql.listTables(activeDatabase);
   const foreignKeys = await window.sql.getForeignKeys(activeDatabase);
   const allColumns = await window.sql.getAllColumns(activeDatabase);
+  const serverTimeZone = await window.sql.getServerTimeZone();
 
   return {
     connectionSlug,
@@ -136,6 +138,7 @@ export async function loader({ params, request }: RouteParams) {
     foreignKeys,
     allColumns,
     activeDatabase,
+    serverTimeZone,
 
     openTables: pruneOpenTables(databaseConfig?.openTables ?? [], tableList),
   };
@@ -150,6 +153,7 @@ export default function ConnectionDetailPage() {
     foreignKeys,
     allColumns,
     activeDatabase,
+    serverTimeZone,
     openTables,
   } = useLoaderData() as Exclude<Awaited<ReturnType<typeof loader>>, Response>;
   const { addConnectionToList } = useConnectionContext();
@@ -166,42 +170,44 @@ export default function ConnectionDetailPage() {
       <TableListContextProvider tableList={tableList}>
         <ForeignKeysContextProvider foreignKeys={foreignKeys}>
           <AllColumnsContextProvider allColumns={allColumns}>
-            <OpenTablesContextProvider
-              // the open tables are the database's: another database is another run
-              key={activeDatabase}
-              connectionSlug={connectionSlug}
-              database={activeDatabase}
-              openTables={openTables}
-            >
-              <NavigateModalContextProvider>
-                <Splitter onResizeEnd={onResizeEnd}>
-                  <Splitter.Panel {...panelProps}>
-                    <Sider>
-                      <SiderHead>
-                        <DatabaseSelector databaseList={databaseList} />
-                      </SiderHead>
-                      <SiderTools>
-                        <OpenNavigateModalButton />
-                      </SiderTools>
-                      <RegionBody>
-                        <TableList tableList={tableList} />
-                      </RegionBody>
-                      <RegionFoot>
-                        {t('tableList.count', {
-                          count: tableList.length,
-                        })}
-                      </RegionFoot>
-                    </Sider>
-                  </Splitter.Panel>
-                  <Splitter.Panel>
-                    <Content>
-                      <TableTabs />
-                      <Outlet />
-                    </Content>
-                  </Splitter.Panel>
-                </Splitter>
-              </NavigateModalContextProvider>
-            </OpenTablesContextProvider>
+            <DateDisplayContextProvider serverTimeZone={serverTimeZone}>
+              <OpenTablesContextProvider
+                // the open tables are the database's: another database is another run
+                key={activeDatabase}
+                connectionSlug={connectionSlug}
+                database={activeDatabase}
+                openTables={openTables}
+              >
+                <NavigateModalContextProvider>
+                  <Splitter onResizeEnd={onResizeEnd}>
+                    <Splitter.Panel {...panelProps}>
+                      <Sider>
+                        <SiderHead>
+                          <DatabaseSelector databaseList={databaseList} />
+                        </SiderHead>
+                        <SiderTools>
+                          <OpenNavigateModalButton />
+                        </SiderTools>
+                        <RegionBody>
+                          <TableList tableList={tableList} />
+                        </RegionBody>
+                        <RegionFoot>
+                          {t('tableList.count', {
+                            count: tableList.length,
+                          })}
+                        </RegionFoot>
+                      </Sider>
+                    </Splitter.Panel>
+                    <Splitter.Panel>
+                      <Content>
+                        <TableTabs />
+                        <Outlet />
+                      </Content>
+                    </Splitter.Panel>
+                  </Splitter>
+                </NavigateModalContextProvider>
+              </OpenTablesContextProvider>
+            </DateDisplayContextProvider>
           </AllColumnsContextProvider>
         </ForeignKeysContextProvider>
       </TableListContextProvider>

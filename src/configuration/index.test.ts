@@ -2,6 +2,7 @@ import { dialog, safeStorage } from 'electron';
 import { existsSync, readFileSync, writeFile } from 'node:fs';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { DatabaseEngine } from '../sql/engine';
+import { DateDisplay } from './dateDisplay';
 import { DEFAULT_LOCALE } from './locale';
 import { PANEL } from './panels';
 import { DEFAULT_THEME } from './themes';
@@ -16,6 +17,7 @@ import {
   setActiveTable,
   setColumnDisplayAfter,
   setColumnWidth,
+  setDateDisplay,
   setOpenTables,
   setPanelSize,
   setTableFilter,
@@ -1124,6 +1126,22 @@ describe('set panel size', () => {
 
     expect(config.panelSizes).toEqual(expected);
     expect(getConfiguration().panelSizes).toEqual(expected);
+  });
+});
+
+describe('setDateDisplay', () => {
+  test('stores the zone dates are shown in, and answers with the new config', async () => {
+    mockExistsSync.mockReturnValue(false);
+
+    const configuration = setDateDisplay(DateDisplay.Local);
+
+    expect(configuration.dateDisplay).toBe('local');
+    expect(mockWriteFile).toHaveBeenCalledWith(
+      'userData/config/config.json',
+      expect.stringContaining('"dateDisplay": "local"'),
+      'utf-8',
+      expect.any(Function)
+    );
   });
 });
 

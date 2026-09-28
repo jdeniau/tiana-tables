@@ -97,14 +97,14 @@ export const WithNumberType: Story = {
 export const WithDateType: Story = {
   args: {
     kind: FieldKind.Date,
-    value: new Date('2020-01-01T12:00:00'),
+    value: '2020-01-01',
   },
 };
 
 export const WithDatetimeType: Story = {
   args: {
     kind: FieldKind.DateTime,
-    value: new Date('2020-01-01T12:00:00'),
+    value: '2020-01-01 12:00:00',
   },
 };
 

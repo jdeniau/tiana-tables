@@ -85,9 +85,10 @@ One owner per value, or both places drift. The code is the reference for the num
 
 `src/renderer/component/Style/` builds every rule above once, so no route rebuilds it; the visual ones have a story.
 
-- `Region.tsx` — `Region`, `RegionHeader`, `RegionGroup`, `RegionName`, `RegionMeta`, `RegionDetail`, `RegionBody` (the scroller, with the scrollbar pair), `RegionFoot`; `FramedRegion` + `Centered` for the connect screen. A region draws no rule of its own: its parent does (the Splitter bar is a 1px `base03` rule).
+- `Region.tsx` — `Region`, `RegionHeader`, `RegionGroup`, `RegionTools` (the controls' side of the header), `RegionName`, `RegionMeta`, `RegionDetail`, `RegionBody` (the scroller, with the scrollbar pair), `RegionFoot`; `FramedRegion` + `Centered` for the connect screen. A region draws no rule of its own: its parent does (the Splitter bar is a 1px `base03` rule).
 - `TabStrip.tsx` — a run of siblings separated by rules, the current one pipped: `TabStripItem` (acts), `TabStripLink` (navigates), `TabStripClosableLink`.
 - `ViewSwitch.tsx` — a framed run of `NavLink` segments, the current one filled: the look of a switch at the right of a result region's header (Data/Structure), matching the SQL page's Data/Chart `Segmented`.
+- `RegionSegmented.tsx` — the antd `Segmented` of a region header (Data/Chart, the dates' zone): its frame and caps set once, so no page passes `styles`.
 - `TitleBar.tsx` — the bar, its groups and the `Brand`.
 - `ActionButton.tsx` — the one solid block of a region (Run, Filter, Save and connect): the accent fill, the word in the display face, in caps.
 - `fill.ts` — the three declarations that make a box fill its parent, whatever the parent's `display`.

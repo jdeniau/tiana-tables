@@ -1,5 +1,3 @@
-import { FieldKind } from '../../sql/resultField';
-import { formatDate, formatDateTime } from '../utils/dateFormatter';
 import { isNullish } from '../utils/isNullish';
 import toHexLiteral from './hexLiteral';
 
@@ -14,19 +12,12 @@ const MAX_BINARY_BYTES = 4096;
  * Turn a cell value into the text shown in the detail modal.
  *
  * This is the full value, not the truncated one-liner of the grid: JSON gets
- * indented, dates keep the formatting of the grid, and NULL becomes an empty
- * text (the modal says so with a placeholder).
+ * indented, a date is the server's text, fraction and offset included, and
+ * NULL becomes an empty text (the modal says so with a placeholder).
  */
-export default function cellValueToText(
-  value: unknown,
-  kind: FieldKind
-): string {
+export default function cellValueToText(value: unknown): string {
   if (isNullish(value)) {
     return '';
-  }
-
-  if (value instanceof Date) {
-    return kind === FieldKind.Date ? formatDate(value) : formatDateTime(value);
   }
 
   if (typeof value === 'string') {

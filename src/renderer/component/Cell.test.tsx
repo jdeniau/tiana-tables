@@ -4,9 +4,13 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ThemeProvider } from 'styled-components';
 import { describe, expect, test } from 'vitest';
+import { DateDisplay } from '../../configuration/dateDisplay';
 import { DEFAULT_THEME } from '../../configuration/themes';
+import { testables } from '../../contexts/DateDisplayContext';
 import { FieldKind } from '../../sql/resultField';
 import Cell from './Cell';
+
+const { DateDisplayContext } = testables;
 
 function renderCell(kind: FieldKind, value: unknown): string {
   return renderToStaticMarkup(
@@ -98,14 +102,59 @@ describe('the order of the tiers', () => {
     expect(rendered).not.toContain('FF'.repeat(200));
   });
 
-  // the value settles that it is a date; the kind only picks the format
-  test('a Date takes its format from the kind', () => {
-    const date = new Date(2026, 8, 11, 14, 3, 9);
+  // the server's text, which only the kind tells from any other string
+  test('a date column formats the text the server answered', () => {
+    expect(
+      renderCell(FieldKind.DateTime, '2026-09-11 14:03:09.123456')
+    ).toContain('>2026-09-11 14:03:09<');
+  });
 
-    expect(renderCell(FieldKind.Date, date)).toContain('>2026-09-11<');
-    expect(renderCell(FieldKind.DateTime, date)).toContain(
-      '>2026-09-11 14:03:09<'
-    );
+  describe('in the zone of the date switch', () => {
+    const inZone = (display: DateDisplay, to: string, value: string) =>
+      renderToStaticMarkup(
+        <ThemeProvider theme={DEFAULT_THEME}>
+          <DateDisplayContext.Provider
+            value={{
+              display,
+              segments: [],
+              shift: { from: 'UTC', to },
+              serverZone: { label: 'UTC', zone: 'UTC' },
+              setDisplay: () => {},
+            }}
+          >
+            <Cell kind={FieldKind.DateTime} value={value} />
+          </DateDisplayContext.Provider>
+        </ThemeProvider>
+      );
+
+    // the offset changes with summer time, so it is the value's own
+    test('local time carries its offset', () => {
+      const winter = inZone(
+        DateDisplay.Local,
+        'Europe/Paris',
+        '2025-12-23 01:02:26'
+      );
+      const summer = inZone(
+        DateDisplay.Local,
+        'Europe/Paris',
+        '2025-07-01 01:02:26'
+      );
+
+      expect(winter).toContain('data-offset="UTC+01:00"');
+      expect(winter).toContain('>2025-12-23 02:02:26<');
+      expect(summer).toContain('data-offset="UTC+02:00"');
+    });
+
+    test('UTC carries no offset', () => {
+      expect(
+        inZone(DateDisplay.Utc, 'UTC', '2025-12-23 01:02:26')
+      ).not.toContain('data-offset');
+    });
+  });
+
+  // MySQL's `0000-00-00`, which Temporal refuses
+  test('a date Temporal refuses is drawn as the server wrote it', () => {
+    expect(renderCell(FieldKind.Date, '0000-00-00')).toContain('>0000-00-00<');
   });
 
   // a `VARCHAR` keeps the colour of a string, which a `TEXT` does not have

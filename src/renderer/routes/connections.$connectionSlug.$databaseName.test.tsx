@@ -57,6 +57,9 @@ describe('loader', () => {
       listTables: vi.fn(() => Promise.resolve(['table1', 'table2'])),
       getForeignKeys: vi.fn(() => Promise.resolve([])),
       getAllColumns: vi.fn(() => Promise.resolve([])),
+      getServerTimeZone: vi.fn(() =>
+        Promise.resolve({ name: 'UTC', isAbbreviation: true })
+      ),
       connectionNameChanged: vi.fn(),
     } as unknown as typeof window.sql;
   });
@@ -134,6 +137,7 @@ describe('loader', () => {
       tableList: ['table1', 'table2'],
       foreignKeys: [],
       allColumns: [],
+      serverTimeZone: { name: 'UTC', isAbbreviation: true },
     });
   });
 

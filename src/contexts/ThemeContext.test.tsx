@@ -54,6 +54,7 @@ function resolveTokens(themeName: string): GlobalToken {
         setActiveDatabase: noop,
         setActiveTable: noop,
         setPanelSize: noop,
+        setDateDisplay: noop,
         changeLanguage: noop,
       }}
     >

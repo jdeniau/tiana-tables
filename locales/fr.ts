@@ -17,6 +17,10 @@ const fr: Translation = {
     " noPrimaryKey {Lecture seule : aucune clé primaire n'identifie cette ligne.}" +
     " unknownColumn {Lecture seule : cette colonne n'appartient à aucune table de cette base.}" +
     ' other {Lecture seule.}}',
+  'cell.detail.serverTime':
+    '{zone, select,' +
+    ' none {Heure du serveur : la valeur est lue et écrite telle que le serveur la stocke, quel que soit le fuseau d’affichage de la grille.}' +
+    ' other {Heure du serveur ({zone}) : la valeur est lue et écrite telle que le serveur la stocke, quel que soit le fuseau d’affichage de la grille.}}',
   'cell.detail.setNull': 'Mettre à NULL',
   'cell.write.cancel': 'Annuler ma modification',
   'cell.write.changed.description':
@@ -110,6 +114,13 @@ const fr: Translation = {
   'connection.list.count':
     '{count, plural, one {# enregistrée} other {# enregistrées}}',
   'connection.list.title': 'Connexions',
+  'dateDisplay.assumed':
+    'Les dates sans fuseau (DATETIME, timestamp) sont lues comme l’heure du serveur ({zone}), puis converties.',
+  'dateDisplay.label': 'Dates',
+  'dateDisplay.option':
+    '{display, select, server {Serveur} utc {UTC} local {Local} other {Serveur}}',
+  'dateDisplay.unresolved':
+    'Le serveur nomme son fuseau « {zone} », qui ne donne aucune règle pour convertir les dates, heure d’été comprise. Réglez son fuseau sur un nom, par exemple America/New_York.',
   'error.connection.notFound': 'Connexion introuvable',
   'errorPage.goHome': "Retourner à la page d'accueil",
   'errorPage.sorry': "Désolé, une erreur inattendue s'est produite.",

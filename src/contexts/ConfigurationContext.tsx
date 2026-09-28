@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import type { DateDisplay } from '../configuration/dateDisplay';
 import { PANEL } from '../configuration/panels';
 import { Configuration } from '../configuration/type';
 import { changeLanguage } from '../i18n';
@@ -18,6 +19,7 @@ type ConfigurationContextType = {
     tableName: string
   ) => void;
   setPanelSize: (panel: PANEL, size: string) => void;
+  setDateDisplay: (dateDisplay: DateDisplay) => void;
   changeLanguage: (language: string) => void;
 };
 
@@ -85,6 +87,7 @@ export function ConfigurationContextProvider({ children }: Props) {
       setActiveDatabase: window.config.setActiveDatabase,
       setActiveTable: window.config.setActiveTable,
       setPanelSize: willChangeConfiguration(window.config.setPanelSize),
+      setDateDisplay: willChangeConfiguration(window.config.setDateDisplay),
       editConnection: willChangeConfiguration(window.config.editConnection),
       changeLanguage: willChangeConfiguration((lang: string) => {
         changeLanguage(lang);
