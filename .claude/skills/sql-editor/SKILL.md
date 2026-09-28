@@ -1,17 +1,12 @@
 ---
 name: sql-editor
 description: >
-  Use when working on the SQL editor of Tiana Tables — completion, syntax
-  validation, semantic highlighting, or anything under
-  src/renderer/component/MonacoEditor/ and src/sql/parser/. Triggers on
-  monaco-editor, monaco-sql-languages, dt-sql-parser, Monarch tokenizers,
-  semantic tokens, model markers, or SQL parsing questions.
+  Use when working on the SQL editor of Tiana Tables — completion, syntax validation, semantic highlighting, or anything under src/renderer/component/MonacoEditor/ and src/sql/parser/. Triggers on monaco-editor, monaco-sql-languages, dt-sql-parser, Monarch tokenizers, semantic tokens, model markers, or SQL parsing questions.
 ---
 
 # The SQL editor stack
 
-Three layers, three different jobs. Keep them straight — most of the traps below
-come from confusing them.
+Three layers, three different jobs. Keep them straight — most of the traps below come from confusing them.
 
 | Layer                  | Job                                                                                         |
 | ---------------------- | ------------------------------------------------------------------------------------------- |
@@ -23,31 +18,22 @@ Monaco stays in charge; the two SQL packages are plugged into it.
 
 ## What we deliberately do NOT use
 
-`monaco-sql-languages` also ships completion and diagnostics, and its own
-`mysql.contribution` turns them on. **They are disabled** in
-`useCompletion.tsx`:
+`monaco-sql-languages` also ships completion and diagnostics, and its `mysql.contribution` / `pgsql.contribution` turn them on. **They are disabled** in `useCompletion.tsx`, for every language of `SQL_LANGUAGES`:
 
 ```ts
-setupLanguageFeatures(LanguageIdEnum.MYSQL, {
+setupLanguageFeatures(language, {
   completionItems: false,
   diagnostics: false,
 });
 ```
 
-Those features run in a worker it creates through Monaco's **pre-0.45** API. In
-Monaco 0.55 the standalone `createWebWorker` forwards only `opts.worker` and
-never sends the second message carrying `createData`, so the worker never
-answers: the suggest widget spins on "Loading" forever and nothing is
-underlined. Both features are rebuilt on `dt-sql-parser`, on the main thread —
-fast enough for editor-sized queries. (Their package declares
-`peerDependency monaco-editor >=0.37.1`, which is wrong.)
+Those features run in a worker it creates through Monaco's **pre-0.45** API. In Monaco 0.55 the standalone `createWebWorker` forwards only `opts.worker` and never sends the second message carrying `createData`, so the worker never answers: the suggest widget spins on "Loading" forever and nothing is underlined. Both features are rebuilt on `dt-sql-parser`, on the main thread — fast enough for editor-sized queries. (Their package declares `peerDependency monaco-editor >=0.37.1`, which is wrong.)
 
 Only the tokenizer and the language registration are kept from that package.
 
 ## Token names — the trap that already bit twice
 
-The Monarch tokenizer appends `tokenPostfix: '.sql'` to **every** token, and its
-class names are not the ones Monaco's built-in SQL grammar uses:
+The Monarch tokenizer appends `tokenPostfix: '.sql'` to **every** token, and its class names are not the ones Monaco's built-in SQL grammar uses:
 
 | SQL                                                   | token emitted              |
 | ----------------------------------------------------- | -------------------------- |
@@ -59,63 +45,31 @@ class names are not the ones Monaco's built-in SQL grammar uses:
 | `@@version`                                           | `variable.sql`             |
 | everything else                                       | `identifier.sql`           |
 
-The word operators are checked **before** the keyword list, so `JOIN` is never a
-`keyword`. Theme rules match by dot segments, so `operator.sql` does **not**
-match `operator.keyword.sql` — they are sibling branches. A rule that looks
-right can silently never apply; check the emitted name, not the intuition.
+The word operators are checked **before** the keyword list, so `JOIN` is never a `keyword`. Theme rules match by dot segments, so `operator.sql` does **not** match `operator.keyword.sql` — they are sibling branches. A rule that looks right can silently never apply; check the emitted name, not the intuition.
 
-Also: Monaco's built-in themes hardcode `string.sql` in **bright red**
-(`#FF0000`), plus `operator.sql` and `predefined.sql`. `buildMonacoTheme` sets
-`inherit: true`, so those more specific rules beat our generic ones and have to
-be restated. Any SQL token that looks wrong despite a correct generic rule needs
-an explicit `<token>.sql` override.
+Also: Monaco's built-in themes hardcode `string.sql` in bright red, which beats our generic rules — see "Monaco gotcha" in the `base16-themes` skill.
 
 ## Semantic tokens
 
-Table names and aliases are colored through
-`languages.registerDocumentSemanticTokensProvider` (`useSemanticTokens.ts`),
-because a lexer cannot tell a table from any other identifier.
+Table names and aliases are colored through `languages.registerDocumentSemanticTokensProvider` (`useSemanticTokens.ts`), because a lexer cannot tell a table from any other identifier.
 
 Three things to know:
 
-1. **The editor option is mandatory.** `StandaloneTheme` hardcodes
-   `semanticHighlighting = false`, and the default option value is
-   `configuredByTheme` — so nothing renders until the editor is created with
-   `'semanticHighlighting.enabled': true`.
-2. **Token types resolve through the theme rules.**
-   `StandaloneTheme.getTokenStyleMetadata` calls
-   `tokenTheme._match([type, ...modifiers].join('.'))`, exactly like tokenizer
-   tokens. A type named `table.sql` is styled by a `{ token: 'table.sql' }`
-   rule. Hence the `.sql` postfix on our types, mirroring the tokenizer.
-3. **Overlapping tokens void the whole result.** Monaco discards everything and
-   warns. `db1` in `FROM db1.users` is inside the table entity's range, so the
-   qualifier pass must skip anything a declaration already covers.
+1. **The editor option is mandatory.** `StandaloneTheme` hardcodes `semanticHighlighting = false`, and the default option value is `configuredByTheme` — so nothing renders until the editor is created with `'semanticHighlighting.enabled': true`.
+2. **Token types resolve through the theme rules.** `StandaloneTheme.getTokenStyleMetadata` calls `tokenTheme._match([type, ...modifiers].join('.'))`, exactly like tokenizer tokens. A type named `table.sql` is styled by a `{ token: 'table.sql' }` rule. Hence the `.sql` postfix on our types, mirroring the tokenizer.
+3. **Overlapping tokens void the whole result.** Monaco discards everything and warns. `db1` in `FROM db1.users` is inside the table entity's range, so the qualifier pass must skip anything a declaration already covers.
 
-The wire format is `[deltaLine, deltaChar, length, typeIndex, modifiers]` per
-token, **0-based**, sorted, each position relative to the previous one (the
-column absolute again on a new line).
+The wire format is `[deltaLine, deltaChar, length, typeIndex, modifiers]` per token, **0-based**, sorted, each position relative to the previous one (the column absolute again on a new line).
 
 ## The query prefix — an editor that holds a fragment
 
-The table filter (`WhereFilter`) is the same `RawSqlEditor`, but its content is
-only the body of a `WHERE` clause: `salary > 1000` on its own is a syntax error,
-names no table to complete columns from, and declares no alias to color. The
-editor therefore takes a `queryPrefix` — ``SELECT * FROM `city` WHERE`` — and
-completion, validation and highlighting all read `prefix + model.getValue()`.
+The table filter (`WhereFilter`) is the same `RawSqlEditor`, but its content is only the body of a `WHERE` clause: `salary > 1000` on its own is a syntax error, names no table to complete columns from, and declares no alias to color. The editor therefore takes a `queryPrefix` — ``SELECT * FROM `city` WHERE`` — and completion, validation and highlighting all read `prefix + model.getValue()`.
 
-`queryPrefix.ts` holds the mapping, in a `WeakMap` keyed by model: the providers
-are registered once per SQL language (`SQL_LANGUAGES`, `language.ts`) and only
-ever see a model, whose language tells them the engine (`engineOf`).
+`queryPrefix.ts` holds the mapping, in a `WeakMap` keyed by model: the providers are registered once per SQL language (`SQL_LANGUAGES`, `language.ts`) and only ever see a model, whose language tells them the engine (`engineOf`).
 
-- the prefix **must stay on a single line**, so a position maps back by
-  subtracting its length on line 1 and untouched anywhere else
-  (`toPrefixedPosition` / `fromPrefixedRange`);
-- anything the parser reports **inside** the prefix is dropped: it is SQL the
-  user never wrote, and Monaco would otherwise paint it over the first
-  characters they did — a semantic token on `city` would land on their filter,
-  and an overlap voids the whole token result;
-- an **empty** editor is not validated at all: the prefix alone is an
-  unfinished statement, and a blank filter is not a mistake.
+- the prefix **must stay on a single line**, so a position maps back by subtracting its length on line 1 and untouched anywhere else (`toPrefixedPosition` / `fromPrefixedRange`);
+- anything the parser reports **inside** the prefix is dropped: it is SQL the user never wrote, and Monaco would otherwise paint it over the first characters they did — a semantic token on `city` would land on their filter, and an overlap voids the whole token result;
+- an **empty** editor is not validated at all: the prefix alone is an unfinished statement, and a blank filter is not a mistake.
 
 ## Position conventions
 
@@ -132,49 +86,33 @@ Four of them, and mixing two is a silent off-by-one:
 
 ## dt-sql-parser behaviours worth remembering
 
-- **`getAllEntities` is all or nothing.** One syntax error and ANTLR drops the
-  whole subtree — not even the tables written before the error come back. That
-  is exactly what the editor holds while typing (`… JOIN `, `… WHERE x = `), so
-  `collectEntities` retries on shorter prefixes, dropping the trailing token
-  each time. Lexing never fails, which is what gives the cut points.
-- **`getSuggestionAtCaretPosition` reports a `column` context only while the
-  name is still empty.** Type one letter and `alias.na` becomes a `function`
-  context; inside a `WHERE` it can return nothing at all. Never derive the
-  qualifier from its `wordRanges` — read it from the model with
-  `getWordUntilPosition` plus the character before the word.
-- **`splitSQLByStatement` returns `null` on any syntax error**, so it cannot
-  answer "is the tail unfinished?". Split on the `;` tokens of `getAllTokens`.
-- **Given no error listener, a dt-sql-parser parser logs to the console**
-  (ANTLR's default listener), and `getAllEntities` passes none: every syntax
-  error of a query being typed was logged, several times with the retries of
-  `collectEntities` (DTStack/dt-sql-parser#431). `getParser` hands out
-  subclasses whose `createParser` defaults to a listener that ignores errors;
-  `validate` passes its own and still reports them. The lexers log nothing.
-- **The `pgsql` Monarch tokenizer colours a quoted identifier as a string**:
-  its grammar sends `"` to `stringDouble` with the `STRING` token, and only a
-  backtick opens a quoted identifier. Not fixable through the theme, since it is
-  the token name of a real string.
-- **Measure an editor change after a full page reload.** Vite's hot reload
-  replaces modules but leaves the watchers older versions registered on the
-  models, and a stale one wrote markers from a grammar the code no longer had.
-- The parser caches the parse tree of its last input, so one shared instance
-  per engine (`getParser`, `src/sql/parser/index.ts`) makes completion,
-  validation and highlighting parse the editor content once.
+- **`getAllEntities` is all or nothing.** One syntax error and ANTLR drops the whole subtree — not even the tables written before the error come back. That is exactly what the editor holds while typing (`… JOIN `, `… WHERE x = `), so `collectEntities` retries on shorter prefixes, dropping the trailing token each time. Lexing never fails, which is what gives the cut points.
+- **`getSuggestionAtCaretPosition` reports a `column` context only while the name is still empty.** Type one letter and `alias.na` becomes a `function` context; inside a `WHERE` it can return nothing at all. Never derive the qualifier from its `wordRanges` — read it from the model with `getWordUntilPosition` plus the character before the word.
+- **`splitSQLByStatement` returns `null` on any syntax error**, so it cannot answer "is the tail unfinished?". Split on the `;` tokens of `getAllTokens`.
+- **Given no error listener, a dt-sql-parser parser logs to the console** (ANTLR's default listener), and `getAllEntities` passes none: every syntax error of a query being typed was logged, several times with the retries of `collectEntities` (DTStack/dt-sql-parser#431). `getParser` hands out subclasses whose `createParser` defaults to a listener that ignores errors; `validate` passes its own and still reports them. The lexers log nothing.
+- **The `pgsql` Monarch tokenizer colours a quoted identifier as a string**: its grammar sends `"` to `stringDouble` with the `STRING` token, and only a backtick opens a quoted identifier. Not fixable through the theme, since it is the token name of a real string.
+- **Measure an editor change after a full page reload.** Vite's hot reload replaces modules but leaves the watchers older versions registered on the models, and a stale one wrote markers from a grammar the code no longer had.
+- The parser caches the parse tree of its last input, so one shared instance per engine (`getParser`, `src/sql/parser/index.ts`) makes completion, validation and highlighting parse the editor content once.
+
+## Names resolve inside one statement
+
+A `;` opens a new scope: tables and aliases resolve inside their statement, never across the editor. Anything that reads names out of the content buckets them by statement first — `splitStatements` plus the name's offset (`statementAtOffset` in `useCompletion`, the `Scope` map of `queryAnalysis`). Two symptoms to check when touching either: completion lengthening an alias for nothing (`a` read as taken by a previous statement), and an `unknown column` warning resolved against another statement's table (the alias map is last-declaration-wins).
+
+Within the statement, aliases are extracted from the **whole statement**, not from the text before the caret: `SELECT e.| FROM employee e` needs the `FROM` that follows.
+
+## Decorations
+
+- **`monaco-editor` decorations take class names, never colours.** The `borderColor` / `gutterIconPath` of VS Code's `createTextEditorDecorationType` belong to the workbench and do not ship in the package; `IModelDecorationOptions` only takes a colour on `overviewRuler.color` and `minimap.color`.
+- **A whole-line decoration on `base01` erases the current-line highlight**: `editor.lineHighlightBackground` is `base01` too, and decorations paint in `.view-overlays` before `.current-line`. A decoration spanning lines stays translucent (the current-statement band is `base02` at 30 %).
+- **A mark in the gutter goes through `linesDecorationsClassName`** — Monaco's own per-line gutter channel (VS Code's breakpoints). Monaco writes its `left` and `width` inline, so draw the bar as a `border-left`; a `border-right` lands past the margin and is clipped with nothing in the console. The whole-line `className` starts at the first character, so a border there sits under the text.
+- Overlay z-order follows DOM order.
 
 ## Electron
 
-The squiggly underline is a `data:image/svg+xml` background image. The CSP in
-`src/main.ts` must keep `img-src 'self' data:`, otherwise markers are computed
-but invisible — with only a console CSP violation to go on.
+The squiggly underline is a `data:image/svg+xml` background image. The CSP in `src/main.ts` must keep `img-src 'self' data:`, otherwise markers are computed but invisible — with only a console CSP violation to go on.
 
 ## Testing
 
-- Keep the analysis modules free of **runtime** monaco imports (`import type`
-  only). Importing `monaco-editor` for real drags in `window` and the test dies
-  in the node environment.
-- A test that builds an editor model needs
-  `/** @vitest-environment happy-dom */`.
-- Verify highlighting by reading **computed styles** out of the DOM
-  (`getComputedStyle(span).color`), not from screenshots — and pick a theme
-  where the slots differ: Dracula has `base0A === base0C`, so tables and aliases
-  look identical there and a screenshot proves nothing. Nord is a good default.
+- Keep the analysis modules free of **runtime** monaco imports (`import type` only). Importing `monaco-editor` for real drags in `window` and the test dies in the node environment.
+- A test that builds an editor model needs `/** @vitest-environment happy-dom */`.
+- Verify highlighting by reading **computed styles** out of the DOM (`getComputedStyle(span).color`), not from screenshots — and pick a theme where the slots differ: Dracula has `base0A === base0C`, so tables and aliases look identical there and a screenshot proves nothing. Nord is a good default.

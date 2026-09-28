@@ -1,0 +1,68 @@
+---
+name: verify-live
+description: >
+  Use when a claim about Tiana Tables has to be proven on the real thing rather than reasoned about: driving the running Electron app over CDP (keyboard, mouse, DOM, console, native menu), reproducing an interaction bug, measuring performance or timing, checking stories headless, or probing the dev MariaDB / PostgreSQL containers. Triggers on "reproduce", "prove", "measure", "benchmark", CDP, remote debugging, long tasks, "does it mount", or any sentence about what the app or a server does that was not run yet.
+---
+
+# Proving it live
+
+The project's recurring lesson: **a claim is measured before code is built on it or a sentence is written about it.** Most wrong turns came from reasoning about a mount, a timing, a tooltip, a cost or a server instead of running it.
+
+## Driving the app over CDP
+
+Wayland session, no xdotool: launch the app with a debugging port and drive it through a CDP WebSocket (`node` ≥ 22 has a global `WebSocket`, nothing to install).
+
+```sh
+tmux new-session -d -s tiana -x 200 -y 50
+tmux send-keys -t tiana "yarn electron-forge start -- \
+  --user-data-dir=<isolated-profile> --remote-debugging-port=9222" Enter
+```
+
+- electron-forge quits as soon as stdin closes: tmux, or `tail -f /dev/null |`.
+- **`--user-data-dir` isolates the configuration**; without it the run writes into the user's real connections. The profile keeps its connections between runs, so create one once (`#/connect/create`, ids `name`/`host`/`port`/`user`/`password`, button "SAVE AND CONNECT" — a new profile is in English), named with `(dev)`.
+- The page target is the one whose url starts with `http://localhost:517x`.
+- The main process is not hot-reloaded: any change to `menu.ts`, the preload or an IPC handler needs a full relaunch.
+- Clean up with `pkill -f "remote-debugging-port=922[2]"` — the brackets matter: the bare pattern matches the shell's own command line and kills it (exit 144) — then `tmux kill-session -t tiana`.
+
+Traps that each cost half an hour:
+
+- **Focus**: with the window in the background Monaco never takes focus. Send `Page.bringToFront` **and** `Emulation.setFocusEmulationEnabled {enabled: true}`, then focus `.monaco-editor .native-edit-context` (a click is not always enough).
+- **Who consumed a key**: Monaco calls both `preventDefault` and `stopPropagation`, so install **two** listeners on `window`, one capturing (what the renderer saw), one bubbling (`defaultPrevented`). Make the probe idempotent: an `if (!window.__probeBound)` guard left by a previous pass installs nothing.
+- `Input.dispatchKeyEvent` **also fires native menu accelerators** (`Ctrl+N` navigates). Modifiers: Alt=1, Ctrl=2, Meta=4, Shift=8; send `rawKeyDown` then `keyUp`, and leave ~1 s for a navigation.
+- **Native menu items**: add `--inspect-electron`; the main-process inspector listens on **9229**. `require` is not global there, use `process.mainModule.require('electron')`. `MenuItem`'s wrapper toggles `checked` before calling the handler, so a programmatic `item.click()` is exactly a real click.
+- **Quitting rewrites `config.json`** from memory: test persistence through the app's action, never by editing the file while it runs.
+- **Timing**: sample with a 1 ms sampler installed through `Page.addScriptToEvaluateOnNewDocument` rather than reasoning about async order (e.g. `window.isDev` is defined ~90 ms in, while `Root` first renders at ~650 ms because `ConfigurationContextProvider` waits for its IPC answer).
+- **After a hot reload, reload the page** (`Page.reload`) before measuring anything: Vite leaves listeners from older module versions registered (stale Monaco markers, inflated mounts).
+
+Ask the user to test in their place only once this harness has been tried.
+
+## Proving what the screen shows
+
+- Colours: `getComputedStyle(el).color`, not screenshots — and pick a theme whose slots differ (Dracula has `base0A === base0C`; Nord is a good default).
+- A border or a rule: `getComputedStyle(el).borderInlineStartWidth` on the real element.
+- A tooltip or a click target: `document.elementsFromPoint(x, y)`.
+- A scroller: `scrollHeight > clientHeight` over every `overflow: auto` ancestor.
+- An antd token: the generated rule in `document.styleSheets`, filtered on the component's class.
+
+## Measuring performance
+
+- **Attribute by A/B isolation**: swap one layer for a plain element and compare; never name a culprit from reading the code.
+- `Performance.getMetrics` deltas around the gesture (`ScriptDuration`, `LayoutDuration`, `RecalcStyleDuration`) say which layer pays; the sampling profiler then says which function; a probe on a `memo` comparator names the prop that changes.
+- Count long tasks with `PerformanceObserver({ entryTypes: ['longtask'] })`. On a hidden page (`document.hidden`) rAF runs at ~1 Hz: dispatch `new Event('scroll')` by hand.
+- Hard-reload before measuring (repeated HMR inflates mounts ~4×). Machine load skews absolutes 2-3×: interleave A and B on the same page state and compare ratios.
+- A React DevTools dev profile is fine for A/B: `measureHostInstance` inflates both sides equally.
+
+## Stories headless
+
+Nothing fails in CI when a story breaks. After adding a hook that reads a context, load every story: ids from Storybook's `index.json`, open `iframe.html?id=…` headless, count `body.sb-show-errordisplay`, before and after. README screenshots are regenerated by `docs/screenshots/shots.sh`.
+
+## Probing the dev databases
+
+Servers and credentials are in `dev/fixtures/README.md` (`docker compose up -d --wait`).
+
+- **Only connections whose name carries `(dev)`**; anything I create carries it from the start.
+- Scratch roles, users, schemas and tables are created and dropped **in the same command**.
+- A claim about what a server accepts goes through the **real driver** when it is about the driver, and over **every schema** of the server.
+- A database spun up to verify something is created persistent (named volume, no `--rm`, `--restart unless-stopped`). **Never clean up what I did not have to create**, and never `docker compose down -v` without being asked: it deletes the volumes.
+- **A script tested against a throwaway stack runs with the override on every call**, never bare: the defaults of `dev/fixtures/*/load.sh` point at the real dev servers. In zsh, `$OPTS` holding several flags is not word-split — spell the flags out or use an array.
+- There is no MySQL 8 container: a MySQL-only behaviour (`CAST(… AS JSON)`, `DEFAULT_GENERATED`) cannot be checked on MariaDB — say so.

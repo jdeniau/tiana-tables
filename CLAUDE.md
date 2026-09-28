@@ -1,37 +1,60 @@
 # Project Guidelines
 
-## Language rules
+## Language
 
 - **ALWAYS answer in the same language as the user.** If the user speaks French, answer in French. This also applies to plans and explanations.
 - **Code and all comments in code MUST always be in English.**
 
-## Workflow Orchestration
+## How to work
 
-### 1. Plan first
+### Plan, then prove
 
-- For ANY non-trivial task (3+ steps, architectural decisions, or touching multiple packages), start by writing a clear plan before editing code.
-- Write detailed specs upfront to reduce ambiguity — list the files you'll touch, the contracts you'll change, and the tests you'll add.
-- If something goes sideways mid-task, **STOP and re-plan immediately** — don't keep pushing through a broken approach.
-- Plans aren't just for building: use them for verification and refactoring steps too.
+- For any non-trivial task (3+ steps, an architectural decision, several packages), write a plan before editing: the files touched, the contracts changed, the tests added. If something goes sideways, **stop and re-plan** rather than push through.
+- One task, one thread: no unrelated change. A pre-existing problem found on the way is named, not swept in.
+- **Never call a task done without proving it works.** When behaviour changes, diff before/after explicitly and say what changed. Would a staff engineer approve the PR?
 
-### 2. Keep context focused
+### Measure, don't assume
 
-- One task = one focused thread. Don't mix unrelated changes.
-- For complex problems, decompose into smaller independent steps and tackle them sequentially.
-- Offload exploration and research (reading unfamiliar packages, scanning the codebase) into dedicated steps before jumping to implementation.
+The mistake made most often here. Before code is built on a claim, or a sentence is written about it:
 
-### 3. Self-Improvement Loop
+- **what a server accepts** costs a container: the `(dev)` servers, through the real driver when it is about the driver, on every schema of the server;
+- **what the app does** — a mount, a timing, focus, a tooltip, a performance cost — is run, not read (the `verify-live` skill);
+- **what a library does** comes from the guide and examples of the installed major, the published package (`npm view`) and a run — not from memory, GitHub issues or the shape of its source. Versions come from `package.json`, not from docs;
+- **a caveat or a limitation in a recap** is measured first, then named part by part.
 
-- After ANY correction from the user: update `.ai/lessons.md` with the pattern.
-- Write rules for yourself that prevent the same mistake from happening again.
-- Ruthlessly iterate on these lessons until the mistake rate drops.
-- At the start of a session, review `.ai/lessons.md` for relevant project context.
+### Git
 
-### 4. Verification before "done"
+- **Never commit or push without being told to, in that very message.** Staging is fine. A review is walked hunk by hunk: contract → implementation → main process → IPC → renderer → fixtures → docs.
+- **Markdown is never hard-wrapped** — `.md` files, PR descriptions, issues, review comments: one paragraph, or one list item, per line. Every renderer reflows it, and a wrapped sentence escapes `grep` and turns a one-word edit into a reflowed paragraph. Only commit messages wrap, at 72 columns: `git log` is a terminal.
+- `eslint --fix` only on files named explicitly, checking it moved imports and nothing else. Never `prettier --write` a whole directory.
 
-- **Never mark a task complete without proving it works.**
-- When changing existing behavior, diff the before/after explicitly and explain what changed.
-- Ask yourself: _"Would a staff engineer approve this PR?"_ If not, iterate.
+### Before handing a change over
+
+- `yarn lint && yarn knip && yarn test` are clean (a PostToolUse hook runs them after every edit).
+- Every new test has been checked by breaking what it covers.
+- List the comment blocks the diff adds that run over two lines, and every `//` pair: each justifies itself or becomes one line. Re-read the comments above what a refactor touched — a stale comment is worse than a long one.
+- After a change to the main process or an IPC contract, say the app needs a full restart.
+
+### Learning from corrections
+
+After a correction, write one rule where it will be loaded when it matters: the `.claude/rules/` file whose `paths` cover the code, the relevant skill, or this file when it is cross-cutting — or needed when _creating_ a file, since a path rule loads only when a matching file is read. Format: **one bold sentence stating the rule**, then the non-obvious mechanism or how to check it, three lines at most. No date, quote or story: those go in the commit message. Update a rule rather than add a near-duplicate, and delete one that became false.
+
+## Writing code
+
+- **A comment states what the code cannot.** A docblock is one line by default; a second line must be something the signature and the next statements do not say. Never narrate the reasoning, justify a design (commit message) or describe a defunct alternative. Break a comment at a thought (comma, colon, dash, full stop), never mid-sentence — a long line beats a wrapped one.
+- **Before inventing a shape, grep for an existing convention** (`testables`, `SqlErrorComponent`, `fill`, a `TabStrip` variant…).
+- **A name says what the value holds in this code**, as the CSS property or type it ends up in would (`selectedBorderColor`, not the design word `rule`). A predicate names the exact set it accepts (`isNullish`, not `isNull`).
+- **A helper module's name differs from every PascalCase component of its directory by more than case**: on macOS and Windows, `./TableTabs` resolves to `tableTabs.ts` first, and nothing warns on Linux. Check with `ls | tr 'A-Z' 'a-z' | sort | uniq -d`.
+- **A closed set of values gets an enum**, never bare string literals — including a library's string union.
+- **A derived value is written as its formula in theme tokens** (`0.6 * fontScale.base`), not measured at runtime.
+- **Reach for a library before hand-rolling**; a circumstantial reason to hand-roll is re-checked before the code lands.
+
+## Talking to the user
+
+- **A base16 slot is never written alone: its role follows in brackets** — `base07 [texte d'emphase]`, `base0D [accent]`, `base02 [fond de sélection]`, `base00 [fond]`, `base03 [filets, texte secondaire]` (roles from the slot table of `DESIGN.md`).
+- **A library internal is explained by what it does on screen, with the before/after values**: "antd recomputes the accent for dark themes, `#36f9f6` came out as `#31d7d4`". The token name can follow in a code span.
+- **No design jargon**: say « le dossier de design », « la maquette », « la couleur », never « handoff », « mock », « slot ».
+- **A disagreement between two sources is presented as a decision**: what each option looks like on a dark and a light theme, which one the mockup shows, and a recommendation.
 
 ## Commands
 
@@ -48,211 +71,89 @@ yarn storybook        # Start Storybook dev server on port 6006
 yarn make             # Build distributable packages
 ```
 
+## Environment
+
+- **The Electron binary is not downloaded by `yarn install`** (no `postinstall` since Electron 42): the `electron` bin fetches it on first run, `start` / `package` / `make` / `publish` chain `install-electron` themselves, and a script calling `electron-forge` directly runs `yarn install-electron` first.
+- **In a cloud session, install the dependencies first**, fetching Yarn from npm: `COREPACK_NPM_REGISTRY=https://registry.npmjs.org yarn install` (the proxy refuses `repo.yarnpkg.com`). A hook that fails with no output is a tool that could not start: check `node_modules` before re-reading the edit.
+- **Dev databases**: `docker compose up -d --wait` starts `tiana-dev-mysql` (MariaDB 11, `127.0.0.1:13306`, `root` / `devpassword`) and `tiana-dev-postgres` (PostgreSQL 18, `127.0.0.1:15432`, `postgres` / `devpassword`), both with database `tiana_dev` holding the same "Le Fil" dataset (details in `dev/fixtures/README.md`). **Never open a connection whose name lacks `(dev)`**, and name every connection created `… (dev)`. Never `docker compose down -v` without being asked.
+
 ## Architecture
 
-Tiana Tables is an **Electron desktop app** for browsing and querying MySQL/MariaDB and PostgreSQL databases. It follows the standard Electron three-process model:
+Tiana Tables is an **Electron desktop app** for browsing and querying MySQL/MariaDB and PostgreSQL databases, in the standard three-process model:
 
 - **Main process** (`src/main.ts`) — app lifecycle, window management, config, IPC handlers. Imports from `src/configuration/`, `src/sql/`, and `src/main-process/`.
-- **Preload script** (`src/preload.ts`, `src/preload/`) — the secure bridge between renderer and main. Exposes typed APIs to the renderer via `contextBridge`.
-- **Renderer process** (`src/renderer/`) — React 19 + React Router 6 SPA rendered in Chromium.
+- **Preload script** (`src/preload.ts`, `src/preload/`) — the secure bridge, exposing typed APIs to the renderer via `contextBridge`.
+- **Renderer process** (`src/renderer/`) — React 19 + React Router 6 SPA.
 
-### IPC Channel Pattern
+### IPC channels
 
-Communication between the renderer and main process goes through typed IPC channels:
-
-1. `src/preload/*Channel.ts` — defines a `XXXX_CHANNEL` enum (e.g., `SQL_CHANNEL`, `CONFIGURATION_CHANNEL`). These files **must stay separate** — they are imported by both preload and main, and you cannot import preload files into the main process.
-2. `src/preload/xxx.ts` — exposes channel methods to the renderer (e.g., `window.sql.executeQuery()`) via `bindChannel.ts`.
-3. Each domain module exposes a `bindIpcMain`-style function that registers the handlers; they are all called from `src/main.ts`: `bindIpcMainConfiguration` (`src/configuration/index.ts`), `bindIpcMainSqlFileStorage` (`src/main-process/sqlFileStorage.ts`), `bindIpcMainClipboard` (`src/main-process/clipboard.ts`) and `connectionStackInstance.bindIpcMain` (`src/sql/index.ts`).
+1. `src/preload/*Channel.ts` defines a `XXXX_CHANNEL` enum. These files **must stay separate**: preload and main both import them, and no other preload file may be imported into the main process.
+2. `src/preload/xxx.ts` exposes the channel to the renderer (`window.sql.executeQuery()`) via `bindChannel.ts`.
+3. Each domain registers its handlers from `src/main.ts`: `bindIpcMainConfiguration` (`src/configuration/index.ts`), `bindIpcMainSqlFileStorage` (`src/main-process/sqlFileStorage.ts`), `bindIpcMainClipboard` (`src/main-process/clipboard.ts`), `connectionStackInstance.bindIpcMain` (`src/sql/index.ts`).
 
 ### Renderer
 
-`src/renderer/routes/` uses React Router v6 file-based routing with dynamic segments: `$connectionSlug`, `$databaseName`, `$tableName` (e.g., `connections.$connectionSlug.$databaseName.$tableName.tsx`).
-
-State is managed via React Context (no Redux/Zustand). Contexts live in `src/contexts/`: `ConnectionContext`, `DatabaseContext`, `DatabaseListContext`, `TableListContext`, `AllColumnsContext`, `ForeignKeysContext`, `ThemeContext`, `ConfigurationContext`.
-
-`src/renderer/component/` contains all UI components. Storybook stories are colocated as `Component.stories.tsx`. Shared hooks live in `src/renderer/hooks/`, theming in `src/renderer/theme/`.
+`src/renderer/routes/` uses file-name routes with dynamic segments `$connectionSlug`, `$databaseName`, `$tableName`. State is React Context (no Redux/Zustand), in `src/contexts/`. UI components live in `src/renderer/component/` with colocated `*.stories.tsx`; hooks in `src/renderer/hooks/`, theming in `src/renderer/theme/`.
 
 ### Design system
 
-The rules live in `DESIGN.md` at the root (from the 2026-09 design handoff): one
-background (base00), structure by 1px base03 hairlines, radius 0, 24px controls,
-mono everywhere except region names in the condensed display face, the accent
-(base0D) as a mark only. Where the values live:
+The rules are in `DESIGN.md`: one background (base00), structure by 1px base03 hairlines, radius 0, 24px controls, mono everywhere except region names, the accent (base0D) as a mark only. Its "Where the values live" section says which file owns each value (antd tokens in `ThemeContext`, our accessors in `renderer/theme`, the title bar's colours through `frame`), and `src/renderer/component/Style/` holds the frame components that routes compose and never rebuild.
 
-- **antd owns the components** — the `ConfigProvider` theme in
-  `src/contexts/ThemeContext.tsx` (tokens, plus Menu / Splitter / Segmented /
-  Layout component tokens). Change a token before writing CSS. Every colour
-  has a slot of the palette as its base, never an antd default: the semantic
-  seeds (`colorError`, `colorWarning`, `colorSuccess`, `colorInfo`,
-  `colorLink`) are mapped there and pinned through the dark algorithm. A
-  colour may be derived from its slot to emphasise or soften (an alert's
-  border and background are two variants of base08, a hover is base02 mixed
-  with the background), never taken from elsewhere.
-- **`src/renderer/theme/index.ts` owns layout and colour** — `space`, `size`,
-  `mono`, `display` next to the base16 accessors. Raw pixel values in a
-  styled-component are a review comment.
-- **The frame's colours go through `frame`**, five CSS custom properties whose
-  default value is the slot each replaces. A title bar tinted by the colour of
-  the current connection (`resolveConnectionTint`,
-  `src/renderer/theme/connectionTint.ts`) re-points them on itself, so the
-  popups it opens — a portal, outside it in the DOM — keep the palette. Use
-  them in anything the title bar renders, the accessors everywhere else.
-- **`src/renderer/component/Style/`** holds the frame: `Region*` (a named,
-  scrollable region of the workspace), `TabStrip` (a run of siblings separated by
-  hairlines, with a pip on the active one), `TitleBar`. Routes compose these,
-  they never rebuild them. Never style antd internals through `.ant-*` classes.
+### Configuration and encryption
 
-### Configuration & Encryption
+Credentials are encrypted with the **asynchronous** `safeStorage` API, and the configuration holds the **ciphertext end to end**: it is decrypted in exactly one place, `#connect` in `src/sql/index.ts`. The consequences are in `.claude/rules/main-process.md`.
 
-Connection credentials are encrypted with Electron's `safeStorage` API and stored in the user's home directory. Config loading/saving lives in `src/configuration/index.ts`, the safeStorage calls in `src/configuration/encryption.ts`.
+### SQL engines
 
-**The asynchronous safeStorage API is the one to use** (`encryptStringAsync` /
-`decryptStringAsync` / `isAsyncEncryptionAvailable`): it runs on
-`os_crypt_async`, whose Linux providers probe D-Bus and **ask to unlock a locked
-keyring**, where the synchronous API silently answers "unavailable" for the rest
-of the process — and that synchronous API disappears in Electron 46.
+A connection has an **engine** (`DatabaseEngine`, `src/sql/engine.ts`): MySQL (MariaDB included) or PostgreSQL. What differs lives in three places keyed by engine, and nowhere else — no `if (engine === …)` in between: `src/sql/dialect/` (SQL text, no driver import, so the renderer loads it), `src/sql/driver/` (main process only, lazily imported), `src/sql/parser/` with `MonacoEditor/language.ts` (the editor's grammar). **The UI's "database" is a PostgreSQL schema**, so routing and contexts are the same for both engines. Adding or changing an engine: the `sql-engines` skill.
 
-**The configuration holds the ciphertext from end to end**, in memory as on
-disk. It is decrypted in exactly one place, `#connect` in `src/sql/index.ts`,
-which is both the only consumer and the moment asking the user to unlock makes
-sense. Three things follow, and they are why the module stays small:
+### SQL statements
 
-- loading and writing the configuration never encrypt, so they cannot fail and
-  stay synchronous: a window move writes the file as it is, and an unreadable
-  password can never be overwritten by an empty one;
-- only `addConnectionToConfig` and `editConnection` encrypt, so they are the
-  only asynchronous setters, and the only writes that report a keyring failure.
-  Nothing is mutated before the password is encrypted, so a refused write leaves
-  the configuration exactly as the file holds it;
-- an empty password field on an edit means "leave it as it is": the stored
-  ciphertext is kept, which is also why the form never receives a password.
+**A query sent to the server is always a single statement**: `multipleStatements` stays off on mysql2, the PostgreSQL driver always uses the extended protocol. When the editor holds several statements, `src/sql/splitStatements.ts` splits them: the one **under the caret** is sent, and the submit button can run them all in order, stopping at the first error (`RunMode`, `src/sql/runMode.ts`). The caret statement is decided in the action, from the content plus the caret offset (`RawSqlEditorHandle`). Split on the `;` tokens of `getAllTokens` (lexing never fails, and a token's `channel` tells code from comments) — never with `splitSQLByStatement`, which returns `null` on any syntax error.
 
-A keyring that is **locked** is told apart from a key that is **gone**
-(`decryptStringAsync` rejecting as "temporarily unavailable" vs anything else)
-and they reach the user as two `ConnectionFailure` reasons: the first is worth
-the Retry the connection-failed page already offers, the second asks for the
-password to be typed again.
+### SQL editor
 
-`getSelectedStorageBackend()` still describes the legacy desktop-environment
-detection, not the provider the async API picked, so the "your passwords are
-only obfuscated" warning can be pessimistic where D-Bus finds a keyring that
-detection misses. Left as is: warning too much beats staying silent, and
-Electron exposes nothing more precise today.
+Monaco, with `monaco-sql-languages` for the `mysql` / `pgsql` languages and their tokenizers, and `dt-sql-parser` for the grammar. The completion and diagnostics of `monaco-sql-languages` are **disabled** (their worker never answers) and rebuilt on `dt-sql-parser` in `useCompletion.tsx`. **The schema held is the current database only**, so a table qualified by another database is never coloured, and unknown columns are warnings on qualified references to a resolved table only — never on bare columns (subqueries, CTEs, expression aliases). Everything else: the `sql-editor` skill.
 
 ### Translations
 
-Translation files are in `locales/` (`en.ts`, `fr.ts`). English (`en.ts`) is the reference locale — its structure defines the `Translation` type in `locales/type.ts`. Add new keys to `en.ts` first, then mirror them in `fr.ts`.
+`locales/en.ts` is the reference locale (it defines `locales/type.ts`): add keys there first, then mirror them in `fr.ts`.
 
-## Key Libraries
+## Key libraries
 
 | Library                    | Purpose                                                      |
 | -------------------------- | ------------------------------------------------------------ |
 | Electron 44                | Desktop shell                                                |
-| React 19 + React Router 6  | UI framework and routing                                     |
+| React 19 + React Router 6  | UI framework and routing (stays on v6)                       |
 | Ant Design 6               | UI component library (except the data grid)                  |
 | TanStack Table 9 + Virtual | Data grid (`TableGrid`): headless table + row virtualization |
 | Monaco Editor              | SQL editor (VS Code's editor)                                |
 | mysql2/promise             | MySQL/MariaDB driver (main process)                          |
 | pg                         | PostgreSQL driver (main process)                             |
+| zod                        | Parsing what a server answers (main process)                 |
 | styled-components 6        | CSS-in-JS                                                    |
-| i18next + react-i18next    | EN/FR internationalization                                   |
+| i18next + react-i18next    | EN/FR internationalization (ICU messages)                    |
 | Vite 8 + electron-forge    | Build tooling                                                |
 | Vitest 4                   | Testing (node env; happy-dom opt-in per file)                |
 | Storybook 8                | Component development                                        |
 | TypeScript 6               | Type checking                                                |
 
-### SQL engines
+## Gotchas
 
-A connection has an **engine** (`DatabaseEngine`, `src/sql/engine.ts`): MySQL
-(MariaDB included) or PostgreSQL. What differs between them lives in three
-places, each keyed by engine, and nowhere else — no `if (engine === …)` in
-between:
-
-- `src/sql/dialect/` — SQL **text**: quoting, literals, the metadata questions
-  (each a `readQuery` whose rows are parsed with zod) and the guarded cell
-  write with its interpretation. No driver import, so the renderer loads it.
-- `src/sql/driver/` — connecting, sending, reading the answer into the app's
-  shapes (`WriteResult`, `ResultField`, SQL errors tagged at the source). Main
-  process only, lazily imported.
-- `src/sql/parser/` and `MonacoEditor/language.ts` — the editor's grammar and
-  tokenizer.
-
-**The UI's "database" is a PostgreSQL schema**: a PostgreSQL connection opens
-one database (`ConnectionObject.database`) and browses its schemas, so routing,
-contexts and `configByDatabase` are the same for both engines.
-`dialect.contract.test.ts` holds every dialect to the same rules; the running
-plan and what was measured on the `tiana-dev-postgres` container are in
-`.ai/postgresql-support.md`.
-
-### SQL statements
-
-**A query sent to the server MUST always be a single statement.** `multipleStatements`
-stays off in the mysql2 connection, the PostgreSQL driver always uses the
-extended protocol (which refuses a second statement), and the editor is expected
-to send one statement at a time.
-
-When the editor holds several statements, they are split and handled
-independently by `src/sql/splitStatements.ts`: the one **under the caret** is
-the one that gets sent, and the SQL page's submit button offers running them
-all, in order, stopping at the first error (`RunMode`, `src/sql/runMode.ts`).
-Which statement the caret sits in is decided in the action, from the whole
-content plus the caret offset the editor hands over (`RawSqlEditorHandle`).
-
-`dt-sql-parser` exposes `splitSQLByStatement`, but beware: it returns `null` as
-soon as the input has any syntax error (`SELECT FROM t1 a` included), so it
-cannot be used as a "is the tail unfinished?" check. Splitting on the `;` tokens
-of `getAllTokens` is error-tolerant, since lexing never fails — and a token's
-`channel` tells code from whitespace and comments, so a `;` inside either is
-never a separator.
-
-### SQL editor
-
-The editor is Monaco, with two SQL packages plugged into it:
-`monaco-sql-languages` for the `mysql` and `pgsql` languages and their Monarch
-tokenizers (lexical), and `dt-sql-parser` for the real grammar (ANTLR). The completion and
-diagnostics of `monaco-sql-languages` are **disabled** — they run in a worker
-built on Monaco's pre-0.45 API and never answer — and rebuilt on
-`dt-sql-parser` in `useCompletion.tsx`.
-
-- `src/sql/parser/index.ts` — one shared parser per engine (`getParser`), plus
-  `collectEntities`, which tolerates the unfinished tail of a query being typed.
-- `MonacoEditor/queryAnalysis.ts` — one read of a query against the schema,
-  producing what to color (table names, aliases) and what to warn about
-  (unknown columns). No runtime monaco import, so it stays testable in node.
-- `MonacoEditor/useQuerySchema.ts` — the schema, indexed once from the contexts.
-- `MonacoEditor/useSemanticTokens.ts` — colors `table.sql` and `alias.sql`.
-- `MonacoEditor/useCompletion.tsx` — completion and model markers.
-
-**The schema we hold is the current database only**: `getAllColumns` and the
-table list are both filtered on the current database (the current schema on
-PostgreSQL). Two
-decisions follow, and both are deliberate:
-
-- a table qualified by **another** database is never colored — `other_db.users`
-  cannot be told apart from a typo, and guessing would color mistakes as valid;
-- unknown columns are reported as **warnings**, only on qualified references
-  (`alias.column`) whose table we resolved. Bare columns are never checked: they
-  may come from a subquery, a CTE or an expression alias, and a wrong warning on
-  valid SQL is worse than no warning.
-
-Deep details — token names, semantic token wiring, position conventions, parser
-quirks — live in the `sql-editor` skill.
-
-### Gotchas
-
-- **Tests default to the node environment.** Add `/** @vitest-environment happy-dom */` at the top of a test file that needs the DOM (see `src/renderer/routes/connections.$connectionSlug.$databaseName.test.tsx`).
+- **Tests default to the node environment.** A test file that needs the DOM starts with `/** @vitest-environment happy-dom */`.
 - **The drivers are main-process only.** `mysql2` and `pg` are CommonJS and fail in the renderer, which reaches SQL through `src/sql/dialect/` alone; the MySQL dialect escapes literals with `mysql` (v2), the one driver package the renderer can load. A column's type reaches the renderer as a `FieldKind`, never as a wire-protocol number.
-- **React Router stays on v6.** A migration to React Router 7 (PR #132) was partially reverted (PR #142); `react-router.config.ts.bak` at the root is a leftover of that attempt.
-- **`TableGrid` uses TanStack Table v9 — its API differs from v8 tutorials.** Features are imported explicitly and passed to `useTable({ features, ... })`, headers render via `<table.FlexRender />`. Work from the official `examples/react/` in the TanStack repo, not from blog posts. The scroll element is stored in a state (not a ref) because the virtualizer reads it in a layout effect that runs before the parent ref attaches. **The `table` object `useTable` returns is a new object on every state change** — the core instance is stable, the React wrapper is rebuilt with `state` — so it must never sit in a `useMemo`/`memo` dependency list: anything derived per column that way is rebuilt on every frame of a resize drag.
-- **The Electron binary is not downloaded by `yarn install` any more.** Since
-  Electron 42 the package has no `postinstall` script (npm supply-chain
-  hardening): the binary is fetched the first time the `electron` bin runs, or
-  by the `install-electron` script. `start`, `package`, `make` and `publish`
-  chain it themselves, so a fresh clone only needs `yarn install`; a script
-  calling `electron-forge` directly has to run `yarn install-electron` first.
-- **The RPM build carries two local `yarn patch`es** (`.yarn/patches/`, applied by `yarn install`; `electron-installer-redhat` is forced to 4.0.0 through `resolutions`, forge still asking for `^3.2.0`).
-  - `electron-installer-redhat`, two lines of `resources/spec.ejs`: `%global _build_id_links none`, without which the `/usr/lib/.build-id/` symlinks of our package collide with those of every other Electron app (Slack, Discord…) and dnf refuses to install ([forge#3594](https://github.com/electron/forge/issues/3594)); and `cp -r %{_topdir}/BUILD/usr/*`, without which the build fails outright on rpm ≥ 4.20, i.e. Fedora 41+ ([installer-redhat#343](https://github.com/electron-userland/electron-installer-redhat/issues/343)). `%{_builddir}` is **not** the second fix — since rpm 4.20 it expands to the per-package subdirectory the installer never writes into, which is why the open upstream PRs #344 and #347 do not work; measured on rpm 4.18.2, 4.20.1 and 6.0.2, `_topdir` is the only anchor that holds on all three.
-  - `@electron-forge/maker-rpm`, one line of `dist/MakerRpm.js`: `electron-installer-redhat` is ESM since 4.0.0, so forge's CJS `require()` hands back the module namespace (`{ default, Installer }`) instead of the installer function. The patch reads `.default` when it is there, which keeps working with 3.x. Forge only drops the `require()` in its own ESM rewrite (8.x, alpha).
-  - A version bump of either package makes `yarn install` fail to apply its patch: that is the signal to check whether upstream landed the fixes. Verify a change by building the real thing rather than reasoning about the spec — `node node_modules/.bin/electron-forge make --targets @electron-forge/maker-rpm` inside a `node:24-bookworm` image with `rpm` installed (Debian's rpm 4.18 is what the CI runner has), then `rpm -qlp out/make/rpm/x64/*.rpm | grep build-id`.
-- **Column widths reach the cells as CSS custom properties written imperatively, not as numbers in a rendered `style`** — TanStack's own `examples/react/column-resizing-performant`: the grid subscribes to no table state (`useTable(options, () => ({}))`), a `useLayoutEffect` subscribes to `table.atoms.columnSizing` and sets `--tg-w-N` (and `--tg-l-N`, the offset of a pinned column) on the `<table>`, and the cells read `width: var(--tg-w-N)`. So a drag renders nothing: the handle is the doc's `onMouseDown={header.getResizeHandler()}` and nothing more, the accent on the grabbed rule is `:active`, and the width to persist comes from `table.atoms.columnResizing` (its `isResizingColumn` dropping back to `false` is the end of the drag). Measured over one drag on a 30-column table (2026-09-11, dev mode): widths as numbers in each cell's style cost 1 408 row renders, 42 240 cell renders and `ScriptDuration` 1 069 ms; the same properties set through a React `style` prop, 139 ms; written imperatively, **32 ms and no long task**. The remaining cost is the browser's own style recalculation (~17 ms/frame for 960 cells reading the property), which no React change can remove.
-- **In the virtualized body of `TableGrid`, React components per cell are fine — per-cell antd components are not, and every extra element mounted per cell costs.** Scrolling mounts hundreds of cells per tick. An A/B ladder benchmark (2026-08-18, 1 000×40 story, dev mode, long tasks per 1 600-cell page jump) measured: plain DOM ≈ a React component (~0 %) < + one styled-components span per cell (~+15 %) < + antd `Flex` (~+120 %, long tasks on every scroll tick). The ~15 % is the price of the **additional rendered element**, not of the number of `styled(...)` calls: `styled(BaseCell)` variants fold into one DOM node and are free (see `.ai/lessons.md`, "Component design"). The grid renders `GridCell` → `Cell.tsx` (the per-type renderer, kept because cell types will multiply) → one typed styled span, ~1.5× plain and no long task per tick. `Cell.tsx` has no layout wrapper on purpose: the `<td>` (`.tg-cell`) provides the flex context — don't reintroduce a wrapper. The inline cell editor can safely be a rich component on the single edited cell. Benchmark hygiene rules live in `.ai/lessons.md`.
+
+## Where knowledge lives
+
+| Place                           | Loaded                                               | Holds                                                                                   |
+| ------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| this file                       | every session                                        | how to work, architecture, invariants, cross-cutting rules                              |
+| `DESIGN.md`                     | when working on layout                               | the design rules                                                                        |
+| `.claude/rules/ui.md`           | reading `src/renderer/`, `src/contexts/`, `locales/` | styling, antd, state, navigation, translations                                          |
+| `.claude/rules/table-grid.md`   | reading the grid, cells, cell editor                 | TanStack v9, per-cell performance, copy formats                                         |
+| `.claude/rules/routing.md`      | reading routes, `app.tsx`                            | loaders, derived state, React Router v6                                                 |
+| `.claude/rules/sql.md`          | reading `src/sql/`                                   | binding, escaping, enums, casts, parsing answers                                        |
+| `.claude/rules/main-process.md` | reading main, preload, configuration                 | IPC, encryption, dev tooling                                                            |
+| `.claude/rules/tests.md`        | reading tests and stories                            | what a test must prove                                                                  |
+| `.claude/rules/build.md`        | reading `package.json`, patches, build config        | dependencies, knip, the RPM patches                                                     |
+| `.claude/skills/*`              | on demand                                            | `sql-engines`, `sql-editor`, `base16-themes`, `verify-live`, `antd`, `github-pr-review` |
