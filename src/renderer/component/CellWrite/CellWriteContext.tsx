@@ -59,13 +59,18 @@ export function CellWriteProvider({
     setPending({ write, issue: failureOf(error) });
   }, []);
 
+  // the modal closes at once: the cell flashes once written, and the modal
+  // reopens on what the forced write still meets (a row deleted in between, a SQL error)
   const overwrite = useCallback(
     async (write: CellWrite) => {
+      setPending(null);
+
       try {
-        // a row deleted in between is the one issue a forced write still meets
         const issue = issueOf(await save({ ...write, force: true }));
 
-        setPending(issue && { write, issue });
+        if (issue) {
+          setPending({ write, issue });
+        }
       } catch (error) {
         reportFailure(write, error);
       }
@@ -97,7 +102,7 @@ export function CellWriteProvider({
 
       <CellConflictModal
         pending={pending}
-        onOverwrite={overwrite}
+        onOverwrite={(write) => void overwrite(write)}
         onClose={close}
       />
     </CellWriteContext.Provider>

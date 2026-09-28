@@ -467,6 +467,26 @@ describe('context menu', () => {
       expect(onValueUpdated).toHaveBeenCalledWith(1, 'name', null);
     });
 
+    test('reopens on a row deleted before the overwrite', async () => {
+      await setNullOnAChangedCell();
+      updateCell.mockResolvedValueOnce({
+        status: UpdateCellStatus.Conflict,
+        reason: ConflictReason.Deleted,
+      });
+
+      await act(async () => {
+        button('Overwrite')?.click();
+      });
+
+      expect(
+        [...document.querySelectorAll('.ant-modal')].some(
+          (modal) =>
+            modal.textContent?.includes('The row no longer exists') &&
+            !modal.classList.contains('ant-zoom-leave')
+        )
+      ).toBe(true);
+    });
+
     test('cancelling keeps the server value, which the grid then shows', async () => {
       const onValueUpdated = vi.fn();
       await setNullOnAChangedCell(onValueUpdated);

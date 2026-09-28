@@ -1,4 +1,4 @@
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Alert, Button, Flex, Input, Modal, Typography } from 'antd';
 import { useTranslation } from '../../../i18n';
 import { ConflictReason } from '../../../sql/updateCell';
@@ -10,7 +10,7 @@ interface CellConflictModalProps {
   /** the write that did not land, `null` when the modal is closed */
   pending: PendingIssue | null;
   /** writes the value anyway, without the guard */
-  onOverwrite: (write: CellWrite) => Promise<void>;
+  onOverwrite: (write: CellWrite) => void;
   onClose: () => void;
 }
 
@@ -21,20 +21,9 @@ export default function CellConflictModal({
   onClose,
 }: CellConflictModalProps): ReactElement {
   const { t } = useTranslation();
-  const [isOverwriting, setIsOverwriting] = useState(false);
 
   const issue = pending?.issue;
   const isChanged = issue?.reason === ConflictReason.Changed;
-
-  const overwrite = async (write: CellWrite): Promise<void> => {
-    setIsOverwriting(true);
-
-    try {
-      await onOverwrite(write);
-    } finally {
-      setIsOverwriting(false);
-    }
-  };
 
   return (
     <Modal
@@ -47,14 +36,8 @@ export default function CellConflictModal({
       footer={
         pending && isChanged ? (
           <Flex justify="flex-end" gap="small">
-            <Button onClick={onClose} disabled={isOverwriting}>
-              {t('cell.write.cancel')}
-            </Button>
-            <Button
-              danger
-              loading={isOverwriting}
-              onClick={() => void overwrite(pending.write)}
-            >
+            <Button onClick={onClose}>{t('cell.write.cancel')}</Button>
+            <Button danger onClick={() => onOverwrite(pending.write)}>
               {t('cell.write.overwrite')}
             </Button>
           </Flex>
