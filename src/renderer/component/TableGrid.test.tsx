@@ -410,21 +410,127 @@ describe('context menu', () => {
     expect(menuItem('Set to NULL')?.getAttribute('aria-disabled')).toBe('true');
   });
 
-  test('a conflicting write opens the detail modal on it', async () => {
+  describe('a write that meets a conflict', () => {
+    function conflictModal(): HTMLElement | null {
+      return (
+        [...document.querySelectorAll<HTMLElement>('.ant-modal')].find(
+          (modal) =>
+            modal.textContent?.includes('The value changed in the database')
+        ) ?? null
+      );
+    }
+
+    function button(label: string): HTMLButtonElement | undefined {
+      return [...(conflictModal()?.querySelectorAll('button') ?? [])].find(
+        (candidate) => candidate.textContent === label
+      );
+    }
+
+    async function setNullOnAChangedCell(
+      onValueUpdated = vi.fn()
+    ): Promise<void> {
+      updateCell.mockResolvedValueOnce({
+        status: UpdateCellStatus.Conflict,
+        reason: ConflictReason.Changed,
+        currentValue: 'changed elsewhere',
+      });
+      renderGrid({ onValueUpdated });
+
+      openMenu('b');
+      await choose('Set to NULL');
+    }
+
+    test('opens the conflict modal, with both values', async () => {
+      const onValueUpdated = vi.fn();
+      await setNullOnAChangedCell(onValueUpdated);
+
+      const values = [
+        ...(conflictModal()?.querySelectorAll('textarea') ?? []),
+      ].map((textarea) => textarea.value);
+
+      // the server's value, then ours: NULL, an empty text
+      expect(values).toEqual(['changed elsewhere', '']);
+      expect(onValueUpdated).not.toHaveBeenCalled();
+    });
+
+    test('overwrites it without the guard', async () => {
+      const onValueUpdated = vi.fn();
+      await setNullOnAChangedCell(onValueUpdated);
+
+      await act(async () => {
+        button('Overwrite')?.click();
+      });
+
+      expect(updateCell).toHaveBeenLastCalledWith(
+        expect.objectContaining({ newValue: null, force: true })
+      );
+      expect(onValueUpdated).toHaveBeenCalledWith(1, 'name', null);
+    });
+
+    test('cancelling keeps the server value, which the grid then shows', async () => {
+      const onValueUpdated = vi.fn();
+      await setNullOnAChangedCell(onValueUpdated);
+
+      await act(async () => {
+        button('Cancel my change')?.click();
+      });
+
+      expect(updateCell).toHaveBeenCalledTimes(1);
+      expect(onValueUpdated).toHaveBeenCalledWith(
+        1,
+        'name',
+        'changed elsewhere'
+      );
+    });
+  });
+
+  test('a conflict met by the detail modal closes it, and opens the conflict modal', async () => {
     updateCell.mockResolvedValueOnce({
       status: UpdateCellStatus.Conflict,
-      reason: ConflictReason.Changed,
-      currentValue: 'changed elsewhere',
+      reason: ConflictReason.Deleted,
     });
-    const onValueUpdated = vi.fn();
-    renderGrid({ onValueUpdated });
+    renderGrid();
+
+    openMenu('b');
+    await choose('Edit…');
+    await act(async () => {
+      document
+        .querySelector<HTMLInputElement>('.ant-modal input[type="checkbox"]')
+        ?.click();
+    });
+    await act(async () => {
+      [...document.querySelectorAll<HTMLButtonElement>('.ant-modal button')]
+        .find((candidate) => candidate.textContent === 'Save')
+        ?.click();
+    });
+
+    const modals = [...document.querySelectorAll('.ant-modal')];
+    const detailModal = modals.find((modal) =>
+      modal.textContent?.includes('Save')
+    );
+    const conflictModal = modals.find((modal) =>
+      modal.textContent?.includes('The row no longer exists')
+    );
+
+    expect(updateCell).toHaveBeenCalledWith(
+      expect.objectContaining({ newValue: null })
+    );
+    // antd keeps a closed modal mounted for its leave animation, which happy-dom never ends
+    expect(detailModal?.classList.contains('ant-zoom-leave')).toBe(true);
+    expect(conflictModal?.classList.contains('ant-zoom-leave')).toBe(false);
+  });
+
+  test('a SQL error of the menu opens the conflict modal on it', async () => {
+    updateCell.mockRejectedValueOnce(new Error('Column cannot be null'));
+    renderGrid();
 
     openMenu('b');
     await choose('Set to NULL');
 
-    expect(onValueUpdated).not.toHaveBeenCalled();
-    expect(document.querySelector('.ant-modal')?.textContent).toContain(
-      'changed elsewhere'
-    );
+    expect(
+      [...document.querySelectorAll('.ant-modal')].some((modal) =>
+        modal.textContent?.includes('Column cannot be null')
+      )
+    ).toBe(true);
   });
 });

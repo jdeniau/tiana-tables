@@ -9,6 +9,7 @@ import {
   type UpdateCellOutcome,
   UpdateCellStatus,
 } from '../../../sql/updateCell';
+import { CellWriteProvider, type SaveCell } from '../CellWrite';
 import type { ColumnMeta } from '../TableGrid';
 import CellDetailModal from './CellDetailModal';
 import type { CellDetail } from './types';
@@ -62,12 +63,10 @@ function makeDetail(
 }
 
 /** A save that succeeds, echoing back what a server would have stored. */
-const saveSucceeds = async ({
+const saveSucceeds: SaveCell = async ({
   newValue,
-}: {
-  newValue: string | null;
 }): Promise<UpdateCellOutcome> => {
-  action('onSave')(newValue);
+  action('save')(newValue);
 
   return { status: UpdateCellStatus.Updated, value: newValue };
 };
@@ -76,8 +75,18 @@ const meta: Meta<typeof CellDetailModal> = {
   component: CellDetailModal,
   args: {
     onClose: action('onClose'),
-    onSave: saveSucceeds,
   },
+  // what the server answers a write with: `parameters.save`, a success by default
+  decorators: [
+    (Story, { parameters }) => (
+      <CellWriteProvider
+        save={(parameters.save as SaveCell | undefined) ?? saveSucceeds}
+        onValueUpdated={action('onValueUpdated')}
+      >
+        <Story />
+      </CellWriteProvider>
+    ),
+  ],
 };
 
 export default meta;
@@ -204,22 +213,27 @@ export const ReadOnlyGeneratedColumn: Story = {
   },
 };
 
-// type something, then save: the cell was written by someone else in between
+// type something, then save: the cell was written by someone else in between,
+// so this modal closes and the conflict modal opens on it
 export const ConflictOnSave: Story = {
   args: {
     detail: makeDetail(
       makeColumn('name', FieldKind.String, makeColumnDetail('name')),
       'the value I loaded'
     ),
-    onSave: async ({ newValue }) => {
-      action('onSave')(newValue);
+  },
+  parameters: {
+    save: (async ({ newValue, force }) => {
+      action('save')(newValue, { force });
 
-      return {
-        status: UpdateCellStatus.Conflict,
-        reason: ConflictReason.Changed,
-        currentValue: 'what someone else wrote',
-      };
-    },
+      return force
+        ? { status: UpdateCellStatus.Updated, value: newValue }
+        : {
+            status: UpdateCellStatus.Conflict,
+            reason: ConflictReason.Changed,
+            currentValue: 'what someone else wrote',
+          };
+    }) satisfies SaveCell,
   },
 };
 
@@ -229,13 +243,15 @@ export const RowDeletedOnSave: Story = {
       makeColumn('name', FieldKind.String, makeColumnDetail('name')),
       'the value I loaded'
     ),
-    onSave: async ({ newValue }) => {
-      action('onSave')(newValue);
+  },
+  parameters: {
+    save: (async ({ newValue }) => {
+      action('save')(newValue);
 
       return {
         status: UpdateCellStatus.Conflict,
         reason: ConflictReason.Deleted,
       };
-    },
+    }) satisfies SaveCell,
   },
 };

@@ -1,25 +1,23 @@
 import { Modal } from 'antd';
 import CellDetailForm from './CellDetailForm';
-import type { CellDetail, SaveCell } from './types';
+import type { CellDetail } from './types';
 
 interface CellDetailModalProps {
   detail: CellDetail | null;
   onClose: () => void;
-  onSave: SaveCell;
 }
 
 /**
  * The full value of a cell, opened by double-clicking it in the grid: what the
  * ellipsis of the grid cuts off is readable — and editable — here.
  *
- * Only the frame lives here. The draft, and everything that can happen to it,
- * belong to `CellDetailForm`, which `destroyOnHidden` unmounts on close — so
- * reopening the modal never shows a stale draft or a stale conflict.
+ * Only the frame lives here. The draft belongs to `CellDetailForm`, which
+ * `destroyOnHidden` unmounts on close — so reopening the modal never shows a
+ * stale draft. A write that meets a conflict is settled by `CellWrite`.
  */
 export default function CellDetailModal({
   detail,
   onClose,
-  onSave,
 }: CellDetailModalProps) {
   return (
     <Modal
@@ -30,9 +28,7 @@ export default function CellDetailModal({
       width={800}
       destroyOnHidden
     >
-      {detail && (
-        <CellDetailForm detail={detail} onClose={onClose} onSave={onSave} />
-      )}
+      {detail && <CellDetailForm detail={detail} onClose={onClose} />}
     </Modal>
   );
 }

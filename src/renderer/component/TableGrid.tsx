@@ -53,13 +53,9 @@ import {
 } from '../theme';
 import Cell from './Cell';
 import CellContextMenu, { CellMenuTarget } from './CellContextMenu';
-import CellDetailModal, {
-  CellDetail,
-  Conflict,
-  SaveCellParams,
-  conflictOf,
-} from './CellDetailModal';
+import CellDetailModal, { CellDetail } from './CellDetailModal';
 import { toBoundValue } from './CellEditor/editableValue';
+import { CellWriteProvider, SaveCellParams } from './CellWrite';
 import ForeignKeyLink from './ForeignKeyLink';
 import { fill } from './Style/fill';
 import { getColumnWidth } from './columnWidth';
@@ -295,43 +291,6 @@ function TableGrid<Row extends ResultRow>({
       return outcome;
     },
     [database, flashCell, onValueUpdated]
-  );
-
-  // written straight from the menu, guarded like any other write; what stops
-  // it is settled in the detail modal, which knows how to reload or overwrite
-  const setCellNull = useCallback(
-    async (detail: CellDetail) => {
-      const openUnsettled = (
-        conflict: Conflict | null,
-        error: string | null
-      ): void => {
-        setCellDetail({
-          ...detail,
-          unsettledWrite: { newValue: null, conflict, error },
-        });
-      };
-
-      try {
-        const conflict = conflictOf(
-          await saveCell({
-            detail,
-            newValue: null,
-            originalValue: detail.value,
-            force: false,
-          })
-        );
-
-        if (conflict) {
-          openUnsettled(conflict, null);
-        }
-      } catch (error) {
-        openUnsettled(
-          null,
-          error instanceof Error ? error.message : String(error)
-        );
-      }
-    },
-    [saveCell]
   );
 
   // both the table and `columnsMeta` are built from this one list, so the two always agree on what the nth column is
@@ -604,24 +563,25 @@ function TableGrid<Row extends ResultRow>({
         )}
       </ScrollContainer>
 
-      <CellDetailModal
-        detail={cellDetail}
-        onSave={saveCell}
-        onClose={() => {
-          setCellDetail(null);
-        }}
-      />
+      {/* every write of a cell goes through here, whichever of the two starts it */}
+      <CellWriteProvider save={saveCell} onValueUpdated={onValueUpdated}>
+        <CellDetailModal
+          detail={cellDetail}
+          onClose={() => {
+            setCellDetail(null);
+          }}
+        />
 
-      <CellContextMenu
-        target={menuTarget}
-        onFilterChange={onFilterChange}
-        // the cell was remembered on the secondary click, so a save still flashes it
-        onEdit={setCellDetail}
-        onSetNull={(target) => void setCellNull(target)}
-        onClose={() => {
-          setMenuTarget(null);
-        }}
-      />
+        <CellContextMenu
+          target={menuTarget}
+          onFilterChange={onFilterChange}
+          // the cell was remembered on the secondary click, so a save still flashes it
+          onEdit={setCellDetail}
+          onClose={() => {
+            setMenuTarget(null);
+          }}
+        />
+      </CellWriteProvider>
     </Wrapper>
   );
 }

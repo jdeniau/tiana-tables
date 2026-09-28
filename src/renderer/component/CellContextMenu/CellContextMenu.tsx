@@ -22,6 +22,7 @@ import type { FieldKind } from '../../../sql/resultField';
 import { useDialect } from '../../hooks/useDialect';
 import { commentForeground } from '../../theme';
 import { isNullish } from '../../utils/isNullish';
+import { useCellWrite } from '../CellWrite';
 import cellValueToText from '../cellValueToText';
 import toHexLiteral from '../hexLiteral';
 import FreeTextFilterModal, {
@@ -47,8 +48,6 @@ interface CellContextMenuProps {
   onFilterChange?: (where: string) => void;
   /** opens the detail modal on the cell, as a double click does */
   onEdit: (target: CellMenuTarget) => void;
-  /** writes `NULL` in the cell; only offered where the detail modal could */
-  onSetNull: (target: CellMenuTarget) => void;
 }
 
 /**
@@ -69,9 +68,9 @@ export default function CellContextMenu({
   onClose,
   onFilterChange,
   onEdit,
-  onSetNull,
 }: CellContextMenuProps): ReactElement {
   const { t } = useTranslation();
+  const { writeCell, reportFailure } = useCellWrite();
   const dialect = useDialect();
   const { database } = useDatabaseContext();
   const [clipboardText, setClipboardText] = useState<string>('');
@@ -117,7 +116,14 @@ export default function CellContextMenu({
           onClose();
         },
         onSetNull: () => {
-          onSetNull(target);
+          const write = {
+            detail: target,
+            newValue: null,
+            originalValue: target.value,
+          };
+
+          // no form to show a SQL error in: the conflict modal shows it
+          writeCell(write).catch((error) => reportFailure(write, error));
           onClose();
         },
         onCopy: (text) => {
