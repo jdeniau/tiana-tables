@@ -212,20 +212,21 @@ describe('sorting', () => {
 });
 
 describe('context menu', () => {
+  function columnDetail(name: string, nullable: boolean): ColumnDetail {
+    return {
+      table: 'items',
+      name,
+      nullable,
+      generated: false,
+      binary: false,
+      json: false,
+      allowedValues: [],
+      multiValued: false,
+    };
+  }
+
   // `name` may hold NULL, `id` may not
-  const SCHEMA: ColumnDetail[] = [
-    ['id', false],
-    ['name', true],
-  ].map(([name, nullable]) => ({
-    table: 'items',
-    name: name as string,
-    nullable: nullable as boolean,
-    generated: false,
-    binary: false,
-    json: false,
-    allowedValues: [],
-    multiValued: false,
-  }));
+  const SCHEMA = [columnDetail('id', false), columnDetail('name', true)];
 
   const writeText = vi.fn<(text: string) => Promise<void>>(async () => {});
   const updateCell = vi.fn(
@@ -245,8 +246,8 @@ describe('context menu', () => {
     onValueUpdated?: (row: number, column: string, value: unknown) => void;
   } = {}): void {
     window.clipboard = { readText: async () => '', writeText };
-    // @ts-expect-error -- only the write is called
-    window.sql = { updateCell };
+    // only the write is called
+    window.sql = { ...window.sql, updateCell };
 
     render(
       <TableGrid
