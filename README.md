@@ -131,7 +131,8 @@ time. Use an admin-oriented tool for that, or just write the SQL.
 See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ```sh
-corepack enable
+npm install -g corepack   # Node 26, which ships no corepack
+corepack enable yarn
 yarn install
 yarn start        # run the app in development
 yarn test         # Vitest

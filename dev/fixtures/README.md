@@ -63,4 +63,4 @@ dev/fixtures/postgres/load.sh
 
 Each drops and recreates its own objects and leaves anything else in the database alone. `TIANA_DEV_CONTAINER`, `TIANA_DEV_DATABASE` and `TIANA_DEV_USER` (plus `TIANA_DEV_PASSWORD` for MariaDB) override the defaults above.
 
-On a first `up`, the rows come from a one-shot `fixtures` service (`node:22-alpine`): neither database image has node to run the generator, so the service writes each server's SQL into a volume that server reads at initialisation.
+On a first `up`, the rows come from a one-shot `fixtures` service (`node:26-alpine`): neither database image has node to run the generator, so the service writes each server's SQL into a volume that server reads at initialisation.

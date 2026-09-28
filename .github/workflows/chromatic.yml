@@ -12,8 +12,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 26
+
+      # Node ships corepack no more since 25
       - name: Enable corepack
-        run: corepack enable
+        run: |
+          npm install -g corepack
+          corepack enable yarn
 
       - name: Install dependencies
         run: yarn install --immutable
