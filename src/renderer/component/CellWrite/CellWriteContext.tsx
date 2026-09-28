@@ -8,9 +8,13 @@ import {
   useState,
 } from 'react';
 import invariant from 'tiny-invariant';
-import { ConflictReason } from '../../../sql/updateCell';
 import CellConflictModal from './CellConflictModal';
-import { type PendingIssue, failureOf, issueOf } from './issue';
+import {
+  type PendingIssue,
+  WriteIssueReason,
+  failureOf,
+  issueOf,
+} from './issue';
 import type { CellWrite, SaveCell } from './types';
 
 interface CellWriteContextValue {
@@ -80,7 +84,7 @@ export function CellWriteProvider({
 
   // cancelling a changed cell keeps the server's value, which the grid then shows
   const close = useCallback(() => {
-    if (pending?.issue.reason === ConflictReason.Changed) {
+    if (pending?.issue.reason === WriteIssueReason.Changed) {
       onValueUpdated?.(
         pending.write.detail.rowIndex,
         pending.write.detail.column.name,

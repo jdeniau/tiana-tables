@@ -1,9 +1,8 @@
 import type { ReactElement } from 'react';
 import { Alert, Button, Flex, Input, Modal, Typography } from 'antd';
 import { useTranslation } from '../../../i18n';
-import { ConflictReason } from '../../../sql/updateCell';
 import cellValueToText from '../cellValueToText';
-import type { PendingIssue } from './issue';
+import { type PendingIssue, WriteIssueReason } from './issue';
 import type { CellWrite } from './types';
 
 interface CellConflictModalProps {
@@ -23,7 +22,7 @@ export default function CellConflictModal({
   const { t } = useTranslation();
 
   const issue = pending?.issue;
-  const isChanged = issue?.reason === ConflictReason.Changed;
+  const isChanged = issue?.reason === WriteIssueReason.Changed;
 
   return (
     <Modal
@@ -48,7 +47,7 @@ export default function CellConflictModal({
     >
       {pending && issue && (
         <Flex vertical gap="small">
-          {issue.reason === ConflictReason.Changed && (
+          {issue.reason === WriteIssueReason.Changed && (
             <>
               <Alert
                 type="warning"
@@ -70,7 +69,7 @@ export default function CellConflictModal({
             </>
           )}
 
-          {issue.reason === ConflictReason.Deleted && (
+          {issue.reason === WriteIssueReason.Deleted && (
             <Alert
               type="error"
               showIcon
@@ -79,7 +78,7 @@ export default function CellConflictModal({
             />
           )}
 
-          {issue.reason === 'failed' && (
+          {issue.reason === WriteIssueReason.Failed && (
             <Alert
               type="error"
               showIcon
