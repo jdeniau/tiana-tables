@@ -1,5 +1,6 @@
 import { FieldKind } from '../../../sql/resultField';
 import type { SqlBoundValue } from '../../../sql/types';
+import { isNullish } from '../../utils/isNullish';
 import cellValueToText from '../cellValueToText';
 import { looksLikeJson } from './editorKind';
 
@@ -30,7 +31,7 @@ export function toEditableValue(
   fieldKind: FieldKind
 ): EditableValue {
   return {
-    isNull: value === null || value === undefined,
+    isNull: isNullish(value),
     text: cellValueToText(value, fieldKind),
   };
 }
@@ -50,7 +51,7 @@ export function toSqlValue({ isNull, text }: EditableValue): string | null {
  * server parses again.
  */
 export function toBoundValue(value: unknown): SqlBoundValue {
-  if (value === null || value === undefined) {
+  if (isNullish(value)) {
     return null;
   }
 

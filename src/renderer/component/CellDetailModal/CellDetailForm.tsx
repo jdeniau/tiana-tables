@@ -5,7 +5,6 @@ import {
   NotEditableReason,
   getCellEditability,
 } from '../../../sql/columnEditing';
-import { ConflictReason, UpdateCellStatus } from '../../../sql/updateCell';
 import CellEditor from '../CellEditor/CellEditor';
 import {
   findValidationError,
@@ -13,46 +12,36 @@ import {
   toEditableValue,
   toSqlValue,
 } from '../CellEditor/editableValue';
-import CellChangedAlert from './CellChangedAlert';
+import { useCellWrite } from '../CellWrite';
 import ReadOnlyCellValue from './ReadOnlyCellValue';
-import RowDeletedAlert from './RowDeletedAlert';
-import type { CellDetail, Conflict, SaveCell } from './types';
+import type { CellDetail } from './types';
 
 interface CellDetailFormProps {
   detail: CellDetail;
   onClose: () => void;
-  onSave: SaveCell;
 }
 
 /**
- * The body of the modal: the draft being edited, what happened to the last
- * attempt at writing it, and the two buttons that end it.
+ * The body of the modal: the draft being edited, and the two buttons that end it.
+ * A write that meets a conflict is handed over to the conflict modal, and this one closes.
  */
 export default function CellDetailForm({
   detail,
   onClose,
-  onSave,
 }: CellDetailFormProps) {
   const { t } = useTranslation();
+  const { writeCell } = useCellWrite();
   const columnDetail = detail.column.detail;
   const fieldKind = detail.column.kind;
 
-  /**
-   * The value the write is guarded on. It starts as the loaded value and moves
-   * only when the user reloads a conflict, so the guard always describes what
-   * the editor was opened on.
-   */
-  const [baseValue, setBaseValue] = useState<unknown>(detail.value);
-
-  /** the same value as text: what the editor opens on, and what "unchanged" means */
+  /** the loaded value as text: what the editor opens on, and what "unchanged" means */
   const baseEditable = useMemo(
-    () => toEditableValue(baseValue, fieldKind),
-    [baseValue, fieldKind]
+    () => toEditableValue(detail.value, fieldKind),
+    [detail.value, fieldKind]
   );
 
   const [edited, setEdited] = useState(baseEditable);
   const [isSaving, setIsSaving] = useState(false);
-  const [conflict, setConflict] = useState<Conflict | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const editability = getCellEditability(columnDetail, detail.rowKey !== null);
@@ -82,64 +71,28 @@ export default function CellDetailForm({
   const column = columnDetail;
   const validationError = findValidationError(edited, column.json);
   const isUnchanged = isSameValue(edited, baseEditable);
-  const isDeleted = conflict?.reason === ConflictReason.Deleted;
-  const canSave =
-    !isSaving && !isUnchanged && validationError === null && !isDeleted;
+  const canSave = !isSaving && !isUnchanged && validationError === null;
 
-  const save = async (force: boolean): Promise<void> => {
+  const save = async (): Promise<void> => {
     setIsSaving(true);
     setSaveError(null);
 
     try {
-      const outcome = await onSave({
+      await writeCell({
         detail,
         newValue: toSqlValue(edited),
-        originalValue: baseValue,
-        force,
+        originalValue: detail.value,
       });
-
-      if (outcome.status === UpdateCellStatus.Updated) {
-        onClose();
-
-        return;
-      }
-
-      setConflict(
-        outcome.reason === ConflictReason.Deleted
-          ? { reason: ConflictReason.Deleted }
-          : {
-              reason: ConflictReason.Changed,
-              currentValue: outcome.currentValue,
-            }
-      );
+      onClose();
     } catch (error) {
+      // a SQL error stays here: it is the draft that has to be fixed
       setSaveError(error instanceof Error ? error.message : String(error));
-    } finally {
       setIsSaving(false);
     }
   };
 
-  /** Start over from what the server holds, guard included. */
-  const reloadConflict = (currentValue: unknown): void => {
-    setBaseValue(currentValue);
-    setEdited(toEditableValue(currentValue, fieldKind));
-    setConflict(null);
-  };
-
   return (
     <Flex vertical gap="small">
-      {conflict?.reason === ConflictReason.Changed && (
-        <CellChangedAlert
-          currentValue={conflict.currentValue}
-          fieldKind={fieldKind}
-          isSaving={isSaving}
-          onReload={() => reloadConflict(conflict.currentValue)}
-          onOverwrite={() => void save(true)}
-        />
-      )}
-
-      {isDeleted && <RowDeletedAlert />}
-
       {saveError && <Alert type="error" showIcon title={saveError} />}
 
       {column.nullable && (
@@ -182,7 +135,7 @@ export default function CellDetailForm({
           type="primary"
           disabled={!canSave}
           loading={isSaving}
-          onClick={() => void save(false)}
+          onClick={() => void save()}
         >
           {t('save')}
         </Button>

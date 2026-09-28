@@ -7,13 +7,27 @@ import type { SortingState } from '@tanstack/react-table';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
+import type { ColumnDetail } from '../../sql/dialect/metadata';
 import { mysqlDialect } from '../../sql/dialect/mysql';
 import { FieldKind } from '../../sql/resultField';
+import {
+  ConflictReason,
+  type UpdateCellOutcome,
+  UpdateCellStatus,
+} from '../../sql/updateCell';
 import TableGrid from './TableGrid';
 
 vi.mock('../hooks/useDialect', () => ({ useDialect: () => mysqlDialect }));
@@ -55,7 +69,7 @@ function renderSortable(): Atom<SortingState> {
   return sortingAtom;
 }
 
-function render(element: ReactElement): void {
+function render(element: ReactElement, allColumns: ColumnDetail[] = []): void {
   container = document.createElement('div');
   document.body.append(container);
 
@@ -70,7 +84,7 @@ function render(element: ReactElement): void {
             value={{ database: 'db', setDatabase: () => {} }}
           >
             <ForeignKeysContextProvider foreignKeys={[]}>
-              <AllColumnsContextProvider allColumns={[]}>
+              <AllColumnsContextProvider allColumns={allColumns}>
                 {element}
               </AllColumnsContextProvider>
             </ForeignKeysContextProvider>
@@ -194,5 +208,350 @@ describe('sorting', () => {
 
     expect(container.querySelector('th button')).toBeNull();
     expect(header('id').hasAttribute('aria-sort')).toBe(false);
+  });
+});
+
+describe('context menu', () => {
+  function columnDetail(name: string, nullable: boolean): ColumnDetail {
+    return {
+      table: 'items',
+      name,
+      nullable,
+      generated: false,
+      binary: false,
+      json: false,
+      allowedValues: [],
+      multiValued: false,
+    };
+  }
+
+  // `name` may hold NULL, `id` may not
+  const SCHEMA = [columnDetail('id', false), columnDetail('name', true)];
+
+  const writeText = vi.fn<(text: string) => Promise<void>>(async () => {});
+  const updateCell = vi.fn(
+    async (): Promise<UpdateCellOutcome> => ({
+      status: UpdateCellStatus.Updated,
+      value: null,
+    })
+  );
+
+  function renderGrid({
+    primaryKeys = ['id'],
+    rows = ROWS,
+    onValueUpdated = () => {},
+  }: {
+    primaryKeys?: Array<string>;
+    rows?: typeof ROWS | Array<{ id: number; name: string | null }>;
+    onValueUpdated?: (row: number, column: string, value: unknown) => void;
+  } = {}): void {
+    window.clipboard = { readText: async () => '', writeText };
+    // only the write is called
+    window.sql = { ...window.sql, updateCell };
+
+    render(
+      <TableGrid
+        fields={FIELDS}
+        result={rows}
+        primaryKeys={primaryKeys}
+        onValueUpdated={onValueUpdated}
+      />,
+      SCHEMA
+    );
+  }
+
+  function cell(text: string): HTMLTableCellElement {
+    const found = [...container.querySelectorAll('td')].find(
+      (td) => td.textContent === text
+    );
+
+    if (!found) {
+      throw new Error(`No cell "${text}"`);
+    }
+
+    return found;
+  }
+
+  function openMenu(text: string): void {
+    act(() => {
+      cell(text).dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, clientX: 10 })
+      );
+    });
+  }
+
+  function menuItem(label: string): HTMLElement | undefined {
+    return [
+      ...document.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+    ].find((item) => item.textContent === label);
+  }
+
+  async function choose(label: string): Promise<void> {
+    await act(async () => {
+      menuItem(label)?.click();
+    });
+  }
+
+  // happy-dom lays nothing out, and the virtualizer mounts the rows that fit
+  // in the height of the scroller
+  const offsetHeight = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'offsetHeight'
+  );
+
+  beforeAll(() => {
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+      configurable: true,
+      get: () => 600,
+    });
+  });
+
+  afterAll(() => {
+    if (offsetHeight) {
+      Object.defineProperty(
+        HTMLElement.prototype,
+        'offsetHeight',
+        offsetHeight
+      );
+    }
+  });
+
+  afterEach(() => {
+    writeText.mockClear();
+    updateCell.mockClear();
+  });
+
+  test('copies the value of the cell', async () => {
+    renderGrid();
+
+    openMenu('b');
+    await choose('Copy value');
+
+    expect(writeText).toHaveBeenCalledWith('b');
+  });
+
+  test('copies the whole row', async () => {
+    renderGrid();
+
+    openMenu('b');
+    // a submenu opens on hover, after antd's delay
+    await act(async () => {
+      document
+        .querySelector('[role="menuitem"][aria-haspopup="true"]')
+        ?.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+    await choose('JSON');
+
+    expect(writeText).toHaveBeenCalledWith(
+      JSON.stringify({ id: 2, name: 'b' }, null, 2)
+    );
+  });
+
+  test('opens the detail modal, as a double click does', async () => {
+    renderGrid();
+
+    openMenu('b');
+    await choose('Edit…');
+
+    expect(document.querySelector('.ant-modal-title')?.textContent).toBe(
+      'name'
+    );
+  });
+
+  test('offers to view what it cannot edit', () => {
+    renderGrid({ primaryKeys: [] });
+
+    openMenu('b');
+    expect(menuItem('Edit…')).toBeUndefined();
+    expect(menuItem('View…')).toBeDefined();
+  });
+
+  test('sets a nullable cell to NULL, guarded on what was loaded', async () => {
+    const onValueUpdated = vi.fn();
+    renderGrid({ onValueUpdated });
+
+    openMenu('b');
+    await choose('Set to NULL');
+
+    expect(updateCell).toHaveBeenCalledWith(
+      expect.objectContaining({
+        table: 'items',
+        column: 'name',
+        primaryKey: [{ column: 'id', value: 2 }],
+        newValue: null,
+        originalValue: 'b',
+        force: false,
+      })
+    );
+    expect(onValueUpdated).toHaveBeenCalledWith(1, 'name', null);
+  });
+
+  test('offers NULL only where the detail modal would save it', () => {
+    renderGrid();
+
+    // a NOT NULL column
+    openMenu('2');
+    expect(menuItem('Copy value')).toBeDefined();
+    expect(menuItem('Set to NULL')).toBeUndefined();
+  });
+
+  test('offers no NULL on a row nothing identifies', () => {
+    renderGrid({ primaryKeys: [] });
+
+    openMenu('b');
+    expect(menuItem('Set to NULL')).toBeUndefined();
+  });
+
+  test('a cell already NULL can be neither copied nor set to NULL', () => {
+    renderGrid({ rows: [{ id: 1, name: null }] });
+
+    openMenu('(NULL)');
+    expect(menuItem('Copy value')?.getAttribute('aria-disabled')).toBe('true');
+    expect(menuItem('Set to NULL')?.getAttribute('aria-disabled')).toBe('true');
+  });
+
+  describe('a write that meets a conflict', () => {
+    function conflictModal(): HTMLElement | null {
+      return (
+        [...document.querySelectorAll<HTMLElement>('.ant-modal')].find(
+          (modal) =>
+            modal.textContent?.includes('The value changed in the database')
+        ) ?? null
+      );
+    }
+
+    function button(label: string): HTMLButtonElement | undefined {
+      return [...(conflictModal()?.querySelectorAll('button') ?? [])].find(
+        (candidate) => candidate.textContent === label
+      );
+    }
+
+    async function setNullOnAChangedCell(
+      onValueUpdated = vi.fn()
+    ): Promise<void> {
+      updateCell.mockResolvedValueOnce({
+        status: UpdateCellStatus.Conflict,
+        reason: ConflictReason.Changed,
+        currentValue: 'changed elsewhere',
+      });
+      renderGrid({ onValueUpdated });
+
+      openMenu('b');
+      await choose('Set to NULL');
+    }
+
+    test('opens the conflict modal, with both values', async () => {
+      const onValueUpdated = vi.fn();
+      await setNullOnAChangedCell(onValueUpdated);
+
+      const values = [
+        ...(conflictModal()?.querySelectorAll('textarea') ?? []),
+      ].map((textarea) => textarea.value);
+
+      // the server's value, then ours: NULL, an empty text
+      expect(values).toEqual(['changed elsewhere', '']);
+      expect(onValueUpdated).not.toHaveBeenCalled();
+    });
+
+    test('overwrites it without the guard', async () => {
+      const onValueUpdated = vi.fn();
+      await setNullOnAChangedCell(onValueUpdated);
+
+      await act(async () => {
+        button('Overwrite')?.click();
+      });
+
+      expect(updateCell).toHaveBeenLastCalledWith(
+        expect.objectContaining({ newValue: null, force: true })
+      );
+      expect(onValueUpdated).toHaveBeenCalledWith(1, 'name', null);
+    });
+
+    test('reopens on a row deleted before the overwrite', async () => {
+      await setNullOnAChangedCell();
+      updateCell.mockResolvedValueOnce({
+        status: UpdateCellStatus.Conflict,
+        reason: ConflictReason.Deleted,
+      });
+
+      await act(async () => {
+        button('Overwrite')?.click();
+      });
+
+      expect(
+        [...document.querySelectorAll('.ant-modal')].some(
+          (modal) =>
+            modal.textContent?.includes('The row no longer exists') &&
+            !modal.classList.contains('ant-zoom-leave')
+        )
+      ).toBe(true);
+    });
+
+    test('cancelling keeps the server value, which the grid then shows', async () => {
+      const onValueUpdated = vi.fn();
+      await setNullOnAChangedCell(onValueUpdated);
+
+      await act(async () => {
+        button('Cancel my change')?.click();
+      });
+
+      expect(updateCell).toHaveBeenCalledTimes(1);
+      expect(onValueUpdated).toHaveBeenCalledWith(
+        1,
+        'name',
+        'changed elsewhere'
+      );
+    });
+  });
+
+  test('a conflict met by the detail modal closes it, and opens the conflict modal', async () => {
+    updateCell.mockResolvedValueOnce({
+      status: UpdateCellStatus.Conflict,
+      reason: ConflictReason.Deleted,
+    });
+    renderGrid();
+
+    openMenu('b');
+    await choose('Edit…');
+    await act(async () => {
+      document
+        .querySelector<HTMLInputElement>('.ant-modal input[type="checkbox"]')
+        ?.click();
+    });
+    await act(async () => {
+      [...document.querySelectorAll<HTMLButtonElement>('.ant-modal button')]
+        .find((candidate) => candidate.textContent === 'Save')
+        ?.click();
+    });
+
+    const modals = [...document.querySelectorAll('.ant-modal')];
+    const detailModal = modals.find((modal) =>
+      modal.textContent?.includes('Save')
+    );
+    const conflictModal = modals.find((modal) =>
+      modal.textContent?.includes('The row no longer exists')
+    );
+
+    expect(updateCell).toHaveBeenCalledWith(
+      expect.objectContaining({ newValue: null })
+    );
+    // antd keeps a closed modal mounted for its leave animation, which happy-dom never ends
+    expect(detailModal?.classList.contains('ant-zoom-leave')).toBe(true);
+    expect(conflictModal?.classList.contains('ant-zoom-leave')).toBe(false);
+  });
+
+  test('a SQL error of the menu opens the conflict modal on it', async () => {
+    updateCell.mockRejectedValueOnce(new Error('Column cannot be null'));
+    renderGrid();
+
+    openMenu('b');
+    await choose('Set to NULL');
+
+    expect(
+      [...document.querySelectorAll('.ant-modal')].some((modal) =>
+        modal.textContent?.includes('Column cannot be null')
+      )
+    ).toBe(true);
   });
 });

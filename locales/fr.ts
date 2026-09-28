@@ -5,15 +5,6 @@ const fr: Translation = {
   edit: 'Modifier',
   save: 'Enregistrer',
   filter: 'Filtrer',
-  'cell.detail.conflict.changed.description':
-    "Cette cellule a été modifiée par quelqu'un d'autre depuis le chargement de la ligne. Rechargez pour repartir de la valeur actuelle, ou écrasez-la.",
-  'cell.detail.conflict.changed.title':
-    'La valeur a changé dans la base de données',
-  'cell.detail.conflict.deleted.description':
-    "La ligne a été supprimée depuis son chargement : rien n'a été écrit.",
-  'cell.detail.conflict.deleted.title': "La ligne n'existe plus",
-  'cell.detail.conflict.overwrite': 'Écraser',
-  'cell.detail.conflict.reload': 'Recharger',
   // ICU select on the `ValidationError` enum
   'cell.detail.error':
     "{error, select, invalidJson {Ce n'est pas du JSON valide.} other {Cette valeur ne peut pas être enregistrée.}}",
@@ -27,6 +18,18 @@ const fr: Translation = {
     " unknownColumn {Lecture seule : cette colonne n'appartient à aucune table de cette base.}" +
     ' other {Lecture seule.}}',
   'cell.detail.setNull': 'Mettre à NULL',
+  'cell.write.cancel': 'Annuler ma modification',
+  'cell.write.changed.description':
+    "Cette cellule a été modifiée par quelqu'un d'autre depuis le chargement de la ligne. Écrasez-la avec votre valeur, ou annulez votre modification.",
+  'cell.write.changed.title': 'La valeur a changé dans la base de données',
+  'cell.write.close': 'Fermer',
+  'cell.write.deleted.description':
+    "La ligne a été supprimée depuis son chargement : rien n'a été écrit.",
+  'cell.write.deleted.title': "La ligne n'existe plus",
+  'cell.write.failed.title': "La valeur n'a pas pu être écrite",
+  'cell.write.overwrite': 'Écraser',
+  'cell.write.serverValue': 'Dans la base de données',
+  'cell.write.yourValue': 'Votre valeur',
   'config.encryption.insecureBackend.detail':
     'Backend de stockage : {backend}. Installez un trousseau (gnome-keyring, KWallet) et redémarrez l’application pour chiffrer vos mots de passe.',
   'config.encryption.insecureBackend.message':
@@ -151,11 +154,19 @@ const fr: Translation = {
   'settings.title': 'Réglages',
   'sqlPanel.callerButton': 'SQL',
   'table.columns.count': '{count, plural, one {# colonne} other {# colonnes}}',
+  'table.contextMenu.copy': 'Copier la valeur',
+  'table.contextMenu.copyRow': 'Copier la ligne en',
+  'table.contextMenu.copyRow.csv': 'CSV',
+  'table.contextMenu.copyRow.json': 'JSON',
+  'table.contextMenu.copyRow.sqlInsert': 'INSERT SQL',
+  'table.contextMenu.edit':
+    '{editable, select, true {Modifier…} other {Afficher…}}',
   'table.contextMenu.filter': 'Filtre',
   'table.contextMenu.filter.cellValue': 'Valeur de la cellule',
   'table.contextMenu.filter.clipboard': 'Presse-papier',
   'table.contextMenu.filter.freeText': '…',
   'table.contextMenu.filter.freeText.title': 'Filtrer sur une valeur',
+  'table.contextMenu.setNull': 'Mettre à NULL',
   'table.filters.history': 'Filtres déjà utilisés',
   'table.filters.title': 'Filtres',
   'table.rows.count': '{count, plural, one {# ligne} other {# lignes}}',

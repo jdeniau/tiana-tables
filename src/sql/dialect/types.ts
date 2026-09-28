@@ -44,6 +44,8 @@ export interface Dialect {
 
   /** How this server spells a boolean in a comparison. */
   booleanLiteral(value: boolean): string;
+  /** Bytes as a literal of this server, every one of them kept. */
+  bytesLiteral(bytes: Uint8Array): string;
 
   /** What the app asks this server about itself. */
   metadata: DialectMetadata;

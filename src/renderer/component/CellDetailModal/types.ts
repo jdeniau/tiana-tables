@@ -1,8 +1,4 @@
-import {
-  ConflictReason,
-  type PrimaryKeyPart,
-  type UpdateCellOutcome,
-} from '../../../sql/updateCell';
+import type { PrimaryKeyPart } from '../../../sql/updateCell';
 import type { ColumnMeta } from '../TableGrid';
 
 export interface CellDetail {
@@ -17,21 +13,3 @@ export interface CellDetail {
   /** where the row sits in the loaded result, to refresh it after a write */
   rowIndex: number;
 }
-
-export interface SaveCellParams {
-  detail: CellDetail;
-  newValue: string | null;
-  /**
-   * The value the write is guarded on. Not always `detail.value`: reloading a
-   * reported conflict moves the guard onto the value the server now holds.
-   */
-  originalValue: unknown;
-  force: boolean;
-}
-
-export type SaveCell = (params: SaveCellParams) => Promise<UpdateCellOutcome>;
-
-/** Why a write found the row in a state the editor was not opened on. */
-export type Conflict =
-  | { reason: ConflictReason.Changed; currentValue: unknown }
-  | { reason: ConflictReason.Deleted };

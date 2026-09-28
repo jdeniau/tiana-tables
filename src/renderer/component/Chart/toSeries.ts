@@ -1,6 +1,7 @@
 import { FieldKind, type ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import { formatDate, formatDateTime } from '../../utils/dateFormatter';
+import { isNullish } from '../../utils/isNullish';
 import type { ChartConfig } from './chartConfig';
 
 /**
@@ -78,7 +79,7 @@ export function toNumber(value: unknown): number | null {
  * default mysql2 options, and their ISO form makes a poor axis label.
  */
 export function toAxisLabel(value: unknown, isDateOnly: boolean): string {
-  if (value === null || value === undefined) {
+  if (isNullish(value)) {
     return '';
   }
 

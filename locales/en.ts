@@ -3,14 +3,6 @@ export default {
   edit: 'Edit',
   save: 'Save',
   filter: 'Filter',
-  'cell.detail.conflict.changed.description':
-    'This cell was written by someone else since the row was loaded. Reload to start over from the current value, or overwrite it.',
-  'cell.detail.conflict.changed.title': 'The value changed in the database',
-  'cell.detail.conflict.deleted.description':
-    'The row was deleted since it was loaded, so nothing was written.',
-  'cell.detail.conflict.deleted.title': 'The row no longer exists',
-  'cell.detail.conflict.overwrite': 'Overwrite',
-  'cell.detail.conflict.reload': 'Reload',
   // ICU select on the `ValidationError` enum
   'cell.detail.error':
     '{error, select, invalidJson {This is not valid JSON.} other {This value cannot be saved.}}',
@@ -24,6 +16,18 @@ export default {
     ' unknownColumn {Read-only: this column belongs to no table of this database.}' +
     ' other {Read-only.}}',
   'cell.detail.setNull': 'Set to NULL',
+  'cell.write.cancel': 'Cancel my change',
+  'cell.write.changed.description':
+    'This cell was written by someone else since the row was loaded. Overwrite it with your value, or cancel your change.',
+  'cell.write.changed.title': 'The value changed in the database',
+  'cell.write.close': 'Close',
+  'cell.write.deleted.description':
+    'The row was deleted since it was loaded, so nothing was written.',
+  'cell.write.deleted.title': 'The row no longer exists',
+  'cell.write.failed.title': 'The value could not be written',
+  'cell.write.overwrite': 'Overwrite',
+  'cell.write.serverValue': 'In the database',
+  'cell.write.yourValue': 'Your value',
   'config.encryption.insecureBackend.detail':
     'Storage backend: {backend}. Install a keyring (gnome-keyring, KWallet) and restart the application to store your passwords encrypted.',
   'config.encryption.insecureBackend.message':
@@ -147,11 +151,18 @@ export default {
   'settings.title': 'Settings',
   'sqlPanel.callerButton': 'SQL',
   'table.columns.count': '{count, plural, one {# column} other {# columns}}',
+  'table.contextMenu.copy': 'Copy value',
+  'table.contextMenu.copyRow': 'Copy row as',
+  'table.contextMenu.copyRow.csv': 'CSV',
+  'table.contextMenu.copyRow.json': 'JSON',
+  'table.contextMenu.copyRow.sqlInsert': 'SQL INSERT',
+  'table.contextMenu.edit': '{editable, select, true {Edit…} other {View…}}',
   'table.contextMenu.filter': 'Filter',
   'table.contextMenu.filter.cellValue': 'Cell value',
   'table.contextMenu.filter.clipboard': 'Clipboard',
   'table.contextMenu.filter.freeText': '…',
   'table.contextMenu.filter.freeText.title': 'Filter on a value',
+  'table.contextMenu.setNull': 'Set to NULL',
   'table.filters.history': 'Filters used before',
   'table.filters.title': 'Filters',
   'table.rows.count': '{count, plural, one {# row} other {# rows}}',

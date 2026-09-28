@@ -1,5 +1,6 @@
 import { FieldKind } from '../../sql/resultField';
 import { formatDate, formatDateTime } from '../utils/dateFormatter';
+import { isNullish } from '../utils/isNullish';
 import toHexLiteral from './hexLiteral';
 
 /**
@@ -20,7 +21,7 @@ export default function cellValueToText(
   value: unknown,
   kind: FieldKind
 ): string {
-  if (value === null || value === undefined) {
+  if (isNullish(value)) {
     return '';
   }
 
