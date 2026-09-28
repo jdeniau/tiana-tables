@@ -325,10 +325,7 @@ function TableGrid<Row extends ResultRow>({
               size: extra.size,
             })
           : columnHelper.accessor(
-              (row: Row) =>
-                rowsAsArray
-                  ? (row as unknown as Array<unknown>)[fieldIndex]
-                  : row[field.name],
+              (row: Row) => (rowsAsArray ? row[fieldIndex] : row[field.name]),
               {
                 // raw SQL results can contain duplicated column names: suffix with the index to keep ids unique
                 // (browsing mode keeps plain names so that column pinning can match primary key names)
@@ -697,9 +694,7 @@ function BodyRowInner<Row extends ResultRow>({
 }: BodyRowProps<Row>): ReactElement {
   const original = row.original;
   const valueOf = (column: ColumnMeta): unknown =>
-    rowsAsArray
-      ? (original as unknown as Array<unknown>)[column.fieldIndex]
-      : original[column.name];
+    rowsAsArray ? original[column.fieldIndex] : original[column.name];
 
   return (
     <tr className="tg-row" style={{ transform: `translateY(${start}px)` }}>
