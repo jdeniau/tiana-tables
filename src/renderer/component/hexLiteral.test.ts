@@ -27,4 +27,10 @@ describe('toHexLiteral', () => {
   test('an empty value is a literal of no bytes', () => {
     expect(toHexLiteral(new Uint8Array([]), 16)).toBe('0x');
   });
+
+  test('writes every byte without a budget', () => {
+    expect(toHexLiteral(new Uint8Array(5000).fill(0xab))).toBe(
+      `0x${'AB'.repeat(5000)}`
+    );
+  });
 });

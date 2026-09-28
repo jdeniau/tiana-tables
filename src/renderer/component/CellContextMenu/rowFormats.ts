@@ -27,11 +27,6 @@ function dateText(value: Date, kind: FieldKind): string {
   return kind === FieldKind.Date ? formatDate(value) : value.toISOString();
 }
 
-/** Bytes as a hexadecimal literal, every one of them: a copy is never cut short. */
-function bytesText(bytes: Uint8Array): string {
-  return toHexLiteral(bytes, bytes.length);
-}
-
 /**
  * The row as one JSON object, keyed by column name.
  *
@@ -61,7 +56,7 @@ function toJsonValue(value: unknown, kind: FieldKind): unknown {
   }
 
   if (value instanceof Uint8Array) {
-    return bytesText(value);
+    return toHexLiteral(value);
   }
 
   // `JSON.stringify` throws on a bigint
@@ -95,7 +90,7 @@ function toFlatText(value: unknown, kind: FieldKind): string {
   }
 
   if (value instanceof Uint8Array) {
-    return bytesText(value);
+    return toHexLiteral(value);
   }
 
   if (typeof value === 'object' && value !== null) {

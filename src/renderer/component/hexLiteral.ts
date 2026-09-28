@@ -12,10 +12,11 @@ const ELLIPSIS = '…';
  *
  * `maxBytes` bounds what gets turned into text, because a column may hold
  * megabytes and each byte costs two characters. An ellipsis says when it did.
+ * Without it every byte is written: what a copy needs.
  */
 export default function toHexLiteral(
   bytes: Uint8Array,
-  maxBytes: number
+  maxBytes: number = bytes.length
 ): string {
   const head = Array.from(bytes.subarray(0, maxBytes), (byte) =>
     byte.toString(16).toUpperCase().padStart(2, '0')

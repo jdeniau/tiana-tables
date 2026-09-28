@@ -282,7 +282,7 @@ function buildMenuItems({
  */
 function toCopiedText(value: unknown, kind: FieldKind): string {
   return value instanceof Uint8Array
-    ? toHexLiteral(value, value.length)
+    ? toHexLiteral(value)
     : cellValueToText(value, kind);
 }
 
