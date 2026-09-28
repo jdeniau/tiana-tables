@@ -1,6 +1,4 @@
 import type { Dialect } from '../../../sql/dialect/types';
-import { FieldKind } from '../../../sql/resultField';
-import { formatDate, formatDateTime } from '../../utils/dateFormatter';
 import { isNullish } from '../../utils/isNullish';
 
 /**
@@ -8,9 +6,9 @@ import { isNullish } from '../../utils/isNullish';
  *
  * The driver hands rows over already typed, and the value is what decides the
  * form of the literal: a number is written bare (quoting it would work, MySQL
- * coerces, but the clause is shown to the user and read by them), a date is
- * written as the wall clock the grid displays, everything else is a quoted
- * string.
+ * coerces, but the clause is shown to the user and read by them), everything
+ * else is a quoted string — a date being the server's own text, so that the
+ * comparison holds to the microsecond.
  *
  * `undefined` — and not `'NULL'` — for a value that has none: `= NULL` is never
  * true, so a null cell offers no comparison at all. The menu reads the absence
@@ -19,8 +17,7 @@ import { isNullish } from '../../utils/isNullish';
  */
 export function cellValueToSqlLiteral(
   dialect: Dialect,
-  value: unknown,
-  kind: FieldKind
+  value: unknown
 ): string | undefined {
   if (isNullish(value)) {
     return undefined;
@@ -32,12 +29,6 @@ export function cellValueToSqlLiteral(
 
   if (typeof value === 'boolean') {
     return dialect.booleanLiteral(value);
-  }
-
-  if (value instanceof Date) {
-    return dialect.escapeLiteral(
-      kind === FieldKind.Date ? formatDate(value) : formatDateTime(value)
-    );
   }
 
   if (typeof value === 'string') {

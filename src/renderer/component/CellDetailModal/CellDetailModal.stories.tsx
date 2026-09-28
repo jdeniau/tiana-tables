@@ -143,7 +143,7 @@ export const Datetime: Story = {
           nullable: false,
         })
       ),
-      new Date(2026, 0, 15, 10, 30, 0)
+      '2026-01-15 10:30:00'
     ),
   },
 };

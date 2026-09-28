@@ -98,14 +98,16 @@ describe('the order of the tiers', () => {
     expect(rendered).not.toContain('FF'.repeat(200));
   });
 
-  // the value settles that it is a date; the kind only picks the format
-  test('a Date takes its format from the kind', () => {
-    const date = new Date(2026, 8, 11, 14, 3, 9);
+  // the server's text, which only the kind tells from any other string
+  test('a date column formats the text the server answered', () => {
+    expect(
+      renderCell(FieldKind.DateTime, '2026-09-11 14:03:09.123456')
+    ).toContain('>2026-09-11 14:03:09<');
+  });
 
-    expect(renderCell(FieldKind.Date, date)).toContain('>2026-09-11<');
-    expect(renderCell(FieldKind.DateTime, date)).toContain(
-      '>2026-09-11 14:03:09<'
-    );
+  // MySQL's `0000-00-00`, which Temporal refuses
+  test('a date Temporal refuses is drawn as the server wrote it', () => {
+    expect(renderCell(FieldKind.Date, '0000-00-00')).toContain('>0000-00-00<');
   });
 
   // a `VARCHAR` keeps the colour of a string, which a `TEXT` does not have

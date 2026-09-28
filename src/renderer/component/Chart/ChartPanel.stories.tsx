@@ -18,7 +18,7 @@ const FIELDS = [
 // the shape this feature exists for: `SELECT day, COUNT(*), SUM(price)
 // FROM … GROUP BY day`, queried with `rowsAsArray`
 const ROWS = Array.from({ length: 30 }, (_, index) => [
-  new Date(2026, 0, index + 1),
+  `2026-01-${String(index + 1).padStart(2, '0')}`,
   40 + Math.round(30 * Math.sin(index / 3)),
   (500 + 220 * Math.cos(index / 4)).toFixed(2),
 ]) as unknown as ResultRow[];

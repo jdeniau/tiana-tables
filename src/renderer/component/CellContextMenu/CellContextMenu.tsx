@@ -18,7 +18,6 @@ import {
   buildFilterClause,
   operatorTakesValue,
 } from '../../../sql/filterClause';
-import type { FieldKind } from '../../../sql/resultField';
 import { useDialect } from '../../hooks/useDialect';
 import { commentForeground } from '../../theme';
 import { isNullish } from '../../utils/isNullish';
@@ -239,7 +238,7 @@ function buildMenuItems({
       // there is no text to a NULL, and copying an empty one would silently
       // wipe what the clipboard held
       disabled: isNullish(value),
-      onClick: () => onCopy(toCopiedText(value, column.kind)),
+      onClick: () => onCopy(toCopiedText(value)),
     },
     {
       key: 'copyRow',
@@ -280,10 +279,10 @@ function buildMenuItems({
  * The whole value, as the detail modal shows it — except bytes, which the
  * modal cuts off after a few kilobytes: a copy must never be truncated.
  */
-function toCopiedText(value: unknown, kind: FieldKind): string {
+function toCopiedText(value: unknown): string {
   return value instanceof Uint8Array
     ? toHexLiteral(value)
-    : cellValueToText(value, kind);
+    : cellValueToText(value);
 }
 
 interface FilterItemParams {
@@ -310,7 +309,7 @@ function buildFilterItem({
   const cellLiteral =
     column.detail?.binary === true
       ? undefined
-      : cellValueToSqlLiteral(dialect, target.value, column.kind);
+      : cellValueToSqlLiteral(dialect, target.value);
 
   const clipboardLiteral =
     clipboardText === '' ? undefined : dialect.escapeLiteral(clipboardText);

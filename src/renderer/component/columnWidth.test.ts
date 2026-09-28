@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { FieldKind } from '../../sql/resultField';
 import { fontScale } from '../theme';
-import { formatDate, formatDateTime } from '../utils/dateFormatter';
+import { formatDateText } from '../utils/dateFormatter';
 import { DEFAULT_COLUMN_WIDTH, getColumnWidth } from './columnWidth';
 
 const CELL_PADDING = 24;
@@ -14,7 +14,10 @@ describe('getColumnWidth', () => {
   });
 
   test('a datetime column fits the whole timestamp', () => {
-    const rendered = formatDateTime(new Date(2026, 8, 11, 14, 3, 9));
+    const rendered = formatDateText(
+      '2026-09-11 14:03:09.123456',
+      FieldKind.DateTime
+    );
 
     expect(getColumnWidth(FieldKind.DateTime)).toBeGreaterThanOrEqual(
       rendered.length * 0.6 * fontScale.base + CELL_PADDING
@@ -22,7 +25,7 @@ describe('getColumnWidth', () => {
   });
 
   test('a DATE column fits its shorter format, and stays narrower', () => {
-    const rendered = formatDate(new Date(2026, 8, 11));
+    const rendered = formatDateText('2026-09-11', FieldKind.Date);
 
     expect(getColumnWidth(FieldKind.Date)).toBeGreaterThanOrEqual(
       rendered.length * 0.6 * fontScale.base + CELL_PADDING

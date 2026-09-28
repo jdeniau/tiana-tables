@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { FieldKind } from '../../../sql/resultField';
 import {
   findValidationError,
   isSameValue,
@@ -10,28 +9,14 @@ import {
 
 describe('toEditableValue', () => {
   it('marks an absent value as NULL, with no text', () => {
-    expect(toEditableValue(null, FieldKind.String)).toEqual({
+    expect(toEditableValue(null)).toEqual({
       isNull: true,
       text: '',
     });
   });
 
-  it('spells a datetime the way MySQL does', () => {
-    expect(
-      toEditableValue(new Date(2026, 0, 15, 10, 30, 45), FieldKind.DateTime)
-    ).toEqual({ isNull: false, text: '2026-01-15 10:30:45' });
-  });
-
-  it('drops the time of a date column', () => {
-    expect(
-      toEditableValue(new Date(2026, 0, 15, 10, 30, 45), FieldKind.Date)
-    ).toEqual({ isNull: false, text: '2026-01-15' });
-  });
-
   it('indents a JSON value so that it can be read and edited', () => {
-    expect(toEditableValue('{"a":1}', FieldKind.Json).text).toBe(
-      '{\n  "a": 1\n}'
-    );
+    expect(toEditableValue('{"a":1}').text).toBe('{\n  "a": 1\n}');
   });
 });
 
@@ -89,16 +74,12 @@ describe('findValidationError', () => {
 });
 
 describe('toBoundValue', () => {
-  it('keeps a Date, which mysql2 knows how to format', () => {
-    const date = new Date(2026, 0, 15);
-
-    expect(toBoundValue(date)).toBe(date);
-  });
-
   it.each([
     [null, null],
     [undefined, null],
     ['text', 'text'],
+    // the server's own text, microseconds included, so that the guard compares equal
+    ['2026-01-15 10:30:45.123456', '2026-01-15 10:30:45.123456'],
     [42, 42],
   ])('passes %s through as %s', (value, expected) => {
     expect(toBoundValue(value)).toBe(expected);

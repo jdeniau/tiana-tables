@@ -50,8 +50,8 @@ export enum ConflictReason {
 /**
  * What became of an edit. `updated` carries the value read back from the
  * server, which is the value the grid must now display — the string that was
- * written is not it (a `DATETIME` comes back as a `Date`, a `DECIMAL` rounded
- * to its scale, a JSON column normalized).
+ * written is not it (a `DATETIME(6)` comes back with six fractional digits, a
+ * `DECIMAL` rounded to its scale, a JSON column normalized).
  */
 export type UpdateCellOutcome =
   | { status: UpdateCellStatus.Updated; value: unknown }

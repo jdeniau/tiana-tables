@@ -157,13 +157,9 @@ type ColumnSource<Row extends ResultRow> =
   | { field: ResultField; fieldIndex: number; extra?: undefined }
   | { field?: undefined; fieldIndex: -1; extra: ExtraColumn<Row> };
 
-/** A scalar the driver answers with, and binds back unchanged. */
+/** A scalar the driver answers with, and binds back unchanged: a date is the server's text. */
 function isPrimaryKeyValue(value: unknown): value is PrimaryKeyPart['value'] {
-  return (
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    value instanceof Date
-  );
+  return typeof value === 'string' || typeof value === 'number';
 }
 
 /**
@@ -803,7 +799,6 @@ const GridCell = memo(function GridCell({
             dialect={column.dialect}
             tableName={column.tableName ?? ''}
             columnName={column.name}
-            fieldKind={column.kind}
             value={value}
           />
         ) : undefined

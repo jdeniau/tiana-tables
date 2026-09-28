@@ -1,18 +1,75 @@
-// This file is a small date formatter helper for now.
-// We might want to use a library like date-fns, luxoon or Temporal in the future.
+import { FieldKind } from '../../sql/resultField';
 
-export function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+/** The offset PostgreSQL appends to a `timestamptz`: `+05:30`, `-05`, `+00:09:21`. */
+const TRAILING_OFFSET = /[+-]\d{2}(?::\d{2}){0,2}$/;
 
-  return `${year}-${month}-${day}`;
+/** Whether a column holds dates, which both drivers hand over as the server's text. */
+export function isDateKind(kind: FieldKind): boolean {
+  return kind === FieldKind.Date || kind === FieldKind.DateTime;
 }
 
-export function formatDateTime(date: Date): string {
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+/**
+ * The server's text of a date as Temporal, or `null` when Temporal refuses it:
+ * MySQL's `0000-00-00`, PostgreSQL's `infinity` or `BC` dates.
+ */
+function parseDate(
+  text: string,
+  kind: FieldKind
+): Temporal.PlainDate | Temporal.PlainDateTime | Temporal.Instant | null {
+  try {
+    if (kind === FieldKind.Date) {
+      return Temporal.PlainDate.from(text);
+    }
 
-  return `${formatDate(date)} ${hours}:${minutes}:${seconds}`;
+    // `PlainDateTime.from` would accept the offset and drop it
+    return TRAILING_OFFSET.test(text)
+      ? Temporal.Instant.from(text)
+      : Temporal.PlainDateTime.from(text);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A date as the grid shows it: `YYYY-MM-DD`, with `HH:mm:ss` when it has a time.
+ * A `timestamptz` shows in the machine's zone, the fraction of a second is left out.
+ */
+export function formatDateText(text: string, kind: FieldKind): string {
+  const date = parseDate(text, kind);
+
+  if (date === null) {
+    return text;
+  }
+
+  if (date instanceof Temporal.PlainDate) {
+    return date.toString();
+  }
+
+  const dateTime =
+    date instanceof Temporal.Instant
+      ? date.toZonedDateTimeISO(Temporal.Now.timeZoneId()).toPlainDateTime()
+      : date;
+
+  return dateTime.toString({ smallestUnit: 'second' }).replace('T', ' ');
+}
+
+/**
+ * A date as a program reads it: ISO 8601, a point in time as an instant,
+ * a wall clock taken in the machine's zone. A `DATE` has no time, hence no offset.
+ */
+export function dateTextToIso(text: string, kind: FieldKind): string {
+  const date = parseDate(text, kind);
+
+  if (date === null) {
+    return text;
+  }
+
+  if (date instanceof Temporal.PlainDateTime) {
+    return date
+      .toZonedDateTime(Temporal.Now.timeZoneId())
+      .toInstant()
+      .toString();
+  }
+
+  return date.toString();
 }

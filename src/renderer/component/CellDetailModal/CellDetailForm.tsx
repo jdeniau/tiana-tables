@@ -36,8 +36,8 @@ export default function CellDetailForm({
 
   /** the loaded value as text: what the editor opens on, and what "unchanged" means */
   const baseEditable = useMemo(
-    () => toEditableValue(detail.value, fieldKind),
-    [detail.value, fieldKind]
+    () => toEditableValue(detail.value),
+    [detail.value]
   );
 
   const [edited, setEdited] = useState(baseEditable);
@@ -48,11 +48,7 @@ export default function CellDetailForm({
 
   if (!editability.editable) {
     return (
-      <ReadOnlyCellValue
-        value={detail.value}
-        fieldKind={fieldKind}
-        reason={editability.reason}
-      />
+      <ReadOnlyCellValue value={detail.value} reason={editability.reason} />
     );
   }
 
@@ -62,7 +58,6 @@ export default function CellDetailForm({
     return (
       <ReadOnlyCellValue
         value={detail.value}
-        fieldKind={fieldKind}
         reason={NotEditableReason.UnknownColumn}
       />
     );

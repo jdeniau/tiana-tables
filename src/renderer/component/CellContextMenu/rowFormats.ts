@@ -1,6 +1,6 @@
 import type { Dialect } from '../../../sql/dialect/types';
-import { FieldKind } from '../../../sql/resultField';
-import { formatDate } from '../../utils/dateFormatter';
+import type { FieldKind } from '../../../sql/resultField';
+import { dateTextToIso, isDateKind } from '../../utils/dateFormatter';
 import { isNullish } from '../../utils/isNullish';
 import type { ColumnMeta } from '../TableGrid';
 import toHexLiteral from '../hexLiteral';
@@ -17,14 +17,6 @@ export enum RowFormat {
   Json = 'json',
   Csv = 'csv',
   SqlInsert = 'sqlInsert',
-}
-
-/**
- * A point in time in UTC, offset included, so that it reads as the same instant anywhere.
- * A `DATE` has no time, hence no offset: it stays the calendar day.
- */
-function dateText(value: Date, kind: FieldKind): string {
-  return kind === FieldKind.Date ? formatDate(value) : value.toISOString();
 }
 
 /**
@@ -51,8 +43,9 @@ function toJsonValue(value: unknown, kind: FieldKind): unknown {
     return null;
   }
 
-  if (value instanceof Date) {
-    return dateText(value, kind);
+  // a point in time reads as the same instant anywhere
+  if (typeof value === 'string' && isDateKind(kind)) {
+    return dateTextToIso(value, kind);
   }
 
   if (value instanceof Uint8Array) {
@@ -85,8 +78,8 @@ export function rowToCsv(cells: ReadonlyArray<RowCell>): string {
 
 /** A value on one line: a JSON column compact, not indented as in the modal. */
 function toFlatText(value: unknown, kind: FieldKind): string {
-  if (value instanceof Date) {
-    return dateText(value, kind);
+  if (typeof value === 'string' && isDateKind(kind)) {
+    return dateTextToIso(value, kind);
   }
 
   if (value instanceof Uint8Array) {
@@ -136,18 +129,12 @@ export function rowToInsert(
   }
 
   const columns = names.map((name) => dialect.escapeIdentifier(name));
-  const values = written.map(({ column, value }) =>
-    toSqlLiteral(dialect, value, column.kind)
-  );
+  const values = written.map(({ value }) => toSqlLiteral(dialect, value));
 
   return `INSERT INTO ${dialect.qualify(databaseName, tableName)} (${columns.join(', ')}) VALUES (${values.join(', ')});`;
 }
 
-function toSqlLiteral(
-  dialect: Dialect,
-  value: unknown,
-  kind: FieldKind
-): string {
+function toSqlLiteral(dialect: Dialect, value: unknown): string {
   if (isNullish(value)) {
     return 'NULL';
   }
@@ -157,5 +144,5 @@ function toSqlLiteral(
   }
 
   // every other value has a literal: only NULL and bytes come back undefined
-  return cellValueToSqlLiteral(dialect, value, kind) ?? 'NULL';
+  return cellValueToSqlLiteral(dialect, value) ?? 'NULL';
 }

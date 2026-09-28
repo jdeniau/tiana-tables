@@ -2,7 +2,7 @@ import { MouseEvent, ReactNode, memo } from 'react';
 import { styled } from 'styled-components';
 import { FieldKind } from '../../sql/resultField';
 import { constantForeground, foreground, stringForeground } from '../theme';
-import { formatDate, formatDateTime } from '../utils/dateFormatter';
+import { formatDateText } from '../utils/dateFormatter';
 import { isNullish } from '../utils/isNullish';
 import toHexLiteral from './hexLiteral';
 
@@ -87,12 +87,8 @@ const ForegroundSpan = styled(BaseCell)`
   color: ${foreground};
 `;
 
-function DateCell({ value }: CellProps<Date>) {
-  return <ForegroundSpan>{formatDate(value)}</ForegroundSpan>;
-}
-
-function DatetimeCell({ value }: CellProps<Date>) {
-  return <ForegroundSpan>{formatDateTime(value)}</ForegroundSpan>;
+function DateCell({ value, kind }: CellProps<string> & { kind: FieldKind }) {
+  return <ForegroundSpan>{formatDateText(value, kind)}</ForegroundSpan>;
 }
 
 const StringSpan = styled(BaseCell)`
@@ -188,15 +184,6 @@ const TableCellFactory = memo(function TableCellFactory({
     return <BinaryCell value={value} />;
   }
 
-  if (value instanceof Date) {
-    // the value already settled that it is a date; the kind only picks a format
-    return kind === FieldKind.Date ? (
-      <DateCell value={value} />
-    ) : (
-      <DatetimeCell value={value} />
-    );
-  }
-
   if (typeof value === 'object') {
     return <JsonCell value={value} />;
   }
@@ -210,6 +197,11 @@ const TableCellFactory = memo(function TableCellFactory({
 
     case FieldKind.Json:
       return <JsonCell value={value} />;
+
+    // the server's text, which only the kind tells from any other string
+    case FieldKind.Date:
+    case FieldKind.DateTime:
+      return <DateCell value={String(value)} kind={kind} />;
 
     // `Text` and everything the app has no rendering of: a `TIME` reads
     // `HH:MM:SS`, a boolean `true`, and an unknown type whatever it answered

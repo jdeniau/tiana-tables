@@ -34,11 +34,12 @@ Scrolling _mounts_ hundreds of cells per tick, so `memo` does nothing there: the
 
 - **The `<td>` of `BodyRowInner` owns the pointer gestures** (double-click, context menu); what the cell renders owns only the rendering. The `<div>` covers neither the padding nor the foreign-key `<a>`.
 - **A transient mark on one element is set imperatively on that element**, its CSS and timing in one module (`useWrittenCellFlash`, `setTitleIfTruncated`). Every prop added to `BodyRow` is a comparison paid by every row.
-- **A cell renders in three tiers**: the shape of the value (`null`, bytes, non-`Date` object), then its `FieldKind`, then `String(value)` — so no value can blank the grid.
+- **A cell renders in three tiers**: the shape of the value (`null`, bytes, any other object), then its `FieldKind` — which alone tells a date, the server's text, from any other string —, then `String(value)` — so no value can blank the grid.
 - **Detect from the value, not from a convention**: JSON is recognised by `cellValueToText` from the value itself (starts with `{`/`[` and parses), never from a column comment or an ORM marker (Doctrine's `(DC2Type:json)` is alone of its kind and gone in DBAL 4).
 
 ## Copy formats (`CellContextMenu/rowFormats.ts`)
 
-- **"Copy value" copies what the grid shows**; a row copied as JSON / CSV is data read by programs, so a point in time goes out as ISO 8601 in UTC (`toISOString()`) — both drivers hand a `DATETIME` / `TIMESTAMP` over as a `Date`, an instant. A `DATE` stays `YYYY-MM-DD` (its local midnight in UTC is the evening before). The INSERT keeps the wall clock: it round-trips into the same column.
-- Tests building dates use `Date.UTC`; run them under `TZ=UTC` and `TZ=Pacific/Auckland`.
-- **No date library**: a MySQL `DATE`/`DATETIME` is a wall clock, which `<Input type="datetime-local">` plus `CellEditor/dateTimeText.ts` edits with no time zone attached.
+- **`cellValueToText` feeds four places at once**: the read-only modal, the editor's opening text, the conflict modal and "Copy value". A change to what it returns changes all four: name each in the PR (`grep -rn "cellValueToText(" src`).
+- **"Copy value" copies what the detail modal shows** — for a date, the server's text, fraction and offset included; a row copied as JSON / CSV is data read by programs, so a point in time goes out as an ISO 8601 instant in UTC (`dateTextToIso`): a wall clock (a `DATETIME`, a `timestamp`) taken in the machine's zone, a `timestamptz` resolved at its own offset. A `DATE` stays `YYYY-MM-DD`. The INSERT and "Copy as SQL" write the server's text: it round-trips into the same column, to the microsecond.
+- **A date is parsed as Temporal only where it is computed on** (`utils/dateFormatter.ts`: the grid's format, the instant of JSON / CSV); the guard, the key and the literal send the server's text back as is, since a `DATETIME(6)` compares equal only to its full fraction. A test that depends on the machine's zone mocks `Temporal.Now.timeZoneId`, never the process `TZ`.
+- `<Input type="datetime-local">` plus `CellEditor/dateTimeText.ts` edit the wall clock with no time zone attached.

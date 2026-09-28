@@ -24,8 +24,8 @@ const CONFIG: ChartConfig = { kind: 'line', x: 0, y: [1, 2] };
 
 // what the raw SQL page gets: `rowsAsArray`, so rows are arrays
 const ROWS = [
-  [new Date(2026, 0, 1), 3, '10.50'],
-  [new Date(2026, 0, 2), 5, '20.25'],
+  ['2026-01-01', 3, '10.50'],
+  ['2026-01-02', 5, '20.25'],
 ] as unknown as ResultRow[];
 
 describe('toNumber', () => {
@@ -50,20 +50,20 @@ describe('toNumber', () => {
 });
 
 describe('toAxisLabel', () => {
-  test('a DATE column drops the time part', () => {
-    expect(toAxisLabel(new Date(2026, 0, 2, 15, 4, 5), true)).toBe(
-      '2026-01-02'
-    );
-  });
-
-  test('any other temporal column keeps it', () => {
-    expect(toAxisLabel(new Date(2026, 0, 2, 15, 4, 5), false)).toBe(
+  test('a date is written as the grid shows it', () => {
+    expect(toAxisLabel('2026-01-02 15:04:05.123456', FieldKind.DateTime)).toBe(
       '2026-01-02 15:04:05'
     );
   });
 
+  test('a string of another kind is left alone', () => {
+    expect(toAxisLabel('2026-01-02 15:04:05.123456', FieldKind.String)).toBe(
+      '2026-01-02 15:04:05.123456'
+    );
+  });
+
   test('a NULL label is empty, never the string "null"', () => {
-    expect(toAxisLabel(null, false)).toBe('');
+    expect(toAxisLabel(null, FieldKind.DateTime)).toBe('');
   });
 });
 
@@ -97,7 +97,11 @@ describe('toLineSeries', () => {
 
   test('reads rows by column name when they are objects', () => {
     const rows = [
-      { day: new Date(2026, 0, 1), total: 3, revenue: '10.50' },
+      {
+        day: '2026-01-01',
+        total: 3,
+        revenue: '10.50',
+      },
     ] as unknown as ResultRow[];
 
     const { series } = toLineSeries({
@@ -112,8 +116,8 @@ describe('toLineSeries', () => {
 
   test('a NULL is a hole in the series, not a zero', () => {
     const rows = [
-      [new Date(2026, 0, 1), 3, null],
-      [new Date(2026, 0, 2), null, '1'],
+      ['2026-01-01', 3, null],
+      ['2026-01-02', null, '1'],
     ] as unknown as ResultRow[];
 
     const { series } = toLineSeries({
@@ -129,7 +133,7 @@ describe('toLineSeries', () => {
 
   test('reports a truncation rather than hiding it', () => {
     const rows = Array.from({ length: MAX_POINTS + 10 }, (_, index) => [
-      new Date(2026, 0, 1),
+      '2026-01-01',
       index,
       '1',
     ]) as unknown as ResultRow[];
@@ -167,7 +171,7 @@ describe('toBarData', () => {
   });
 
   test('a NULL leaves the key out rather than writing a zero', () => {
-    const rows = [[new Date(2026, 0, 1), null, '1']] as unknown as ResultRow[];
+    const rows = [['2026-01-01', null, '1']] as unknown as ResultRow[];
 
     const { data } = toBarData({
       rows,
