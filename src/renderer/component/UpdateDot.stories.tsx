@@ -6,7 +6,7 @@ import {
   ConnectionColor,
   ConnectionColorKind,
 } from '../../configuration/connectionColor';
-import type { UpdateStatus } from '../../main-process/updateCheck';
+import { UpdateStatus, UpdateStep } from '../../main-process/updateStatus';
 import { resolveConnectionTint } from '../theme/connectionTint';
 import { Brand, BrandGroup, TitleBar, TitleGroup } from './Style/TitleBar';
 import UpdateDot from './UpdateDot';
@@ -35,12 +35,16 @@ function Demo({
   );
 }
 
+const RELEASE_URL = 'https://github.com/jdeniau/tiana-tables/releases/latest';
+
 const meta: Meta<typeof Demo> = {
   component: Demo,
   args: {
     updateStatus: {
       available: true,
+      step: UpdateStep.Download,
       version: '1.3.0',
+      releaseUrl: RELEASE_URL,
       installSource: 'linuxPackage',
     },
   },
@@ -65,20 +69,31 @@ export const AppImage: Story = {
   args: {
     updateStatus: {
       available: true,
+      step: UpdateStep.Download,
       version: '1.3.0',
+      releaseUrl: RELEASE_URL,
       installSource: 'appimage',
     },
   },
 };
 
-/** Windows/macOS: Squirrel should have applied it, so its presence is a symptom. */
+/** Windows/macOS: shown once the auto-updater failed, as it installs the version otherwise. */
 export const AutomaticUpdateFailed: Story = {
   args: {
     updateStatus: {
       available: true,
+      step: UpdateStep.Download,
       version: '1.3.0',
+      releaseUrl: RELEASE_URL,
       installSource: 'selfUpdating',
     },
+  },
+};
+
+/** Windows/macOS: the auto-updater downloaded it, a click restarts on it. */
+export const ReadyToRestart: Story = {
+  args: {
+    updateStatus: { available: true, step: UpdateStep.Restart },
   },
 };
 
@@ -87,7 +102,9 @@ export const UnknownSource: Story = {
   args: {
     updateStatus: {
       available: true,
+      step: UpdateStep.Download,
       version: '1.3.0',
+      releaseUrl: RELEASE_URL,
       installSource: 'unknown',
     },
   },
@@ -98,7 +115,9 @@ export const StoreManaged: Story = {
   args: {
     updateStatus: {
       available: true,
+      step: UpdateStep.Download,
       version: '1.3.0',
+      releaseUrl: RELEASE_URL,
       installSource: 'flatpak',
     },
   },

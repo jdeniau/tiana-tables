@@ -202,6 +202,8 @@ const fr: Translation = {
     ' linuxPackage {La version {version} est disponible — télécharge le nouveau paquet depuis GitHub.}' +
     " selfUpdating {La version {version} est disponible. La mise à jour automatique ne l'a pas appliquée : télécharge-la depuis GitHub.}" +
     ' other {La version {version} est disponible sur GitHub.}}',
+  'update.restart':
+    "Une mise à jour est téléchargée — clique pour redémarrer et l'installer.",
 };
 
 export default fr;

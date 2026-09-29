@@ -375,14 +375,14 @@ dégât**. Dire « télécharge le .deb » à quelqu'un dont le magasin le met d
 jour est pire que de ne rien dire. Union discriminée, signaux du plus fiable au
 moins fiable, et un cas `unknown` dont le message reste vrai quoi qu'il arrive.
 
-| Installation         | Détection                          | Message                                               |
-| -------------------- | ---------------------------------- | ----------------------------------------------------- |
-| Flatpak              | `process.env.FLATPAK_ID`           | rien — le magasin gère                                |
-| Snap                 | `process.env.SNAP`                 | rien                                                  |
-| AppImage             | `process.env.APPIMAGE`             | « télécharge la nouvelle version »                    |
-| paquet système Linux | `execPath` sous `/usr/` ou `/opt/` | voir ci-dessous                                       |
-| Windows / macOS      | `process.platform`                 | « une nouvelle version existe » (= Squirrel a échoué) |
-| reste                | —                                  | `unknown` : message vrai dans tous les cas            |
+| Installation         | Détection                          | Message                                           |
+| -------------------- | ---------------------------------- | ------------------------------------------------- |
+| Flatpak              | `process.env.FLATPAK_ID`           | rien — le magasin gère                            |
+| Snap                 | `process.env.SNAP`                 | rien                                              |
+| AppImage             | `process.env.APPIMAGE`             | « télécharge la nouvelle version »                |
+| paquet système Linux | `execPath` sous `/usr/` ou `/opt/` | voir ci-dessous                                   |
+| Windows / macOS      | `process.platform`                 | voir « Windows et macOS : le relais de Squirrel » |
+| reste                | —                                  | `unknown` : message vrai dans tous les cas        |
 
 L'ordre compte : un Flatpak a aussi un `/usr` (celui du runtime), donc les
 variables d'environnement doivent être testées **avant** le préfixe système.
@@ -429,24 +429,27 @@ mécanismes en sous-processus pour une info qu'un `readFile` donne.
   ouverte des jours n'a aucune raison de poller.
 - **Rien en dev** (`app.isPackaged`) : une pastille permanente serait du bruit.
 
+### Windows et macOS : le relais de Squirrel
+
+Sur ces plateformes, `update-electron-app` télécharge la mise à jour (le `.nupkg` complet sous Windows, 151 Mo pour la 1.14.2) puis ouvre une modale « Restart / Later ». La pastille ne double pas Squirrel, elle prend le relais quand il ne suffit pas, d'après les événements de l'`autoUpdater` :
+
+- pendant la vérification et le téléchargement, ou si l'app est à jour : rien, même si GitHub annonce une version plus récente ;
+- `update-downloaded` : la pastille devient un bouton « redémarrer et installer » (`autoUpdater.quitAndInstall()`), qui reste affiché après un « Later ». L'état est définitif pour la session : une vérification ultérieure ne l'efface pas, puisque la mise à jour téléchargée s'installe au prochain démarrage quoi qu'il arrive ;
+- `error` : la pastille pointe vers la page de release, avec le message « la mise à jour automatique ne l'a pas appliquée ».
+
+Le main process pousse chaque changement au renderer (`UPDATE_CHANNEL.STATUS_CHANGED`), puisque le téléchargement se termine bien après la première lecture du statut. L'état de Squirrel est relu après la réponse de GitHub, pour qu'un `update-downloaded` arrivé entre-temps ne soit pas écrasé.
+
 ### Fichiers
 
-- `src/main-process/installSource.ts` (+ test) — détection pure, testable sans
-  toucher au vrai `process` : `detectInstallSource({platform, execPath, env})`.
-- `src/main-process/updateCheck.ts` — `isNewerVersion`, fetch, cache,
-  `bindIpcMainUpdate`. Pas de test : `isNewerVersion` n'est qu'un garde
-  `validate()` autour de `compare-versions`, tester la lib n'est pas le rôle
-  de ce dépôt.
-- `src/preload/updateChannel.ts` — `UPDATE_CHANNEL.CHECK`.
-- reste à faire : `src/preload/update.ts`, exposition dans `src/preload.ts`,
-  binding dans `src/main.ts`, hook renderer + pastille dans `root.tsx`, clés de
-  traduction EN/FR (une par cas), story Storybook.
+- `src/main-process/installSource.ts` (+ test) — détection pure, testable sans toucher au vrai `process` : `detectInstallSource({platform, execPath, env})`.
+- `src/main-process/updateStatus.ts` — `UpdateStatus` et `UpdateStep` (`Download` / `Restart`), sans import d'Electron pour que le renderer lise l'enum.
+- `src/main-process/updateCheck.ts` (+ test) — `isNewerVersion`, fetch, cache, l'état de l'`autoUpdater` (`startAutoUpdate`), `bindIpcMainUpdate`. Le test couvre l'état et ses transitions, pas `isNewerVersion`, qui n'est qu'un garde `validate()` autour de `compare-versions`.
+- `src/preload/updateChannel.ts` — `CHECK`, `RESTART`, `STATUS_CHANGED` ; `src/preload/update.ts` les expose en `window.update`.
+- `src/renderer/hooks/useUpdateStatus.ts` (+ test), `src/renderer/component/UpdateDot.tsx` (+ test, stories), clés `update.available` et `update.restart`.
 
-### Non fait volontairement
+### Liens
 
-La pastille n'est pas cliquable : ouvrir la page de release demanderait un canal
-`OPEN_EXTERNAL` (il n'existe pas — `shell.openExternal` n'est utilisé que dans
-`src/main-process/menu.ts`). Candidat naturel pour un suivi.
+La pastille à télécharger est un lien `target="_blank"` vers la page de release : le `setWindowOpenHandler` de `src/main.ts` l'ouvre dans le navigateur du système, sans canal IPC dédié. Un `<a>` ou un `<button>` est aussi ce qui échappe à la zone de déplacement de la barre de titre (`-webkit-app-region: no-drag`).
 
 ---
 

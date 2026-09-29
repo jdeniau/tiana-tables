@@ -200,4 +200,6 @@ export default {
     ' linuxPackage {Version {version} is available — download the new package from GitHub.}' +
     ' selfUpdating {Version {version} is available. The automatic update did not apply it: download it from GitHub.}' +
     ' other {Version {version} is available on GitHub.}}',
+  'update.restart':
+    'An update is downloaded — click to restart and install it.',
 };
