@@ -1,5 +1,6 @@
 import { BrowserWindow, Menu } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { z } from 'zod';
 import { dracula } from '../configuration/palettes/dracula';
 import { TITLE_BAR_CHANNEL } from '../preload/titleBarChannel';
 import { isMacPlatform } from './helpers';
@@ -68,7 +69,7 @@ describe('set colors', () => {
     ['a colour that is not text', { color: 0x282a36, symbolColor: '#fff' }],
   ])('refuses %s', (_label, colors) => {
     expect(() => invoke(TITLE_BAR_CHANNEL.SET_COLORS, colors)).toThrow(
-      TypeError
+      z.ZodError
     );
     expect(window.setTitleBarOverlay).not.toHaveBeenCalled();
   });
@@ -104,10 +105,11 @@ describe('open menu', () => {
     ['nothing', undefined],
     ['an x alone', { x: 10 }],
     ['a coordinate that is not a number', { x: '10', y: 20 }],
-    ['a coordinate that is not finite', { x: Number.NaN, y: 20 }],
+    ['a NaN coordinate', { x: Number.NaN, y: 20 }],
+    ['an infinite coordinate', { x: 10, y: Number.POSITIVE_INFINITY }],
   ])('refuses %s', (_label, anchor) => {
     expect(() => invoke(TITLE_BAR_CHANNEL.OPEN_MENU, anchor)).toThrow(
-      TypeError
+      z.ZodError
     );
     expect(menu.popup).not.toHaveBeenCalled();
   });

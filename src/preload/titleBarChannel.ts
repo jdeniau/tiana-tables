@@ -4,9 +4,9 @@ export enum TITLE_BAR_CHANNEL {
 }
 
 export type TitleBarColors = {
-  /** the fill behind the window controls */
+  /** the title bar's fill: base00, or the current connection's colour */
   color: string;
-  /** the minimise, maximise and close symbols */
+  /** its text: base05, or base07 / base00 on a tinted bar */
   symbolColor: string;
 };
 

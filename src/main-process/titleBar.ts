@@ -1,4 +1,5 @@
 import { BrowserWindow, BrowserWindowConstructorOptions, Menu } from 'electron';
+import { z } from 'zod';
 import { AppTheme } from '../configuration/themes';
 import {
   MenuAnchor,
@@ -27,33 +28,20 @@ export function titleBarWindowOptions(
   };
 }
 
-function isTitleBarColors(value: unknown): value is TitleBarColors {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'color' in value &&
-    typeof value.color === 'string' &&
-    'symbolColor' in value &&
-    typeof value.symbolColor === 'string'
-  );
-}
+const titleBarColorsSchema: z.ZodType<TitleBarColors> = z.object({
+  color: z.string(),
+  symbolColor: z.string(),
+});
 
-function isMenuAnchor(value: unknown): value is MenuAnchor {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'x' in value &&
-    Number.isFinite(value.x) &&
-    'y' in value &&
-    Number.isFinite(value.y)
-  );
-}
+// `z.number()` refuses NaN and the infinities
+const menuAnchorSchema: z.ZodType<MenuAnchor> = z.object({
+  x: z.number(),
+  y: z.number(),
+});
 
 export function bindIpcMainTitleBar(ipcMain: Electron.IpcMain): void {
-  ipcMain.handle(TITLE_BAR_CHANNEL.SET_COLORS, (event, colors: unknown) => {
-    if (!isTitleBarColors(colors)) {
-      throw new TypeError('The title bar takes a color and a symbolColor');
-    }
+  ipcMain.handle(TITLE_BAR_CHANNEL.SET_COLORS, (event, payload: unknown) => {
+    const colors = titleBarColorsSchema.parse(payload);
 
     // macOS draws its traffic lights in the system colours, whatever is asked
     if (isMacPlatform()) {
@@ -67,10 +55,8 @@ export function bindIpcMainTitleBar(ipcMain: Electron.IpcMain): void {
   });
 
   // the application menu itself, so its items, accelerators and states are the ones the shortcuts run
-  ipcMain.handle(TITLE_BAR_CHANNEL.OPEN_MENU, (event, anchor: unknown) => {
-    if (!isMenuAnchor(anchor)) {
-      throw new TypeError('The menu opens at an x and a y');
-    }
+  ipcMain.handle(TITLE_BAR_CHANNEL.OPEN_MENU, (event, payload: unknown) => {
+    const anchor = menuAnchorSchema.parse(payload);
 
     const window = BrowserWindow.fromWebContents(event.sender);
 
