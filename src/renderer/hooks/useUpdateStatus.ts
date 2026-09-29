@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import type { UpdateStatus } from '../../main-process/updateCheck';
+import type { UpdateStatus } from '../../main-process/updateStatus';
 
 const NO_UPDATE: UpdateStatus = { available: false };
 
-/** The main process caches its answer, so mounting this costs no network call. */
+/** The main process caches GitHub's answer, and sends what the auto-updater changes later on. */
 export default function useUpdateStatus(): UpdateStatus {
   const [status, setStatus] = useState<UpdateStatus>(NO_UPDATE);
 
@@ -21,8 +21,11 @@ export default function useUpdateStatus(): UpdateStatus {
         // a failed check must never surface; the main process logs why
       });
 
+    const unsubscribe = window.update.onStatusChange(setStatus);
+
     return () => {
       isCanceled = true;
+      unsubscribe();
     };
   }, []);
 

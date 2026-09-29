@@ -3,7 +3,6 @@ import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import log from 'electron-log/main';
 import started from 'electron-squirrel-startup';
-import { updateElectronApp } from 'update-electron-app';
 import {
   bindIpcMain as bindIpcMainConfiguration,
   getConfiguration,
@@ -25,7 +24,7 @@ import {
   bindIpcMainTitleBar,
   titleBarWindowOptions,
 } from './main-process/titleBar';
-import { bindIpcMainUpdate } from './main-process/updateCheck';
+import { bindIpcMainUpdate, startAutoUpdate } from './main-process/updateCheck';
 import WindowStateKeeper from './main-process/windowState';
 import connectionStackInstance from './sql';
 
@@ -127,9 +126,7 @@ const createWindow = () => {
     // Defer non-critical initialization to the next event-loop task after first window display.
     setTimeout(() => {
       if (!isDev) {
-        updateElectronApp({
-          logger: log,
-        });
+        startAutoUpdate();
         logStartupMilestone('auto-update-initialized');
       }
     }, 0);
