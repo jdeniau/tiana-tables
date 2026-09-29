@@ -137,6 +137,7 @@ const fr: Translation = {
   'menu.navigate.sqlPanel': 'Panneau SQL',
   'menu.navigate': 'Naviguer',
   'menu.settings': 'Réglages…',
+  'menu.title': 'Menu',
   'menu.view.devTools': 'Outils de développement',
   'menu.view.togglePath': "Afficher la barre d'adresse",
   'navigation_modal.search.placeholder': 'Commencer à chercher…',
@@ -194,6 +195,7 @@ const fr: Translation = {
   'theme.group.dark': 'Sombres',
   'theme.group.light': 'Clairs',
   'theme.switch.label': 'Thème',
+  'titleBar.devMode': '(mode dev)',
   'update.available':
     '{source, select,' +
     ' appimage {La version {version} est disponible — télécharge le nouvel AppImage depuis GitHub.}' +

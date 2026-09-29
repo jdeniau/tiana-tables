@@ -11,6 +11,7 @@ import {
 } from './configuration';
 import { logEncryptionStatus } from './configuration/encryption';
 import { getLogPath } from './configuration/filePaths';
+import { DEFAULT_THEME, THEME_LIST } from './configuration/themes';
 import { changeLanguage } from './i18n';
 import { bindIpcMainClipboard } from './main-process/clipboard';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
@@ -20,6 +21,10 @@ import {
 } from './main-process/installReactDevToolsExtension';
 import { createMenu } from './main-process/menu';
 import { bindIpcMainSqlFileStorage } from './main-process/sqlFileStorage';
+import {
+  bindIpcMainTitleBar,
+  titleBarWindowOptions,
+} from './main-process/titleBar';
 import { bindIpcMainUpdate } from './main-process/updateCheck';
 import WindowStateKeeper from './main-process/windowState';
 import connectionStackInstance from './sql';
@@ -60,6 +65,7 @@ const createWindow = () => {
   );
 
   const mainWindow = mainWindowStateHandler.createBrowserWindow({
+    ...titleBarWindowOptions(THEME_LIST[configuration.theme] ?? DEFAULT_THEME),
     icon: 'images/icons/icon.png',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -128,11 +134,6 @@ const createWindow = () => {
       }
     }, 0);
   });
-
-  // Open the DevTools.
-  if (isDev) {
-    mainWindow.webContents.openDevTools();
-  }
 };
 
 // This method will be called when Electron has finished
@@ -163,6 +164,7 @@ app.whenReady().then(async () => {
   bindIpcMainConfiguration(ipcMain);
   bindIpcMainSqlFileStorage(ipcMain);
   bindIpcMainClipboard(ipcMain);
+  bindIpcMainTitleBar(ipcMain);
   bindIpcMainUpdate(ipcMain);
   connectionStackInstance.bindIpcMain(ipcMain);
   logStartupMilestone('ipc-bound');

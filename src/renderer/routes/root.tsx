@@ -1,21 +1,21 @@
 import { Layout } from 'antd';
 import { Outlet, useMatch, useNavigate } from 'react-router';
 import { styled } from 'styled-components';
-import packageJson from '../../../package.json';
 import { ConfigurationContextProvider } from '../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { ThemeContextProvider } from '../../contexts/ThemeContext';
 import { useTranslation } from '../../i18n';
+import AppMenuButton from '../component/AppMenuButton';
 import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import PathBar from '../component/PathBar';
-import SettingsMenu from '../component/SettingsMenu';
 import { TabStrip, TabStripLink } from '../component/Style/TabStrip';
 import {
   Brand,
   BrandGroup,
+  DevModeMark,
   TitleBar,
   TitleGroup,
 } from '../component/Style/TitleBar';
@@ -23,6 +23,7 @@ import UpdateDot from '../component/UpdateDot';
 import { useCurrentConnectionTint } from '../hooks/useCurrentConnectionTint';
 import useEffectOnce from '../hooks/useEffectOnce';
 import useUpdateStatus from '../hooks/useUpdateStatus';
+import { useWindowControlsColors } from '../hooks/useWindowControlsColors';
 import { background } from '../theme';
 
 const Content = styled(Layout.Content)`
@@ -60,19 +61,22 @@ function ToggleRawSqlButton() {
   );
 }
 
-/** The frame: the brand, the settings and the connections left, the SQL toggle right. */
+/** The frame: the brand, the menu and the connections left, the SQL toggle right. */
 function AppTitleBar() {
   const updateStatus = useUpdateStatus();
   const tint = useCurrentConnectionTint();
+  const { t } = useTranslation();
+  useWindowControlsColors(tint);
 
   return (
     <TitleBar $tint={tint}>
       <TitleGroup>
         <BrandGroup>
           <Brand to="/">Tiana Tables</Brand>
+          {window.isDev && <DevModeMark>{t('titleBar.devMode')}</DevModeMark>}
           <UpdateDot updateStatus={updateStatus} />
         </BrandGroup>
-        <SettingsMenu version={packageJson.version} />
+        <AppMenuButton />
         <ConnectionNav />
       </TitleGroup>
 
@@ -105,8 +109,8 @@ export default function Root() {
       <ThemeContextProvider>
         <ConnectionStack>
           <Layout>
-            <PathBar />
             <AppTitleBar />
+            <PathBar />
 
             <Content>
               <Outlet />

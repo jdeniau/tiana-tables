@@ -1,14 +1,13 @@
 import { Layout } from 'antd';
 import { Link } from 'react-router-dom';
 import { css, styled } from 'styled-components';
-import { brand, frame, space } from '../../theme';
+import { brand, fontSize, frame, space } from '../../theme';
 import { ConnectionTint } from '../../theme/connectionTint';
 
 /**
- * The title bar of the shell: its height and padding come from the antd
- * `Layout` tokens, the rule under it is the one structural device. The brand,
- * the settings and the connections sit left, the SQL toggle right, nothing in
- * the middle.
+ * The title bar of the shell: its height comes from the antd `Layout` tokens,
+ * the rule under it is the one structural device. The brand, the menu and the
+ * connections sit left, the SQL toggle right, nothing in the middle.
  *
  * `$tint` is the colour of the current connection, if it has one: it re-points
  * the frame colours for this element and its descendants, which is what paints
@@ -38,6 +37,20 @@ export const TitleBar = styled(Layout.Header)<{ $tint?: ConnectionTint }>`
   && {
     background: ${frame.background};
     color: ${frame.text};
+    /* the window controls sit over the bar: left on macOS, right elsewhere */
+    padding-inline-start: calc(${space.md} + env(titlebar-area-x, 0px));
+    padding-inline-end: calc(
+      ${space.md} +
+        100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw)
+    );
+  }
+
+  /* the bar moves the window, what can be clicked in it does not */
+  -webkit-app-region: drag;
+
+  & a,
+  & button {
+    -webkit-app-region: no-drag;
   }
 `;
 
@@ -68,4 +81,12 @@ export const Brand = styled(Link)`
   &:hover {
     color: ${frame.emphasis};
   }
+`;
+
+/** says the app runs from the sources, next to the software name */
+export const DevModeMark = styled.span`
+  flex: none;
+  font-size: ${fontSize.sm};
+  color: ${frame.muted};
+  white-space: nowrap;
 `;

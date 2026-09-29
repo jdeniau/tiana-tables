@@ -16,7 +16,7 @@ export function createMenu(mainWindow: BrowserWindow) {
     label: t('menu.settings'),
     accelerator: 'CmdOrCtrl+,',
     click: () => {
-      mainWindow.webContents.send('openSettings');
+      mainWindow.webContents.send('navigate', '/settings');
     },
   };
 

@@ -26,6 +26,7 @@ The mistake made most often here. Before code is built on a claim, or a sentence
 
 - **Never commit or push without being told to, in that very message.** Staging is fine. A review is walked hunk by hunk: contract → implementation → main process → IPC → renderer → fixtures → docs (the `interactive-review` skill stages the approved hunks, or marks a PR's files as viewed).
 - **Markdown is never hard-wrapped** — `.md` files, PR descriptions, issues, review comments: one paragraph, or one list item, per line. Every renderer reflows it, and a wrapped sentence escapes `grep` and turns a one-word edit into a reflowed paragraph. Only commit messages wrap, at 72 columns: `git log` is a terminal.
+- **A finding of a local review is fixed in the tree it was read in**, even when the pushed branch already holds the fix: the working tree is what the user runs and reviews next. Compare it with the branch (`cmp` file by file) before calling a finding stale.
 - `eslint --fix` only on files named explicitly, checking it moved imports and nothing else. Never `prettier --write` a whole directory.
 
 ### Before handing a change over
