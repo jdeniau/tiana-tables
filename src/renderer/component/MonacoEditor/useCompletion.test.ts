@@ -14,20 +14,25 @@ import { buildCompletionProvider, validateModel } from './useCompletion';
 
 const TABLE_LIST = ['employee', 'title', 'planning'];
 
-const FOREIGN_KEYS = new ForeignKeysHelper([
-  {
-    table: 'employee',
-    column: 'title_id',
-    referencedTable: 'title',
-    referencedColumn: 'id',
-  },
-  {
-    table: 'planning',
-    column: 'employee_id',
-    referencedTable: 'employee',
-    referencedColumn: 'id',
-  },
-]);
+const FOREIGN_KEYS = new ForeignKeysHelper(
+  [
+    {
+      table: 'employee',
+      column: 'title_id',
+      referencedDatabase: 'db',
+      referencedTable: 'title',
+      referencedColumn: 'id',
+    },
+    {
+      table: 'planning',
+      column: 'employee_id',
+      referencedDatabase: 'db',
+      referencedTable: 'employee',
+      referencedColumn: 'id',
+    },
+  ],
+  'db'
+);
 
 /** only the two names the completion reads of a column */
 function column(table: string, name: string): ColumnDetail {

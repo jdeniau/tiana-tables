@@ -18,6 +18,7 @@ const FOREIGN_KEYS: ForeignKey[] = [
   {
     table: 'orders',
     column: 'customer_label',
+    referencedDatabase: 'db',
     referencedTable: 'customers',
     referencedColumn: 'label',
   },
@@ -31,8 +32,11 @@ afterEach(() => {
   container.remove();
 });
 
-/** the `?where=` the link would navigate to, decoded */
-function renderLink(value: unknown): string | null {
+/** where the link would navigate to */
+function renderLink(
+  value: unknown,
+  foreignKeys: ForeignKey[] = FOREIGN_KEYS
+): URL | null {
   container = document.createElement('div');
   document.body.append(container);
 
@@ -54,7 +58,10 @@ function renderLink(value: unknown): string | null {
             <DatabaseContext.Provider
               value={{ database: 'db', setDatabase: () => {} }}
             >
-              <ForeignKeysContextProvider foreignKeys={FOREIGN_KEYS}>
+              <ForeignKeysContextProvider
+                foreignKeys={foreignKeys}
+                database="db"
+              >
                 <ForeignKeyLink
                   dialect={mysqlDialect}
                   tableName="orders"
@@ -75,25 +82,41 @@ function renderLink(value: unknown): string | null {
     return null;
   }
 
-  return new URL(link.href, 'http://localhost').searchParams.get('where');
+  return new URL(link.href, 'http://localhost');
+}
+
+/** the `?where=` the link would navigate to, decoded */
+function renderWhere(value: unknown): string | null {
+  return renderLink(value)?.searchParams.get('where') ?? null;
 }
 
 describe('ForeignKeyLink', () => {
   test('compares the referenced column to a quoted literal', () => {
-    expect(renderLink('abc')).toBe("`label` = 'abc'");
+    expect(renderWhere('abc')).toBe("`label` = 'abc'");
   });
 
   test('escapes a value that would otherwise end the literal', () => {
     // it used to build `label="O'Brien"`: a double-quoted value, unescaped, so
     // an apostrophe in it made the clause a syntax error
-    expect(renderLink("O'Brien")).toBe("`label` = 'O\\'Brien'");
+    expect(renderWhere("O'Brien")).toBe("`label` = 'O\\'Brien'");
   });
 
   test('writes a number bare', () => {
-    expect(renderLink(42)).toBe('`label` = 42');
+    expect(renderWhere(42)).toBe('`label` = 42');
   });
 
   test('offers no link for a key holding NULL, which references nothing', () => {
-    expect(renderLink(null)).toBeNull();
+    expect(renderWhere(null)).toBeNull();
+  });
+
+  test('opens the table in the database it belongs to', () => {
+    expect(renderLink('abc')?.pathname).toBe(
+      '/connections/shop/db/tables/customers'
+    );
+    expect(
+      renderLink('abc', [
+        { ...FOREIGN_KEYS[0], referencedDatabase: 'accounts' },
+      ])?.pathname
+    ).toBe('/connections/shop/accounts/tables/customers');
   });
 });

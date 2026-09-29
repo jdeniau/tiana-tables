@@ -26,6 +26,7 @@ const TABLE_STRUCTURE_FIELDS: ResultField[] = [
  * so a dialect only describes its columns.
  */
 export function toTableStructure(
+  databaseName: string,
   tableName: string,
   columns: DescribedColumn[],
   foreignKeys: ForeignKey[]
@@ -36,7 +37,13 @@ export function toTableStructure(
         .filter(
           (key) => key.table === tableName && key.column === column.Column
         )
-        .map((key) => `${key.referencedTable}.${key.referencedColumn}`)
+        .map((key) => {
+          const target = `${key.referencedTable}.${key.referencedColumn}`;
+
+          return key.referencedDatabase === databaseName
+            ? target
+            : `${key.referencedDatabase}.${target}`;
+        })
     );
 
     return {

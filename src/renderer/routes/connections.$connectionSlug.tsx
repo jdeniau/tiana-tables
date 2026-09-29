@@ -69,16 +69,17 @@ const Content = styled.div`
 `;
 
 interface RouteParams extends LoaderFunctionArgs {
-  params: Params<'connectionSlug'>;
+  /** `databaseName` when the URL goes on to a database */
+  params: Params<'connectionSlug'> & Partial<Params<'databaseName'>>;
   request: Request;
 }
 
 export async function loader({ params, request }: RouteParams) {
-  const { connectionSlug } = params;
+  const { connectionSlug, databaseName } = params;
 
   invariant(connectionSlug, 'Connection slug is required');
 
-  // The database is not known yet: it is read from the configuration below.
+  // The database is not known yet: it is resolved below.
   window.sql.connectionNameChanged(connectionSlug, undefined);
 
   const databaseList = await window.sql.listDatabases();
@@ -88,20 +89,17 @@ export async function loader({ params, request }: RouteParams) {
   const { activeDatabase: configDatabase, configByDatabase } =
     getConnectionAppState(configuration, connectionSlug) || {};
 
-  const databaseConfig = configDatabase
-    ? configByDatabase?.[configDatabase]
-    : undefined;
-
-  const openedTable = databaseConfig?.activeTable;
-
   if (!databaseList || !databaseList[0]) {
     // TODO handle the case where there is no table in the databbase
     throw new Error('No database found. Case not handled for now.');
   }
 
-  const activeDatabase = configDatabase || databaseList[0];
+  // the URL's first: the `$databaseName` loader, run alongside, may not have stored it yet
+  const activeDatabase = databaseName || configDatabase || databaseList[0];
 
-  // TODO handle the case where the "configDatabase" is not in the databaseList
+  const databaseConfig = configByDatabase?.[activeDatabase];
+
+  // TODO handle the case where the "activeDatabase" is not in the databaseList
   if (activeDatabase && !databaseList.includes(activeDatabase)) {
     throw new Error(
       'Database not found in the database list. Case not handled for now.'
@@ -113,21 +111,27 @@ export async function loader({ params, request }: RouteParams) {
   // leave the main process on the `undefined` it set above.
   window.sql.connectionNameChanged(connectionSlug, activeDatabase);
 
-  // redirect to the current database if we are not on a "database" page
-  const expectedUrl = `/connections/${connectionSlug}/${activeDatabase}${
-    openedTable ? `/tables/${openedTable}` : ''
-  }`;
+  // a URL naming its database is followed as it is: a link opens a table of another one
+  if (!databaseName) {
+    const openedTable = databaseConfig?.activeTable;
+    const expectedUrl = `/connections/${connectionSlug}/${activeDatabase}${
+      openedTable ? `/tables/${openedTable}` : ''
+    }`;
 
-  // redirect if we are not on the expected page
-  if (
-    new URL(request.url).pathname !==
-    new URL(expectedUrl, window.location.origin).pathname
-  ) {
-    return redirect(expectedUrl);
+    // redirect if we are not on the expected page
+    if (
+      new URL(request.url).pathname !==
+      new URL(expectedUrl, window.location.origin).pathname
+    ) {
+      return redirect(expectedUrl);
+    }
   }
 
   const tableList = await window.sql.listTables(activeDatabase);
-  const foreignKeys = await window.sql.getForeignKeys(activeDatabase);
+  // a key to a database the user cannot open would link to an error page
+  const foreignKeys = (await window.sql.getForeignKeys(activeDatabase)).filter(
+    (key) => databaseList.includes(key.referencedDatabase)
+  );
   const allColumns = await window.sql.getAllColumns(activeDatabase);
   const serverTimeZone = await window.sql.getServerTimeZone();
 
@@ -168,7 +172,10 @@ export default function ConnectionDetailPage() {
   return (
     <DatabaseListContextProvider databaseList={databaseList}>
       <TableListContextProvider tableList={tableList}>
-        <ForeignKeysContextProvider foreignKeys={foreignKeys}>
+        <ForeignKeysContextProvider
+          foreignKeys={foreignKeys}
+          database={activeDatabase}
+        >
           <AllColumnsContextProvider allColumns={allColumns}>
             <DateDisplayContextProvider serverTimeZone={serverTimeZone}>
               <OpenTablesContextProvider

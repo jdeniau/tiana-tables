@@ -185,6 +185,51 @@ describe('loader', () => {
     );
   });
 
+  // the configuration may still hold the database a link was followed from
+  test('follows a URL naming another database than the configuration', async () => {
+    const params = {
+      connectionSlug: 'connectionSlug',
+      databaseName: 'databaseName2',
+    };
+
+    setConfiguration('connectionSlug', 'databaseName1');
+
+    const result = await loader({
+      params,
+      request: new Request(
+        'http://localhost/connections/connectionSlug/databaseName2/tables/table2'
+      ),
+    });
+
+    expect(result).toMatchObject({ activeDatabase: 'databaseName2' });
+    expect(window.sql.listTables).toHaveBeenCalledWith('databaseName2');
+  });
+
+  test('drops the foreign keys to a database the user cannot open', async () => {
+    const params = { connectionSlug: 'connectionSlug' };
+
+    setConfiguration('connectionSlug', 'databaseName2');
+    const key = (referencedDatabase: string) => ({
+      table: 'orders',
+      column: 'user_id',
+      referencedDatabase,
+      referencedTable: 'users',
+      referencedColumn: 'id',
+    });
+    window.sql.getForeignKeys = vi.fn(() =>
+      Promise.resolve([key('databaseName1'), key('hidden')])
+    );
+
+    const result = await loader({
+      params,
+      request: new Request(
+        'http://localhost/connections/connectionSlug/databaseName2'
+      ),
+    });
+
+    expect(result).toMatchObject({ foreignKeys: [key('databaseName1')] });
+  });
+
   test('handle connection name that are url-encoded', async () => {
     const params = { connectionSlug: 'connection + name' };
 

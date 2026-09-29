@@ -191,10 +191,12 @@ const meta: Meta<typeof TableGrid> = {
               {
                 table: 'items',
                 column: 'linkedId',
+                referencedDatabase: 'mocked-db',
                 referencedTable: 'linkedTable',
                 referencedColumn: 'id',
               },
             ]}
+            database="mocked-db"
           >
             <AllColumnsContextProvider allColumns={ALL_COLUMNS}>
               <div

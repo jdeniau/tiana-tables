@@ -223,7 +223,7 @@ class ConnectionStack {
         metadata.listForeignKeys(databaseName)
       );
 
-      return toTableStructure(tableName, columns, foreignKeys);
+      return toTableStructure(databaseName, tableName, columns, foreignKeys);
     });
   }
 

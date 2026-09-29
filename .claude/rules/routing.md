@@ -11,4 +11,5 @@ paths:
 - **`useNavigate` swallows the promise `router.navigate` returns**: a navigation cannot be awaited from a component.
 - **`MemoryRouter` navigates synchronously and reproduces none of this**: a regression test uses `createMemoryRouter` with a real (even trivial) `loader` on the target route, or it passes against the bug.
 - **The route loaders own `window.sql.connectionNameChanged`.** Announce from a component only where no loader runs — landing on `/connect` after closing the last connection announces `undefined`, or `Cmd+T` reopens the closed one.
+- **A loader never reads what a sibling loader of the same navigation writes**: they run in parallel, so `connections/:connectionSlug` takes the database from `params.databaseName`, not from the configuration the `$databaseName` loader is storing it in.
 - **Entering another connection remounts the page**: the `connections/:connectionSlug` loader redirects to its active database or table, so `SqlPage` and its editor are created anew. Code for "the engine changes under a mounted editor" is code for a case that cannot happen.
