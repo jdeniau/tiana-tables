@@ -95,7 +95,7 @@ One owner per value, or both places drift. The code is the reference for the num
 
 ## Screen notes
 
-- **Title bar** — 38px. Left: "Tiana Tables" in the `brand` face, the settings gear right after it (`Ctrl+,`), then the connections as a run separated by `base03` rules, the active one carrying its pip. Language, theme and version live in the settings menu.
+- **Title bar** — 38px. Left: "Tiana Tables" in the `brand` face (followed by "(dev mode)" in 11px muted text when run from the sources), the settings gear right after it (`Ctrl+,`), then the connections as a run separated by `base03` rules, the active one carrying its pip. Language, theme and version live in the settings menu.
   - **The one exception to the single background**: a connection may be marked with a colour, and the bar is then filled with it, so that a production connection is impossible to miss. Everything in the bar turns `base07` or `base00`, whichever contrasts more with the fill, and the hairlines and inactive items take 70 % of that tone over the fill. The colour is one of the eight colourful slots, so it follows the theme, or one of the user's own.
 - **Sidebar** — 200px on first run, then resizable (its width is kept as a ratio). Database name in the display face with a caret, the ⌘K "Go to table…" button directly under it (deliberately _not_ in the title bar: it belongs next to the tables it searches), then 24px mono rows, and a row count at the foot.
 - **Query region** — name, statement count, and the Run button with its select caret, all in the header row. Editor below.

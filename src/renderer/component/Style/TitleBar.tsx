@@ -1,7 +1,7 @@
 import { Layout } from 'antd';
 import { Link } from 'react-router-dom';
 import { css, styled } from 'styled-components';
-import { brand, frame, space } from '../../theme';
+import { brand, fontSize, frame, space } from '../../theme';
 import { ConnectionTint } from '../../theme/connectionTint';
 
 /**
@@ -68,4 +68,12 @@ export const Brand = styled(Link)`
   &:hover {
     color: ${frame.emphasis};
   }
+`;
+
+/** says the app runs from the sources, next to the software name */
+export const DevModeMark = styled.span`
+  flex: none;
+  font-size: ${fontSize.sm};
+  color: ${frame.muted};
+  white-space: nowrap;
 `;

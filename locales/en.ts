@@ -192,6 +192,7 @@ export default {
   'theme.group.dark': 'Dark',
   'theme.group.light': 'Light',
   'theme.switch.label': 'Theme',
+  'titleBar.devMode': '(dev mode)',
   'update.available':
     '{source, select,' +
     ' appimage {Version {version} is available — download the new AppImage from GitHub.}' +

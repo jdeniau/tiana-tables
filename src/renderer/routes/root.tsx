@@ -16,6 +16,7 @@ import { TabStrip, TabStripLink } from '../component/Style/TabStrip';
 import {
   Brand,
   BrandGroup,
+  DevModeMark,
   TitleBar,
   TitleGroup,
 } from '../component/Style/TitleBar';
@@ -64,12 +65,14 @@ function ToggleRawSqlButton() {
 function AppTitleBar() {
   const updateStatus = useUpdateStatus();
   const tint = useCurrentConnectionTint();
+  const { t } = useTranslation();
 
   return (
     <TitleBar $tint={tint}>
       <TitleGroup>
         <BrandGroup>
           <Brand to="/">Tiana Tables</Brand>
+          {window.isDev && <DevModeMark>{t('titleBar.devMode')}</DevModeMark>}
           <UpdateDot updateStatus={updateStatus} />
         </BrandGroup>
         <SettingsMenu version={packageJson.version} />
