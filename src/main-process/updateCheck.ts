@@ -151,8 +151,12 @@ export function startAutoUpdate(): void {
   }
 
   autoUpdater.on('error', () => setAutoUpdateState(AutoUpdateState.Failed));
-  autoUpdater.on('update-available', () =>
-    setAutoUpdateState(AutoUpdateState.Idle)
+  autoUpdater.on('update-available', () => {
+    // a retry after a failure keeps the link until it downloads
+    if (autoUpdateState !== AutoUpdateState.Failed) {
+      setAutoUpdateState(AutoUpdateState.Idle);
+    }
+  });
   );
   autoUpdater.on('update-not-available', () =>
     setAutoUpdateState(AutoUpdateState.Idle)
