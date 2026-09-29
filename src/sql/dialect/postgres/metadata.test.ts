@@ -56,10 +56,10 @@ describe('the statements each question sends', () => {
     expect(values).toEqual({ databaseName: 'app', tableName: 'order_lines' });
   });
 
-  // `pg` hands an array of `name` over as its text, `{sad,ok,happy}`
-  test("an enum's labels are read as text, in their declared order", () => {
+  // the driver hands a `text[]` over as its text, `{sad,ok,happy}`, and decodes JSON
+  test("an enum's labels are read as JSON, in their declared order", () => {
     expect(postgresMetadata.listColumns('public').sql).toContain(
-      'array_agg(CAST(e.enumlabel AS text) ORDER BY e.enumsortorder)'
+      'json_agg(e.enumlabel ORDER BY e.enumsortorder)'
     );
   });
 
