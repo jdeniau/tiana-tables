@@ -20,15 +20,24 @@ describe('isNullable', () => {
 });
 
 describe('isGenerated', () => {
-  it.each(['VIRTUAL GENERATED', 'STORED GENERATED'])(
-    'recognizes %s',
-    (extra) => {
-      expect(isGenerated(extra)).toBe(true);
-    }
-  );
+  it.each([
+    'VIRTUAL GENERATED',
+    'STORED GENERATED',
+    'VIRTUAL GENERATED INVISIBLE',
+    'VIRTUAL GENERATED, INVISIBLE',
+  ])('recognizes %s', (extra) => {
+    expect(isGenerated(extra)).toBe(true);
+  });
 
   it('leaves an auto increment column alone', () => {
     expect(isGenerated('auto_increment')).toBe(false);
+  });
+
+  it.each([
+    'DEFAULT_GENERATED',
+    'DEFAULT_GENERATED on update CURRENT_TIMESTAMP',
+  ])('leaves a MySQL 8 expression default (%s) writable', (extra) => {
+    expect(isGenerated(extra)).toBe(false);
   });
 
   it('reads a column with no extra at all as not generated', () => {

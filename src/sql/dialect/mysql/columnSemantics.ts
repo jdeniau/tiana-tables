@@ -25,9 +25,9 @@ export function isMultiValued(dataType: string): boolean {
   return readDataType(dataType) === DataType.Set;
 }
 
-/** `EXTRA` reads `VIRTUAL GENERATED` or `STORED GENERATED` on such a column. */
+/** `EXTRA` reads `VIRTUAL GENERATED` or `STORED GENERATED` on such a column, and MySQL 8 writes `DEFAULT_GENERATED` on a writable expression default. */
 export function isGenerated(extra: string | null): boolean {
-  return /GENERATED/i.test(extra ?? '');
+  return /\b(?:VIRTUAL|STORED) GENERATED\b/i.test(extra ?? '');
 }
 
 export function isNullable(isNullableColumn: string | null): boolean {
