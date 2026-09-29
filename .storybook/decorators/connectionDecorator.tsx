@@ -1,5 +1,5 @@
-import { action } from '@storybook/addon-actions';
-import type { Preview } from '@storybook/react';
+import type { Preview } from '@storybook/react-vite';
+import { action } from 'storybook/actions';
 import type { EncryptedConnectionObject } from '../../src/configuration/type';
 import { ConnectionContext } from '../../src/contexts/ConnectionContext';
 import { DatabaseEngine } from '../../src/sql/engine';

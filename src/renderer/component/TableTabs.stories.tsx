@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { openTablesDecorator } from '../../../.storybook/decorators/openTablesDecorator';
 import TableTabs from './TableTabs';

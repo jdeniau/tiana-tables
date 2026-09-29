@@ -1,6 +1,6 @@
-import { action } from '@storybook/addon-actions';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Layout } from 'antd';
+import { action } from 'storybook/actions';
 import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
 import { ConnectionContext } from '../../../contexts/ConnectionContext';
 import { Brand, TitleBar, TitleGroup } from '../Style/TitleBar';

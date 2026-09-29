@@ -1,8 +1,8 @@
 import { ComponentProps, useEffect, useState } from 'react';
-import { action } from '@storybook/addon-actions';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useCreateAtom } from '@tanstack/react-store';
 import type { SortingState } from '@tanstack/react-table';
+import { action } from 'storybook/actions';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';

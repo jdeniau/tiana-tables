@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { RegionGroup, RegionMeta, RegionName } from './Region';
 import { TabStrip, TabStripItem } from './TabStrip';
 

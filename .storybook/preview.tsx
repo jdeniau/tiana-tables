@@ -3,8 +3,8 @@ import 'temporal-polyfill/global';
 import { useEffect } from 'react';
 import '@fontsource/oswald/600.css';
 import '@fontsource/syne-mono/400.css';
-import { action } from '@storybook/addon-actions';
-import type { Preview } from '@storybook/react';
+import type { Preview } from '@storybook/react-vite';
+import { action } from 'storybook/actions';
 import { DEFAULT_LOCALE } from '../src/configuration/locale';
 import { DEFAULT_THEME, THEME_LIST } from '../src/configuration/themes';
 import { testables } from '../src/contexts/ConfigurationContext';
@@ -16,6 +16,7 @@ import { STORY_CONNECTION } from './decorators/connectionDecorator';
 const { ConfigurationContext } = testables;
 
 const preview: Preview = {
+  tags: ['autodocs'],
   parameters: {
     controls: {
       matchers: {
@@ -23,8 +24,16 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+
     backgrounds: {
-      disable: true,
+      disabled: true,
+    },
+
+    a11y: {
+      // 'todo' - show a11y violations in the test UI only
+      // 'error' - fail CI on a11y violations
+      // 'off' - skip a11y checks entirely
+      test: 'todo',
     },
   },
 

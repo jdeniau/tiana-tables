@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { Preview } from '@storybook/react';
+import type { Preview } from '@storybook/react-vite';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 
 // extract unexposed type

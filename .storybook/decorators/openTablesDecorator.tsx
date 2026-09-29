@@ -1,4 +1,4 @@
-import type { Preview } from '@storybook/react';
+import type { Preview } from '@storybook/react-vite';
 import { OpenTablesContextProvider } from '../../src/contexts/OpenTablesContext';
 
 // extract unexposed type

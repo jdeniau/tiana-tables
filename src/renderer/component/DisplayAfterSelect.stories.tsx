@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import DisplayAfterSelect from './DisplayAfterSelect';
 
 const meta: Meta<typeof DisplayAfterSelect> = {
