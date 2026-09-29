@@ -71,7 +71,7 @@ overwrite instead of silently clobbering. Cells that cannot be written say why
 
 ## Charts
 
-<img src="docs/screenshots/chart.png" alt="Bar chart of a SQL result" width="700" />
+<img src="docs/screenshots/chart.png" alt="Line chart of a SQL result" width="700" />
 
 Any raw SQL result with a numeric column can be flipped to a bar or line chart —
 you pick the X axis and the series. A result with a `LIMIT` is refused on
@@ -79,7 +79,7 @@ purpose: a chart of a partial result is a lie.
 
 ## Themes and languages
 
-<img src="docs/screenshots/themes.png" alt="Theme selector" width="700" />
+<img src="docs/screenshots/themes.png" alt="The app in nine themes, five dark and four light" width="900" />
 
 25 base16 themes, light and dark — Dracula, Nord, Solarized, Gruvbox,
 Catppuccin, Tokyo Night, Rosé Pine… The theme applies to the whole app, grid and

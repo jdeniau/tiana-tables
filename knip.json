@@ -8,7 +8,7 @@
     "vite.main.config.ts",
     "vite.preload.config.ts",
     "vite.renderer.config.ts",
-    "docs/screenshots/sql-editor-shot.mjs",
+    "docs/screenshots/shots.mjs",
     "dev/fixtures/generate.mjs",
     ".claude/skills/interactive-review/review.mjs"
   ],
