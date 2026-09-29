@@ -14,6 +14,7 @@ paths:
 
 - **The main process is not hot-reloaded**: `plugin-vite` rebuilds `main.js` but never relaunches Electron, while the renderer takes HMR. After changing an IPC contract, restart the app fully, and say so when a channel's return value changes — a stale handler produces symptoms that look nothing like the change.
 - **The context bridge rebuilds an `Error` from `name`, `message` and `stack` alone** and drops every other property. Anything the renderer must read off an error travels as a plain object; only the last hop (a `throw` in a loader) may be error-shaped. Check with `window.sql.x().catch((e) => Object.keys(e))`.
+- **A payload the renderer sends is parsed with zod in its handler, never with a hand-written guard**: a schema typed `z.ZodType<ChannelType>` fails the lint when the channel's type moves without it.
 - **Before duplicating a write to shared main-process state "to be safe", name the caller that could get in between** and try it. If there is none, the second writer is the bug.
 - **Quitting the app rewrites `config.json` from memory** (`saveWindowState`): a file edited while the app runs is lost. Test persistence through the app's own action.
 
