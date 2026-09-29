@@ -1,3 +1,5 @@
+// first: Chromatic extracts the stories in a Chrome without Temporal
+import 'temporal-polyfill/global';
 import { useEffect } from 'react';
 import '@fontsource/oswald/600.css';
 import '@fontsource/syne-mono/400.css';
