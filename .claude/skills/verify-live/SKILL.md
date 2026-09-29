@@ -22,7 +22,6 @@ tmux send-keys -t tiana "yarn electron-forge start -- \
 - **`--user-data-dir` isolates the configuration**; without it the run writes into the user's real connections. The profile keeps its connections between runs, so create one once (`#/connect/create`, ids `name`/`host`/`port`/`user`/`password`, button "SAVE AND CONNECT" — a new profile is in English), named with `(dev)`.
 - The page target is the one whose url starts with `http://localhost:517x`.
 - The main process is not hot-reloaded: any change to `menu.ts`, the preload or an IPC handler needs a full relaunch.
-- **The shell's `node` may be `/usr/bin/node` 22**, not nvm's 26: `export PATH=$HOME/.nvm/versions/node/v26.10.0/bin:$PATH` first, or `Temporal` is missing and 19 date tests fail.
 - Clean up with `pkill -f "remote-debugging-port=922[2]"` — the brackets matter: the bare pattern matches the shell's own command line and kills it (exit 144), and so does any other spelling of the flag in the same command. Then check `pgrep -f "electron/dist/electro[n]"` is empty: a second instance keeps port 9222 and every CDP call hangs on it.
 
 Traps that each cost half an hour:
