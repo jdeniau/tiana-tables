@@ -7,11 +7,14 @@ const foreignKeysContext = createContext<ForeignKeysHelper | null>(null);
 export function ForeignKeysContextProvider({
   children,
   foreignKeys,
+  database,
 }: {
   children: React.ReactNode;
   foreignKeys: ForeignKey[];
+  /** the database whose tables hold `foreignKeys` */
+  database: string;
 }) {
-  const foreignKeysHelper = new ForeignKeysHelper(foreignKeys);
+  const foreignKeysHelper = new ForeignKeysHelper(foreignKeys, database);
 
   return (
     <foreignKeysContext.Provider value={foreignKeysHelper}>

@@ -17,10 +17,12 @@ const meta: Meta<typeof ForeignKeyLink> = {
           {
             table: 'table',
             column: 'linkedId',
+            referencedDatabase: 'db',
             referencedTable: 'linkedTable',
             referencedColumn: 'id',
           },
         ]}
+        database="db"
       >
         <Story />
       </ForeignKeysContextProvider>

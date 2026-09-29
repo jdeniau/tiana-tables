@@ -136,7 +136,10 @@ export default function DatabasePage() {
 
   return (
     <TableListContextProvider tableList={tableList}>
-      <ForeignKeysContextProvider foreignKeys={foreignKeys}>
+      <ForeignKeysContextProvider
+        foreignKeys={foreignKeys}
+        database={databaseName}
+      >
         <AllColumnsContextProvider allColumns={allColumns}>
           <OpenTablesContextProvider
             // the open tables are the database's: another database is another run

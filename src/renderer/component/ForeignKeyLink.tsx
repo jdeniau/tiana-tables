@@ -2,7 +2,6 @@ import { type JSX, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
-import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import type { Dialect } from '../../sql/dialect/types';
 import { FilterOperator, buildFilterClause } from '../../sql/filterClause';
@@ -33,7 +32,6 @@ const ForeignKeyLink = memo(function ForeignKeyLink({
   value,
 }: Props): JSX.Element | null {
   const { currentConnectionSlug } = useConnectionContext();
-  const { database } = useDatabaseContext();
 
   const foreignKeys = useForeignKeysContext();
 
@@ -58,7 +56,7 @@ const ForeignKeyLink = memo(function ForeignKeyLink({
     literal
   );
 
-  const to = `/connections/${currentConnectionSlug}/${database}/tables/${foreignKey.referencedTableName}?where=${encodeURIComponent(where)}`;
+  const to = `/connections/${currentConnectionSlug}/${foreignKey.referencedDatabaseName}/tables/${foreignKey.referencedTableName}?where=${encodeURIComponent(where)}`;
 
   return <StyledLink to={to}>↗️</StyledLink>;
 });

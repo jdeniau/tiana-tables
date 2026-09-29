@@ -60,7 +60,7 @@ async function render(where?: string): Promise<void> {
           <DatabaseContext.Provider
             value={{ database: 'shop', setDatabase: () => {} }}
           >
-            <ForeignKeysContextProvider foreignKeys={[]}>
+            <ForeignKeysContextProvider foreignKeys={[]} database="shop">
               <AllColumnsContextProvider allColumns={[]}>
                 <TableLayout
                   connectionSlug="shop"

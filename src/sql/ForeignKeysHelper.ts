@@ -4,8 +4,15 @@ export class ForeignKeysHelper {
   // Can not use JS #private props because of an issue in storybook with react-docgen ¯\_(ツ)_/¯
   private _foreignKeys: ForeignKey[];
 
-  constructor(foreignKeys: ForeignKey[]) {
+  /** the keys to the tables of `database`, which a join can only name bare */
+  private _localForeignKeys: ForeignKey[];
+
+  /** `foreignKeys` are the keys of the tables of `database` */
+  constructor(foreignKeys: ForeignKey[], database: string) {
     this._foreignKeys = foreignKeys;
+    this._localForeignKeys = foreignKeys.filter(
+      (r) => r.referencedDatabase === database
+    );
   }
 
   getForeignKey(tableName: string, columnName: string) {
@@ -18,6 +25,7 @@ export class ForeignKeysHelper {
     }
 
     return {
+      referencedDatabaseName: row.referencedDatabase,
       referencedTableName: row.referencedTable,
       referencedColumnName: row.referencedColumn,
     };
@@ -30,7 +38,7 @@ export class ForeignKeysHelper {
     let foundAlias: string | undefined = undefined;
     let isManyToOne = false;
 
-    const row = this._foreignKeys.find((r) => {
+    const row = this._localForeignKeys.find((r) => {
       // handle many-to-one relationship
       if (r.referencedTable === tableName) {
         const foundTable = tableList.find((t) => t.tableName === r.table);
