@@ -25,18 +25,11 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 26
+          # Not 26: forge 7 extracts Electron with extract-zip, which stalls on Node 26 and exits 0 with nothing packaged
+          node-version: 24
 
-      # The Windows image installs Yarn 1 with npm: its C:\npm\prefix\yarn.cmd makes `npm install -g corepack` fail with EEXIST
-      - name: Remove the runner's Yarn 1
-        if: runner.os == 'Windows'
-        run: npm uninstall -g yarn
-
-      # Node ships corepack no more since 25
       - name: enable corepack
-        run: |
-          npm install -g corepack
-          corepack enable yarn
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --immutable
