@@ -73,7 +73,7 @@ yarn make             # Build distributable packages
 
 ## Environment
 
-- **Node 26**: it ships `Temporal` natively, as Electron 44 does, so the tests run on the same API with no polyfill. Node ships corepack no more since 25: `npm install -g corepack && corepack enable yarn`.
+- **Node 26**: it ships `Temporal` natively, as Electron 44 does, so the tests run on the same API with no polyfill. Node ships corepack no more since 25: `npm install -g corepack && corepack enable yarn`. **Packaging (`package`, `make`, `publish`) runs on Node 24**: on Node 26 it exits 0 with nothing built (`.claude/rules/build.md`).
 - **The Electron binary is not downloaded by `yarn install`** (no `postinstall` since Electron 42): the `electron` bin fetches it on first run, `start` / `package` / `make` / `publish` chain `install-electron` themselves, and a script calling `electron-forge` directly runs `yarn install-electron` first.
 - **In a cloud session, install the dependencies first**, fetching Yarn from npm: `COREPACK_NPM_REGISTRY=https://registry.npmjs.org yarn install` (the proxy refuses `repo.yarnpkg.com`). A hook that fails with no output is a tool that could not start: check `node_modules` before re-reading the edit.
 - **Dev databases**: `docker compose up -d --wait` starts `tiana-dev-mysql` (MariaDB 11, `127.0.0.1:13306`, `root` / `devpassword`) and `tiana-dev-postgres` (PostgreSQL 18, `127.0.0.1:15432`, `postgres` / `devpassword`), both with database `tiana_dev` holding the same "Le Fil" dataset (details in `dev/fixtures/README.md`). **Never open a connection whose name lacks `(dev)`**, and name every connection created `… (dev)`. Never `docker compose down -v` without being asked.
