@@ -22,14 +22,15 @@ tmux send-keys -t tiana "yarn electron-forge start -- \
 - **`--user-data-dir` isolates the configuration**; without it the run writes into the user's real connections. The profile keeps its connections between runs, so create one once (`#/connect/create`, ids `name`/`host`/`port`/`user`/`password`, button "SAVE AND CONNECT" — a new profile is in English), named with `(dev)`.
 - The page target is the one whose url starts with `http://localhost:517x`.
 - The main process is not hot-reloaded: any change to `menu.ts`, the preload or an IPC handler needs a full relaunch.
-- Clean up with `pkill -f "remote-debugging-port=922[2]"` — the brackets matter: the bare pattern matches the shell's own command line and kills it (exit 144) — then `tmux kill-session -t tiana`.
+- **The shell's `node` may be `/usr/bin/node` 22**, not nvm's 26: `export PATH=$HOME/.nvm/versions/node/v26.10.0/bin:$PATH` first, or `Temporal` is missing and 19 date tests fail.
+- Clean up with `pkill -f "remote-debugging-port=922[2]"` — the brackets matter: the bare pattern matches the shell's own command line and kills it (exit 144), and so does any other spelling of the flag in the same command. Then check `pgrep -f "electron/dist/electro[n]"` is empty: a second instance keeps port 9222 and every CDP call hangs on it.
 
 Traps that each cost half an hour:
 
 - **Focus**: with the window in the background Monaco never takes focus. Send `Page.bringToFront` **and** `Emulation.setFocusEmulationEnabled {enabled: true}`, then focus `.monaco-editor .native-edit-context` (a click is not always enough).
 - **Who consumed a key**: Monaco calls both `preventDefault` and `stopPropagation`, so install **two** listeners on `window`, one capturing (what the renderer saw), one bubbling (`defaultPrevented`). Make the probe idempotent: an `if (!window.__probeBound)` guard left by a previous pass installs nothing.
-- `Input.dispatchKeyEvent` **also fires native menu accelerators** (`Ctrl+N` navigates). Modifiers: Alt=1, Ctrl=2, Meta=4, Shift=8; send `rawKeyDown` then `keyUp`, and leave ~1 s for a navigation.
-- **Native menu items**: add `--inspect-electron`; the main-process inspector listens on **9229**. `require` is not global there, use `process.mainModule.require('electron')`. `MenuItem`'s wrapper toggles `checked` before calling the handler, so a programmatic `item.click()` is exactly a real click.
+- **No synthetic key fires a native menu accelerator** — neither `Input.dispatchKeyEvent` nor `webContents.sendInputEvent`, even focused with the system title bar (Electron 44, Wayland): the page sees the key, the menu does not. An accelerator is proven by a real keypress, while the main inspector records `webContents.send`. Modifiers: Alt=1, Ctrl=2, Meta=4, Shift=8; `rawKeyDown` then `keyUp`.
+- **Native menu items**: add `--inspect-electron`, a forge flag that goes before the `--`; the main-process inspector listens on **9229**. `require` is not global there, use `process.mainModule.require('electron')`. `MenuItem`'s wrapper toggles `checked` before calling the handler, so a programmatic `item.click()` is exactly a real click.
 - **Quitting rewrites `config.json`** from memory: test persistence through the app's action, never by editing the file while it runs.
 - **Timing**: sample with a 1 ms sampler installed through `Page.addScriptToEvaluateOnNewDocument` rather than reasoning about async order (e.g. `window.isDev` is defined ~90 ms in, while `Root` first renders at ~650 ms because `ConfigurationContextProvider` waits for its IPC answer).
 - **After a hot reload, reload the page** (`Page.reload`) before measuring anything: Vite leaves listeners from older module versions registered (stale Monaco markers, inflated mounts).

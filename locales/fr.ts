@@ -137,6 +137,7 @@ const fr: Translation = {
   'menu.navigate.sqlPanel': 'Panneau SQL',
   'menu.navigate': 'Naviguer',
   'menu.settings': 'Réglages…',
+  'menu.title': 'Menu',
   'menu.view.devTools': 'Outils de développement',
   'menu.view.togglePath': "Afficher la barre d'adresse",
   'navigation_modal.search.placeholder': 'Commencer à chercher…',

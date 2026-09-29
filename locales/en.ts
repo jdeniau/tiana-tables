@@ -137,6 +137,7 @@ export default {
   'menu.navigate.sqlPanel': 'SQL Panel',
   'menu.navigate': 'Navigate',
   'menu.settings': 'Settings…',
+  'menu.title': 'Menu',
   'menu.view.devTools': 'Developer tools',
   'menu.view.togglePath': 'Toggle path bar',
   'navigation_modal.search.placeholder': 'Start searching…',
