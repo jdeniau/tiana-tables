@@ -194,7 +194,7 @@ export const postgresMetadata: DialectMetadata = {
     }),
 
   // an enum's labels live in `pg_enum` and nowhere else, so they come with it;
-  // as `text`, since `pg` leaves an array of `name` undecoded (measured)
+  // as JSON, the one array shape the driver decodes
   listColumns: (databaseName) =>
     readQuery('listColumns', {
       sql: `
@@ -206,7 +206,7 @@ export const postgresMetadata: DialectMetadata = {
           a.attidentity,
           t.typname,
           (
-            SELECT array_agg(CAST(e.enumlabel AS text) ORDER BY e.enumsortorder)
+            SELECT json_agg(e.enumlabel ORDER BY e.enumsortorder)
             FROM pg_catalog.pg_enum e
             WHERE e.enumtypid = t.oid
           ) AS enum_labels
