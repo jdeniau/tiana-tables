@@ -79,7 +79,7 @@ purpose: a chart of a partial result is a lie.
 
 ## Themes and languages
 
-<img src="docs/screenshots/themes.png" alt="The app in Unikitty Light and Tokyo Night Dark" width="700" />
+<img src="docs/screenshots/themes.png" alt="The app in nine themes, five dark and four light" width="900" />
 
 25 base16 themes, light and dark — Dracula, Nord, Solarized, Gruvbox,
 Catppuccin, Tokyo Night, Rosé Pine… The theme applies to the whole app, grid and

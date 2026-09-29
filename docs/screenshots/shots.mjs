@@ -5,7 +5,7 @@
 import { execFileSync, spawn } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -212,7 +212,7 @@ try {
       format: 'png',
       ...(clip && { clip: { ...clip, scale: 1 } }),
     });
-    writeFileSync(join(HERE, file), Buffer.from(data, 'base64'));
+    writeFileSync(resolve(HERE, file), Buffer.from(data, 'base64'));
     console.log('wrote', file);
   };
 
@@ -301,29 +301,39 @@ try {
   await showTable('Dracula');
   await capture('hero.png');
 
-  // themes: the top-left corner of the same window, in a light and a dark theme
-  const corner = { x: 0, y: 0, width: 560, height: 380 };
-  await showTable('Unikitty Light');
-  await capture('themes-a.png', () => corner);
-  await showTable('Tokyo Night Dark');
-  await capture('themes-b.png', () => corner);
+  // themes: the top-left corner of the same window in nine themes, a checkerboard of five dark and four light
+  const THEMES = [
+    ['Dracula', 'Unikitty Light', 'Tokyo Night Dark'],
+    ['Solarized Light', 'Nord', 'Catppuccin Latte'],
+    ['Monokai', 'Gruvbox Light', 'Outrun Dark'],
+  ];
+  const corner = { x: 0, y: 0, width: 400, height: 270 };
+  const tiles = [];
+  for (const theme of THEMES.flat()) {
+    const tile = join(profile, `theme-${tiles.length}.png`);
+    await showTable(theme);
+    await capture(tile, () => corner);
+    tiles.push(tile);
+  }
   execFileSync(
     'python3',
     [
       '-c',
       `
+import sys
 from PIL import Image
-a, b = Image.open('themes-a.png'), Image.open('themes-b.png')
-out = Image.new('RGB', (a.width + b.width, max(a.height, b.height)))
-out.paste(a, (0, 0))
-out.paste(b, (a.width, 0))
+columns, tiles = int(sys.argv[1]), [Image.open(f) for f in sys.argv[2:]]
+w, h = tiles[0].size
+out = Image.new('RGB', (columns * w, -(-len(tiles) // columns) * h))
+for i, tile in enumerate(tiles):
+    out.paste(tile, ((i % columns) * w, (i // columns) * h))
 out.save('themes.png', optimize=True)
 `,
+      String(THEMES[0].length),
+      ...tiles,
     ],
     { cwd: HERE }
   );
-  rmSync(join(HERE, 'themes-a.png'));
-  rmSync(join(HERE, 'themes-b.png'));
 
   // sql-editor: retyped up to `WHERE a.` so the suggest widget opens on the alias
   await evaluate(`window.config.changeTheme('Dracula')`);
