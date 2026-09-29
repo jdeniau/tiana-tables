@@ -114,6 +114,15 @@ describe('with an auto-updater', () => {
     expect(await check()).toEqual(download);
   });
 
+  test('a retry after its failure keeps the link', async () => {
+    const { autoUpdater, check } = await start('selfUpdating');
+
+    autoUpdater.emit('error', new Error('offline'));
+    autoUpdater.emit('update-available');
+
+    expect(await check()).toMatchObject({ step: UpdateStep.Download });
+  });
+
   test('a downloaded update asks for a restart, whatever a later check reports', async () => {
     const { autoUpdater, check, send } = await start('selfUpdating');
 

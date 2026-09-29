@@ -157,7 +157,6 @@ export function startAutoUpdate(): void {
       setAutoUpdateState(AutoUpdateState.Idle);
     }
   });
-  );
   autoUpdater.on('update-not-available', () =>
     setAutoUpdateState(AutoUpdateState.Idle)
   );

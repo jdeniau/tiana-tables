@@ -43,6 +43,8 @@ const email = user?.email ?? FALLBACK_EMAIL;
 ```
 ````
 
+**A `suggestion` replaces exactly `start_line`…`line`: that range covers every line of the statements it rewrites, closing `);` included.** Before posting, apply it to the file at the PR head and run the type checker on the result.
+
 ### The global body
 
 **With inline findings, the global body stays empty (`""`)** — unless it carries something no line can hold. That exception is real, and it is narrow:
