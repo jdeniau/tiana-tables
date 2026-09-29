@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import connectionDecorator from '../../../.storybook/decorators/connectionDecorator';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';

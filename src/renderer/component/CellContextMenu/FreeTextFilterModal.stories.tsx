@@ -1,5 +1,5 @@
-import { action } from '@storybook/addon-actions';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { action } from 'storybook/actions';
 import connectionDecorator from '../../../../.storybook/decorators/connectionDecorator';
 import { FilterOperator } from '../../../sql/filterClause';
 import FreeTextFilterModal from './FreeTextFilterModal';

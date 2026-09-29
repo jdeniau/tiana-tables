@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AllColumnsContextProvider } from '../../../contexts/AllColumnsContext';
 import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext';
 import { TableListContextProvider } from '../../../contexts/TableListContext';

@@ -1,5 +1,5 @@
 import { SettingOutlined } from '@ant-design/icons';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button, Layout } from 'antd';
 import { useTheme } from 'styled-components';
 import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';

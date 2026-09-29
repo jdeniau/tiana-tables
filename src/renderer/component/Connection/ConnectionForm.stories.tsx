@@ -1,6 +1,6 @@
-import { action } from '@storybook/addon-actions';
-import type { Meta, StoryObj } from '@storybook/react';
-import { expect, fn, userEvent, waitFor, within } from '@storybook/test';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { action } from 'storybook/actions';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
 import { testables } from '../../../contexts/ConfigurationContext';
 import { DatabaseEngine } from '../../../sql/engine';

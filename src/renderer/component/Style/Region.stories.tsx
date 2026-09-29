@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Splitter } from 'antd';
 import { styled } from 'styled-components';
 import { fontSize, size, space } from '../../theme';

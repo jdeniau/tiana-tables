@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Fetcher } from 'react-router';
 import connectionDecorator from '../../../../../.storybook/decorators/connectionDecorator';
 import reactRouterDecorator from '../../../../../.storybook/decorators/reactRouterDecorator';

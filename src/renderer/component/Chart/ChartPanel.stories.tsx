@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FieldKind, type ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import ChartPanel from './ChartPanel';
