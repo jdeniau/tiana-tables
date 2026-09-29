@@ -15,7 +15,6 @@ type Unsubscribe = () => void;
 type NavigationListener = {
   onNavigate: (callback: OnNavigateCallback) => Unsubscribe;
   onOpenNavigationPanel: (callback: () => void) => Unsubscribe;
-  onOpenSettings: (callback: () => void) => Unsubscribe;
   onPathBarVisibilityChange: (
     callback: (showPath: boolean) => void
   ) => Unsubscribe;
@@ -41,8 +40,6 @@ export const navigationListener: NavigationListener = {
 
   onOpenNavigationPanel: (callback) =>
     subscribe('openNavigationPanel', callback),
-
-  onOpenSettings: (callback) => subscribe('openSettings', callback),
 
   onPathBarVisibilityChange: (callback) =>
     subscribe('pathBarVisibilityChange', callback),

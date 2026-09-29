@@ -1,7 +1,6 @@
 import { Layout } from 'antd';
 import { Outlet, useMatch, useNavigate } from 'react-router';
 import { styled } from 'styled-components';
-import packageJson from '../../../package.json';
 import { ConfigurationContextProvider } from '../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
@@ -11,7 +10,6 @@ import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import PathBar from '../component/PathBar';
-import SettingsMenu from '../component/SettingsMenu';
 import { TabStrip, TabStripLink } from '../component/Style/TabStrip';
 import {
   Brand,
@@ -61,7 +59,7 @@ function ToggleRawSqlButton() {
   );
 }
 
-/** The frame: the brand, the settings and the connections left, the SQL toggle right. */
+/** The frame: the brand and the connections left, the SQL toggle right. */
 function AppTitleBar() {
   const updateStatus = useUpdateStatus();
   const tint = useCurrentConnectionTint();
@@ -75,7 +73,6 @@ function AppTitleBar() {
           {window.isDev && <DevModeMark>{t('titleBar.devMode')}</DevModeMark>}
           <UpdateDot updateStatus={updateStatus} />
         </BrandGroup>
-        <SettingsMenu version={packageJson.version} />
         <ConnectionNav />
       </TitleGroup>
 

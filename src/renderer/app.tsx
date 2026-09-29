@@ -14,6 +14,7 @@ import ConnectionFailedPage from './routes/errors/ConnectionFailedPage';
 import ConnectionErrorPage from './routes/errors/ConnectionsErrorPage';
 import RootErrorPage from './routes/errors/RootErrorPage';
 import Root from './routes/root';
+import Settings from './routes/settings';
 
 const appElement = document.getElementById('App');
 
@@ -57,6 +58,10 @@ const router = createHashRouter([
             element: <Edit />,
           },
         ],
+      },
+      {
+        path: 'settings',
+        element: <Settings />,
       },
       // The `connections/*` and `sql/*` subtrees stay lazy on purpose: they pull
       // in TableGrid (TanStack Table + Virtual) and Monaco (~3 MB of editor +

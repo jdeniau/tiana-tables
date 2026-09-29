@@ -6,9 +6,8 @@ import { ConnectionTint } from '../../theme/connectionTint';
 
 /**
  * The title bar of the shell: its height and padding come from the antd
- * `Layout` tokens, the rule under it is the one structural device. The brand,
- * the settings and the connections sit left, the SQL toggle right, nothing in
- * the middle.
+ * `Layout` tokens, the rule under it is the one structural device. The brand
+ * and the connections sit left, the SQL toggle right, nothing in the middle.
  *
  * `$tint` is the colour of the current connection, if it has one: it re-points
  * the frame colours for this element and its descendants, which is what paints
