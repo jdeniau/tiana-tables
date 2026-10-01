@@ -186,7 +186,7 @@ const fr: Translation = {
   'table.sort.hint': 'Clic pour trier, Maj+clic pour ajouter au tri',
   'table.structure.displayAfter': "S'affiche après",
   'table.structure.displayAfter.none': 'Ordre de la base',
-  'table.structure.displayAfter.movedByKey':
+  'table.structure.displayAfter.overriddenByPrimaryKey':
     "Les colonnes de la clé primaire s'affichent en premier : cette colonne ne suit pas directement celle choisie",
   'table.tab.data': 'Données',
   'table.tab.structure': 'Structure',

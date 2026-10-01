@@ -8,7 +8,7 @@ const meta: Meta<typeof DisplayAfterSelect> = {
     columnName: 'lastname',
     columns: ['id', 'firstname', 'lastname', 'email', 'created_at'],
     displayAfter: null,
-    movedByKey: false,
+    overriddenByPrimaryKey: false,
     onChange: (columnName, displayAfter) => {
       console.log(columnName, displayAfter);
     },
@@ -33,9 +33,13 @@ export const Moved: Story = {
   args: { displayAfter: 'email' },
 };
 
-/** the key columns lead the grid, so the column does not land where it was asked */
-export const MovedByKey: Story = {
-  args: { columnName: 'id', displayAfter: 'email', movedByKey: true },
+/** the primary key columns lead the grid, so the column does not land where it was asked */
+export const OverriddenByPrimaryKey: Story = {
+  args: {
+    columnName: 'id',
+    displayAfter: 'email',
+    overriddenByPrimaryKey: true,
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const label =

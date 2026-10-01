@@ -67,8 +67,8 @@ export function keyColumnsFirst<T>(
   return items.toSorted((a, b) => Number(isKey(b)) - Number(isKey(a)));
 }
 
-/** The columns the order puts right after their anchor, and the grid does not, since the key columns lead. */
-export function listColumnsMovedByKey(
+/** The columns whose "displays after" the grid overrides: the order puts them right after their anchor, the primary key columns shown first do not. */
+export function listDisplayAfterOverriddenByPrimaryKey(
   columns: ReadonlyArray<string>,
   displayAfterByColumn: DisplayAfterByColumn,
   primaryKeys: ReadonlyArray<string>

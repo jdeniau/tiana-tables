@@ -10,7 +10,7 @@ import invariant from 'tiny-invariant';
 import { getDatabaseAppState } from '../../configuration/appState';
 import {
   type DisplayAfterByColumn,
-  listColumnsMovedByKey,
+  listDisplayAfterOverriddenByPrimaryKey,
 } from '../../configuration/columnOrder';
 import { useTranslation } from '../../i18n';
 import type { TableStructureRow } from '../../sql/dialect/metadata';
@@ -75,8 +75,13 @@ export default function TableStructure() {
     [result]
   );
 
-  const movedByKey = useMemo(
-    () => listColumnsMovedByKey(columnNames, displayAfterByColumn, primaryKeys),
+  const displayAfterOverriddenByPrimaryKey = useMemo(
+    () =>
+      listDisplayAfterOverriddenByPrimaryKey(
+        columnNames,
+        displayAfterByColumn,
+        primaryKeys
+      ),
     [columnNames, displayAfterByColumn, primaryKeys]
   );
 
@@ -110,13 +115,21 @@ export default function TableStructure() {
             columnName={row.Column}
             columns={columnNames}
             displayAfter={displayAfterByColumn[row.Column] ?? null}
-            movedByKey={movedByKey.has(row.Column)}
+            overriddenByPrimaryKey={displayAfterOverriddenByPrimaryKey.has(
+              row.Column
+            )}
             onChange={handleDisplayAfterChange}
           />
         ),
       },
     ],
-    [t, columnNames, displayAfterByColumn, movedByKey, handleDisplayAfterChange]
+    [
+      t,
+      columnNames,
+      displayAfterByColumn,
+      displayAfterOverriddenByPrimaryKey,
+      handleDisplayAfterChange,
+    ]
   );
 
   // the same header as the data region — name, meta, then the view tabs — so

@@ -15,8 +15,8 @@ type Props = {
   columns: ReadonlyArray<string>;
   /** `null` when the column has not been moved */
   displayAfter: string | null;
-  /** the grid shows the key columns first, and so not this one right after `displayAfter` */
-  movedByKey: boolean;
+  /** the grid shows the primary key columns first, and so not this one right after `displayAfter` */
+  overriddenByPrimaryKey: boolean;
   onChange: (columnName: string, displayAfter: string | null) => void;
 };
 
@@ -25,7 +25,7 @@ export default function DisplayAfterSelect({
   columnName,
   columns,
   displayAfter,
-  movedByKey,
+  overriddenByPrimaryKey,
   onChange,
 }: Props): ReactElement {
   const { t } = useTranslation();
@@ -47,10 +47,14 @@ export default function DisplayAfterSelect({
       allowClear
       showSearch
       prefix={
-        movedByKey && (
-          <Tooltip title={t('table.structure.displayAfter.movedByKey')}>
+        overriddenByPrimaryKey && (
+          <Tooltip
+            title={t('table.structure.displayAfter.overriddenByPrimaryKey')}
+          >
             <WarningIcon
-              aria-label={t('table.structure.displayAfter.movedByKey')}
+              aria-label={t(
+                'table.structure.displayAfter.overriddenByPrimaryKey'
+              )}
             />
           </Tooltip>
         )
