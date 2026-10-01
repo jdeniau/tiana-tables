@@ -65,7 +65,7 @@ export const TabStrip = styled.div<{
     `}
 `;
 
-type ItemProps = { $active: boolean; $failed: boolean };
+type ItemProps = { $active: boolean; $failed: boolean; $plain?: boolean };
 
 const item = css<ItemProps>`
   display: flex;
@@ -84,9 +84,11 @@ const item = css<ItemProps>`
   color: ${(props) =>
     props.$failed
       ? variableForeground(props)
-      : props.$active
-        ? frame.emphasis
-        : frame.muted};
+      : props.$plain
+        ? frame.text
+        : props.$active
+          ? frame.emphasis
+          : frame.muted};
 
   &:focus-visible {
     outline: 1px solid ${frame.accent};
@@ -125,6 +127,8 @@ type CommonProps = {
   active: boolean;
   /** a failed statement keeps its place in the run, in the error colour */
   failed?: boolean;
+  /** body text whether active or not: the pip alone marks it, as on an item with no siblings to stand out from */
+  plain?: boolean;
   children: ReactNode;
 };
 
@@ -144,6 +148,7 @@ function Content({
 export function TabStripItem({
   active,
   failed = false,
+  plain = false,
   children,
   ...rest
 }: CommonProps & ComponentPropsWithRef<'button'>) {
@@ -154,6 +159,7 @@ export function TabStripItem({
       {...rest}
       $active={active}
       $failed={failed}
+      $plain={plain}
     >
       <Content active={active}>{children}</Content>
     </ItemButton>
@@ -164,6 +170,7 @@ export function TabStripItem({
 export function TabStripLink({
   active,
   failed = false,
+  plain = false,
   children,
   ...rest
 }: CommonProps & LinkProps & RefAttributes<HTMLAnchorElement>) {
@@ -173,6 +180,7 @@ export function TabStripLink({
       {...rest}
       $active={active}
       $failed={failed}
+      $plain={plain}
     >
       <Content active={active}>{children}</Content>
     </ItemLink>

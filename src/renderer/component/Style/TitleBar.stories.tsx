@@ -38,7 +38,9 @@ function Demo({ color }: { color?: ConnectionColor }) {
 
         <TitleGroup>
           <TabStrip $caps>
-            <TabStripItem active={false}>SQL</TabStripItem>
+            <TabStripItem active={false} plain>
+              SQL
+            </TabStripItem>
           </TabStrip>
         </TitleGroup>
       </TitleBar>

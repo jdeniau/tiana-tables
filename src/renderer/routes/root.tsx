@@ -52,6 +52,7 @@ function ToggleRawSqlButton() {
       <KeyboardShortcutTooltip cmdOrCtrl pressedKey="t">
         <TabStripLink
           active={onSqlPage}
+          plain
           to={`/connections/${currentConnectionSlug}/${database}/sql`}
         >
           {t('sqlPanel.callerButton')}
