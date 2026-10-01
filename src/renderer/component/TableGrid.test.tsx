@@ -135,6 +135,32 @@ function mark(name: string): string {
   );
 }
 
+// happy-dom lays nothing out, and the virtualizer mounts the rows that fit
+// in the height of the scroller
+function mountRows(): void {
+  const offsetHeight = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'offsetHeight'
+  );
+
+  beforeAll(() => {
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+      configurable: true,
+      get: () => 600,
+    });
+  });
+
+  afterAll(() => {
+    if (offsetHeight) {
+      Object.defineProperty(
+        HTMLElement.prototype,
+        'offsetHeight',
+        offsetHeight
+      );
+    }
+  });
+}
+
 describe('sorting', () => {
   test('ascending, then descending, then back to no sort', () => {
     const sortingAtom = renderSortable();
@@ -294,29 +320,7 @@ describe('context menu', () => {
     });
   }
 
-  // happy-dom lays nothing out, and the virtualizer mounts the rows that fit
-  // in the height of the scroller
-  const offsetHeight = Object.getOwnPropertyDescriptor(
-    HTMLElement.prototype,
-    'offsetHeight'
-  );
-
-  beforeAll(() => {
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-      configurable: true,
-      get: () => 600,
-    });
-  });
-
-  afterAll(() => {
-    if (offsetHeight) {
-      Object.defineProperty(
-        HTMLElement.prototype,
-        'offsetHeight',
-        offsetHeight
-      );
-    }
-  });
+  mountRows();
 
   afterEach(() => {
     writeText.mockClear();
@@ -608,5 +612,69 @@ describe('the head of a date-time column', () => {
 
   test('names nothing when every zone is the same one', () => {
     expect(heads([SERVER])).toEqual(['id', 'name', 'at', 'day']);
+  });
+});
+
+describe('the primary key columns', () => {
+  mountRows();
+
+  /** the value a `var(--tg-…)` of the table holds */
+  function resolve(value: string): string {
+    const name = /^var\((.+)\)$/.exec(value)?.[1];
+
+    return name
+      ? (container.querySelector('table')?.style.getPropertyValue(name) ?? '')
+      : value;
+  }
+
+  /** the heads and the cells of the first row, checked to line up */
+  function columns(
+    names: Array<string>,
+    primaryKeys: Array<string>
+  ): Array<[string | null, string | null]> {
+    render(
+      <TableGrid
+        fields={names.map((name) => ({
+          name,
+          kind: FieldKind.String,
+          table: 'tag_cart',
+        }))}
+        result={[Object.fromEntries(names.map((name) => [name, `${name}!`]))]}
+        primaryKeys={primaryKeys}
+      />
+    );
+
+    const heads = [...container.querySelectorAll('th')];
+    const cells = [...container.querySelectorAll<HTMLElement>('tbody td')];
+
+    return heads.map((th, index) => {
+      expect(resolve(cells[index].style.width)).toBe(resolve(th.style.width));
+      expect(resolve(cells[index].style.left)).toBe(resolve(th.style.left));
+
+      return [th.textContent, cells[index].textContent];
+    });
+  }
+
+  test('lead in the order of the table, whatever the order of the key', () => {
+    expect(
+      columns(['tag_id', 'cart_id', 'label'], ['cart_id', 'tag_id'])
+    ).toEqual([
+      ['tag_id', 'tag_id!'],
+      ['cart_id', 'cart_id!'],
+      ['label', 'label!'],
+    ]);
+
+    const heads = [...container.querySelectorAll('th')];
+
+    expect(resolve(heads[0].style.left)).toBe('0px');
+    expect(resolve(heads[1].style.left)).toBe(resolve(heads[0].style.width));
+    expect(heads[2].style.left).toBe('');
+  });
+
+  test('lead when the table places them after another column', () => {
+    expect(columns(['label', 'id'], ['id'])).toEqual([
+      ['id', 'id!'],
+      ['label', 'label!'],
+    ]);
   });
 });

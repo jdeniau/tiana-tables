@@ -59,6 +59,38 @@ export function applyColumnOrder(
   return ordered;
 }
 
+/** The key columns first, each group in its given order: the grid pins the key to the start. */
+export function keyColumnsFirst<T>(
+  items: ReadonlyArray<T>,
+  isKey: (item: T) => boolean
+): Array<T> {
+  return items.toSorted((a, b) => Number(isKey(b)) - Number(isKey(a)));
+}
+
+/** The columns whose "displays after" the grid overrides: the order puts them right after their anchor, the primary key columns shown first do not. */
+export function listDisplayAfterOverriddenByPrimaryKey(
+  columns: ReadonlyArray<string>,
+  displayAfterByColumn: DisplayAfterByColumn,
+  primaryKeys: ReadonlyArray<string>
+): Set<string> {
+  const ordered = applyColumnOrder(columns, displayAfterByColumn);
+  const shown = keyColumnsFirst(ordered, (column) =>
+    primaryKeys.includes(column)
+  );
+
+  return new Set(
+    ordered.filter((column, index) => {
+      const anchor = displayAfterByColumn[column];
+
+      return (
+        anchor !== undefined &&
+        ordered[index - 1] === anchor &&
+        shown[shown.indexOf(column) - 1] !== anchor
+      );
+    })
+  );
+}
+
 /** Without this, no column of a cycle would ever be emitted. */
 function breakCycles(
   columns: ReadonlyArray<string>,

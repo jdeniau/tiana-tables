@@ -1,6 +1,13 @@
 import { ReactElement, useMemo } from 'react';
-import { Select } from 'antd';
+import { WarningOutlined } from '@ant-design/icons';
+import { Select, Tooltip } from 'antd';
+import { styled } from 'styled-components';
 import { useTranslation } from '../../i18n';
+import { classForeground } from '../theme';
+
+const WarningIcon = styled(WarningOutlined)`
+  color: ${classForeground};
+`;
 
 type Props = {
   columnName: string;
@@ -8,6 +15,8 @@ type Props = {
   columns: ReadonlyArray<string>;
   /** `null` when the column has not been moved */
   displayAfter: string | null;
+  /** the grid shows the primary key columns first, and so not this one right after `displayAfter` */
+  overriddenByPrimaryKey: boolean;
   onChange: (columnName: string, displayAfter: string | null) => void;
 };
 
@@ -16,6 +25,7 @@ export default function DisplayAfterSelect({
   columnName,
   columns,
   displayAfter,
+  overriddenByPrimaryKey,
   onChange,
 }: Props): ReactElement {
   const { t } = useTranslation();
@@ -36,6 +46,19 @@ export default function DisplayAfterSelect({
       popupMatchSelectWidth={false}
       allowClear
       showSearch
+      prefix={
+        overriddenByPrimaryKey && (
+          <Tooltip
+            title={t('table.structure.displayAfter.overriddenByPrimaryKey')}
+          >
+            <WarningIcon
+              aria-label={t(
+                'table.structure.displayAfter.overriddenByPrimaryKey'
+              )}
+            />
+          </Tooltip>
+        )
+      }
       placeholder={t('table.structure.displayAfter.none')}
       value={displayAfter}
       options={options}

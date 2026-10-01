@@ -30,6 +30,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Empty } from 'antd';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
+import { keyColumnsFirst } from '../../configuration/columnOrder';
 import { DateDisplay } from '../../configuration/dateDisplay';
 import type { ColumnWidthByColumn } from '../../configuration/type';
 import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
@@ -292,6 +293,17 @@ function TableGrid<Row extends ResultRow>({
     [database, flashCell, onValueUpdated]
   );
 
+  // pin primary key columns to the left, in the order of `fields`
+  const columnPinning = useMemo(
+    () => ({
+      start: (fields ?? [])
+        .map(({ name }) => name)
+        .filter((name) => primaryKeys?.includes(name)),
+      end: [],
+    }),
+    [fields, primaryKeys]
+  );
+
   // both the table and `columnsMeta` are built from this one list, so the two always agree on what the nth column is
   const columnSources = useMemo((): Array<ColumnSource<Row>> => {
     const sources: Array<ColumnSource<Row>> = (fields ?? []).map(
@@ -309,8 +321,13 @@ function TableGrid<Row extends ResultRow>({
       });
     }
 
-    return sources;
-  }, [fields, extraColumns]);
+    const isPinned = (source: ColumnSource<Row>): boolean =>
+      source.field !== undefined &&
+      columnPinning.start.includes(source.field.name);
+
+    // TanStack heads the pinned columns first, so the body must too
+    return keyColumnsFirst(sources, isPinned);
+  }, [fields, extraColumns, columnPinning]);
 
   // local time is followed by its offset, which the column opens wide enough for
   const showsOffset = useDateDisplay().display === DateDisplay.Local;
@@ -342,12 +359,6 @@ function TableGrid<Row extends ResultRow>({
       )
     );
   }, [columnSources, rowsAsArray, showsOffset]);
-
-  // pin primary key columns to the left, like the previous `fixed: 'left'`
-  const columnPinning = useMemo(
-    () => ({ start: primaryKeys ?? [], end: [] }),
-    [primaryKeys]
-  );
 
   const table = useTable(
     {

@@ -8,7 +8,10 @@ import {
 } from 'react-router';
 import invariant from 'tiny-invariant';
 import { getDatabaseAppState } from '../../configuration/appState';
-import type { DisplayAfterByColumn } from '../../configuration/columnOrder';
+import {
+  type DisplayAfterByColumn,
+  listDisplayAfterOverriddenByPrimaryKey,
+} from '../../configuration/columnOrder';
 import { useTranslation } from '../../i18n';
 import type { TableStructureRow } from '../../sql/dialect/metadata';
 import DisplayAfterSelect from '../component/DisplayAfterSelect';
@@ -38,7 +41,10 @@ export async function loader({ params }: RouteParams) {
   invariant(databaseName, 'Database name is required');
   invariant(tableName, 'Table name is required');
 
-  const data = await window.sql.getTableStructure(databaseName, tableName);
+  const [data, primaryKeys] = await Promise.all([
+    window.sql.getTableStructure(databaseName, tableName),
+    window.sql.getPrimaryKeyColumns(databaseName, tableName),
+  ]);
 
   const configuration = await window.config.getConfiguration();
 
@@ -49,6 +55,7 @@ export async function loader({ params }: RouteParams) {
 
   return {
     data,
+    primaryKeys,
     displayAfterByColumn,
   };
 }
@@ -59,12 +66,23 @@ export default function TableStructure() {
   const { revalidate } = useRevalidator();
   const {
     data: [result, fields],
+    primaryKeys,
     displayAfterByColumn,
   } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
 
   const columnNames = useMemo(
     () => result.map((column) => column.Column),
     [result]
+  );
+
+  const displayAfterOverriddenByPrimaryKey = useMemo(
+    () =>
+      listDisplayAfterOverriddenByPrimaryKey(
+        columnNames,
+        displayAfterByColumn,
+        primaryKeys
+      ),
+    [columnNames, displayAfterByColumn, primaryKeys]
   );
 
   // written, then read back by the loader, rather than mirrored in a state that the next table would leave stale
@@ -97,12 +115,21 @@ export default function TableStructure() {
             columnName={row.Column}
             columns={columnNames}
             displayAfter={displayAfterByColumn[row.Column] ?? null}
+            overriddenByPrimaryKey={displayAfterOverriddenByPrimaryKey.has(
+              row.Column
+            )}
             onChange={handleDisplayAfterChange}
           />
         ),
       },
     ],
-    [t, columnNames, displayAfterByColumn, handleDisplayAfterChange]
+    [
+      t,
+      columnNames,
+      displayAfterByColumn,
+      displayAfterOverriddenByPrimaryKey,
+      handleDisplayAfterChange,
+    ]
   );
 
   // the same header as the data region — name, meta, then the view tabs — so
