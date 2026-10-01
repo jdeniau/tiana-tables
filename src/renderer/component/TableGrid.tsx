@@ -30,6 +30,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Empty } from 'antd';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
+import { keyColumnsFirst } from '../../configuration/columnOrder';
 import { DateDisplay } from '../../configuration/dateDisplay';
 import type { ColumnWidthByColumn } from '../../configuration/type';
 import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
@@ -324,8 +325,8 @@ function TableGrid<Row extends ResultRow>({
       source.field !== undefined &&
       columnPinning.start.includes(source.field.name);
 
-    // TanStack heads the pinned columns first, so the body must too; the sort is stable
-    return sources.sort((a, b) => Number(isPinned(b)) - Number(isPinned(a)));
+    // TanStack heads the pinned columns first, so the body must too
+    return keyColumnsFirst(sources, isPinned);
   }, [fields, extraColumns, columnPinning]);
 
   // local time is followed by its offset, which the column opens wide enough for

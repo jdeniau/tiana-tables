@@ -8,7 +8,10 @@ import {
 } from 'react-router';
 import invariant from 'tiny-invariant';
 import { getDatabaseAppState } from '../../configuration/appState';
-import type { DisplayAfterByColumn } from '../../configuration/columnOrder';
+import {
+  type DisplayAfterByColumn,
+  listColumnsMovedByKey,
+} from '../../configuration/columnOrder';
 import { useTranslation } from '../../i18n';
 import type { TableStructureRow } from '../../sql/dialect/metadata';
 import DisplayAfterSelect from '../component/DisplayAfterSelect';
@@ -72,6 +75,11 @@ export default function TableStructure() {
     [result]
   );
 
+  const movedByKey = useMemo(
+    () => listColumnsMovedByKey(columnNames, displayAfterByColumn, primaryKeys),
+    [columnNames, displayAfterByColumn, primaryKeys]
+  );
+
   // written, then read back by the loader, rather than mirrored in a state that the next table would leave stale
   const handleDisplayAfterChange = useCallback(
     async (columnName: string, displayAfter: string | null) => {
@@ -102,19 +110,13 @@ export default function TableStructure() {
             columnName={row.Column}
             columns={columnNames}
             displayAfter={displayAfterByColumn[row.Column] ?? null}
-            pinned={primaryKeys.includes(row.Column)}
+            movedByKey={movedByKey.has(row.Column)}
             onChange={handleDisplayAfterChange}
           />
         ),
       },
     ],
-    [
-      t,
-      columnNames,
-      primaryKeys,
-      displayAfterByColumn,
-      handleDisplayAfterChange,
-    ]
+    [t, columnNames, displayAfterByColumn, movedByKey, handleDisplayAfterChange]
   );
 
   // the same header as the data region — name, meta, then the view tabs — so

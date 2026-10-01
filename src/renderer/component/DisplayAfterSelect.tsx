@@ -1,6 +1,13 @@
 import { ReactElement, useMemo } from 'react';
-import { Select } from 'antd';
+import { WarningOutlined } from '@ant-design/icons';
+import { Select, Tooltip } from 'antd';
+import { styled } from 'styled-components';
 import { useTranslation } from '../../i18n';
+import { classForeground } from '../theme';
+
+const WarningIcon = styled(WarningOutlined)`
+  color: ${classForeground};
+`;
 
 type Props = {
   columnName: string;
@@ -8,8 +15,8 @@ type Props = {
   columns: ReadonlyArray<string>;
   /** `null` when the column has not been moved */
   displayAfter: string | null;
-  /** a column of the primary key, which the grid always shows first */
-  pinned: boolean;
+  /** the grid shows the key columns first, and so not this one right after `displayAfter` */
+  movedByKey: boolean;
   onChange: (columnName: string, displayAfter: string | null) => void;
 };
 
@@ -18,7 +25,7 @@ export default function DisplayAfterSelect({
   columnName,
   columns,
   displayAfter,
-  pinned,
+  movedByKey,
   onChange,
 }: Props): ReactElement {
   const { t } = useTranslation();
@@ -39,13 +46,17 @@ export default function DisplayAfterSelect({
       popupMatchSelectWidth={false}
       allowClear
       showSearch
-      disabled={pinned}
-      placeholder={t(
-        pinned
-          ? 'table.structure.displayAfter.pinned'
-          : 'table.structure.displayAfter.none'
-      )}
-      value={pinned ? null : displayAfter}
+      prefix={
+        movedByKey && (
+          <Tooltip title={t('table.structure.displayAfter.movedByKey')}>
+            <WarningIcon
+              aria-label={t('table.structure.displayAfter.movedByKey')}
+            />
+          </Tooltip>
+        )
+      }
+      placeholder={t('table.structure.displayAfter.none')}
+      value={displayAfter}
       options={options}
       onChange={(value: string | undefined) => {
         onChange(columnName, value ?? null);

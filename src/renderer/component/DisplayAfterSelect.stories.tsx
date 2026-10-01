@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import DisplayAfterSelect from './DisplayAfterSelect';
 
 const meta: Meta<typeof DisplayAfterSelect> = {
@@ -8,7 +8,7 @@ const meta: Meta<typeof DisplayAfterSelect> = {
     columnName: 'lastname',
     columns: ['id', 'firstname', 'lastname', 'email', 'created_at'],
     displayAfter: null,
-    pinned: false,
+    movedByKey: false,
     onChange: (columnName, displayAfter) => {
       console.log(columnName, displayAfter);
     },
@@ -33,14 +33,25 @@ export const Moved: Story = {
   args: { displayAfter: 'email' },
 };
 
-/** a column of the primary key cannot be moved, even when an order was stored for it */
-export const PrimaryKey: Story = {
-  args: { columnName: 'id', displayAfter: 'email', pinned: true },
+/** the key columns lead the grid, so the column does not land where it was asked */
+export const MovedByKey: Story = {
+  args: { columnName: 'id', displayAfter: 'email', movedByKey: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const label =
+      'The primary key columns are shown first: this column does not come right after the one chosen';
 
-    await expect(canvas.getByRole('combobox')).toBeDisabled();
-    await expect(canvas.getByText('First (primary key)')).toBeVisible();
-    await expect(canvas.queryByText('email')).toBeNull();
+    // in view without a hover, and explained on one
+    const icon = canvas.getByRole('img', { name: label });
+    await expect(icon).toBeVisible();
+
+    await userEvent.hover(icon);
+
+    // the tooltip fades in
+    await waitFor(() =>
+      expect(
+        within(document.body).getByRole('tooltip', { name: label })
+      ).toBeVisible()
+    );
   },
 };

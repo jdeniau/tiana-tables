@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { applyColumnOrder } from './columnOrder';
+import { applyColumnOrder, listColumnsMovedByKey } from './columnOrder';
 
 const COLUMNS = ['id', 'firstname', 'lastname', 'email'];
 
@@ -95,5 +95,45 @@ describe('applyColumnOrder', () => {
     });
 
     expect([...ordered].sort()).toEqual([...COLUMNS].sort());
+  });
+});
+
+describe('listColumnsMovedByKey', () => {
+  const KEYED = ['tag_id', 'cart_id', 'label'];
+  const KEY = ['tag_id', 'cart_id'];
+
+  test('lists nothing when nothing is configured', () => {
+    expect(listColumnsMovedByKey(KEYED, {}, KEY)).toEqual(new Set());
+  });
+
+  test('lets the key columns be ordered among themselves', () => {
+    expect(listColumnsMovedByKey(KEYED, { tag_id: 'cart_id' }, KEY)).toEqual(
+      new Set()
+    );
+  });
+
+  test('lists a key column displayed after another column', () => {
+    expect(listColumnsMovedByKey(COLUMNS, { id: 'email' }, ['id'])).toEqual(
+      new Set(['id'])
+    );
+  });
+
+  test('lists a column displayed after a key column other than the last', () => {
+    expect(listColumnsMovedByKey(KEYED, { label: 'tag_id' }, KEY)).toEqual(
+      new Set(['label'])
+    );
+  });
+
+  // the second one sharing an anchor follows the first, whatever the key
+  test('leaves out the columns the order itself sets apart', () => {
+    expect(
+      listColumnsMovedByKey(COLUMNS, { lastname: 'id', email: 'id' }, ['id'])
+    ).toEqual(new Set());
+  });
+
+  test('lets a column be displayed after the last key column', () => {
+    expect(listColumnsMovedByKey(KEYED, { label: 'cart_id' }, KEY)).toEqual(
+      new Set()
+    );
   });
 });
