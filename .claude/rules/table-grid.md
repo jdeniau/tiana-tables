@@ -19,6 +19,7 @@ paths:
 - **The grid subscribes to no table state** (`useTable(options, () => ({}))`), so a part that shows a state subscribes itself: `<table.Subscribe selector={(state) => state.sorting}>`.
 - **The `table` object `useTable` returns is a new object on every state change** (a wrapper rebuilt around the stable core), so it never sits in a `useMemo` / `memo` dependency list. A hand-written dependency list with an `eslint-disable` is an identity claim: verify it with a probe on the comparator.
 - **The scroll element is held in a state, not a ref**: the virtualizer reads it in a layout effect that runs before the parent ref attaches.
+- **The primary key columns lead the grid, in the order of `fields`, whatever the user's column order**: TanStack heads the pinned columns first, so `columnSources` sorts them first for the body and the `--tg-*-N` indexes to match. The structure page disables their "Displays after", and a column displayed after a key column other than the last one lands after the whole key.
 
 ## Performance in the virtualized body
 

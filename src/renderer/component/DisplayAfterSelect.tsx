@@ -8,6 +8,8 @@ type Props = {
   columns: ReadonlyArray<string>;
   /** `null` when the column has not been moved */
   displayAfter: string | null;
+  /** a column of the primary key, which the grid always shows first */
+  pinned: boolean;
   onChange: (columnName: string, displayAfter: string | null) => void;
 };
 
@@ -16,6 +18,7 @@ export default function DisplayAfterSelect({
   columnName,
   columns,
   displayAfter,
+  pinned,
   onChange,
 }: Props): ReactElement {
   const { t } = useTranslation();
@@ -36,8 +39,13 @@ export default function DisplayAfterSelect({
       popupMatchSelectWidth={false}
       allowClear
       showSearch
-      placeholder={t('table.structure.displayAfter.none')}
-      value={displayAfter}
+      disabled={pinned}
+      placeholder={t(
+        pinned
+          ? 'table.structure.displayAfter.pinned'
+          : 'table.structure.displayAfter.none'
+      )}
+      value={pinned ? null : displayAfter}
       options={options}
       onChange={(value: string | undefined) => {
         onChange(columnName, value ?? null);

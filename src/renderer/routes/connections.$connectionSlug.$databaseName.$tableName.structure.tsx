@@ -38,7 +38,10 @@ export async function loader({ params }: RouteParams) {
   invariant(databaseName, 'Database name is required');
   invariant(tableName, 'Table name is required');
 
-  const data = await window.sql.getTableStructure(databaseName, tableName);
+  const [data, primaryKeys] = await Promise.all([
+    window.sql.getTableStructure(databaseName, tableName),
+    window.sql.getPrimaryKeyColumns(databaseName, tableName),
+  ]);
 
   const configuration = await window.config.getConfiguration();
 
@@ -49,6 +52,7 @@ export async function loader({ params }: RouteParams) {
 
   return {
     data,
+    primaryKeys,
     displayAfterByColumn,
   };
 }
@@ -59,6 +63,7 @@ export default function TableStructure() {
   const { revalidate } = useRevalidator();
   const {
     data: [result, fields],
+    primaryKeys,
     displayAfterByColumn,
   } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
 
@@ -97,12 +102,19 @@ export default function TableStructure() {
             columnName={row.Column}
             columns={columnNames}
             displayAfter={displayAfterByColumn[row.Column] ?? null}
+            pinned={primaryKeys.includes(row.Column)}
             onChange={handleDisplayAfterChange}
           />
         ),
       },
     ],
-    [t, columnNames, displayAfterByColumn, handleDisplayAfterChange]
+    [
+      t,
+      columnNames,
+      primaryKeys,
+      displayAfterByColumn,
+      handleDisplayAfterChange,
+    ]
   );
 
   // the same header as the data region — name, meta, then the view tabs — so

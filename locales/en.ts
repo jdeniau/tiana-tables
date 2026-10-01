@@ -184,6 +184,7 @@ export default {
   'table.sort.hint': 'Click to sort, Shift+click to add to the sort',
   'table.structure.displayAfter': 'Displays after',
   'table.structure.displayAfter.none': 'Database order',
+  'table.structure.displayAfter.pinned': 'First (primary key)',
   'table.tab.data': 'Data',
   'table.tab.structure': 'Structure',
   'table.view.label': 'Table view',
