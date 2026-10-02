@@ -20,6 +20,21 @@ type ColumnSource<Row extends ResultRow> =
   | { field: ResultField; fieldIndex: number; extra?: undefined }
   | { field?: undefined; fieldIndex: -1; extra: ExtraColumn<Row> };
 
+/**
+ * Raw SQL results can contain duplicated column names: suffix with the index to keep ids unique.
+ * Browsing mode keeps plain names so that column pinning can match primary key names.
+ */
+export function columnId<Row extends ResultRow>(
+  { field, fieldIndex, extra }: ColumnSource<Row>,
+  rowsAsArray: boolean
+): string {
+  if (extra) {
+    return extra.id;
+  }
+
+  return rowsAsArray ? `${fieldIndex}:${field.name}` : field.name;
+}
+
 type Options<Row extends ResultRow> = {
   fields: null | ResultField[];
   primaryKeys: Array<string> | undefined;
@@ -85,27 +100,28 @@ export function useGridColumns<Row extends ResultRow>({
     const columnHelper = createColumnHelper<GridFeatures, Row>();
 
     return columnHelper.columns(
-      columnSources.map(({ field, fieldIndex, extra }) =>
-        extra
+      columnSources.map((source) => {
+        const { field, fieldIndex, extra } = source;
+        const id = columnId(source, rowsAsArray);
+
+        return extra
           ? columnHelper.display({
-              id: extra.id,
+              id,
               header: extra.header,
               size: extra.size,
             })
           : columnHelper.accessor(
               (row: Row) => (rowsAsArray ? row[fieldIndex] : row[field.name]),
               {
-                // raw SQL results can contain duplicated column names: suffix with the index to keep ids unique
-                // (browsing mode keeps plain names so that column pinning can match primary key names)
-                id: rowsAsArray ? `${fieldIndex}:${field.name}` : field.name,
+                id,
                 header:
                   field.kind === FieldKind.DateTime
                     ? () => <DateColumnHeader name={field.name} />
                     : field.name,
                 size: getColumnWidth(field.kind, showsOffset),
               }
-            )
-      )
+            );
+      })
     );
   }, [columnSources, rowsAsArray, showsOffset]);
 

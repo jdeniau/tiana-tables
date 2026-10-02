@@ -57,7 +57,7 @@ import { fill } from './Style/fill';
 import type { SelectionModifiers } from './rowSelectionGesture';
 import { OpenCellMenu, ShowCellDetail, useCellDialogs } from './useCellDialogs';
 import { leftVar, useColumnWidthVars, widthVar } from './useColumnWidthVars';
-import { useGridColumns } from './useGridColumns';
+import { columnId, useGridColumns } from './useGridColumns';
 import { type SelectRow, useRowSelection } from './useRowSelection';
 import { writtenCellFlashStyle } from './useWrittenCellFlash';
 
@@ -210,7 +210,7 @@ function TableGrid<Row extends ResultRow>({
   columnWidths,
   onColumnResized,
   sortingAtom,
-  enableSorting = sortingAtom !== undefined,
+  enableSorting,
   selectionAtom,
 }: TableGridProps<Row>): ReactElement {
   const { t } = useTranslation();
@@ -263,7 +263,8 @@ function TableGrid<Row extends ResultRow>({
       },
       // the rows arrive sorted by the server, one column at a time, and always in some order
       manualSorting: true,
-      enableSorting,
+      // a default read from another prop, in the destructuring, makes React Compiler skip the whole grid
+      enableSorting: enableSorting ?? sortingAtom !== undefined,
       sortDescFirst: false,
       enableRowSelection: selectionAtom !== undefined,
       ...(primaryKeys && primaryKeys.length > 0
@@ -277,39 +278,48 @@ function TableGrid<Row extends ResultRow>({
   );
 
   // everything the body needs to render a cell, resolved once per column
-  // (foreign keys, pinning offsets, widths) instead of once per cell
-  const columnsMeta: Array<ColumnMeta> = useMemo(
-    () =>
-      table.getAllLeafColumns().map((column, index) => {
-        const { field, fieldIndex, extra } = columnSources[index];
-        const isPinned = column.getIsPinned();
-        const foreignKey = field
-          ? foreignKeys.getForeignKey(field.table ?? '', field.name)
-          : null;
+  // (foreign keys, pinning offsets, widths) instead of once per cell.
+  // Read from the column sources, never `table`: a new object on every state change, it would hand every row new props.
+  const columnsMeta: Array<ColumnMeta> = useMemo(() => {
+    const ids = columnSources.map((source) => columnId(source, rowsAsArray));
+    // TanStack's `getIsLastColumn('start')`: the last of the pinned ids the grid holds
+    const lastPinned = columnPinning.start.findLast((id) => ids.includes(id));
 
-        return {
-          id: column.id,
-          fieldIndex,
-          name: field?.name ?? column.id,
-          tableName: field?.table,
-          kind: field?.kind ?? FieldKind.Unknown,
-          width: `var(${widthVar(index)})`,
-          pinnedLeft: isPinned === 'start' ? `var(${leftVar(index)})` : null,
-          isLastPinned: isPinned === 'start' && column.getIsLastColumn('start'),
-          numeric: field?.kind === FieldKind.Number,
-          hasForeignKey: foreignKey !== null,
-          dialect,
-          // the schema of the column, resolved here rather than in the modal so
-          // that no context lookup happens per mounted cell
-          detail: field
-            ? allColumns.getColumn(field.table ?? '', field.name)
-            : undefined,
-          render: extra?.render as ColumnMeta['render'],
-        };
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `table` is a new object on every state change, and a width no longer travels through here: only these drive a cell
-    [columns, columnPinning, columnSources, foreignKeys, allColumns, dialect]
-  );
+    return columnSources.map(({ field, fieldIndex, extra }, index) => {
+      const id = ids[index];
+      const isPinned = columnPinning.start.includes(id);
+      const foreignKey = field
+        ? foreignKeys.getForeignKey(field.table ?? '', field.name)
+        : null;
+
+      return {
+        id,
+        fieldIndex,
+        name: field?.name ?? id,
+        tableName: field?.table,
+        kind: field?.kind ?? FieldKind.Unknown,
+        width: `var(${widthVar(index)})`,
+        pinnedLeft: isPinned ? `var(${leftVar(index)})` : null,
+        isLastPinned: id === lastPinned,
+        numeric: field?.kind === FieldKind.Number,
+        hasForeignKey: foreignKey !== null,
+        dialect,
+        // the schema of the column, resolved here rather than in the modal so
+        // that no context lookup happens per mounted cell
+        detail: field
+          ? allColumns.getColumn(field.table ?? '', field.name)
+          : undefined,
+        render: extra?.render as ColumnMeta['render'],
+      };
+    });
+  }, [
+    columnSources,
+    rowsAsArray,
+    columnPinning,
+    foreignKeys,
+    allColumns,
+    dialect,
+  ]);
 
   useColumnWidthVars({
     table,
