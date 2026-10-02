@@ -26,6 +26,8 @@ import { RegionSegmented } from '../../Style/RegionSegmented';
 import { TabStrip, TabStripItem } from '../../Style/TabStrip';
 import { fill } from '../../Style/fill';
 import TableGrid from '../../TableGrid';
+import { useLastCopy } from '../../useLastCopy';
+import type { RowsCopied } from '../../useRowsCopy';
 import SqlErrorComponent from '../SqlErrorComponent';
 
 /** What one statement of the editor answered with. */
@@ -134,12 +136,14 @@ function OutcomePane({
   rowsAsArray,
   gridKey,
   selectionAtom,
+  onRowsCopied,
 }: {
   outcome: StatementOutcome;
   view: View;
   rowsAsArray: boolean;
   gridKey: number;
   selectionAtom: Atom<RowSelectionState>;
+  onRowsCopied: (copied: RowsCopied) => void;
 }): ReactElement {
   const { t } = useTranslation();
   const { result, error } = outcome;
@@ -161,6 +165,7 @@ function OutcomePane({
             fields={fields}
             rowsAsArray={rowsAsArray}
             selectionAtom={selectionAtom}
+            onRowsCopied={onRowsCopied}
           />
         </Pane>
         <Pane $active={view === View.Chart}>
@@ -236,13 +241,19 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
     : null;
   const shownView = unavailable === null ? view : View.Data;
 
+  const [lastCopy, onRowsCopied] = useLastCopy();
+
   const selectedCount = useSelector(
     selections.atoms[active] ?? NO_SELECTION,
     (selection) => Object.keys(selection).length
   );
 
-  const meta =
-    outcome && outcome.durationMs !== undefined
+  const meta = lastCopy
+    ? t('table.rows.copied', {
+        count: lastCopy.rowCount,
+        format: lastCopy.format,
+      })
+    : outcome && outcome.durationMs !== undefined
       ? rows
         ? selectedCount > 0
           ? t('rawSql.result.meta.selectedRows', {
@@ -282,6 +293,7 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
               rowsAsArray={rowsAsArray}
               gridKey={selections.gridKey}
               selectionAtom={selections.atoms[index]}
+              onRowsCopied={onRowsCopied}
             />
           </Pane>
         ))}
@@ -314,7 +326,7 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
         {outcome && !outcome.error && (
           <RegionTools>
             {meta &&
-              (selectedCount > 0 ? (
+              (selectedCount > 0 || lastCopy ? (
                 <SelectionRegionMeta>{meta}</SelectionRegionMeta>
               ) : (
                 <RegionMeta>{meta}</RegionMeta>

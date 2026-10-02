@@ -31,6 +31,7 @@ import {
   UpdateCellStatus,
 } from '../../sql/updateCell';
 import { selectAllFromMenu } from '../selectAll';
+import { columnNamesAtom } from './CellContextMenu/rowsCopyItem';
 import TableGrid from './TableGrid';
 
 vi.mock('../hooks/useDialect', () => ({ useDialect: () => mysqlDialect }));
@@ -96,6 +97,13 @@ function render(element: ReactElement, allColumns: ColumnDetail[] = []): void {
       </ThemeProvider>
     );
   });
+}
+
+/** what a menu entry wrote to the clipboard, in one of its types */
+async function clipboardOf(type: string): Promise<string> {
+  const [item] = await navigator.clipboard.read();
+
+  return item ? (await item.getType(type)).text() : '';
 }
 
 function header(name: string): HTMLTableCellElement {
@@ -350,28 +358,29 @@ describe('context menu', () => {
     });
     await choose('JSON');
 
-    expect(writeText).toHaveBeenCalledWith(
-      JSON.stringify({ id: 2, name: 'b' }, null, 2)
-    );
+    expect(JSON.parse(await clipboardOf('text/plain'))).toEqual({
+      id: 2,
+      name: 'b',
+    });
   });
 
   test('opens the detail modal, as a double click does', async () => {
     renderGrid();
 
     openMenu('b');
-    await choose('Edit…');
+    await choose('Edit…Double-click');
 
     expect(document.querySelector('.ant-modal-title')?.textContent).toBe(
       'name'
     );
   });
 
-  test('offers to view what it cannot edit', () => {
+  test('offers to view what it cannot edit, by the double click as well', () => {
     renderGrid({ primaryKeys: [] });
 
     openMenu('b');
-    expect(menuItem('Edit…')).toBeUndefined();
-    expect(menuItem('View…')).toBeDefined();
+    expect(menuItem('Edit…Double-click')).toBeUndefined();
+    expect(menuItem('View…Double-click')).toBeDefined();
   });
 
   test('sets a nullable cell to NULL, guarded on what was loaded', async () => {
@@ -520,7 +529,7 @@ describe('context menu', () => {
     renderGrid();
 
     openMenu('b');
-    await choose('Edit…');
+    await choose('Edit…Double-click');
     await act(async () => {
       document
         .querySelector<HTMLInputElement>('.ant-modal input[type="checkbox"]')
@@ -868,12 +877,16 @@ describe('row selection', () => {
     expect(selectionAtom.get()).toEqual({ 2: true });
   });
 
-  test('Select All selects every row, unfocused; Escape, in the grid, none', () => {
+  test('Select All selects every row, unfocused, and focuses the grid; Escape, in the grid, none', () => {
     HTMLElement.prototype.checkVisibility = () => true;
     const selectionAtom = renderSelectable();
 
     act(() => selectAllFromMenu());
     expect(selectionAtom.get()).toEqual({ 1: true, 2: true, 3: true });
+    // for Ctrl+C to copy them next
+    expect(document.activeElement).toBe(
+      container.querySelector('[tabindex="0"]')
+    );
 
     pressKey('Escape');
     expect(selectionAtom.get()).toEqual({});
@@ -931,5 +944,214 @@ describe('row selection', () => {
 
     expect(shownSelected()).toEqual([]);
     expect(container.querySelector('[tabindex]')).toBeNull();
+  });
+});
+
+describe('copying the selected rows', () => {
+  mountRows();
+
+  const ROWS_ABC = [
+    { id: 1, name: 'a' },
+    { id: 2, name: 'b' },
+    { id: 3, name: 'c' },
+  ];
+
+  const onRowsCopied = vi.fn();
+
+  afterEach(() => {
+    onRowsCopied.mockClear();
+    columnNamesAtom.set(true);
+    window.getSelection()?.removeAllRanges();
+  });
+
+  function renderCopyable(allColumns: ColumnDetail[] = []): void {
+    window.clipboard = { readText: async () => '', writeText: async () => {} };
+
+    render(
+      <TableGrid
+        fields={FIELDS}
+        result={ROWS_ABC}
+        primaryKeys={['id']}
+        selectionAtom={createAtom<RowSelectionState>({})}
+        onRowsCopied={onRowsCopied}
+      />,
+      allColumns
+    );
+  }
+
+  function cellOf(name: string): HTMLTableCellElement {
+    const found = [...container.querySelectorAll('td')].find(
+      (td) => td.textContent === name
+    );
+
+    if (!found) {
+      throw new Error(`No cell "${name}"`);
+    }
+
+    return found;
+  }
+
+  function select(...names: Array<string>): void {
+    act(() => {
+      names.forEach((name, index) =>
+        cellOf(name).dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+            detail: 1,
+            ctrlKey: index > 0,
+          })
+        )
+      );
+    });
+  }
+
+  /** a Ctrl+C on the focused grid: Chromium's copy event, on the grid */
+  function pressCopy(): ClipboardEvent {
+    const event = new ClipboardEvent('copy', {
+      clipboardData: new DataTransfer(),
+      bubbles: true,
+      cancelable: true,
+    });
+
+    act(() => {
+      cellOf('a').dispatchEvent(event);
+    });
+
+    return event;
+  }
+
+  function menuItem(label: string): HTMLElement | undefined {
+    return [
+      ...document.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+    ].find((item) => item.textContent?.startsWith(label));
+  }
+
+  test('Ctrl+C copies them as TSV, and as an HTML table beside', () => {
+    renderCopyable();
+    select('a', 'c');
+
+    const event = pressCopy();
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(event.clipboardData?.getData('text/plain')).toBe(
+      'id\tname\n1\ta\n3\tc'
+    );
+    expect(event.clipboardData?.getData('text/html')).toBe(
+      '<table><thead><tr><th>id</th><th>name</th></tr></thead><tbody><tr><td>1</td><td>a</td></tr><tr><td>3</td><td>c</td></tr></tbody></table>'
+    );
+    expect(onRowsCopied).toHaveBeenCalledWith({
+      rowCount: 2,
+      format: 'tsv',
+    });
+  });
+
+  test('Ctrl+C leaves a text highlighted in a cell, or no selection, to the native copy', () => {
+    renderCopyable();
+
+    expect(pressCopy().defaultPrevented).toBe(false);
+
+    select('a');
+    const range = document.createRange();
+    range.selectNodeContents(cellOf('b'));
+    window.getSelection()?.addRange(range);
+
+    expect(pressCopy().defaultPrevented).toBe(false);
+    expect(onRowsCopied).not.toHaveBeenCalled();
+  });
+
+  /** opens the context menu on a cell, then one of its copy submenus, after antd's hover delay */
+  async function openCopyMenu(
+    name: string,
+    clientX: number,
+    submenu: RegExp = /^Copy \d+ rows as/
+  ): Promise<void> {
+    act(() => {
+      cellOf(name).dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, clientX })
+      );
+    });
+    act(() => {
+      [...document.querySelectorAll('[role="menuitem"][aria-haspopup="true"]')]
+        .find((item) => submenu.test(item.textContent ?? ''))
+        ?.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    });
+
+    // however long the hover delay takes on a loaded machine
+    for (let wait = 0; wait < 100 && !menuItem('Column names'); wait++) {
+      await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    }
+  }
+
+  test('the context menu copies them in the format chosen, the column names left out on demand', async () => {
+    renderCopyable();
+    select('a', 'b');
+
+    await openCopyMenu('b', 10);
+    expect(menuItem('Copy 2 rows as')).toBeDefined();
+    await act(async () => menuItem('JSON')?.click());
+
+    expect(JSON.parse(await clipboardOf('text/plain'))).toEqual([
+      { id: 1, name: 'a' },
+      { id: 2, name: 'b' },
+    ]);
+    expect(onRowsCopied).toHaveBeenCalledWith({
+      rowCount: 2,
+      format: 'json',
+    });
+
+    await openCopyMenu('b', 20);
+    await act(async () => menuItem('Column names')?.click());
+
+    // the toggle keeps its submenu open
+    expect(menuItem('Copy 2 rows as')?.getAttribute('aria-expanded')).toBe(
+      'true'
+    );
+
+    await act(async () => menuItem('CSV')?.click());
+
+    expect(await clipboardOf('text/plain')).toBe('1,a\n2,b');
+  });
+
+  test('a single selected row is the row of the menu, offered once', async () => {
+    renderCopyable();
+    select('b');
+
+    await openCopyMenu('b', 10, /^Copy row as/);
+
+    expect(menuItem('Copy 1 row as')).toBeUndefined();
+
+    await act(async () => menuItem('TSV')?.click());
+
+    expect(await clipboardOf('text/plain')).toBe('id\tname\n2\tb');
+    expect(await clipboardOf('text/html')).toContain('<td>b</td>');
+    expect(onRowsCopied).toHaveBeenCalledWith({ rowCount: 1, format: 'tsv' });
+  });
+
+  test('an INSERT is offered only for the columns of a table the schema knows', async () => {
+    renderCopyable();
+    select('a');
+    await openCopyMenu('a', 10, /^Copy row as/);
+    expect(menuItem('SQL INSERT')?.getAttribute('aria-disabled')).toBe('true');
+
+    act(() => unmount());
+    container.remove();
+
+    renderCopyable(
+      ['id', 'name'].map((name) => ({
+        table: 'items',
+        name,
+        nullable: false,
+        generated: false,
+        binary: false,
+        json: false,
+        allowedValues: [],
+        multiValued: false,
+      }))
+    );
+    select('a');
+    await openCopyMenu('a', 10, /^Copy row as/);
+    expect(menuItem('SQL INSERT')?.getAttribute('aria-disabled')).not.toBe(
+      'true'
+    );
   });
 });

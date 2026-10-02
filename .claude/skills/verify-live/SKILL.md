@@ -44,6 +44,7 @@ Ask the user to test in their place only once this harness has been tried.
 - A tooltip or a click target: `document.elementsFromPoint(x, y)`.
 - A scroller: `scrollHeight > clientHeight` over every `overflow: auto` ancestor.
 - An antd token: the generated rule in `document.styleSheets`, filtered on the component's class.
+- What a copy writes: record `DataTransfer.prototype.setData` in the page. Reading the system clipboard from the main process proves it only while the window holds the keyboard focus: on Wayland, an unfocused window's write never lands, and the read returns what the user copied elsewhere.
 
 ## Measuring performance
 
