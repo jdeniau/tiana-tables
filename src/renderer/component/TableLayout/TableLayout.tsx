@@ -30,6 +30,7 @@ import {
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
+import { useLastCopy } from '../useLastCopy';
 import { buildTableQuery, hasOrderByToken } from './tableQuery';
 
 interface TableNameProps {
@@ -73,6 +74,7 @@ export function TableLayout({
   const sorting = useSelector(sortingAtom);
   // by primary key, so it follows its rows to the next page; a new order empties it
   const selectionAtom = useCreateAtom<RowSelectionState>({});
+  const [lastCopy, onRowsCopied] = useLastCopy();
   const selectedCount = useSelector(
     selectionAtom,
     (selection) => Object.keys(selection).length
@@ -193,7 +195,15 @@ export function TableLayout({
           <RegionHeader>
             <RegionGroup>
               <RegionName>{tableName}</RegionName>
-              {result &&
+              {lastCopy ? (
+                <SelectionRegionMeta>
+                  {t('table.rows.copied', {
+                    count: lastCopy.rowCount,
+                    format: lastCopy.format,
+                  })}
+                </SelectionRegionMeta>
+              ) : (
+                result &&
                 (selectedCount > 0 ? (
                   <SelectionRegionMeta>
                     {t('table.rows.selected', {
@@ -205,7 +215,8 @@ export function TableLayout({
                   <RegionMeta>
                     {t('table.rows.count', { count: result.length })}
                   </RegionMeta>
-                ))}
+                ))
+              )}
             </RegionGroup>
 
             <RegionTools>
@@ -229,6 +240,7 @@ export function TableLayout({
               sortingAtom={sortingAtom}
               enableSorting={sortable}
               selectionAtom={selectionAtom}
+              onRowsCopied={onRowsCopied}
             />
           </RegionBody>
 
