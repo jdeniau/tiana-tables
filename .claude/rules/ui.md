@@ -46,7 +46,7 @@ The layout and colour rules themselves are in `DESIGN.md`; this file is what app
 
 ## Hooks
 
-- **Extract custom hooks from a component when its hook calls make up more than ~40% of it, or when they serve several unrelated concerns**: one hook per concern (`useCurrentCart()` holds the `useParams` + `useState` + `useEffect` that fetch the cart; the component only renders it). The extraction is a plain cut and paste into a `useXxx` function, and the hook becomes testable on its own.
+- **Extract custom hooks from a component when its hook calls make up more than ~40% of it, or when they serve several unrelated concerns**: one hook per concern (`MonacoEditor/useQuerySchema.ts` holds the three contexts and the `useMemo` that build the editor's schema; the editor only calls it). The extraction is a plain cut and paste into a `useXxx` function, and the hook becomes testable on its own.
 - **A hook lives as close to its users as it can**: in the component's file if it is small and private, in its own file in the component's directory past ~50 lines (`MonacoEditor/useCompletion.tsx`), and in a shared place only when several components use it — next to the domain code it serves, `src/renderer/hooks/` only for hooks that cut across domains.
 
 ## Navigation
