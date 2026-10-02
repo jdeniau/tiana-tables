@@ -848,6 +848,19 @@ describe('row selection', () => {
     expect(selectionAtom.get()).toEqual({ 2: true });
   });
 
+  test('a double click on the only selected row leaves it selected', () => {
+    const selectionAtom = renderSelectable();
+
+    clickCell('b');
+    clickCell('b');
+    clickCell('b', { detail: 2 });
+    act(() => {
+      cellOf('b').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    });
+
+    expect(selectionAtom.get()).toEqual({ 2: true });
+  });
+
   test('Select All selects every row, unfocused; Escape, in the grid, none', () => {
     HTMLElement.prototype.checkVisibility = () => true;
     const selectionAtom = renderSelectable();

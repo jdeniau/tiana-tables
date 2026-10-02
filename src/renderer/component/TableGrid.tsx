@@ -890,6 +890,11 @@ function BodyRowInner<Row extends ResultRow>({
               });
             }}
             onDoubleClick={(event) => {
+              // the first click of the pair deselected the only selected row: the detail opens on a selected one
+              if (onSelectRow && !selected) {
+                onSelectRow(row, PLAIN_CLICK);
+              }
+
               onShowCellDetail(detailOf(), event.currentTarget);
             }}
             onContextMenu={(event) => {
