@@ -67,18 +67,25 @@ const NO_OUTCOMES: StatementOutcome[] = [];
 
 const NO_SELECTION = createAtom<RowSelectionState>({});
 
-/** What one run selects: a new run mounts new grids, since a grid keeps its selection atom for life. */
-interface Run {
+/** The rows selected in each result of one execution of the editor. */
+interface ExecutionSelections {
+  /** the results of that execution */
   outcomes: StatementOutcome[];
-  key: number;
-  selections: Array<Atom<RowSelectionState>>;
+  /** a new number for each execution: as their key, it remounts the grids, which keep their atom for life */
+  gridKey: number;
+  /** one per result, by position */
+  atoms: Array<Atom<RowSelectionState>>;
 }
 
-function startRun(outcomes: StatementOutcome[], key: number): Run {
+/** Nothing selected yet in the results of a new execution. */
+function emptySelections(
+  outcomes: StatementOutcome[],
+  gridKey: number
+): ExecutionSelections {
   return {
     outcomes,
-    key,
-    selections: outcomes.map(() => createAtom<RowSelectionState>({})),
+    gridKey,
+    atoms: outcomes.map(() => createAtom<RowSelectionState>({})),
   };
 }
 
@@ -125,13 +132,13 @@ function OutcomePane({
   outcome,
   view,
   rowsAsArray,
-  runKey,
+  gridKey,
   selectionAtom,
 }: {
   outcome: StatementOutcome;
   view: View;
   rowsAsArray: boolean;
-  runKey: number;
+  gridKey: number;
   selectionAtom: Atom<RowSelectionState>;
 }): ReactElement {
   const { t } = useTranslation();
@@ -149,7 +156,7 @@ function OutcomePane({
       <>
         <Pane $active={view === View.Data}>
           <TableGrid
-            key={runKey}
+            key={gridKey}
             result={rows}
             fields={fields}
             rowsAsArray={rowsAsArray}
@@ -204,10 +211,12 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
   }, [outcomes]);
 
   // a result is selected by position, which means nothing in the next one
-  const [run, setRun] = useState(() => startRun(outcomes, 0));
+  const [selections, setSelections] = useState(() =>
+    emptySelections(outcomes, 0)
+  );
 
-  if (run.outcomes !== outcomes) {
-    setRun(startRun(outcomes, run.key + 1));
+  if (selections.outcomes !== outcomes) {
+    setSelections(emptySelections(outcomes, selections.gridKey + 1));
   }
 
   // A run stops at the first error, so a failed statement is always the last
@@ -228,7 +237,7 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
   const shownView = unavailable === null ? view : View.Data;
 
   const selectedCount = useSelector(
-    run.selections[active] ?? NO_SELECTION,
+    selections.atoms[active] ?? NO_SELECTION,
     (selection) => Object.keys(selection).length
   );
 
@@ -271,8 +280,8 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
               outcome={one}
               view={shownView}
               rowsAsArray={rowsAsArray}
-              runKey={run.key}
-              selectionAtom={run.selections[index]}
+              gridKey={selections.gridKey}
+              selectionAtom={selections.atoms[index]}
             />
           </Pane>
         ))}

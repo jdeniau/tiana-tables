@@ -7,6 +7,8 @@ paths:
   - 'src/renderer/component/ForeignKeyLink*'
   - 'src/renderer/component/columnWidth*'
   - 'src/renderer/component/useWrittenCellFlash.ts'
+  - 'src/renderer/component/useRowSelection.ts'
+  - 'src/renderer/component/rowSelectionGesture*'
   - 'src/renderer/component/TableLayout/**'
 ---
 

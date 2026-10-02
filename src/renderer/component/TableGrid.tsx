@@ -1,5 +1,4 @@
 import {
-  KeyboardEvent,
   ReactElement,
   ReactNode,
   memo,
@@ -47,7 +46,6 @@ import { FieldKind, type ResultField } from '../../sql/resultField';
 import type { ResultRow } from '../../sql/types';
 import { type PrimaryKeyPart, UpdateCellStatus } from '../../sql/updateCell';
 import { useDialect } from '../hooks/useDialect';
-import { registerSelectAllRows } from '../selectAll';
 import {
   accent,
   background,
@@ -67,7 +65,8 @@ import { CellWriteProvider, SaveCellParams } from './CellWrite';
 import ForeignKeyLink from './ForeignKeyLink';
 import { fill } from './Style/fill';
 import { getColumnWidth } from './columnWidth';
-import { SelectionModifiers, nextRowSelection } from './rowSelectionGesture';
+import type { SelectionModifiers } from './rowSelectionGesture';
+import { type SelectRow, useRowSelection } from './useRowSelection';
 import {
   useWrittenCellFlash,
   writtenCellFlashStyle,
@@ -83,6 +82,8 @@ const features = tableFeatures({
   rowSelectionFeature,
   rowSortingFeature,
 });
+
+export type GridFeatures = typeof features;
 
 const ROW_HEIGHT = parseInt(size.row, 10);
 
@@ -487,73 +488,19 @@ function TableGrid<Row extends ResultRow>({
     };
   }, [table, columns, columnPinning, onColumnResized]);
 
-  // the row the next Shift+click extends from
-  const anchorRef = useRef<string | null>(null);
-
-  // a new order starts from the first row, with nothing selected
+  // a new order starts from the first row
   useEffect(() => {
     const sorts = table.atoms.sorting.subscribe(() => {
       scrollElement?.scrollTo({ top: 0 });
-      table.resetRowSelection(true);
-      anchorRef.current = null;
     });
 
     return () => sorts.unsubscribe();
   }, [table, scrollElement]);
 
-  // a row whose key was written, or that is gone, is selected no more
-  useEffect(() => {
-    const selected = Object.keys(table.atoms.rowSelection.get());
-    const { rowsById } = table.getCoreRowModel();
-    const kept = selected.filter((id) => id in rowsById);
-
-    if (kept.length < selected.length) {
-      table.setRowSelection(
-        Object.fromEntries(kept.map((id) => [id, true as const]))
-      );
-    }
-  }, [table, result]);
-
-  // stable, so that the `memo` of `BodyRow` still holds: the table is reached through the row
-  const selectRow = useCallback<SelectRow<Row>>(
-    (row, modifiers) => {
-      const core = row.table;
-      const next = nextRowSelection(
-        core.atoms.rowSelection.get(),
-        anchorRef.current,
-        row.id,
-        core.getRowModel().rows.map(({ id }) => id),
-        modifiers
-      );
-
-      anchorRef.current = next.anchorId;
-      core.setRowSelection(next.selection);
-      // a modified click prevented its mousedown, and with it the focus Ctrl+A needs
-      scrollElement?.focus({ preventScroll: true });
-    },
-    [scrollElement]
-  );
-
-  const selectAllRows = useCallback((): void => {
-    table.toggleAllRowsSelected(true);
-    anchorRef.current = table.getRowModel().rows[0]?.id ?? null;
-  }, [table]);
-
-  // Ctrl+A and the Edit menu's Select All, wherever the focus is short of text
-  useEffect(
-    () =>
-      scrollElement && selectionAtom
-        ? registerSelectAllRows(scrollElement, selectAllRows)
-        : undefined,
-    [scrollElement, selectionAtom, selectAllRows]
-  );
-
-  const handleGridKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    if (event.key === 'Escape') {
-      table.resetRowSelection(true);
-      anchorRef.current = null;
-    }
-  };
+  const { selectRow, handleKeyDown } = useRowSelection(table, {
+    enabled: selectionAtom !== undefined,
+    scrollElement,
+  });
 
   return (
     <Wrapper>
@@ -561,7 +508,7 @@ function TableGrid<Row extends ResultRow>({
         ref={setScrollElement}
         // focusable for Escape
         tabIndex={selectionAtom ? 0 : undefined}
-        onKeyDown={selectionAtom ? handleGridKeyDown : undefined}
+        onKeyDown={handleKeyDown}
       >
         <StyledTable ref={tableRef}>
           <StyledThead>
@@ -648,7 +595,7 @@ function TableGrid<Row extends ResultRow>({
             scrollElement={scrollElement}
             onShowCellDetail={showCellDetail}
             onCellContextMenu={openCellMenu}
-            onSelectRow={selectionAtom ? selectRow : undefined}
+            onSelectRow={selectRow}
           />
         </StyledTable>
 
@@ -718,12 +665,6 @@ type ShowCellDetail = (detail: CellDetail, cell: HTMLTableCellElement) => void;
 type OpenCellMenu = (
   target: CellMenuTarget,
   cell: HTMLTableCellElement
-) => void;
-
-/** what a click on a row selects, read as a file manager reads its modifiers */
-type SelectRow<Row extends ResultRow> = (
-  row: TanstackRow<typeof features, Row>,
-  modifiers: SelectionModifiers
 ) => void;
 
 const PLAIN_CLICK: SelectionModifiers = { toggle: false, extend: false };
