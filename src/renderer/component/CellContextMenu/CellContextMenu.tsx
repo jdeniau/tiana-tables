@@ -137,10 +137,7 @@ export default function CellContextMenu({
       label,
       t,
       canCopyAs: (format) => rowsCopy.canCopyAs(format, rows),
-      onCopy: (format) => {
-        rowsCopy.copyRows(format, rows);
-        onClose();
-      },
+      onCopy: (format) => rowsCopy.copyRows(format, rows),
       columnNames,
       onToggleColumnNames: () => columnNamesAtom.set((shown) => !shown),
     });
@@ -151,10 +148,7 @@ export default function CellContextMenu({
         target,
         clipboardText,
         t,
-        onEdit: () => {
-          onEdit(target);
-          onClose();
-        },
+        onEdit: () => onEdit(target),
         onSetNull: () => {
           const write = {
             detail: target,
@@ -164,11 +158,9 @@ export default function CellContextMenu({
 
           // no form to show a SQL error in: the conflict modal shows it
           writeCell(write).catch((error) => reportFailure(write, error));
-          onClose();
         },
         onCopy: (text) => {
           void window.clipboard.writeText(text);
-          onClose();
         },
         copyRowsItems: [
           copyRowsItem('copyRow', t('table.contextMenu.copyRow'), [target.row]),
@@ -189,7 +181,6 @@ export default function CellContextMenu({
           onApply: applyFilter,
           onAskFreeText: (operator) => {
             setPending({ columnName: target.column.name, operator });
-            onClose();
           },
         },
       })
@@ -264,9 +255,9 @@ function CellMenuDropdown({
         },
       }}
       trigger={['contextMenu']}
-      // every entry closes the menu itself, but the one that toggles the column names
-      onOpenChange={(open, { source }) => {
-        if (!open && source !== 'menu') {
+      // a click closes the menu, but the one on the toggle of the column names
+      onOpenChange={(open) => {
+        if (!open && !keepSubmenuOpen.current) {
           onClose();
         }
       }}

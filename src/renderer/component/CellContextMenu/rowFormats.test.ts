@@ -257,6 +257,12 @@ describe('the selected rows', () => {
     );
   });
 
+  it('as Markdown: a backslash escaped too, so that one before a pipe splits no cell', () => {
+    expect(
+      rowsToMarkdown([[cell('path', FieldKind.String, 'C:\\dir\\|x')]], SHOWN)
+    ).toBe('| path |\n| --- |\n| C:\\\\dir\\\\\\|x |');
+  });
+
   it('as JSON: an array of the objects of a row', () => {
     expect(JSON.parse(rowsToJson(ROWS, SERVER_ZONE))).toEqual([
       {

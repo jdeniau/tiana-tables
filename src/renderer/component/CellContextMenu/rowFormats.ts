@@ -165,14 +165,14 @@ export function rowsToHtmlTable(
 
 /**
  * The rows as a Markdown table, always headed by the column names, numbers set flush right.
- * NULL is written out, a `|` is escaped and a line break becomes a space.
+ * NULL is written out, a `|` or a `\` is escaped and a line break becomes a space.
  */
 export function rowsToMarkdown(
   rows: ReadonlyArray<ReadonlyArray<RowCell>>,
   shown: DateShown
 ): string {
   const line = (fields: ReadonlyArray<string>): string =>
-    `| ${fields.map((field) => field.replaceAll('|', '\\|').replace(/[\r\n]/g, ' ')).join(' | ')} |`;
+    `| ${fields.map((field) => field.replace(/[\\|]/g, '\\$&').replace(/[\r\n]/g, ' ')).join(' | ')} |`;
   const alignments = (rows[0] ?? []).map(({ column }) =>
     column.numeric ? '---:' : '---'
   );
