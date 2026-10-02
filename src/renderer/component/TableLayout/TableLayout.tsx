@@ -78,11 +78,6 @@ export function TableLayout({
     (selection) => Object.keys(selection).length
   );
 
-  // the layout stays mounted from one table to the next, where the same key is another row
-  useEffect(() => {
-    selectionAtom.set({});
-  }, [selectionAtom, database, tableName]);
-
   const fetchTableData = useCallback(
     (offset: number) => {
       const query = buildTableQuery(dialect, {
