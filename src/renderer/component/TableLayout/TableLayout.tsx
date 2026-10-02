@@ -1,4 +1,4 @@
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useMemo } from 'react';
 import { useCreateAtom, useSelector } from '@tanstack/react-store';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { Button, Splitter } from 'antd';
@@ -10,8 +10,6 @@ import {
 import { PANEL } from '../../../configuration/panels';
 import type { ColumnWidthByColumn } from '../../../configuration/type';
 import { useTranslation } from '../../../i18n';
-import type { ResultField } from '../../../sql/resultField';
-import type { ResultRow } from '../../../sql/types';
 import { useDialect } from '../../hooks/useDialect';
 import { usePanelSize } from '../../hooks/usePanelSize';
 import DateDisplaySwitch from '../DateDisplaySwitch';
@@ -30,7 +28,8 @@ import {
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
-import { buildTableQuery, hasOrderByToken } from './tableQuery';
+import { hasOrderByToken } from './tableQuery';
+import { useTableRows } from './useTableRows';
 
 interface TableNameProps {
   connectionSlug: string;
@@ -48,7 +47,6 @@ interface TableNameProps {
   /** the widths the columns of this table were dragged to */
   columnWidths: ColumnWidthByColumn;
 }
-const DEFAULT_LIMIT = 100;
 
 export function TableLayout({
   connectionSlug,
@@ -64,10 +62,6 @@ export function TableLayout({
   const navigate = useNavigate();
   const dialect = useDialect();
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.TABLE_FILTERS);
-  const [result, setResult] = useState<null | ResultRow[]>(null);
-  const [fields, setFields] = useState<null | ResultField[]>(null);
-  const [error, setError] = useState<null | Error>(null);
-  const [currentOffset, setCurrentOffset] = useState<number>(0);
   // empty until a header is clicked, and again once its sort is removed: the key's order
   const sortingAtom = useCreateAtom<SortingState>([]);
   const sorting = useSelector(sortingAtom);
@@ -78,40 +72,13 @@ export function TableLayout({
     (selection) => Object.keys(selection).length
   );
 
-  const fetchTableData = useCallback(
-    (offset: number) => {
-      const query = buildTableQuery(dialect, {
-        database,
-        tableName,
-        primaryKeys,
-        where,
-        sorting,
-        limit: DEFAULT_LIMIT,
-        offset,
-      });
-
-      window.sql
-        .executeQuery<ResultRow[]>(query)
-        .then(([result, fields]) => {
-          setError(null);
-          setCurrentOffset(offset);
-          setFields(fields.map((field) => ({ ...field, table: tableName })));
-          setResult((prev) =>
-            offset > 0 && prev ? prev.concat(result) : result
-          );
-        })
-        .catch((err) => {
-          setError(err);
-          setResult(null);
-        });
-    },
-    [dialect, database, tableName, primaryKeys, where, sorting]
-  );
-
-  // a new query starts over from the first page; the next ones are fetched by "load more"
-  useEffect(() => {
-    fetchTableData(0);
-  }, [fetchTableData]);
+  const { result, fields, error, loadMore, updateValue } = useTableRows({
+    database,
+    tableName,
+    primaryKeys,
+    where,
+    sorting,
+  });
 
   // the query stays a `SELECT *`: ordering here means a column added to or dropped from the table needs no new query to be placed
   const orderedFields = useMemo(() => {
@@ -126,27 +93,6 @@ export function TableLayout({
       displayAfterByColumn
     ).flatMap((name) => byName.get(name) ?? []);
   }, [fields, displayAfterByColumn]);
-
-  // a written cell is patched in place rather than re-fetched: the value comes
-  // from the server (see `updateCell`), so the row is as fresh as a reload
-  // would make it — without losing the rows already loaded, nor the scroll
-  const handleValueUpdated = useCallback(
-    (rowIndex: number, columnName: string, value: unknown) => {
-      setResult((previous) => {
-        const row = previous?.[rowIndex];
-
-        if (!previous || !row) {
-          return previous;
-        }
-
-        const next = [...previous];
-        next[rowIndex] = { ...row, [columnName]: value };
-
-        return next;
-      });
-    },
-    []
-  );
 
   // written, then read back by the loader on the next visit, rather than
   // mirrored in a state that the next table would leave stale
@@ -222,7 +168,7 @@ export function TableLayout({
               fields={orderedFields}
               result={result}
               primaryKeys={primaryKeys}
-              onValueUpdated={handleValueUpdated}
+              onValueUpdated={updateValue}
               onFilterChange={handleFilterChange}
               columnWidths={columnWidths}
               onColumnResized={handleColumnResized}
@@ -237,7 +183,7 @@ export function TableLayout({
               <Button
                 type="text"
                 size="small"
-                onClick={() => fetchTableData(currentOffset + DEFAULT_LIMIT)}
+                onClick={loadMore}
               >
                 {t('table.rows.loadMore')}
               </Button>
