@@ -16,6 +16,8 @@ paths:
 - **The context bridge rebuilds an `Error` from `name`, `message` and `stack` alone** and drops every other property. Anything the renderer must read off an error travels as a plain object; only the last hop (a `throw` in a loader) may be error-shaped. Check with `window.sql.x().catch((e) => Object.keys(e))`.
 - **A payload the renderer sends is parsed with zod in its handler, never with a hand-written guard**: a schema typed `z.ZodType<ChannelType>` fails the lint when the channel's type moves without it.
 - **Before duplicating a write to shared main-process state "to be safe", name the caller that could get in between** and try it. If there is none, the second writer is the bug.
+- **Select All is ours, never `role: 'selectAll'`**: the role selects the page's text whatever has the focus. The menu entry sends `EDIT_MENU_CHANNEL.SELECT_ALL` and Ctrl/Cmd+A is caught on `window`; both go to `renderer/selectAll.ts`, which selects the rows of the grid on screen unless the focus is in text, the SQL editor or a dialog.
+- **`AppMenuButton` never takes the focus** (`preventDefault` on `mousedown`): every Edit entry acts on the focused element. A menu entry is verified by a real click on that button, then `item.click()`: `item.click()` alone skips the focus change.
 - **Quitting the app rewrites `config.json` from memory** (`saveWindowState`): a file edited while the app runs is lost. Test persistence through the app's own action.
 
 ## Configuration and encryption

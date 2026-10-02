@@ -47,6 +47,7 @@ import { FieldKind, type ResultField } from '../../sql/resultField';
 import type { ResultRow } from '../../sql/types';
 import { type PrimaryKeyPart, UpdateCellStatus } from '../../sql/updateCell';
 import { useDialect } from '../hooks/useDialect';
+import { registerSelectAllRows } from '../selectAll';
 import {
   accent,
   background,
@@ -533,12 +534,22 @@ function TableGrid<Row extends ResultRow>({
     [scrollElement]
   );
 
+  const selectAllRows = useCallback((): void => {
+    table.toggleAllRowsSelected(true);
+    anchorRef.current = table.getRowModel().rows[0]?.id ?? null;
+  }, [table]);
+
+  // Ctrl+A and the Edit menu's Select All, wherever the focus is short of text
+  useEffect(
+    () =>
+      scrollElement && selectionAtom
+        ? registerSelectAllRows(scrollElement, selectAllRows)
+        : undefined,
+    [scrollElement, selectionAtom, selectAllRows]
+  );
+
   const handleGridKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
-      event.preventDefault();
-      table.toggleAllRowsSelected(true);
-      anchorRef.current = table.getRowModel().rows[0]?.id ?? null;
-    } else if (event.key === 'Escape') {
+    if (event.key === 'Escape') {
       table.resetRowSelection(true);
       anchorRef.current = null;
     }
@@ -548,7 +559,7 @@ function TableGrid<Row extends ResultRow>({
     <Wrapper>
       <ScrollContainer
         ref={setScrollElement}
-        // focusable for Ctrl+A and Escape
+        // focusable for Escape
         tabIndex={selectionAtom ? 0 : undefined}
         onKeyDown={selectionAtom ? handleGridKeyDown : undefined}
       >

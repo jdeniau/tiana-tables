@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Layout } from 'antd';
 import { Outlet, useMatch, useNavigate } from 'react-router';
 import { styled } from 'styled-components';
@@ -24,6 +25,7 @@ import { useCurrentConnectionTint } from '../hooks/useCurrentConnectionTint';
 import useEffectOnce from '../hooks/useEffectOnce';
 import useUpdateStatus from '../hooks/useUpdateStatus';
 import { useWindowControlsColors } from '../hooks/useWindowControlsColors';
+import { handleSelectAllKey, selectAllFromMenu } from '../selectAll';
 import { background } from '../theme';
 
 const Content = styled(Layout.Content)`
@@ -104,6 +106,14 @@ export default function Root() {
       navigate(path);
     });
   });
+
+  useEffect(() => window.editMenu.onSelectAll(selectAllFromMenu), []);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleSelectAllKey);
+
+    return () => window.removeEventListener('keydown', handleSelectAllKey);
+  }, []);
 
   return (
     <ConfigurationContextProvider>

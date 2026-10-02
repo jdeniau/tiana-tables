@@ -126,6 +126,7 @@ const fr: Translation = {
   'errorPage.sorry': "Désolé, une erreur inattendue s'est produite.",
   'errorPage.title': 'Oups !',
   'language.switch.label': 'Langue',
+  'menu.edit.selectAll': 'Tout sélectionner',
   'menu.help.configuration': 'Configuration',
   'menu.help.dataFolders': 'Dossiers de données',
   'menu.help.githubRepository': 'Dépôt GitHub',

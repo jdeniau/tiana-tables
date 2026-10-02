@@ -30,6 +30,7 @@ import {
   type UpdateCellOutcome,
   UpdateCellStatus,
 } from '../../sql/updateCell';
+import { selectAllFromMenu } from '../selectAll';
 import TableGrid from './TableGrid';
 
 vi.mock('../hooks/useDialect', () => ({ useDialect: () => mysqlDialect }));
@@ -847,10 +848,11 @@ describe('row selection', () => {
     expect(selectionAtom.get()).toEqual({ 2: true });
   });
 
-  test('Ctrl+A selects every row, Escape none', () => {
+  test('Select All selects every row, unfocused; Escape, in the grid, none', () => {
+    HTMLElement.prototype.checkVisibility = () => true;
     const selectionAtom = renderSelectable();
 
-    expect(pressKey('a', { ctrlKey: true }).defaultPrevented).toBe(true);
+    act(() => selectAllFromMenu());
     expect(selectionAtom.get()).toEqual({ 1: true, 2: true, 3: true });
 
     pressKey('Escape');

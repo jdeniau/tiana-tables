@@ -126,6 +126,7 @@ export default {
   'errorPage.sorry': 'Sorry, an unexpected error has occurred.',
   'errorPage.title': 'Oops!',
   'language.switch.label': 'Language',
+  'menu.edit.selectAll': 'Select All',
   'menu.help.configuration': 'Configuration',
   'menu.help.dataFolders': 'Data folders',
   'menu.help.githubRepository': 'GitHub repository',
