@@ -1009,6 +1009,11 @@ const ScrollContainer = styled.div`
     height: ${ROW_HEIGHT}px;
   }
 
+  &:focus-visible {
+    outline: 1px solid ${accent};
+    outline-offset: -1px;
+  }
+
   /* before the hover, which wins over it */
   .tg-row[data-selected] .tg-cell {
     background: ${selectedBackground};
