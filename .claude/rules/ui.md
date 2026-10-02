@@ -44,6 +44,11 @@ The layout and colour rules themselves are in `DESIGN.md`; this file is what app
 - **A view toggle is local state** until the user asks for it to survive a restart; nothing goes in `config.json` otherwise.
 - **Never persist a pixel size that will be replayed on another screen**: antd's Splitter gives an oversized panel 100% and ignores `min`/`max`. Store a percentage; a persisted value carries its unit (`'32.5%'`) so an older format is recognisable; "not released yet" is not "no migration needed".
 
+## Hooks
+
+- **Extract custom hooks from a component when its hook calls make up more than ~40% of it, or when they serve several unrelated concerns**: one hook per concern (`useCurrentCart()` holds the `useParams` + `useState` + `useEffect` that fetch the cart; the component only renders it). The extraction is a plain cut and paste into a `useXxx` function, and the hook becomes testable on its own.
+- **A hook lives as close to its users as it can**: in the component's file if it is small and private, in its own file in the component's directory past ~50 lines (`MonacoEditor/useCompletion.tsx`), and in a shared place only when several components use it — next to the domain code it serves, `src/renderer/hooks/` only for hooks that cut across domains.
+
 ## Navigation
 
 - **A navigation is a `Link`, never an `onClick` calling `navigate()`** — even in Electron. `navigate()` only follows an action (a form submitted, a filter built). When an item can both act and navigate, ship two variants sharing the css (`TabStripItem` / `TabStripLink`).
