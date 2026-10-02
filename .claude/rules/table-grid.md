@@ -7,6 +7,8 @@ paths:
   - 'src/renderer/component/ForeignKeyLink*'
   - 'src/renderer/component/columnWidth*'
   - 'src/renderer/component/useWrittenCellFlash.ts'
+  - 'src/renderer/component/useRowSelection.ts'
+  - 'src/renderer/component/rowSelectionGesture*'
   - 'src/renderer/component/TableLayout/**'
 ---
 
@@ -18,6 +20,7 @@ paths:
 - **State the owner reads lives in an external atom**: `useCreateAtom` (`@tanstack/react-store`), read with `useSelector`, handed over in `atoms: { sorting }` — no `state` + `onXChange` bridge. An external atom is wrapped once at construction, so it must be stable for the grid's whole life: gate a feature with `enableX`, never by passing the atom on some renders only.
 - **The grid subscribes to no table state** (`useTable(options, () => ({}))`), so a part that shows a state subscribes itself: `<table.Subscribe selector={(state) => state.sorting}>`.
 - **The `table` object `useTable` returns is a new object on every state change** (a wrapper rebuilt around the stable core), so it never sits in a `useMemo` / `memo` dependency list. A hand-written dependency list with an `eslint-disable` is an identity claim: verify it with a probe on the comparator.
+- **Row selection is TanStack's state driven by our gestures**: `getToggleSelectedHandler` reads `event.target.checked` and only ever adds a range (a checkbox's semantics), so the file-manager clicks go through `nextRowSelection` (`rowSelectionGesture.ts`) and `setRowSelection`. An absent atom is no key of `atoms` at all: `constructTable` calls `.get()` on every value it is given.
 - **The scroll element is held in a state, not a ref**: the virtualizer reads it in a layout effect that runs before the parent ref attaches.
 - **The primary key columns lead the grid, in the order of `fields`, whatever the user's column order**: TanStack heads the pinned columns first, so `columnSources` sorts them first (`keyColumnsFirst`) for the body and the `--tg-*-N` indexes to match. "Displays after" still orders the key columns among themselves; where the key moves a column away from its anchor, the structure page warns (`listDisplayAfterOverriddenByPrimaryKey`).
 

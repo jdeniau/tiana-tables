@@ -126,6 +126,7 @@ const fr: Translation = {
   'errorPage.sorry': "Désolé, une erreur inattendue s'est produite.",
   'errorPage.title': 'Oups !',
   'language.switch.label': 'Langue',
+  'menu.edit.selectAll': 'Tout sélectionner',
   'menu.help.configuration': 'Configuration',
   'menu.help.dataFolders': 'Dossiers de données',
   'menu.help.githubRepository': 'Dépôt GitHub',
@@ -150,6 +151,8 @@ const fr: Translation = {
   'rawSql.result.meta.duration': '{ms, number} ms',
   'rawSql.result.meta.rows':
     '{count, plural, one {# ligne} other {# lignes}} · {ms, number} ms',
+  'rawSql.result.meta.selectedRows':
+    '{selected, plural, one {# ligne} other {# lignes}} / {count, plural, one {# ligne} other {# lignes}} · {ms, number} ms',
   'rawSql.result.noStatement':
     "L'éditeur ne contient aucune requête à exécuter.",
   'rawSql.result.title': 'Résultat',
@@ -182,6 +185,8 @@ const fr: Translation = {
   'table.filters.history': 'Filtres déjà utilisés',
   'table.filters.title': 'Filtres',
   'table.rows.count': '{count, plural, one {# ligne} other {# lignes}}',
+  'table.rows.selected':
+    '{selected, plural, one {# ligne} other {# lignes}} / {count, plural, one {# ligne} other {# lignes}}',
   'table.rows.loadMore': 'Charger plus…',
   'table.sort.hint': 'Clic pour trier, Maj+clic pour ajouter au tri',
   'table.structure.displayAfter': "S'affiche après",

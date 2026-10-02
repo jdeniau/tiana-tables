@@ -1,4 +1,6 @@
 import { ReactElement, useEffect, useState } from 'react';
+import { type Atom, createAtom, useSelector } from '@tanstack/react-store';
+import type { RowSelectionState } from '@tanstack/react-table';
 import { Empty, Spin } from 'antd';
 import { Fetcher } from 'react-router';
 import { styled } from 'styled-components';
@@ -18,6 +20,7 @@ import {
   RegionMeta,
   RegionName,
   RegionTools,
+  SelectionRegionMeta,
 } from '../../Style/Region';
 import { RegionSegmented } from '../../Style/RegionSegmented';
 import { TabStrip, TabStripItem } from '../../Style/TabStrip';
@@ -62,6 +65,30 @@ enum View {
 
 const NO_OUTCOMES: StatementOutcome[] = [];
 
+const NO_SELECTION = createAtom<RowSelectionState>({});
+
+/** The rows selected in each result of one execution of the editor. */
+interface ExecutionSelections {
+  /** the results of that execution */
+  outcomes: StatementOutcome[];
+  /** a new number for each execution: as their key, it remounts the grids, which keep their atom for life */
+  gridKey: number;
+  /** one per result, by position */
+  atoms: Array<Atom<RowSelectionState>>;
+}
+
+/** Nothing selected yet in the results of a new execution. */
+function emptySelections(
+  outcomes: StatementOutcome[],
+  gridKey: number
+): ExecutionSelections {
+  return {
+    outcomes,
+    gridKey,
+    atoms: outcomes.map(() => createAtom<RowSelectionState>({})),
+  };
+}
+
 /** how much of a statement a tab label shows before eliding it */
 const LABEL_LENGTH = 40;
 
@@ -105,10 +132,14 @@ function OutcomePane({
   outcome,
   view,
   rowsAsArray,
+  gridKey,
+  selectionAtom,
 }: {
   outcome: StatementOutcome;
   view: View;
   rowsAsArray: boolean;
+  gridKey: number;
+  selectionAtom: Atom<RowSelectionState>;
 }): ReactElement {
   const { t } = useTranslation();
   const { result, error } = outcome;
@@ -124,7 +155,13 @@ function OutcomePane({
     return (
       <>
         <Pane $active={view === View.Data}>
-          <TableGrid result={rows} fields={fields} rowsAsArray={rowsAsArray} />
+          <TableGrid
+            key={gridKey}
+            result={rows}
+            fields={fields}
+            rowsAsArray={rowsAsArray}
+            selectionAtom={selectionAtom}
+          />
         </Pane>
         <Pane $active={view === View.Chart}>
           <ChartPanel result={rows} fields={fields} rowsAsArray={rowsAsArray} />
@@ -173,6 +210,15 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
     setChosen(null);
   }, [outcomes]);
 
+  // a result is selected by position, which means nothing in the next one
+  const [selections, setSelections] = useState(() =>
+    emptySelections(outcomes, 0)
+  );
+
+  if (selections.outcomes !== outcomes) {
+    setSelections(emptySelections(outcomes, selections.gridKey + 1));
+  }
+
   // A run stops at the first error, so a failed statement is always the last
   // one — and the one worth reading first.
   const failedIndex = outcomes.findIndex(({ error }) => error);
@@ -190,13 +236,24 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
     : null;
   const shownView = unavailable === null ? view : View.Data;
 
+  const selectedCount = useSelector(
+    selections.atoms[active] ?? NO_SELECTION,
+    (selection) => Object.keys(selection).length
+  );
+
   const meta =
     outcome && outcome.durationMs !== undefined
       ? rows
-        ? t('rawSql.result.meta.rows', {
-            count: rows.length,
-            ms: outcome.durationMs,
-          })
+        ? selectedCount > 0
+          ? t('rawSql.result.meta.selectedRows', {
+              selected: selectedCount,
+              count: rows.length,
+              ms: outcome.durationMs,
+            })
+          : t('rawSql.result.meta.rows', {
+              count: rows.length,
+              ms: outcome.durationMs,
+            })
         : t('rawSql.result.meta.duration', { ms: outcome.durationMs })
       : null;
 
@@ -223,6 +280,8 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
               outcome={one}
               view={shownView}
               rowsAsArray={rowsAsArray}
+              gridKey={selections.gridKey}
+              selectionAtom={selections.atoms[index]}
             />
           </Pane>
         ))}
@@ -254,7 +313,12 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
 
         {outcome && !outcome.error && (
           <RegionTools>
-            {meta && <RegionMeta>{meta}</RegionMeta>}
+            {meta &&
+              (selectedCount > 0 ? (
+                <SelectionRegionMeta>{meta}</SelectionRegionMeta>
+              ) : (
+                <RegionMeta>{meta}</RegionMeta>
+              ))}
             {rows && <DateDisplaySwitch fields={outcome.result?.[1] ?? []} />}
             {rows && (
               <RegionSegmented<View>

@@ -4,6 +4,7 @@ import {
   getLogFolder,
 } from '../configuration/filePaths';
 import { t } from '../i18n';
+import { EDIT_MENU_CHANNEL } from '../preload/editMenuChannel';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import connectionStackInstance from '../sql';
 import { isDevApp, isMacPlatform } from './helpers';
@@ -17,6 +18,15 @@ export function createMenu(mainWindow: BrowserWindow) {
     accelerator: 'CmdOrCtrl+,',
     click: () => {
       mainWindow.webContents.send('navigate', '/settings');
+    },
+  };
+
+  // the renderer decides what "all" is: the rows of the grid on screen, unless the focus selects its own content
+  const selectAllItem = {
+    label: t('menu.edit.selectAll'),
+    accelerator: 'CmdOrCtrl+A',
+    click: () => {
+      mainWindow.webContents.send(EDIT_MENU_CHANNEL.SELECT_ALL);
     },
   };
 
@@ -63,14 +73,14 @@ export function createMenu(mainWindow: BrowserWindow) {
           ? [
               { role: 'pasteAndMatchStyle' },
               { role: 'delete' },
-              { role: 'selectAll' },
+              selectAllItem,
               { type: 'separator' },
               {
                 label: 'Speech',
                 submenu: [{ role: 'startSpeaking' }, { role: 'stopSpeaking' }],
               },
             ]
-          : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
+          : [{ role: 'delete' }, { type: 'separator' }, selectAllItem]),
       ],
     },
     //

@@ -27,6 +27,8 @@ export default function AppMenuButton(): ReactElement | null {
       icon={<MenuOutlined />}
       aria-label={t('menu.title')}
       title={t('menu.title')}
+      // the menu acts on the focused element (Select All, Paste…), which the button must not take
+      onMouseDown={(event) => event.preventDefault()}
       onClick={openMenu}
     />
   );

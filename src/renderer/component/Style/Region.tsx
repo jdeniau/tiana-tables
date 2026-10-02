@@ -6,6 +6,7 @@ import {
   displayWeight,
   emphasisForeground,
   fontSize,
+  foreground,
   selection,
   size,
   space,
@@ -65,6 +66,11 @@ export const RegionMeta = styled.span`
   font-size: ${fontSize.sm};
   color: ${commentForeground};
   white-space: nowrap;
+`;
+
+/** The meta while it counts a selection, read as body text */
+export const SelectionRegionMeta = styled(RegionMeta)`
+  color: ${foreground};
 `;
 
 /**

@@ -8,6 +8,7 @@ console.info(
 import { contextBridge, ipcRenderer } from 'electron';
 import { clipboard } from './preload/clipboard';
 import { config } from './preload/config';
+import { editMenu } from './preload/editMenu';
 import { navigationListener } from './preload/navigationListener';
 import { sql } from './preload/sql';
 import { sqlFileStorage } from './preload/sqlFileStorage';
@@ -25,6 +26,7 @@ contextBridge.exposeInMainWorld('sqlFileStorage', sqlFileStorage);
 contextBridge.exposeInMainWorld('navigationListener', navigationListener);
 contextBridge.exposeInMainWorld('update', update);
 contextBridge.exposeInMainWorld('titleBar', titleBar);
+contextBridge.exposeInMainWorld('editMenu', editMenu);
 
 ipcRenderer.invoke('get-is-dev').then((isDev) => {
   contextBridge.exposeInMainWorld('isDev', isDev);
@@ -46,5 +48,6 @@ declare global {
     navigationListener: typeof navigationListener;
     update: typeof update;
     titleBar: typeof titleBar;
+    editMenu: typeof editMenu;
   }
 }

@@ -34,7 +34,7 @@ Every colour on screen comes from this table. Nothing else gets a colour.
 | `base02` | selection fill, scrollbar thumb, cell separators    | `#44475a` | `#c4c3c5`      |
 | `base03` | structural rules, meta text, line numbers           | `#6272a4` | `#a7a5a8`      |
 | `base05` | body text, table names, cell values                 | `#f8f8f2` | `#6c696e`      |
-| `base07` | emphasis: region names, selected row text           | `#ffffff` | `#322d34`      |
+| `base07` | emphasis: region names                              | `#ffffff` | `#322d34`      |
 | `base09` | numbers in results                                  | `#bd93f9` | `#d65407`      |
 | `base0D` | the accent mark: Run, active pip, current statement | `#50fa7b` | `#775dff`      |
 
@@ -44,7 +44,7 @@ The text on the accent fill is `base00`, which holds at least 3.4:1 on every pal
 
 An active item is marked by a **6px `base0D` square** before its label: the active connection in the title bar, the current statement in the result tab strip, the active table tab. Not an underline — it crowded the descenders.
 
-The selected **table** in the sidebar also gets a `base02` row fill and a 3px `base0D` left border (antd's Menu can only draw its bar on the right, so the rule is ours, on `TableLink`). The selected **row** of a grid gets the `base02` fill and `base07` text. The grid keeps a `base02` separator between rows.
+The selected **table** in the sidebar also gets a `base02` row fill and a 3px `base0D` left border (antd's Menu can only draw its bar on the right, so the rule is ours, on `TableLink`). A grid row under the cursor gets the `base02` fill; a selected **row** gets `base02` mixed at 70% into `base00`, weaker so that the pointer stays the stronger mark. Both keep the colours of their text. The grid keeps a `base02` separator between rows.
 
 ## Separators
 
@@ -71,7 +71,7 @@ The editor carries a `base02`-at-low-opacity dot grid on a 22px pitch, offset so
 
 ## Scrollbars
 
-`scrollbar-width: thin` plus `scrollbar-color: <base02> <base00>` — Chromium honours both, so no `::-webkit-scrollbar` rules are needed. Same pair as the selected row, so scrollbars introduce no value the palette did not supply.
+`scrollbar-width: thin` plus `scrollbar-color: <base02> <base00>` — Chromium honours both, so no `::-webkit-scrollbar` rules are needed. Same pair as a hovered grid row, so scrollbars introduce no value the palette did not supply.
 
 ## Where the values live
 

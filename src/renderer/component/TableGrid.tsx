@@ -10,19 +10,21 @@ import {
   useState,
 } from 'react';
 import { CaretDownFilled, CaretUpFilled } from '@ant-design/icons';
-import type { Atom } from '@tanstack/react-store';
+import { type Atom, useSelector } from '@tanstack/react-store';
 import {
   columnOrderingFeature,
   columnPinningFeature,
   columnResizingFeature,
   columnSizingFeature,
   createColumnHelper,
+  rowSelectionFeature,
   rowSortingFeature,
   tableFeatures,
   useTable,
 } from '@tanstack/react-table';
 import type {
   ReactTable,
+  RowSelectionState,
   SortingState,
   Row as TanstackRow,
 } from '@tanstack/react-table';
@@ -63,6 +65,8 @@ import { CellWriteProvider, SaveCellParams } from './CellWrite';
 import ForeignKeyLink from './ForeignKeyLink';
 import { fill } from './Style/fill';
 import { getColumnWidth } from './columnWidth';
+import type { SelectionModifiers } from './rowSelectionGesture';
+import { type SelectRow, useRowSelection } from './useRowSelection';
 import {
   useWrittenCellFlash,
   writtenCellFlashStyle,
@@ -75,8 +79,11 @@ const features = tableFeatures({
   columnPinningFeature,
   columnResizingFeature,
   columnSizingFeature,
+  rowSelectionFeature,
   rowSortingFeature,
 });
+
+export type GridFeatures = typeof features;
 
 const ROW_HEIGHT = parseInt(size.row, 10);
 
@@ -139,6 +146,12 @@ interface TableGridProps<R extends ResultRow> {
 
   /** off leaves the headers inert, even with a `sortingAtom` */
   enableSorting?: boolean;
+
+  /**
+   * The rows a click selects, by row id: the primary key, or the position without one.
+   * Rows are selectable only when given; it must be the same atom for the grid's whole life.
+   */
+  selectionAtom?: Atom<RowSelectionState>;
 }
 
 /**
@@ -221,6 +234,7 @@ function TableGrid<Row extends ResultRow>({
   onColumnResized,
   sortingAtom,
   enableSorting = sortingAtom !== undefined,
+  selectionAtom,
 }: TableGridProps<Row>): ReactElement {
   const { t } = useTranslation();
 
@@ -370,11 +384,16 @@ function TableGrid<Row extends ResultRow>({
       columnResizeMode: 'onChange' as const,
       state: { columnPinning },
       onColumnPinningChange: () => undefined,
-      atoms: sortingAtom ? { sorting: sortingAtom } : undefined,
+      // TanStack reads every key it is given: an absent atom must be no key at all
+      atoms: {
+        ...(sortingAtom && { sorting: sortingAtom }),
+        ...(selectionAtom && { rowSelection: selectionAtom }),
+      },
       // the rows arrive sorted by the server, one column at a time, and always in some order
       manualSorting: true,
       enableSorting,
       sortDescFirst: false,
+      enableRowSelection: selectionAtom !== undefined,
       ...(primaryKeys && primaryKeys.length > 0
         ? {
             getRowId: (row: Row) =>
@@ -478,9 +497,19 @@ function TableGrid<Row extends ResultRow>({
     return () => sorts.unsubscribe();
   }, [table, scrollElement]);
 
+  const { selectRow, handleKeyDown } = useRowSelection(table, {
+    enabled: selectionAtom !== undefined,
+    scrollElement,
+  });
+
   return (
     <Wrapper>
-      <ScrollContainer ref={setScrollElement}>
+      <ScrollContainer
+        ref={setScrollElement}
+        // focusable for Escape
+        tabIndex={selectionAtom ? 0 : undefined}
+        onKeyDown={handleKeyDown}
+      >
         <StyledTable ref={tableRef}>
           <StyledThead>
             {/* the heads alone follow the order: the grid itself subscribes to no table state */}
@@ -566,6 +595,7 @@ function TableGrid<Row extends ResultRow>({
             scrollElement={scrollElement}
             onShowCellDetail={showCellDetail}
             onCellContextMenu={openCellMenu}
+            onSelectRow={selectRow}
           />
         </StyledTable>
 
@@ -637,6 +667,8 @@ type OpenCellMenu = (
   cell: HTMLTableCellElement
 ) => void;
 
+const PLAIN_CLICK: SelectionModifiers = { toggle: false, extend: false };
+
 interface TableBodyProps<Row extends ResultRow> {
   table: ReactTable<typeof features, Row, ReturnType<typeof NO_TABLE_STATE>>;
   columnsMeta: Array<ColumnMeta>;
@@ -645,6 +677,8 @@ interface TableBodyProps<Row extends ResultRow> {
   scrollElement: HTMLDivElement | null;
   onShowCellDetail: ShowCellDetail;
   onCellContextMenu: OpenCellMenu;
+  /** absent on a grid whose rows cannot be selected */
+  onSelectRow: SelectRow<Row> | undefined;
 }
 
 // keep the virtualizer in the lowest component possible: it re-renders on
@@ -657,8 +691,10 @@ function TableBody<Row extends ResultRow>({
   scrollElement,
   onShowCellDetail,
   onCellContextMenu,
+  onSelectRow,
 }: TableBodyProps<Row>): ReactElement {
   const { rows } = table.getRowModel();
+  const selection = useSelector(table.atoms.rowSelection);
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,
@@ -682,6 +718,8 @@ function TableBody<Row extends ResultRow>({
             primaryKeys={primaryKeys}
             onShowCellDetail={onShowCellDetail}
             onCellContextMenu={onCellContextMenu}
+            selected={selection[row.id] === true}
+            onSelectRow={onSelectRow}
           />
         );
       })}
@@ -697,6 +735,8 @@ interface BodyRowProps<Row extends ResultRow> {
   primaryKeys: Array<string> | undefined;
   onShowCellDetail: ShowCellDetail;
   onCellContextMenu: OpenCellMenu;
+  selected: boolean;
+  onSelectRow: SelectRow<Row> | undefined;
 }
 
 function BodyRowInner<Row extends ResultRow>({
@@ -707,13 +747,19 @@ function BodyRowInner<Row extends ResultRow>({
   primaryKeys,
   onShowCellDetail,
   onCellContextMenu,
+  selected,
+  onSelectRow,
 }: BodyRowProps<Row>): ReactElement {
   const original = row.original;
   const valueOf = (column: ColumnMeta): unknown =>
     rowsAsArray ? original[column.fieldIndex] : original[column.name];
 
   return (
-    <tr className="tg-row" style={{ transform: `translateY(${start}px)` }}>
+    <tr
+      className="tg-row"
+      data-selected={selected || undefined}
+      style={{ transform: `translateY(${start}px)` }}
+    >
       {columnsMeta.map((column) => {
         const value = valueOf(column);
         const pinned = column.pinnedLeft !== null;
@@ -757,11 +803,49 @@ function BodyRowInner<Row extends ResultRow>({
               width: column.width,
               left: column.pinnedLeft ?? undefined,
             }}
+            onMouseDown={(event) => {
+              // a modified click selects rows, never text up to the last click
+              if (
+                onSelectRow &&
+                event.button === 0 &&
+                (event.shiftKey || event.ctrlKey || event.metaKey)
+              ) {
+                event.preventDefault();
+                window.getSelection()?.removeAllRanges();
+              }
+            }}
+            onClick={(event) => {
+              // the second click of a double click, a text highlighted in the cell, a link followed: no selection
+              if (
+                !onSelectRow ||
+                event.detail > 1 ||
+                window.getSelection()?.toString() ||
+                (event.target as Element).closest('a')
+              ) {
+                return;
+              }
+
+              onSelectRow(row, {
+                toggle: event.ctrlKey || event.metaKey,
+                extend: event.shiftKey,
+              });
+            }}
             onDoubleClick={(event) => {
+              // the first click of the pair deselected the only selected row: the detail opens on a selected one
+              if (onSelectRow && !selected) {
+                onSelectRow(row, PLAIN_CLICK);
+              }
+
               onShowCellDetail(detailOf(), event.currentTarget);
             }}
             onContextMenu={(event) => {
               event.preventDefault();
+
+              // as in a file manager, the menu acts on the selection, which then holds the row
+              if (onSelectRow && !selected) {
+                onSelectRow(row, PLAIN_CLICK);
+              }
+
               onCellContextMenu(
                 {
                   ...detailOf(),
@@ -795,7 +879,9 @@ const BodyRow = memo(
     prevProps.rowsAsArray === nextProps.rowsAsArray &&
     prevProps.primaryKeys === nextProps.primaryKeys &&
     prevProps.onShowCellDetail === nextProps.onShowCellDetail &&
-    prevProps.onCellContextMenu === nextProps.onCellContextMenu
+    prevProps.onCellContextMenu === nextProps.onCellContextMenu &&
+    prevProps.selected === nextProps.selected &&
+    prevProps.onSelectRow === nextProps.onSelectRow
 ) as typeof BodyRowInner;
 
 // one React component per cell (measured free, 2026-08-18 benchmark): hosts
@@ -829,13 +915,14 @@ const GridCell = memo(function GridCell({
 
 // DESIGN.md: the grid sits flush at the region edge, with no frame of its own.
 // Column heads are 11px caps over a base03 rule, rows are 26px, cells and rows
-// are divided by base02 hairlines, and hover is the selection fill mixed into
-// the background so that it never reads as selected.
+// are divided by base02 hairlines. A selected row takes 70% of the selection
+// fill over the background, the row under the cursor the fill itself: the
+// stronger mark follows the pointer, and both keep the colours of their text.
 type StyledProps = Parameters<typeof selection>[0];
 
 // opaque: a pinned cell must hide the cells scrolling under it
-const hoverBackground = (props: StyledProps): string =>
-  `color-mix(in srgb, ${selection(props)} 40%, ${background(props)})`;
+const selectedBackground = (props: StyledProps): string =>
+  `color-mix(in srgb, ${selection(props)} 70%, ${background(props)})`;
 
 // the grid scrolls itself, so its host has to bound its height
 const Wrapper = styled.div`
@@ -863,8 +950,18 @@ const ScrollContainer = styled.div`
     height: ${ROW_HEIGHT}px;
   }
 
+  &:focus-visible {
+    outline: 1px solid ${accent};
+    outline-offset: -1px;
+  }
+
+  /* before the hover, which wins over it */
+  .tg-row[data-selected] .tg-cell {
+    background: ${selectedBackground};
+  }
+
   .tg-row:hover .tg-cell {
-    background: ${hoverBackground};
+    background: ${selection};
   }
 
   .tg-cell {

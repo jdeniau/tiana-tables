@@ -1,9 +1,9 @@
 /**
  * @vitest-environment happy-dom
  */
-import { type ReactElement, act } from 'react';
+import { type ReactElement, act, useState } from 'react';
 import { type Atom, createAtom } from '@tanstack/react-store';
-import type { SortingState } from '@tanstack/react-table';
+import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
@@ -30,6 +30,7 @@ import {
   type UpdateCellOutcome,
   UpdateCellStatus,
 } from '../../sql/updateCell';
+import { selectAllFromMenu } from '../selectAll';
 import TableGrid from './TableGrid';
 
 vi.mock('../hooks/useDialect', () => ({ useDialect: () => mysqlDialect }));
@@ -676,5 +677,252 @@ describe('the primary key columns', () => {
       ['id', 'id!'],
       ['label', 'label!'],
     ]);
+  });
+});
+
+describe('row selection', () => {
+  mountRows();
+
+  const THREE_ROWS = [
+    { id: 1, name: 'a' },
+    { id: 2, name: 'b' },
+    { id: 3, name: 'c' },
+  ];
+
+  let showRows: (rows: typeof THREE_ROWS) => void;
+
+  /** a grid whose rows the test can replace, as a cell write or a reload does */
+  function Grid({
+    primaryKeys,
+    selectionAtom,
+    sortingAtom,
+  }: {
+    primaryKeys?: Array<string>;
+    selectionAtom?: Atom<RowSelectionState>;
+    sortingAtom?: Atom<SortingState>;
+  }): ReactElement {
+    const [rows, setRows] = useState(THREE_ROWS);
+    showRows = setRows;
+
+    return (
+      <TableGrid
+        fields={FIELDS}
+        result={rows}
+        primaryKeys={primaryKeys}
+        selectionAtom={selectionAtom}
+        sortingAtom={sortingAtom}
+      />
+    );
+  }
+
+  function renderSelectable({
+    primaryKeys = ['id'],
+    sortingAtom,
+  }: {
+    primaryKeys?: Array<string>;
+    sortingAtom?: Atom<SortingState>;
+  } = {}): Atom<RowSelectionState> {
+    const selectionAtom = createAtom<RowSelectionState>({});
+
+    render(
+      <Grid
+        primaryKeys={primaryKeys}
+        selectionAtom={selectionAtom}
+        sortingAtom={sortingAtom}
+      />
+    );
+
+    return selectionAtom;
+  }
+
+  function cellOf(name: string): HTMLTableCellElement {
+    const found = [...container.querySelectorAll('td')].find(
+      (td) => td.textContent === name
+    );
+
+    if (!found) {
+      throw new Error(`No cell "${name}"`);
+    }
+
+    return found;
+  }
+
+  function clickCell(
+    name: string,
+    { shiftKey = false, ctrlKey = false, metaKey = false, detail = 1 } = {}
+  ): void {
+    const init = {
+      bubbles: true,
+      cancelable: true,
+      shiftKey,
+      ctrlKey,
+      metaKey,
+    };
+
+    act(() => {
+      cellOf(name).dispatchEvent(new MouseEvent('mousedown', init));
+      cellOf(name).dispatchEvent(new MouseEvent('click', { ...init, detail }));
+    });
+  }
+
+  function pressKey(key: string, { ctrlKey = false } = {}): KeyboardEvent {
+    const event = new KeyboardEvent('keydown', {
+      key,
+      ctrlKey,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    act(() => {
+      container.querySelector('[tabindex="0"]')?.dispatchEvent(event);
+    });
+
+    return event;
+  }
+
+  /** the names of the rows drawn as selected */
+  function shownSelected(): Array<string | null | undefined> {
+    return [...container.querySelectorAll('tr[data-selected]')].map(
+      (tr) => tr.querySelectorAll('td')[1]?.textContent
+    );
+  }
+
+  afterEach(() => {
+    window.getSelection()?.removeAllRanges();
+  });
+
+  test('a click selects the row alone, a second one deselects it', () => {
+    const selectionAtom = renderSelectable();
+
+    clickCell('a');
+    clickCell('b');
+    expect(selectionAtom.get()).toEqual({ 2: true });
+    expect(shownSelected()).toEqual(['b']);
+
+    clickCell('b');
+    expect(selectionAtom.get()).toEqual({});
+    expect(shownSelected()).toEqual([]);
+  });
+
+  test('Ctrl or Cmd adds a row, Shift selects the range from the last click', () => {
+    const selectionAtom = renderSelectable();
+
+    clickCell('a');
+    clickCell('c', { metaKey: true });
+    expect(shownSelected()).toEqual(['a', 'c']);
+
+    clickCell('a', { ctrlKey: true });
+    clickCell('b', { shiftKey: true });
+    expect(selectionAtom.get()).toEqual({ 1: true, 2: true });
+  });
+
+  test('a modified click prevents the text selection of its mousedown', () => {
+    renderSelectable();
+    const mousedown = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true,
+      shiftKey: true,
+    });
+
+    act(() => {
+      cellOf('a').dispatchEvent(mousedown);
+    });
+
+    expect(mousedown.defaultPrevented).toBe(true);
+  });
+
+  test('a text highlighted in the cell, or the second click of a double click, selects nothing', () => {
+    const selectionAtom = renderSelectable();
+    const range = document.createRange();
+    range.selectNodeContents(cellOf('a'));
+    window.getSelection()?.addRange(range);
+
+    act(() => {
+      cellOf('a').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(selectionAtom.get()).toEqual({});
+
+    window.getSelection()?.removeAllRanges();
+    clickCell('b');
+    clickCell('b', { detail: 2 });
+    expect(selectionAtom.get()).toEqual({ 2: true });
+  });
+
+  test('a double click on the only selected row leaves it selected', () => {
+    const selectionAtom = renderSelectable();
+
+    clickCell('b');
+    clickCell('b');
+    clickCell('b', { detail: 2 });
+    act(() => {
+      cellOf('b').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    });
+
+    expect(selectionAtom.get()).toEqual({ 2: true });
+  });
+
+  test('Select All selects every row, unfocused; Escape, in the grid, none', () => {
+    HTMLElement.prototype.checkVisibility = () => true;
+    const selectionAtom = renderSelectable();
+
+    act(() => selectAllFromMenu());
+    expect(selectionAtom.get()).toEqual({ 1: true, 2: true, 3: true });
+
+    pressKey('Escape');
+    expect(selectionAtom.get()).toEqual({});
+  });
+
+  test('a secondary click selects its row, unless it is already selected', () => {
+    window.clipboard = { readText: async () => '', writeText: async () => {} };
+    const selectionAtom = renderSelectable();
+    const openMenuOn = (name: string): void => {
+      act(() => {
+        cellOf(name).dispatchEvent(
+          new MouseEvent('contextmenu', { bubbles: true, clientX: 10 })
+        );
+      });
+    };
+
+    openMenuOn('a');
+    expect(selectionAtom.get()).toEqual({ 1: true });
+
+    clickCell('b', { ctrlKey: true });
+    openMenuOn('a');
+    expect(selectionAtom.get()).toEqual({ 1: true, 2: true });
+  });
+
+  test('a row whose key changed is selected no more', () => {
+    const selectionAtom = renderSelectable();
+
+    clickCell('a');
+    clickCell('b', { ctrlKey: true });
+    act(() => {
+      showRows([{ id: 1, name: 'a' }, { id: 20, name: 'b' }, THREE_ROWS[2]]);
+    });
+
+    expect(selectionAtom.get()).toEqual({ 1: true });
+  });
+
+  test('a new order selects nothing, and extends from no row', () => {
+    const sortingAtom = createAtom<SortingState>([]);
+    const selectionAtom = renderSelectable({ sortingAtom });
+
+    clickCell('a');
+    act(() => sortingAtom.set([{ id: 'name', desc: true }]));
+    expect(selectionAtom.get()).toEqual({});
+
+    clickCell('c', { shiftKey: true });
+    expect(selectionAtom.get()).toEqual({ 3: true });
+  });
+
+  test('a grid given no atom selects nothing', () => {
+    render(
+      <TableGrid fields={FIELDS} result={THREE_ROWS} primaryKeys={['id']} />
+    );
+
+    clickCell('a');
+
+    expect(shownSelected()).toEqual([]);
+    expect(container.querySelector('[tabindex]')).toBeNull();
   });
 });
