@@ -183,14 +183,14 @@ const fr: Translation = {
   'table.copy.columnNames': 'Noms de colonnes',
   'table.copy.columnNames.formats': 'TSV, CSV',
   'table.copy.format':
-    '{format, select, tsv {TSV} csv {CSV} markdown {Markdown} json {JSON} sqlInsert {SQL INSERT} other {{format}}}',
+    '{format, select, tsv {TSV} csv {CSV} markdown {Markdown} json {JSON} sqlInsert {INSERT SQL} other {{format}}}',
   'table.copy.rowsAs':
     'Copier {count, plural, one {# ligne} other {# lignes}} en',
   'table.filters.history': 'Filtres déjà utilisés',
   'table.filters.title': 'Filtres',
   'table.rows.count': '{count, plural, one {# ligne} other {# lignes}}',
   'table.rows.copied':
-    '{count, plural, one {# ligne copiée} other {# lignes copiées}} en {format, select, tsv {TSV} csv {CSV} markdown {Markdown} json {JSON} sqlInsert {SQL INSERT} other {{format}}}',
+    '{count, plural, one {# ligne copiée} other {# lignes copiées}} en {format, select, tsv {TSV} csv {CSV} markdown {Markdown} json {JSON} sqlInsert {INSERT SQL} other {{format}}}',
   'table.rows.selected':
     '{selected, plural, one {# ligne} other {# lignes}} / {count, plural, one {# ligne} other {# lignes}}',
   'table.rows.loadMore': 'Charger plus…',
