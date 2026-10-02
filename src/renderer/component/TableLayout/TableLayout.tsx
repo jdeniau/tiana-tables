@@ -1,6 +1,6 @@
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useCreateAtom, useSelector } from '@tanstack/react-store';
-import type { SortingState } from '@tanstack/react-table';
+import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { Button, Splitter } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -26,6 +26,7 @@ import {
   RegionMeta,
   RegionName,
   RegionTools,
+  SelectionRegionMeta,
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
@@ -70,6 +71,17 @@ export function TableLayout({
   // empty until a header is clicked, and again once its sort is removed: the key's order
   const sortingAtom = useCreateAtom<SortingState>([]);
   const sorting = useSelector(sortingAtom);
+  // by primary key, so it follows its rows to the next page; a new order empties it
+  const selectionAtom = useCreateAtom<RowSelectionState>({});
+  const selectedCount = useSelector(
+    selectionAtom,
+    (selection) => Object.keys(selection).length
+  );
+
+  // the layout stays mounted from one table to the next, where the same key is another row
+  useEffect(() => {
+    selectionAtom.set({});
+  }, [selectionAtom, database, tableName]);
 
   const fetchTableData = useCallback(
     (offset: number) => {
@@ -186,11 +198,19 @@ export function TableLayout({
           <RegionHeader>
             <RegionGroup>
               <RegionName>{tableName}</RegionName>
-              {result && (
-                <RegionMeta>
-                  {t('table.rows.count', { count: result.length })}
-                </RegionMeta>
-              )}
+              {result &&
+                (selectedCount > 0 ? (
+                  <SelectionRegionMeta>
+                    {t('table.rows.selected', {
+                      selected: selectedCount,
+                      count: result.length,
+                    })}
+                  </SelectionRegionMeta>
+                ) : (
+                  <RegionMeta>
+                    {t('table.rows.count', { count: result.length })}
+                  </RegionMeta>
+                ))}
             </RegionGroup>
 
             <RegionTools>
@@ -213,6 +233,7 @@ export function TableLayout({
               onColumnResized={handleColumnResized}
               sortingAtom={sortingAtom}
               enableSorting={sortable}
+              selectionAtom={selectionAtom}
             />
           </RegionBody>
 

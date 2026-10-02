@@ -150,6 +150,8 @@ export default {
   'rawSql.result.meta.duration': '{ms, number} ms',
   'rawSql.result.meta.rows':
     '{count, plural, one {# row} other {# rows}} · {ms, number} ms',
+  'rawSql.result.meta.selectedRows':
+    '{selected, plural, one {# row} other {# rows}} / {count, plural, one {# row} other {# rows}} · {ms, number} ms',
   'rawSql.result.noStatement': 'The editor holds no query to run.',
   'rawSql.result.title': 'Result',
   'rawSql.run.description':
@@ -180,6 +182,8 @@ export default {
   'table.filters.history': 'Filters used before',
   'table.filters.title': 'Filters',
   'table.rows.count': '{count, plural, one {# row} other {# rows}}',
+  'table.rows.selected':
+    '{selected, plural, one {# row} other {# rows}} / {count, plural, one {# row} other {# rows}}',
   'table.rows.loadMore': 'Load more…',
   'table.sort.hint': 'Click to sort, Shift+click to add to the sort',
   'table.structure.displayAfter': 'Displays after',

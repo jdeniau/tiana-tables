@@ -62,7 +62,7 @@ export const functionForeground = ({ theme }: StyledProps): string =>
 export const keywordForeground = ({ theme }: StyledProps): string =>
   theme.palette.base0E;
 
-/** Lightest Foreground — emphasis: region names, selected row text (base07) */
+/** Lightest Foreground — emphasis: region names (base07) */
 export const emphasisForeground = ({ theme }: StyledProps): string =>
   theme.palette.base07;
 
