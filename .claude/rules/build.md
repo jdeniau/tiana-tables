@@ -19,6 +19,10 @@ paths:
 - **Before dismissing an "unused dependency" as a knip mistake, read the dependents' `package.json`** (`npm view <pkg>@<v> peerDependencies dependencies.<candidate>`): `@nivo/bar` lists `@nivo/core` in its own `dependencies`, so declaring it is redundant.
 - **Before bumping a transitive dependency across a major, check how its consumer loads it**: an ESM-only package `require()`d from CJS hands back the module namespace.
 
+## React Compiler
+
+- **`@babel/core` stays on 7 while `babel-plugin-react-compiler` is 1.x**: on Babel 8 the compiler silently skips every component that destructures a prop with a default value (`ButtonLink`, `TabStrip`, `ChartPanel`…). Before a bump, count the skips with the plugin's `logger` option (`CompileError` events) on both versions.
+
 ## knip
 
 - **A deliberately exhaustive export is kept with a `@public` JSDoc tag**, not a `knip.json` ignore (on an enum it covers all members). An unexported unused type is an eslint error, so a type kept for later is re-exported and tagged.
