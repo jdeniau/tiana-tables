@@ -21,7 +21,7 @@ export function createMenu(mainWindow: BrowserWindow) {
     },
   };
 
-  // the renderer decides what "all" is: a focused grid selects its rows, anything else the text
+  // the renderer decides what "all" is: the rows of the grid on screen, unless the focus selects its own content
   const selectAllItem = {
     label: t('menu.edit.selectAll'),
     accelerator: 'CmdOrCtrl+A',
