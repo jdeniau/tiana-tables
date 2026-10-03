@@ -47,6 +47,7 @@ After a correction, write one rule where it will be loaded when it matters: the 
 - **A name says what the value holds in this code**, as the CSS property or type it ends up in would (`selectedBorderColor`, not the design word `rule`). A predicate names the exact set it accepts (`isNullish`, not `isNull`).
 - **A helper module's name differs from every PascalCase component of its directory by more than case**: on macOS and Windows, `./TableTabs` resolves to `tableTabs.ts` first, and nothing warns on Linux. Check with `ls | tr 'A-Z' 'a-z' | sort | uniq -d`.
 - **A closed set of values gets an enum**, never bare string literals — including a library's string union.
+- **An exported function declares its return type**, never left to inference: it is the contract its callers read. A hook returning several values returns a named interface documented field by field (`RowSelection<Row>` in `useRowSelection.ts`); local functions and inline callbacks keep inference. `@typescript-eslint/explicit-module-boundary-types` lists the exports that lack one.
 - **A derived value is written as its formula in theme tokens** (`0.6 * fontScale.base`), not measured at runtime.
 - **Reach for a library before hand-rolling**; a circumstantial reason to hand-roll is re-checked before the code lands.
 

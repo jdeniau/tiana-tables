@@ -8,6 +8,9 @@ paths:
   - 'src/renderer/component/columnWidth*'
   - 'src/renderer/component/useWrittenCellFlash.ts'
   - 'src/renderer/component/useRowSelection.ts'
+  - 'src/renderer/component/useGridColumns.tsx'
+  - 'src/renderer/component/useColumnWidthVars.ts'
+  - 'src/renderer/component/useCellDialogs.ts'
   - 'src/renderer/component/rowSelectionGesture*'
   - 'src/renderer/component/TableLayout/**'
 ---

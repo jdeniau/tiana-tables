@@ -2,9 +2,7 @@ import {
   ReactElement,
   ReactNode,
   memo,
-  useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -16,7 +14,6 @@ import {
   columnPinningFeature,
   columnResizingFeature,
   columnSizingFeature,
-  createColumnHelper,
   rowSelectionFeature,
   rowSortingFeature,
   tableFeatures,
@@ -31,20 +28,15 @@ import type {
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Empty } from 'antd';
 import { styled } from 'styled-components';
-import invariant from 'tiny-invariant';
-import { keyColumnsFirst } from '../../configuration/columnOrder';
-import { DateDisplay } from '../../configuration/dateDisplay';
 import type { ColumnWidthByColumn } from '../../configuration/type';
 import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
-import { useDatabaseContext } from '../../contexts/DatabaseContext';
-import { useDateDisplay } from '../../contexts/DateDisplayContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import { useTranslation } from '../../i18n';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
 import type { Dialect } from '../../sql/dialect/types';
 import { FieldKind, type ResultField } from '../../sql/resultField';
 import type { ResultRow } from '../../sql/types';
-import { type PrimaryKeyPart, UpdateCellStatus } from '../../sql/updateCell';
+import type { PrimaryKeyPart } from '../../sql/updateCell';
 import { useDialect } from '../hooks/useDialect';
 import {
   accent,
@@ -52,25 +44,22 @@ import {
   commentForeground,
   fontSize,
   foreground,
-  mutedForeground,
   selection,
   size,
   space,
 } from '../theme';
 import Cell from './Cell';
-import CellContextMenu, { CellMenuTarget } from './CellContextMenu';
+import CellContextMenu from './CellContextMenu';
 import CellDetailModal, { CellDetail } from './CellDetailModal';
-import { toBoundValue } from './CellEditor/editableValue';
-import { CellWriteProvider, SaveCellParams } from './CellWrite';
+import { CellWriteProvider } from './CellWrite';
 import ForeignKeyLink from './ForeignKeyLink';
 import { fill } from './Style/fill';
-import { getColumnWidth } from './columnWidth';
 import type { SelectionModifiers } from './rowSelectionGesture';
+import { OpenCellMenu, ShowCellDetail, useCellDialogs } from './useCellDialogs';
+import { leftVar, useColumnWidthVars, widthVar } from './useColumnWidthVars';
+import { columnId, useGridColumns } from './useGridColumns';
 import { type SelectRow, useRowSelection } from './useRowSelection';
-import {
-  useWrittenCellFlash,
-  writtenCellFlashStyle,
-} from './useWrittenCellFlash';
+import { writtenCellFlashStyle } from './useWrittenCellFlash';
 
 const features = tableFeatures({
   // columnOrderingFeature provides `getIsLastColumn`, used to draw the shadow
@@ -86,13 +75,6 @@ const features = tableFeatures({
 export type GridFeatures = typeof features;
 
 const ROW_HEIGHT = parseInt(size.row, 10);
-
-// A width reaches the cells as a custom property on the table, written
-// imperatively rather than rendered — TanStack's own recipe for resizing a
-// large grid (`examples/react/column-resizing-performant`). With the selector
-// below, a drag costs no React render at all.
-const widthVar = (index: number): string => `--tg-w-${index}`;
-const leftVar = (index: number): string => `--tg-l-${index}`;
 
 /** subscribes the grid to no table state: the widths reach the DOM on their own */
 const NO_TABLE_STATE = (): Record<string, never> => ({});
@@ -169,11 +151,6 @@ export interface ExtraColumn<Row extends ResultRow> {
 
 const NO_EXTRA_COLUMNS: Array<never> = [];
 
-/** `fieldIndex` indexes `fields`, not the columns on screen. */
-type ColumnSource<Row extends ResultRow> =
-  | { field: ResultField; fieldIndex: number; extra?: undefined }
-  | { field?: undefined; fieldIndex: -1; extra: ExtraColumn<Row> };
-
 /** A scalar the driver answers with, and binds back unchanged: a date is the server's text. */
 function isPrimaryKeyValue(value: unknown): value is PrimaryKeyPart['value'] {
   return typeof value === 'string' || typeof value === 'number';
@@ -233,7 +210,7 @@ function TableGrid<Row extends ResultRow>({
   columnWidths,
   onColumnResized,
   sortingAtom,
-  enableSorting = sortingAtom !== undefined,
+  enableSorting,
   selectionAtom,
 }: TableGridProps<Row>): ReactElement {
   const { t } = useTranslation();
@@ -248,131 +225,26 @@ function TableGrid<Row extends ResultRow>({
     null
   );
 
-  // the value shown by the detail modal, `null` when it is closed
-  const [cellDetail, setCellDetail] = useState<CellDetail | null>(null);
-  const { rememberCell, flashCell } = useWrittenCellFlash();
-
-  const showCellDetail = useCallback<ShowCellDetail>(
-    (detail, cell) => {
-      rememberCell(cell);
-      setCellDetail(detail);
-    },
-    [rememberCell]
-  );
-
-  // the cell the context menu is open on, `null` when it is closed
-  const [menuTarget, setMenuTarget] = useState<CellMenuTarget | null>(null);
-
-  // stable, so that the `memo` of `BodyRow` still holds
-  const openCellMenu = useCallback<OpenCellMenu>(
-    (target, cell) => {
-      // the menu can write the cell too, which then flashes like any write
-      rememberCell(cell);
-      setMenuTarget(target);
-    },
-    [rememberCell]
-  );
+  const {
+    cellDetail,
+    setCellDetail,
+    menuTarget,
+    setMenuTarget,
+    showCellDetail,
+    openCellMenu,
+    saveCell,
+  } = useCellDialogs(onValueUpdated);
 
   const foreignKeys = useForeignKeysContext();
   const allColumns = useAllColumnsContext();
   const dialect = useDialect();
-  const { database } = useDatabaseContext();
 
-  const saveCell = useCallback(
-    async ({ detail, newValue, originalValue, force }: SaveCellParams) => {
-      const { rowKey, column } = detail;
-
-      invariant(database, 'A database must be selected to write a cell');
-      invariant(rowKey, 'A cell of an unidentified row cannot be written');
-      invariant(column.tableName, 'A cell of no table cannot be written');
-
-      const outcome = await window.sql.updateCell({
-        database,
-        table: column.tableName,
-        column: column.name,
-        primaryKey: rowKey,
-        newValue,
-        originalValue: toBoundValue(originalValue),
-        isJsonColumn: column.detail?.json ?? false,
-        force,
-      });
-
-      if (outcome.status === UpdateCellStatus.Updated) {
-        flashCell();
-        onValueUpdated?.(detail.rowIndex, column.name, outcome.value);
-      }
-
-      return outcome;
-    },
-    [database, flashCell, onValueUpdated]
-  );
-
-  // pin primary key columns to the left, in the order of `fields`
-  const columnPinning = useMemo(
-    () => ({
-      start: (fields ?? [])
-        .map(({ name }) => name)
-        .filter((name) => primaryKeys?.includes(name)),
-      end: [],
-    }),
-    [fields, primaryKeys]
-  );
-
-  // both the table and `columnsMeta` are built from this one list, so the two always agree on what the nth column is
-  const columnSources = useMemo((): Array<ColumnSource<Row>> => {
-    const sources: Array<ColumnSource<Row>> = (fields ?? []).map(
-      (field, fieldIndex) => ({ field, fieldIndex })
-    );
-
-    for (const extra of extraColumns) {
-      const anchor = extra.after
-        ? sources.findIndex((source) => source.field?.name === extra.after)
-        : -1;
-
-      sources.splice(anchor < 0 ? sources.length : anchor + 1, 0, {
-        fieldIndex: -1,
-        extra,
-      });
-    }
-
-    const isPinned = (source: ColumnSource<Row>): boolean =>
-      source.field !== undefined &&
-      columnPinning.start.includes(source.field.name);
-
-    // TanStack heads the pinned columns first, so the body must too
-    return keyColumnsFirst(sources, isPinned);
-  }, [fields, extraColumns, columnPinning]);
-
-  // local time is followed by its offset, which the column opens wide enough for
-  const showsOffset = useDateDisplay().display === DateDisplay.Local;
-
-  const columns = useMemo(() => {
-    const columnHelper = createColumnHelper<typeof features, Row>();
-
-    return columnHelper.columns(
-      columnSources.map(({ field, fieldIndex, extra }) =>
-        extra
-          ? columnHelper.display({
-              id: extra.id,
-              header: extra.header,
-              size: extra.size,
-            })
-          : columnHelper.accessor(
-              (row: Row) => (rowsAsArray ? row[fieldIndex] : row[field.name]),
-              {
-                // raw SQL results can contain duplicated column names: suffix with the index to keep ids unique
-                // (browsing mode keeps plain names so that column pinning can match primary key names)
-                id: rowsAsArray ? `${fieldIndex}:${field.name}` : field.name,
-                header:
-                  field.kind === FieldKind.DateTime
-                    ? () => <DateColumnHeader name={field.name} />
-                    : field.name,
-                size: getColumnWidth(field.kind, showsOffset),
-              }
-            )
-      )
-    );
-  }, [columnSources, rowsAsArray, showsOffset]);
+  const { columnPinning, columnSources, columns } = useGridColumns({
+    fields,
+    primaryKeys,
+    extraColumns,
+    rowsAsArray,
+  });
 
   const table = useTable(
     {
@@ -391,7 +263,8 @@ function TableGrid<Row extends ResultRow>({
       },
       // the rows arrive sorted by the server, one column at a time, and always in some order
       manualSorting: true,
-      enableSorting,
+      // a default read from another prop, in the destructuring, makes React Compiler skip the whole grid
+      enableSorting: enableSorting ?? sortingAtom !== undefined,
       sortDescFirst: false,
       enableRowSelection: selectionAtom !== undefined,
       ...(primaryKeys && primaryKeys.length > 0
@@ -405,88 +278,56 @@ function TableGrid<Row extends ResultRow>({
   );
 
   // everything the body needs to render a cell, resolved once per column
-  // (foreign keys, pinning offsets, widths) instead of once per cell
-  const columnsMeta: Array<ColumnMeta> = useMemo(
-    () =>
-      table.getAllLeafColumns().map((column, index) => {
-        const { field, fieldIndex, extra } = columnSources[index];
-        const isPinned = column.getIsPinned();
-        const foreignKey = field
-          ? foreignKeys.getForeignKey(field.table ?? '', field.name)
-          : null;
+  // (foreign keys, pinning offsets, widths) instead of once per cell.
+  // Read from the column sources, never `table`: a new object whenever its options are (a new `result` included), it would hand every row new props.
+  const columnsMeta: Array<ColumnMeta> = useMemo(() => {
+    const ids = columnSources.map((source) => columnId(source, rowsAsArray));
+    // TanStack's `getIsLastColumn('start')`: the last of the pinned ids the grid holds
+    const lastPinned = columnPinning.start.findLast((id) => ids.includes(id));
 
-        return {
-          id: column.id,
-          fieldIndex,
-          name: field?.name ?? column.id,
-          tableName: field?.table,
-          kind: field?.kind ?? FieldKind.Unknown,
-          width: `var(${widthVar(index)})`,
-          pinnedLeft: isPinned === 'start' ? `var(${leftVar(index)})` : null,
-          isLastPinned: isPinned === 'start' && column.getIsLastColumn('start'),
-          numeric: field?.kind === FieldKind.Number,
-          hasForeignKey: foreignKey !== null,
-          dialect,
-          // the schema of the column, resolved here rather than in the modal so
-          // that no context lookup happens per mounted cell
-          detail: field
-            ? allColumns.getColumn(field.table ?? '', field.name)
-            : undefined,
-          render: extra?.render as ColumnMeta['render'],
-        };
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `table` is a new object on every state change, and a width no longer travels through here: only these drive a cell
-    [columns, columnPinning, columnSources, foreignKeys, allColumns, dialect]
-  );
+    return columnSources.map(({ field, fieldIndex, extra }, index) => {
+      const id = ids[index];
+      const isPinned = columnPinning.start.includes(id);
+      const foreignKey = field
+        ? foreignKeys.getForeignKey(field.table ?? '', field.name)
+        : null;
 
-  // the width of every column, and the offset of the pinned ones, rewritten on
-  // the table itself whenever a drag commits a size
-  useLayoutEffect(() => {
-    const element = tableRef.current;
+      return {
+        id,
+        fieldIndex,
+        name: field?.name ?? id,
+        tableName: field?.table,
+        kind: field?.kind ?? FieldKind.Unknown,
+        width: `var(${widthVar(index)})`,
+        pinnedLeft: isPinned ? `var(${leftVar(index)})` : null,
+        isLastPinned: id === lastPinned,
+        numeric: field?.kind === FieldKind.Number,
+        hasForeignKey: foreignKey !== null,
+        dialect,
+        // the schema of the column, resolved here rather than in the modal so
+        // that no context lookup happens per mounted cell
+        detail: field
+          ? allColumns.getColumn(field.table ?? '', field.name)
+          : undefined,
+        render: extra?.render as ColumnMeta['render'],
+      };
+    });
+  }, [
+    columnSources,
+    rowsAsArray,
+    columnPinning,
+    foreignKeys,
+    allColumns,
+    dialect,
+  ]);
 
-    if (!element) {
-      return undefined;
-    }
-
-    const writeWidths = (): void => {
-      table.getAllLeafColumns().forEach((column, index) => {
-        element.style.setProperty(widthVar(index), `${column.getSize()}px`);
-
-        if (column.getIsPinned() === 'start') {
-          element.style.setProperty(
-            leftVar(index),
-            `${column.getStart('start')}px`
-          );
-        }
-      });
-    };
-
-    writeWidths();
-
-    const sizes = table.atoms.columnSizing.subscribe(writeWidths);
-
-    // `columnResizing` names the column being dragged, and drops it on
-    // release: that transition is the end of the drag, and the width the user
-    // settled on is the one to remember.
-    let dragged: string | false = false;
-
-    const drags = table.atoms.columnResizing.subscribe(
-      ({ isResizingColumn }) => {
-        const column = dragged ? table.getColumn(dragged) : undefined;
-
-        if (column && !isResizingColumn) {
-          onColumnResized?.(column.id, column.getSize());
-        }
-
-        dragged = isResizingColumn;
-      }
-    );
-
-    return () => {
-      sizes.unsubscribe();
-      drags.unsubscribe();
-    };
-  }, [table, columns, columnPinning, onColumnResized]);
+  useColumnWidthVars({
+    table,
+    tableRef,
+    columns,
+    columnPinning,
+    onColumnResized,
+  });
 
   // a new order starts from the first row
   useEffect(() => {
@@ -657,15 +498,6 @@ export interface ColumnMeta {
   /** what an extra column renders, `undefined` for a column of the result */
   render?: (row: ResultRow) => ReactNode;
 }
-
-/** opens the detail modal on a cell, from the `<td>` that was double-clicked */
-type ShowCellDetail = (detail: CellDetail, cell: HTMLTableCellElement) => void;
-
-/** opens the context menu on a cell, from the `<td>` that was secondary-clicked */
-type OpenCellMenu = (
-  target: CellMenuTarget,
-  cell: HTMLTableCellElement
-) => void;
 
 const PLAIN_CLICK: SelectionModifiers = { toggle: false, extend: false };
 
@@ -1078,26 +910,6 @@ const HeaderLabel = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
 `;
-
-const DateSuffix = styled.span`
-  margin-inline-start: ${space.xs};
-  color: ${mutedForeground};
-`;
-
-/** A date-time column's name, and the zone its values are shown in when there is a choice. */
-function DateColumnHeader({ name }: { name: string }): ReactNode {
-  const { t } = useTranslation();
-  const { display, segments } = useDateDisplay();
-
-  return (
-    <>
-      {name}
-      {segments.length > 1 && (
-        <DateSuffix>{t('dateDisplay.option', { display })}</DateSuffix>
-      )}
-    </>
-  );
-}
 
 // the rule between two column heads is what one grabs to resize: the zone is
 // wider than the line it draws, and the line takes the accent under the cursor

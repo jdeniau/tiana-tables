@@ -651,6 +651,8 @@ describe('the primary key columns', () => {
     return heads.map((th, index) => {
       expect(resolve(cells[index].style.width)).toBe(resolve(th.style.width));
       expect(resolve(cells[index].style.left)).toBe(resolve(th.style.left));
+      // the head asks TanStack, the body its own `columnsMeta`
+      expect(cells[index].dataset.lastPinned).toBe(th.dataset.lastPinned);
 
       return [th.textContent, cells[index].textContent];
     });
@@ -670,6 +672,11 @@ describe('the primary key columns', () => {
     expect(resolve(heads[0].style.left)).toBe('0px');
     expect(resolve(heads[1].style.left)).toBe(resolve(heads[0].style.width));
     expect(heads[2].style.left).toBe('');
+    expect(heads.map((th) => th.dataset.lastPinned)).toEqual([
+      undefined,
+      'true',
+      undefined,
+    ]);
   });
 
   test('lead when the table places them after another column', () => {
