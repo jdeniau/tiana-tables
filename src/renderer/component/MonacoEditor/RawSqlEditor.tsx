@@ -10,25 +10,16 @@ import {
 import type monaco from 'monaco-editor';
 import { createGlobalStyle, useTheme } from 'styled-components';
 import type { DatabaseEngine } from '../../../sql/engine';
-import {
-  SqlStatement,
-  splitStatements,
-  statementAtOffset,
-} from '../../../sql/splitStatements';
-import useEffectOnce from '../../hooks/useEffectOnce';
 import { accent, fontScale, mono, selection, size } from '../../theme';
 import { languageOf } from './language';
 import { setQueryPrefix } from './queryPrefix';
-import { buildMonacoTheme } from './themes';
 import useCompletion from './useCompletion';
+import useCurrentStatementHighlight, {
+  CURRENT_STATEMENT_BAR_CLASS,
+  CURRENT_STATEMENT_CLASS,
+} from './useCurrentStatementHighlight';
+import useMonaco, { MONACO_THEME } from './useMonaco';
 import useSemanticTokens from './useSemanticTokens';
-
-/**
- * Monaco decorations are styled by class name — there is no inline-style
- * option — so the theme reaches these through a global rule.
- */
-const CURRENT_STATEMENT_CLASS = 'sql-current-statement';
-const CURRENT_STATEMENT_BAR_CLASS = 'sql-current-statement-bar';
 
 /** how much of the selection colour a dot of the editor's grid holds */
 const DOT_ALPHA = '35%';
@@ -140,8 +131,8 @@ export function RawSqlEditor({
   style,
   monacoOptions,
 }: Props) {
-  const [monacoInstance, setMonacoInstance] = useState<typeof monaco | null>(
-    null
+  const monacoInstance = useMonaco(
+    'Unable to load Monaco editor. Navigate away from this SQL tab and come back, or restart the app, then check bundled asset loading in developer tools.'
   );
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -151,13 +142,7 @@ export function RawSqlEditor({
   onSubmitRef.current = onSubmit;
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  const onStatementCountChangeRef = useRef(onStatementCountChange);
-  onStatementCountChangeRef.current = onStatementCountChange;
-  const engineRef = useRef(engine);
-  engineRef.current = engine;
   const theme = useTheme();
-
-  const monacoTheme = buildMonacoTheme(theme);
 
   useCompletion();
   useSemanticTokens();
@@ -177,135 +162,59 @@ export function RawSqlEditor({
     [editor]
   );
 
-  // Load Monaco and create the editor once — useEffectOnce prevents the
-  // React 18 StrictMode double-invocation that caused "Element already has
-  // context attribute" when editor.create() was called inside a setState updater.
-  useEffectOnce(() => {
-    let isCanceled = false;
-
-    // `userWorker` configures Monaco workers through module side effects.
-    Promise.all([import('monaco-editor'), import('./userWorker')])
-      .then(([loadedMonaco]) => {
-        if (isCanceled || !monacoEl.current) {
-          return;
-        }
-
-        loadedMonaco.editor.defineTheme('currentTheme', monacoTheme);
-
-        const createdEditor = loadedMonaco.editor.create(monacoEl.current, {
-          value: defaultValue,
-          language: languageOf(engineRef.current),
-          theme: 'currentTheme',
-          // standalone themes cannot opt in, `StandaloneTheme` hardcodes
-          // `semanticHighlighting = false`
-          'semanticHighlighting.enabled': true,
-          automaticLayout: true,
-          ...BASE_OPTIONS,
-          ...memoizedMonacoOptions,
-        });
-
-        const model = createdEditor.getModel();
-
-        if (model) {
-          // before Monaco asks for the first semantic tokens: the provider has
-          // no `onDidChange`, they are only recomputed on a content change
-          setQueryPrefix(model, queryPrefix);
-        }
-
-        createdEditor.addCommand(
-          loadedMonaco.KeyMod.CtrlCmd | loadedMonaco.KeyCode.Enter,
-          () => {
-            onSubmitRef.current();
-          }
-        );
-
-        // Splitting lexes the whole content, and the caret moves far more
-        // often than the content changes.
-        let lastSplit: { content: string; statements: SqlStatement[] } | null =
-          null;
-        const statementsOf = (content: string): SqlStatement[] => {
-          if (lastSplit?.content !== content) {
-            lastSplit = {
-              content,
-              statements: splitStatements(content, engineRef.current),
-            };
-          }
-
-          return lastSplit.statements;
-        };
-
-        const decorations = createdEditor.createDecorationsCollection();
-
-        let reportedCount: number | null = null;
-
-        // Show what Ctrl+Enter would run, but only once there is a choice to
-        // make: on a single statement the decoration would just repaint the
-        // whole editor.
-        const highlightCurrentStatement = (): void => {
-          const model = createdEditor.getModel();
-          const position = createdEditor.getPosition();
-          const statements = model ? statementsOf(model.getValue()) : [];
-
-          if (statements.length !== reportedCount) {
-            reportedCount = statements.length;
-            onStatementCountChangeRef.current?.(reportedCount);
-          }
-
-          const current =
-            model && position && statements.length > 1
-              ? statementAtOffset(statements, model.getOffsetAt(position))
-              : undefined;
-
-          decorations.set(
-            current && model
-              ? [
-                  {
-                    range: loadedMonaco.Range.fromPositions(
-                      model.getPositionAt(current.start),
-                      model.getPositionAt(current.end)
-                    ),
-                    options: {
-                      isWholeLine: true,
-                      className: CURRENT_STATEMENT_CLASS,
-                      linesDecorationsClassName: CURRENT_STATEMENT_BAR_CLASS,
-                    },
-                  },
-                ]
-              : []
-          );
-        };
-
-        createdEditor.onDidChangeCursorPosition(highlightCurrentStatement);
-
-        createdEditor.onDidChangeModelContent(() => {
-          highlightCurrentStatement();
-          onChangeRef.current?.(createdEditor.getValue());
-        });
-
-        highlightCurrentStatement();
-
-        setMonacoInstance(loadedMonaco);
-        setEditor(createdEditor);
-      })
-      .catch((error) => {
-        console.error(
-          'Unable to load Monaco editor. Navigate away from this SQL tab and come back, or restart the app, then check bundled asset loading in developer tools.',
-          error
-        );
-      });
-
-    return () => {
-      isCanceled = true;
-    };
-  });
+  // before the effect creating the editor, so that its cleanup runs before the editor is disposed
+  useCurrentStatementHighlight(
+    monacoInstance,
+    editor,
+    engine,
+    onStatementCountChange
+  );
 
   useEffect(() => {
-    if (!monacoInstance) {
+    if (!monacoInstance || !monacoEl.current) {
       return;
     }
 
-    monacoInstance.editor.defineTheme('currentTheme', monacoTheme);
-  }, [monacoInstance, monacoTheme]);
+    const createdEditor = monacoInstance.editor.create(monacoEl.current, {
+      value: defaultValue,
+      language: languageOf(engine),
+      theme: MONACO_THEME,
+      // standalone themes cannot opt in, `StandaloneTheme` hardcodes
+      // `semanticHighlighting = false`
+      'semanticHighlighting.enabled': true,
+      automaticLayout: true,
+      ...BASE_OPTIONS,
+      ...memoizedMonacoOptions,
+    });
+
+    const model = createdEditor.getModel();
+
+    if (model) {
+      // before Monaco asks for the first semantic tokens: the provider has
+      // no `onDidChange`, they are only recomputed on a content change
+      setQueryPrefix(model, queryPrefix);
+    }
+
+    createdEditor.addCommand(
+      monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter,
+      () => {
+        onSubmitRef.current();
+      }
+    );
+
+    createdEditor.onDidChangeModelContent(() => {
+      onChangeRef.current?.(createdEditor.getValue());
+    });
+
+    setEditor(createdEditor);
+
+    return () => {
+      createdEditor.dispose();
+      setEditor(null);
+    };
+    // the content, the prefix and the options are read once: the editor holds them from then on
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monacoInstance]);
 
   useEffect(() => {
     const model = editor?.getModel();
@@ -314,11 +223,6 @@ export function RawSqlEditor({
       setQueryPrefix(model, queryPrefix);
     }
   }, [editor, queryPrefix]);
-
-  useEffect(() => {
-    // dispose the editor when the component is unmounted
-    return () => editor?.dispose();
-  }, [editor]);
 
   return (
     <>
