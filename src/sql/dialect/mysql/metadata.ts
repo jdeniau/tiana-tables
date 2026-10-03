@@ -19,6 +19,7 @@ const columnNameRow = z.object({ COLUMN_NAME: z.string() });
 const foreignKeyRow = z.object({
   TABLE_NAME: z.string(),
   COLUMN_NAME: z.string(),
+  REFERENCED_TABLE_SCHEMA: z.string(),
   REFERENCED_TABLE_NAME: z.string(),
   REFERENCED_COLUMN_NAME: z.string(),
 });
@@ -83,6 +84,7 @@ export const mysqlMetadata: DialectMetadata = {
         SELECT
           TABLE_NAME,
           COLUMN_NAME,
+          REFERENCED_TABLE_SCHEMA,
           REFERENCED_TABLE_NAME,
           REFERENCED_COLUMN_NAME
         FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
@@ -96,6 +98,7 @@ export const mysqlMetadata: DialectMetadata = {
         rows.map((row) => ({
           table: row.TABLE_NAME,
           column: row.COLUMN_NAME,
+          referencedDatabase: row.REFERENCED_TABLE_SCHEMA,
           referencedTable: row.REFERENCED_TABLE_NAME,
           referencedColumn: row.REFERENCED_COLUMN_NAME,
         })),

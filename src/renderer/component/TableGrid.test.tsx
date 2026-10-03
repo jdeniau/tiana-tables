@@ -86,7 +86,7 @@ function render(element: ReactElement, allColumns: ColumnDetail[] = []): void {
           <DatabaseContext.Provider
             value={{ database: 'db', setDatabase: () => {} }}
           >
-            <ForeignKeysContextProvider foreignKeys={[]}>
+            <ForeignKeysContextProvider foreignKeys={[]} database="db">
               <AllColumnsContextProvider allColumns={allColumns}>
                 {element}
               </AllColumnsContextProvider>

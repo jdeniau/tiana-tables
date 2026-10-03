@@ -28,7 +28,7 @@ const meta: Meta<typeof RawSqlEditor> = {
   },
   decorators: [
     (Story) => (
-      <ForeignKeysContextProvider foreignKeys={[]}>
+      <ForeignKeysContextProvider foreignKeys={[]} database="db">
         <TableListContextProvider tableList={['employe', 'title']}>
           <AllColumnsContextProvider
             allColumns={[
@@ -92,16 +92,19 @@ JOIN
           {
             table: 'employe',
             column: 'title_id',
+            referencedDatabase: 'db',
             referencedTable: 'title',
             referencedColumn: 'id',
           },
           {
             table: 'planning',
             column: 'employe_id',
+            referencedDatabase: 'db',
             referencedTable: 'employe',
             referencedColumn: 'id',
           },
         ]}
+        database="db"
       >
         <TableListContextProvider tableList={['employe', 'title', 'planning']}>
           <Story />

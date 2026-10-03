@@ -40,12 +40,6 @@ describe('the statements each question sends', () => {
     );
   });
 
-  test('a foreign key to another schema is left out', () => {
-    expect(postgresMetadata.listForeignKeys('app').sql).toContain(
-      'target.relnamespace = source.relnamespace'
-    );
-  });
-
   test('the primary key is read in the order the key declares it', () => {
     const { sql, values } = postgresMetadata.listPrimaryKeyColumns(
       'app',
@@ -155,18 +149,20 @@ describe('the other questions', () => {
     expect(
       postgresMetadata.listForeignKeys('app').answer([
         {
-          table_name: 'shipments',
-          column_name: 'order_id',
-          referenced_table: 'order_lines',
-          referenced_column: 'order_id',
+          table_name: 'orders',
+          column_name: 'user_id',
+          referenced_schema: 'public',
+          referenced_table: 'users',
+          referenced_column: 'id',
         },
       ])
     ).toEqual([
       {
-        table: 'shipments',
-        column: 'order_id',
-        referencedTable: 'order_lines',
-        referencedColumn: 'order_id',
+        table: 'orders',
+        column: 'user_id',
+        referencedDatabase: 'public',
+        referencedTable: 'users',
+        referencedColumn: 'id',
       },
     ]);
   });

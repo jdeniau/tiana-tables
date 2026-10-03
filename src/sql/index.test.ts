@@ -151,6 +151,7 @@ describe('database-scoped queries', () => {
               {
                 TABLE_NAME: 'some-table',
                 COLUMN_NAME: 'auteur_id',
+                REFERENCED_TABLE_SCHEMA: 'some-database',
                 REFERENCED_TABLE_NAME: 'auteur',
                 REFERENCED_COLUMN_NAME: 'id',
               },

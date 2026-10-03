@@ -5,6 +5,8 @@ import type { ReadQuery } from './readQuery';
 export interface ForeignKey {
   table: string;
   column: string;
+  /** may differ from the database the keys were listed for */
+  referencedDatabase: string;
   referencedTable: string;
   referencedColumn: string;
 }
@@ -46,7 +48,7 @@ export interface DescribedColumn {
 
 /** One row of the structure page: a described column, and what it references. */
 export interface TableStructureRow extends DescribedColumn, ResultRow {
-  /** `table.column` of every foreign key on this column, `null` when there is none */
+  /** `table.column` of every foreign key on this column, `database.table.column` to another database, `null` when there is none */
   References: string | null;
 }
 
