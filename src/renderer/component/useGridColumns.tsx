@@ -1,5 +1,9 @@
 import { ReactNode, useMemo } from 'react';
-import { createColumnHelper } from '@tanstack/react-table';
+import {
+  type ColumnDef,
+  type ColumnPinningState,
+  createColumnHelper,
+} from '@tanstack/react-table';
 import { styled } from 'styled-components';
 import { keyColumnsFirst } from '../../configuration/columnOrder';
 import { DateDisplay } from '../../configuration/dateDisplay';
@@ -12,7 +16,7 @@ import type { ExtraColumn, GridFeatures } from './TableGrid';
 import { getColumnWidth } from './columnWidth';
 
 /** `fieldIndex` indexes `fields`, not the columns on screen. */
-export type ColumnSource<Row extends ResultRow> =
+type ColumnSource<Row extends ResultRow> =
   | { field: ResultField; fieldIndex: number; extra?: undefined }
   | { field?: undefined; fieldIndex: -1; extra: ExtraColumn<Row> };
 
@@ -23,13 +27,21 @@ type Options<Row extends ResultRow> = {
   rowsAsArray: boolean;
 };
 
+interface GridColumns<Row extends ResultRow> {
+  /** the primary key columns, in the order of `fields` */
+  columnPinning: ColumnPinningState;
+  /** the field or extra column of each column, in the order of `columns` */
+  columnSources: Array<ColumnSource<Row>>;
+  columns: Array<ColumnDef<GridFeatures, Row, unknown>>;
+}
+
 /** the columns of the grid, the primary key pinned first, and the field or extra column each one comes from */
 export function useGridColumns<Row extends ResultRow>({
   fields,
   primaryKeys,
   extraColumns,
   rowsAsArray,
-}: Options<Row>) {
+}: Options<Row>): GridColumns<Row> {
   // pin primary key columns to the left, in the order of `fields`
   const columnPinning = useMemo(
     () => ({
