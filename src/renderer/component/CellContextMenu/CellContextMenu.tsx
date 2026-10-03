@@ -3,13 +3,13 @@ import {
   ReactNode,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
+import { useSelector } from '@tanstack/react-store';
 import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { styled } from 'styled-components';
-import { useDatabaseContext } from '../../../contexts/DatabaseContext';
-import { useDateDisplay } from '../../../contexts/DateDisplayContext';
 import { useTranslation } from '../../../i18n';
 import { getCellEditability } from '../../../sql/columnEditing';
 import type { Dialect } from '../../../sql/dialect/types';
@@ -29,7 +29,12 @@ import FreeTextFilterModal, {
   PendingFreeTextFilter,
 } from './FreeTextFilterModal';
 import { cellValueToSqlLiteral } from './cellValueToSqlLiteral';
-import { RowFormat, rowToCsv, rowToInsert, rowToJson } from './rowFormats';
+import type { RowCell, RowFormat } from './rowFormats';
+import {
+  columnNamesAtom,
+  isColumnNamesKey,
+  rowsCopyItem,
+} from './rowsCopyItem';
 import type { CellMenuTarget } from './types';
 
 type MenuItem = NonNullable<MenuProps['items']>[number];
@@ -37,9 +42,24 @@ type MenuItem = NonNullable<MenuProps['items']>[number];
 /** how much of a literal the menu shows as a preview of a value source */
 const MAX_PREVIEW_LENGTH = 24;
 
+/** How the menu copies rows: the one it was opened on, or the selected ones. */
+interface RowsCopyMenu {
+  /** empty on a grid whose rows cannot be selected */
+  selectedRows: ReadonlyArray<ReadonlyArray<RowCell>>;
+  copyRows: (
+    format: RowFormat,
+    rows: ReadonlyArray<ReadonlyArray<RowCell>>
+  ) => void;
+  canCopyAs: (
+    format: RowFormat,
+    rows: ReadonlyArray<ReadonlyArray<RowCell>>
+  ) => boolean;
+}
+
 interface CellContextMenuProps {
   /** the cell the menu is open on, `null` when it is closed */
   target: CellMenuTarget | null;
+  rowsCopy: RowsCopyMenu;
   onClose: () => void;
   /**
    * Called with the `WHERE` clause to apply, replacing the current filter.
@@ -52,7 +72,7 @@ interface CellContextMenuProps {
 
 /**
  * The menu a secondary click on a body cell opens: edit the cell or set it to
- * `NULL`, copy its value or its whole row, filter on its column.
+ * `NULL`, copy its value, its whole row or the selected rows, filter on its column.
  *
  * It lives outside the virtualized body: a single antd component for the whole
  * grid, never one per cell (see the performance note on `TableGrid`).
@@ -65,6 +85,7 @@ interface CellContextMenuProps {
  */
 export default function CellContextMenu({
   target,
+  rowsCopy,
   onClose,
   onFilterChange,
   onEdit,
@@ -72,7 +93,6 @@ export default function CellContextMenu({
   const { t } = useTranslation();
   const { writeCell, reportFailure } = useCellWrite();
   const dialect = useDialect();
-  const { database } = useDatabaseContext();
   const [clipboardText, setClipboardText] = useState<string>('');
   const [pending, setPending] = useState<PendingFreeTextFilter | null>(null);
 
@@ -104,20 +124,31 @@ export default function CellContextMenu({
     [onFilterChange, onClose]
   );
 
-  const serverZone = useDateDisplay().serverZone?.zone ?? null;
+  const columnNames = useSelector(columnNamesAtom);
+
+  // the same entries for the row of the menu and for the selected rows
+  const copyRowsItem = (
+    key: string,
+    label: string,
+    rows: ReadonlyArray<ReadonlyArray<RowCell>>
+  ) =>
+    rowsCopyItem({
+      key,
+      label,
+      t,
+      canCopyAs: (format) => rowsCopy.canCopyAs(format, rows),
+      onCopy: (format) => rowsCopy.copyRows(format, rows),
+      columnNames,
+      onToggleColumnNames: () => columnNamesAtom.set((shown) => !shown),
+    });
 
   const items = target
     ? buildMenuItems({
         dialect,
-        databaseName: database,
-        serverZone,
         target,
         clipboardText,
         t,
-        onEdit: () => {
-          onEdit(target);
-          onClose();
-        },
+        onEdit: () => onEdit(target),
         onSetNull: () => {
           const write = {
             detail: target,
@@ -127,17 +158,29 @@ export default function CellContextMenu({
 
           // no form to show a SQL error in: the conflict modal shows it
           writeCell(write).catch((error) => reportFailure(write, error));
-          onClose();
         },
         onCopy: (text) => {
           void window.clipboard.writeText(text);
-          onClose();
         },
+        copyRowsItems: [
+          copyRowsItem('copyRow', t('table.contextMenu.copyRow'), [target.row]),
+          // a selection of one row is the row of the menu, already offered
+          ...(rowsCopy.selectedRows.length > 1
+            ? [
+                copyRowsItem(
+                  'copySelection',
+                  t('table.copy.rowsAs', {
+                    count: rowsCopy.selectedRows.length,
+                  }),
+                  rowsCopy.selectedRows
+                ),
+              ]
+            : []),
+        ],
         filter: onFilterChange && {
           onApply: applyFilter,
           onAskFreeText: (operator) => {
             setPending({ columnName: target.column.name, operator });
-            onClose();
           },
         },
       })
@@ -146,20 +189,13 @@ export default function CellContextMenu({
   return (
     <>
       {target && (
-        <Dropdown
+        <CellMenuDropdown
           key={`${target.x}:${target.y}`}
-          open
-          menu={{ items }}
-          trigger={['contextMenu']}
-          onOpenChange={(open) => {
-            if (!open) {
-              onClose();
-            }
-          }}
-          destroyOnHidden
-        >
-          <Anchor style={{ left: target.x, top: target.y }} />
-        </Dropdown>
+          x={target.x}
+          y={target.y}
+          items={items}
+          onClose={onClose}
+        />
       )}
 
       <FreeTextFilterModal
@@ -184,45 +220,92 @@ export default function CellContextMenu({
   );
 }
 
+/** The dropdown of one secondary click, with the submenus it opened: the next click starts with none. */
+function CellMenuDropdown({
+  x,
+  y,
+  items,
+  onClose,
+}: {
+  x: number;
+  y: number;
+  items: MenuProps['items'];
+  onClose: () => void;
+}): ReactElement {
+  const [openKeys, setOpenKeys] = useState<Array<string>>([]);
+  // set by a click on the toggle of the column names, which must not close its submenu
+  const keepSubmenuOpen = useRef(false);
+
+  return (
+    <Dropdown
+      open
+      menu={{
+        items,
+        openKeys,
+        // runs before rc-menu closes every submenu after a click, the toggle's own included
+        onClick: ({ key }) => {
+          keepSubmenuOpen.current = isColumnNamesKey(key);
+        },
+        onOpenChange: (keys) => {
+          if (keepSubmenuOpen.current) {
+            keepSubmenuOpen.current = false;
+          } else {
+            setOpenKeys(keys);
+          }
+        },
+      }}
+      trigger={['contextMenu']}
+      // a click closes the menu, but the one on the toggle of the column names
+      onOpenChange={(open) => {
+        if (!open && !keepSubmenuOpen.current) {
+          onClose();
+        }
+      }}
+      destroyOnHidden
+    >
+      <Anchor style={{ left: x, top: y }} />
+    </Dropdown>
+  );
+}
+
 interface MenuItemsParams {
   dialect: Dialect;
-  databaseName: string | null;
-  /** the zone a JSON / CSV copy takes a wall clock in, `null` when the server's is unknown */
-  serverZone: string | null;
   target: CellMenuTarget;
   clipboardText: string;
   t: ReturnType<typeof useTranslation>['t'];
   onEdit: () => void;
   onSetNull: () => void;
   onCopy: (text: string) => void;
+  /** the submenus that copy the row of the menu, then the selected rows */
+  copyRowsItems: Array<MenuItem>;
   /** absent where the grid feeds no filter */
   filter:
     | Omit<FilterItemParams, 'dialect' | 'target' | 'clipboardText' | 't'>
     | undefined;
 }
 
-/** The entries in three groups: writing the cell, copying it, filtering on it. */
+/** The entries in three groups: writing the cell, copying it, its row or the selected rows, filtering on it. */
 function buildMenuItems({
   dialect,
-  databaseName,
-  serverZone,
   target,
   clipboardText,
   t,
   onEdit,
   onSetNull,
   onCopy,
+  copyRowsItems,
   filter,
 }: MenuItemsParams): MenuProps['items'] {
-  const { column, rowKey, row, value } = target;
+  const { column, rowKey, value } = target;
   const editable = getCellEditability(column.detail, rowKey !== null).editable;
-  const insert = rowToInsert(dialect, databaseName, row);
 
   const items: MenuProps['items'] = [
     {
       key: 'edit',
       // the modal shows what it cannot write, so the entry is never disabled
       label: t('table.contextMenu.edit', { editable: String(editable) }),
+      // the gesture that opens the same modal
+      extra: t('table.contextMenu.edit.shortcut'),
       onClick: onEdit,
     },
   ];
@@ -247,29 +330,7 @@ function buildMenuItems({
       disabled: isNullish(value),
       onClick: () => onCopy(toCopiedText(value)),
     },
-    {
-      key: 'copyRow',
-      label: t('table.contextMenu.copyRow'),
-      children: [
-        {
-          key: RowFormat.Json,
-          label: t('table.contextMenu.copyRow.json'),
-          onClick: () => onCopy(rowToJson(row, serverZone)),
-        },
-        {
-          key: RowFormat.Csv,
-          label: t('table.contextMenu.copyRow.csv'),
-          onClick: () => onCopy(rowToCsv(row, serverZone)),
-        },
-        {
-          key: RowFormat.SqlInsert,
-          label: t('table.contextMenu.copyRow.sqlInsert'),
-          // a row of no single known table has nowhere to be inserted into
-          disabled: insert === undefined,
-          onClick: () => insert !== undefined && onCopy(insert),
-        },
-      ],
-    }
+    ...copyRowsItems
   );
 
   if (filter) {

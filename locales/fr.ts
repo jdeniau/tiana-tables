@@ -171,20 +171,26 @@ const fr: Translation = {
   'table.columns.count': '{count, plural, one {# colonne} other {# colonnes}}',
   'table.contextMenu.copy': 'Copier la valeur',
   'table.contextMenu.copyRow': 'Copier la ligne en',
-  'table.contextMenu.copyRow.csv': 'CSV',
-  'table.contextMenu.copyRow.json': 'JSON',
-  'table.contextMenu.copyRow.sqlInsert': 'INSERT SQL',
   'table.contextMenu.edit':
     '{editable, select, true {Modifier…} other {Afficher…}}',
+  'table.contextMenu.edit.shortcut': 'Double-clic',
   'table.contextMenu.filter': 'Filtre',
   'table.contextMenu.filter.cellValue': 'Valeur de la cellule',
   'table.contextMenu.filter.clipboard': 'Presse-papier',
   'table.contextMenu.filter.freeText': '…',
   'table.contextMenu.filter.freeText.title': 'Filtrer sur une valeur',
   'table.contextMenu.setNull': 'Mettre à NULL',
+  'table.copy.columnNames': 'Noms de colonnes',
+  'table.copy.columnNames.formats': 'TSV, CSV',
+  'table.copy.format':
+    '{format, select, tsv {TSV} csv {CSV} markdown {Markdown} json {JSON} sqlInsert {INSERT SQL} other {{format}}}',
+  'table.copy.rowsAs':
+    'Copier {count, plural, one {# ligne} other {# lignes}} en',
   'table.filters.history': 'Filtres déjà utilisés',
   'table.filters.title': 'Filtres',
   'table.rows.count': '{count, plural, one {# ligne} other {# lignes}}',
+  'table.rows.copied':
+    '{count, plural, one {# ligne copiée} other {# lignes copiées}} en {format, select, tsv {TSV} csv {CSV} markdown {Markdown} json {JSON} sqlInsert {INSERT SQL} other {{format}}}',
   'table.rows.selected':
     '{selected, plural, one {# ligne} other {# lignes}} / {count, plural, one {# ligne} other {# lignes}}',
   'table.rows.loadMore': 'Charger plus…',

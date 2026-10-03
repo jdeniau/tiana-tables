@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import { FieldKind } from '../../sql/resultField';
-import { dateTextToIso, formatDateText } from './dateFormatter';
+import {
+  dateTextToIso,
+  dateTextToShownIso,
+  formatDateText,
+} from './dateFormatter';
 
 // the texts measured through mysql2 (`dateStrings`) and pg on the dev servers
 describe('formatDateText, as the server wrote it', () => {
@@ -119,5 +123,70 @@ describe('dateTextToIso', () => {
     expect(dateTextToIso('infinity', FieldKind.DateTime, 'UTC')).toBe(
       'infinity'
     );
+  });
+});
+
+describe('dateTextToShownIso', () => {
+  const TO_PARIS = { from: 'UTC', to: 'Europe/Paris' };
+
+  test('a date has no time, nor any offset', () => {
+    expect(
+      dateTextToShownIso('2021-12-12', FieldKind.Date, TO_PARIS, 'UTC')
+    ).toBe('2021-12-12');
+  });
+
+  test.each([
+    // moved as the grid moves it, with the offset of the day: summer, then winter time
+    ['2025-04-30 04:56:08', '2025-04-30 06:56:08+02:00'],
+    ['2025-12-30 04:56:08.123456', '2025-12-30 05:56:08+01:00'],
+  ])('a wall clock %s shown in Paris is %s', (text, expected) => {
+    expect(dateTextToShownIso(text, FieldKind.DateTime, TO_PARIS, 'UTC')).toBe(
+      expected
+    );
+  });
+
+  test('a timestamptz is moved from its own offset', () => {
+    expect(
+      dateTextToShownIso(
+        '2025-12-22 20:02:26-05',
+        FieldKind.DateTime,
+        TO_PARIS,
+        'America/New_York'
+      )
+    ).toBe('2025-12-23 02:02:26+01:00');
+  });
+
+  test("shown as the server wrote it, a wall clock takes the server's offset", () => {
+    expect(
+      dateTextToShownIso(
+        '2025-04-30 04:56:08',
+        FieldKind.DateTime,
+        null,
+        'Pacific/Auckland'
+      )
+    ).toBe('2025-04-30 04:56:08+12:00');
+  });
+
+  test('shown as the server wrote it, a timestamptz keeps its offset, in full', () => {
+    expect(
+      dateTextToShownIso(
+        '2025-12-22 20:02:26-05',
+        FieldKind.DateTime,
+        null,
+        'America/New_York'
+      )
+    ).toBe('2025-12-22 20:02:26-05:00');
+  });
+
+  test('a wall clock of a server in an unknown zone has no offset to write', () => {
+    expect(
+      dateTextToShownIso('2025-04-30 04:56:08', FieldKind.DateTime, null, null)
+    ).toBe('2025-04-30 04:56:08');
+  });
+
+  test('a text Temporal refuses is copied as is', () => {
+    expect(
+      dateTextToShownIso('0000-00-00 00:00:00', FieldKind.DateTime, null, 'UTC')
+    ).toBe('0000-00-00 00:00:00');
   });
 });

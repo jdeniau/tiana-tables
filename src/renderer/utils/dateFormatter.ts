@@ -87,6 +87,47 @@ export function formatDateText(
   };
 }
 
+/** A trailing offset as ISO 8601 writes it: PostgreSQL's `-05` is `-05:00`. */
+function isoOffset(offset: string): string {
+  return /^[+-]\d{2}$/.test(offset) ? `${offset}:00` : offset;
+}
+
+/**
+ * A date as the grid shows it, followed by the offset of the zone it is shown in: `2025-04-30 06:56:08+02:00`.
+ * A wall clock of a server whose zone is unknown has no offset to write; a `DATE` has no time.
+ */
+export function dateTextToShownIso(
+  text: string,
+  kind: FieldKind,
+  shift: ZoneShift | null,
+  serverZone: string | null
+): string {
+  const date = parseDate(text, kind);
+
+  if (date === null || date instanceof Temporal.PlainDate) {
+    return date?.toString() ?? text;
+  }
+
+  if (shift !== null) {
+    const zoned =
+      date instanceof Temporal.Instant
+        ? date.toZonedDateTimeISO(shift.to)
+        : date.toZonedDateTime(shift.from).withTimeZone(shift.to);
+
+    return `${formatWallClock(zoned.toPlainDateTime())}${zoned.offset}`;
+  }
+
+  if (date instanceof Temporal.Instant) {
+    const offset = TRAILING_OFFSET.exec(text)?.[0] ?? '';
+
+    return `${formatWallClock(Temporal.PlainDateTime.from(text))}${isoOffset(offset)}`;
+  }
+
+  return serverZone === null
+    ? formatWallClock(date)
+    : `${formatWallClock(date)}${date.toZonedDateTime(serverZone).offset}`;
+}
+
 /**
  * A date as a program reads it: ISO 8601, a point in time as an instant in UTC.
  * A wall clock is taken in the server's zone, and stays one when that zone is unknown; a `DATE` has no time.
