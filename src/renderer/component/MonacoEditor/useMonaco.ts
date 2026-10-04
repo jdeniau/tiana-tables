@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import type monaco from 'monaco-editor';
 import { useTheme } from 'styled-components';
-import useEffectOnce from '../../hooks/useEffectOnce';
 import { buildMonacoTheme } from './themes';
 
 /** the name every editor passes as `theme`, defined from the current theme */
@@ -19,7 +18,7 @@ export default function useMonaco(
   );
   const monacoTheme = buildMonacoTheme(useTheme());
 
-  useEffectOnce(() => {
+  useEffect(() => {
     let isCanceled = false;
 
     // `userWorker` configures Monaco workers through module side effects
@@ -36,7 +35,7 @@ export default function useMonaco(
     return () => {
       isCanceled = true;
     };
-  });
+  }, [failureMessage]);
 
   // before the effects of the caller, which create the editor with this theme
   useEffect(() => {
