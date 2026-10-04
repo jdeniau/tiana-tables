@@ -59,6 +59,7 @@ import { OpenCellMenu, ShowCellDetail, useCellDialogs } from './useCellDialogs';
 import { leftVar, useColumnWidthVars, widthVar } from './useColumnWidthVars';
 import { columnId, useGridColumns } from './useGridColumns';
 import { type SelectRow, useRowSelection } from './useRowSelection';
+import { type RowsCopied, columnValue, useRowsCopy } from './useRowsCopy';
 import { writtenCellFlashStyle } from './useWrittenCellFlash';
 
 const features = tableFeatures({
@@ -134,6 +135,9 @@ interface TableGridProps<R extends ResultRow> {
    * Rows are selectable only when given; it must be the same atom for the grid's whole life.
    */
   selectionAtom?: Atom<RowSelectionState>;
+
+  /** Called once rows have been copied, by Ctrl+C or from the context menu. */
+  onRowsCopied?: (copied: RowsCopied) => void;
 }
 
 /**
@@ -212,6 +216,7 @@ function TableGrid<Row extends ResultRow>({
   sortingAtom,
   enableSorting,
   selectionAtom,
+  onRowsCopied,
 }: TableGridProps<Row>): ReactElement {
   const { t } = useTranslation();
 
@@ -343,6 +348,14 @@ function TableGrid<Row extends ResultRow>({
     scrollElement,
   });
 
+  const { selectedRows, copyRows, canCopyAs } = useRowsCopy(table, {
+    enabled: selectionAtom !== undefined,
+    scrollElement,
+    columnsMeta,
+    rowsAsArray,
+    onCopied: onRowsCopied,
+  });
+
   return (
     <Wrapper>
       <ScrollContainer
@@ -458,6 +471,12 @@ function TableGrid<Row extends ResultRow>({
 
         <CellContextMenu
           target={menuTarget}
+          rowsCopy={{
+            // read when the menu opens, after its secondary click selected the row
+            selectedRows: menuTarget ? selectedRows() : [],
+            copyRows,
+            canCopyAs,
+          }}
           onFilterChange={onFilterChange}
           // the cell was remembered on the secondary click, so a save still flashes it
           onEdit={setCellDetail}
@@ -584,7 +603,7 @@ function BodyRowInner<Row extends ResultRow>({
 }: BodyRowProps<Row>): ReactElement {
   const original = row.original;
   const valueOf = (column: ColumnMeta): unknown =>
-    rowsAsArray ? original[column.fieldIndex] : original[column.name];
+    columnValue(original, column, rowsAsArray);
 
   return (
     <tr

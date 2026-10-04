@@ -67,7 +67,7 @@ export function useRowSelection<Row extends ResultRow>(
 
       anchorRef.current = next.anchorId;
       core.setRowSelection(next.selection);
-      // a modified click prevented its mousedown, and with it the focus Escape needs
+      // a modified click prevented its mousedown, and with it the focus Escape and Ctrl+C need
       scrollElement?.focus({ preventScroll: true });
     },
     [scrollElement]
@@ -76,7 +76,9 @@ export function useRowSelection<Row extends ResultRow>(
   const selectAllRows = useCallback((): void => {
     table.toggleAllRowsSelected(true);
     anchorRef.current = table.getRowModel().rows[0]?.id ?? null;
-  }, [table]);
+    // Ctrl+C copies the rows of the focused grid only
+    scrollElement?.focus({ preventScroll: true });
+  }, [table, scrollElement]);
 
   // Ctrl+A and the Edit menu's Select All, wherever the focus is short of text
   useEffect(
