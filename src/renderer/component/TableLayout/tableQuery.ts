@@ -2,7 +2,7 @@ import type { SortingState } from '@tanstack/react-table';
 import type { Dialect } from '../../../sql/dialect/types';
 import { getParser } from '../../../sql/parser';
 
-interface TablePage {
+export interface TablePage {
   database: string;
   tableName: string;
   primaryKeys: string[];
