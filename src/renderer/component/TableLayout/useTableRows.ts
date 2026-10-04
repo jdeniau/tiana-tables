@@ -6,13 +6,18 @@ import { TablePage, buildTableQuery } from './tableQuery';
 
 const DEFAULT_LIMIT = 100;
 
-type TableRows = {
+interface TableRows {
+  /** the pages loaded so far, `null` until the first one arrives and again after an error */
   result: null | ResultRow[];
+  /** the columns of the last page, each tagged with this table */
   fields: null | ResultField[];
+  /** the last fetch's error, cleared by the next one that succeeds */
   error: null | Error;
+  /** fetches the next page and appends it to `result` */
   loadMore: () => void;
+  /** stable: writes the value the server answered into the row already loaded */
   updateValue: (rowIndex: number, columnName: string, value: unknown) => void;
-};
+}
 
 /** the rows of a table, fetched one page at a time */
 export function useTableRows({
@@ -68,9 +73,8 @@ export function useTableRows({
     [fetchTableData, currentOffset]
   );
 
-  // a written cell is patched in place rather than re-fetched: the value comes
-  // from the server (see `updateCell`), so the row is as fresh as a reload
-  // would make it — without losing the rows already loaded, nor the scroll
+  // patched in place, not re-fetched: the value is the server's (see `updateCell`),
+  // as fresh as a reload, without losing the rows loaded nor the scroll
   const updateValue = useCallback(
     (rowIndex: number, columnName: string, value: unknown) => {
       setResult((previous) => {
