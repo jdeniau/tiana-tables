@@ -42,7 +42,7 @@ After a correction, write one rule where it will be loaded when it matters: the 
 
 ## Writing code
 
-- **A comment states what the code cannot.** A docblock is one line by default; a second line must be something the signature and the next statements do not say. Never narrate the reasoning, justify a design (commit message) or describe a defunct alternative. Break a comment at a thought (comma, colon, dash, full stop), never mid-sentence — a long line beats a wrapped one.
+- **A comment states what the code cannot.** A docblock is one line by default; a second line must be something the signature and the next statements do not say. Never narrate the reasoning, justify a design (commit message) or describe a defunct alternative. Break a comment at a thought (comma, colon, dash, full stop), never mid-sentence: one sentence on two lines cut at a thought reads better than one line too long to read.
 - **Before inventing a shape, grep for an existing convention** (`testables`, `SqlErrorComponent`, `fill`, a `TabStrip` variant…).
 - **A name says what the value holds in this code**, as the CSS property or type it ends up in would (`selectedBorderColor`, not the design word `rule`). A predicate names the exact set it accepts (`isNullish`, not `isNull`).
 - **A helper module's name differs from every PascalCase component of its directory by more than case**: on macOS and Windows, `./TableTabs` resolves to `tableTabs.ts` first, and nothing warns on Linux. Check with `ls | tr 'A-Z' 'a-z' | sort | uniq -d`.

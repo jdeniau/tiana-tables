@@ -22,7 +22,6 @@ import {
 } from '../component/Style/TitleBar';
 import UpdateDot from '../component/UpdateDot';
 import { useCurrentConnectionTint } from '../hooks/useCurrentConnectionTint';
-import useEffectOnce from '../hooks/useEffectOnce';
 import useUpdateStatus from '../hooks/useUpdateStatus';
 import { useWindowControlsColors } from '../hooks/useWindowControlsColors';
 import { handleSelectAllKey, selectAllFromMenu } from '../selectAll';
@@ -93,9 +92,7 @@ function AppTitleBar() {
 export default function Root() {
   const navigate = useNavigate();
 
-  // Use `useEffectOnce` here as we don't want to register twice the same event
-  // Do not use elsewhere, it's a hacky hook
-  useEffectOnce(() => {
+  useEffect(() => {
     console.info(
       `[startup][renderer] root-route-ready: +${Math.round(performance.now())}ms`
     );
@@ -105,7 +102,7 @@ export default function Root() {
       console.log('onNavigate called with path: ', path);
       navigate(path);
     });
-  });
+  }, [navigate]);
 
   useEffect(() => window.editMenu.onSelectAll(selectAllFromMenu), []);
 
