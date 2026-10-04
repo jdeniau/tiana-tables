@@ -8,8 +8,8 @@ import {
 } from '../../../sql/splitStatements';
 
 /**
- * Monaco decorations are styled by class name — there is no inline-style
- * option — so the theme reaches these through a global rule.
+ * Monaco decorations are styled by class name — there is no inline-style option,
+ * so the theme reaches these through a global rule.
  */
 export const CURRENT_STATEMENT_CLASS = 'sql-current-statement';
 export const CURRENT_STATEMENT_BAR_CLASS = 'sql-current-statement-bar';
@@ -29,8 +29,8 @@ export default function useCurrentStatementHighlight(
       return;
     }
 
-    // Splitting lexes the whole content, and the caret moves far more
-    // often than the content changes.
+    // Splitting lexes the whole content,
+    // and the caret moves far more often than the content changes.
     let lastSplit: { content: string; statements: SqlStatement[] } | null =
       null;
     const statementsOf = (content: string): SqlStatement[] => {
@@ -45,9 +45,8 @@ export default function useCurrentStatementHighlight(
 
     let reportedCount: number | null = null;
 
-    // Show what Ctrl+Enter would run, but only once there is a choice to
-    // make: on a single statement the decoration would just repaint the
-    // whole editor.
+    // Show what Ctrl+Enter would run, but only once there is a choice to make:
+    // on a single statement the decoration would just repaint the whole editor.
     const highlightCurrentStatement = (): void => {
       const model = editor.getModel();
       const position = editor.getPosition();
