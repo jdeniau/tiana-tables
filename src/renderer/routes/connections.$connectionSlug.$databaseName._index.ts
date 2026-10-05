@@ -1,6 +1,6 @@
 import { LoaderFunctionArgs, Params, redirect } from 'react-router';
 import invariant from 'tiny-invariant';
-import { lastTableUrl } from './lastTableUrl';
+import { lastTableUrl } from '../component/databaseUrl';
 
 interface RouteParams extends LoaderFunctionArgs {
   params: Params<'connectionSlug' | 'databaseName'>;

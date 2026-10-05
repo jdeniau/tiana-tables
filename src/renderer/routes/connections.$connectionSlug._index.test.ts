@@ -81,12 +81,13 @@ describe('loader', () => {
     );
   });
 
-  test('resumes the last database', async () => {
+  test('resumes the last database, with no query to announce', async () => {
     setConfiguration('connectionSlug', 'databaseName2');
 
     expect(await load('connectionSlug')).toEqual(
       redirect('/connections/connectionSlug/databaseName2')
     );
+    expect(window.sql.connectionNameChanged).not.toHaveBeenCalled();
   });
 
   test('resumes the last table of the last database', async () => {

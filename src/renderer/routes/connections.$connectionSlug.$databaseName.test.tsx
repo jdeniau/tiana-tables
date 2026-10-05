@@ -201,6 +201,23 @@ describe('routing', () => {
     );
   });
 
+  test('re-entering the connection on screen keeps its database announced', async () => {
+    const router = createRouter(
+      '/connections/connectionSlug/app/tables/orders'
+    );
+    await settled(router);
+
+    await router.navigate('/connections/connectionSlug');
+
+    expect(await settled(router)).toBe(
+      '/connections/connectionSlug/app/tables/orders'
+    );
+    expect(window.sql.connectionNameChanged).toHaveBeenLastCalledWith(
+      'connectionSlug',
+      'app'
+    );
+  });
+
   test('a link to a table of another database keeps its table and filter', async () => {
     const router = createRouter(
       '/connections/connectionSlug/app/tables/orders'

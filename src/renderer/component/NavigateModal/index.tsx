@@ -1,5 +1,6 @@
 import { type JSX, useMemo } from 'react';
 import { DatabaseOutlined, TableOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
 import { useDatabaseListContext } from '../../../contexts/DatabaseListContext';
@@ -12,9 +13,10 @@ type Props = {
 };
 
 export default function NavigateModalContainer(props: Props): JSX.Element {
+  const navigate = useNavigate();
   const tableList = useTableListContext();
   const { currentConnectionSlug } = useConnectionContext();
-  const { database } = useDatabaseContext();
+  const { database, setDatabase } = useDatabaseContext();
   const databaseList = useDatabaseListContext();
 
   const navigationItemList: Array<NavigationItem> = useMemo(
@@ -22,17 +24,28 @@ export default function NavigateModalContainer(props: Props): JSX.Element {
       ...tableList.map((table) => ({
         key: `Table-${table}`,
         name: table,
-        link: `/connections/${currentConnectionSlug}/${database}/tables/${table}`,
+        open: () =>
+          navigate(
+            `/connections/${currentConnectionSlug}/${database}/tables/${table}`
+          ),
         Icon: TableOutlined,
       })),
       ...databaseList.map((databaseName) => ({
         key: `Database-${databaseName}`,
         name: databaseName,
-        link: `/connections/${currentConnectionSlug}/${databaseName}`,
+        // the selector's way in: straight to the database's last table
+        open: () => setDatabase(databaseName),
         Icon: DatabaseOutlined,
       })),
     ],
-    [currentConnectionSlug, database, databaseList, tableList]
+    [
+      currentConnectionSlug,
+      database,
+      databaseList,
+      navigate,
+      setDatabase,
+      tableList,
+    ]
   );
 
   return <NavigateModal navigationItemList={navigationItemList} {...props} />;
