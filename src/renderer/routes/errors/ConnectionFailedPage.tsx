@@ -20,9 +20,10 @@ import { space } from '../../theme';
 /**
  * A connection that could not be opened — the reason, and the way out.
  *
- * The boundary sits on the `connections/:connectionSlug` route, so the title
- * bar and the connection tabs stay: only the workspace is replaced. Anything
- * that is not a connection failure falls back to the server's own error.
+ * The boundary sits on the `connections/:connectionSlug` and `:databaseName`
+ * routes, so the title bar and the connection tabs stay: only the workspace is
+ * replaced. Anything that is not a connection failure falls back to the
+ * server's own error.
  */
 export default function ConnectionFailedPage() {
   const error = useRouteError();

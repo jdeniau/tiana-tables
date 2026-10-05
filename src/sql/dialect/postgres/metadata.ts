@@ -21,6 +21,7 @@ const attributeRow = z.object({ attname: z.string() });
 const foreignKeyRow = z.object({
   table_name: z.string(),
   column_name: z.string(),
+  referenced_schema: z.string(),
   referenced_table: z.string(),
   referenced_column: z.string(),
 });
@@ -132,20 +133,22 @@ export const postgresMetadata: DialectMetadata = {
     }),
 
   // `conkey` and `confkey` are parallel: unnested together, they pair each column with its target.
-  // Left out: a key to another schema, since a link names a table of the current one,
-  // and the copy a partition inherits (`conparentid`), which would double its parent's
+  // Left out: the copy a partition inherits (`conparentid`), which would double its parent's
   listForeignKeys: (databaseName) =>
     readQuery('listForeignKeys', {
       sql: `
         SELECT
           source.relname AS table_name,
           source_column.attname AS column_name,
+          target_namespace.nspname AS referenced_schema,
           target.relname AS referenced_table,
           target_column.attname AS referenced_column
         FROM pg_catalog.pg_constraint con
         JOIN pg_catalog.pg_class source ON source.oid = con.conrelid
         JOIN pg_catalog.pg_namespace n ON n.oid = source.relnamespace
         JOIN pg_catalog.pg_class target ON target.oid = con.confrelid
+        JOIN pg_catalog.pg_namespace target_namespace
+          ON target_namespace.oid = target.relnamespace
         CROSS JOIN LATERAL unnest(con.conkey, con.confkey)
           WITH ORDINALITY AS pair(source_attnum, target_attnum, position)
         JOIN pg_catalog.pg_attribute source_column
@@ -157,7 +160,6 @@ export const postgresMetadata: DialectMetadata = {
         WHERE con.contype = 'f'
           AND con.conparentid = 0
           AND n.nspname = :databaseName
-          AND target.relnamespace = source.relnamespace
         ORDER BY source.relname, con.conname, pair.position
       `,
       values: { databaseName },
@@ -166,6 +168,7 @@ export const postgresMetadata: DialectMetadata = {
         rows.map((row) => ({
           table: row.table_name,
           column: row.column_name,
+          referencedDatabase: row.referenced_schema,
           referencedTable: row.referenced_table,
           referencedColumn: row.referenced_column,
         })),

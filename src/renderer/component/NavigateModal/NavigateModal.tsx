@@ -1,7 +1,6 @@
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Flex, Input, Modal } from 'antd';
 import Fuse from 'fuse.js';
-import { useNavigate } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import { selection } from '../../theme';
@@ -9,7 +8,7 @@ import { selection } from '../../theme';
 export type NavigationItem = {
   key: string;
   name: string;
-  link: string;
+  open: () => void;
   Icon: React.ElementType;
 };
 
@@ -26,7 +25,6 @@ export default function NavigateModal({
 }: Props): ReactElement {
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
-  const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = useState(-1);
 
   let filteredTableStatusList = navigationItemList;
@@ -49,9 +47,9 @@ export default function NavigateModal({
     (item: NavigationItem) => {
       setIsNavigateModalOpen(false);
 
-      navigate(item.link);
+      item.open();
     },
-    [navigate, setIsNavigateModalOpen]
+    [setIsNavigateModalOpen]
   );
 
   // handle keyboard navigation

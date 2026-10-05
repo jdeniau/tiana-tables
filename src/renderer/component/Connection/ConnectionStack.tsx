@@ -9,6 +9,7 @@ import {
   DatabaseContext,
   DatabaseContextProps,
 } from '../../../contexts/DatabaseContext';
+import { databaseUrl } from '../databaseUrl';
 import { closeConnectionTarget } from './closeConnectionTarget';
 
 interface Props {
@@ -70,10 +71,16 @@ function ConnectionStack({ children }: Props) {
   );
 
   const handleSetDatabase = useCallback(
-    (database: string) => {
+    async (database: string) => {
       invariant(currentConnectionSlug, 'Connection slug is required');
 
-      navigate(`/connections/${currentConnectionSlug}/${database}`);
+      navigate(
+        databaseUrl(
+          await window.config.getConfiguration(),
+          currentConnectionSlug,
+          database
+        )
+      );
     },
     [currentConnectionSlug, navigate]
   );

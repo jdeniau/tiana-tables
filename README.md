@@ -107,8 +107,7 @@ Tiana Tables supports MySQL, MariaDB and PostgreSQL.
 
 A PostgreSQL connection opens one database, and the app browses its schemas the
 way it browses the databases of a MySQL server: the schema list is where the
-database list would be. A foreign key to another schema is not offered as a
-link.
+database list would be.
 
 A connection can be encrypted, with the modes libpq names: `Required` encrypts
 and takes the server certificate as it comes (the `sslmode=require` of a

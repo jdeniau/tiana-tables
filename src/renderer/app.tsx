@@ -77,12 +77,8 @@ const router = createHashRouter([
         // the root boundary: the title bar and the connection tabs stay, so
         // there is somewhere to go from the error.
         errorElement: <ConnectionFailedPage />,
-        shouldRevalidate: ({ currentParams, nextParams }) => {
-          return (
-            currentParams.connectionSlug !== nextParams.connectionSlug ||
-            currentParams.databaseName !== nextParams.databaseName
-          );
-        },
+        shouldRevalidate: ({ currentParams, nextParams }) =>
+          currentParams.connectionSlug !== nextParams.connectionSlug,
         lazy: async () => {
           const routeModule =
             await import('./routes/connections.$connectionSlug');
@@ -94,8 +90,22 @@ const router = createHashRouter([
         },
         children: [
           {
+            index: true,
+            lazy: async () => {
+              const routeModule =
+                await import('./routes/connections.$connectionSlug._index');
+
+              return { loader: routeModule.loader };
+            },
+          },
+          {
             path: ':databaseName',
-            errorElement: <ConnectionErrorPage />,
+            // The sidebar is this route's: a failure of its own loader replaces
+            // it, a failure under it is answered by the routes below.
+            errorElement: <ConnectionFailedPage />,
+            shouldRevalidate: ({ currentParams, nextParams }) =>
+              currentParams.connectionSlug !== nextParams.connectionSlug ||
+              currentParams.databaseName !== nextParams.databaseName,
             lazy: async () => {
               const routeModule =
                 await import('./routes/connections.$connectionSlug.$databaseName');
@@ -107,7 +117,17 @@ const router = createHashRouter([
             },
             children: [
               {
+                index: true,
+                lazy: async () => {
+                  const routeModule =
+                    await import('./routes/connections.$connectionSlug.$databaseName._index');
+
+                  return { loader: routeModule.loader };
+                },
+              },
+              {
                 path: 'tables/:tableName',
+                errorElement: <ConnectionErrorPage />,
                 children: [
                   {
                     index: true,
@@ -137,6 +157,7 @@ const router = createHashRouter([
               },
               {
                 path: 'sql',
+                errorElement: <ConnectionErrorPage />,
                 lazy: async () => {
                   const routeModule =
                     await import('./routes/sql.$connectionSlug');

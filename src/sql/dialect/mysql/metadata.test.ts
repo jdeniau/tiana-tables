@@ -157,6 +157,7 @@ describe('the statements each question sends', () => {
         {
           TABLE_NAME: 'article',
           COLUMN_NAME: 'auteur_id',
+          REFERENCED_TABLE_SCHEMA: 'accounts',
           REFERENCED_TABLE_NAME: 'auteur',
           REFERENCED_COLUMN_NAME: 'id',
         },
@@ -165,6 +166,7 @@ describe('the statements each question sends', () => {
       {
         table: 'article',
         column: 'auteur_id',
+        referencedDatabase: 'accounts',
         referencedTable: 'auteur',
         referencedColumn: 'id',
       },

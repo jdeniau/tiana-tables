@@ -1,209 +1,248 @@
 /**
  * @vitest-environment happy-dom
  */
-import { redirect } from 'react-router';
+import { createMemoryRouter, redirect } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_LOCALE } from '../../configuration/locale';
 import { DEFAULT_THEME } from '../../configuration/themes';
-import { Configuration } from '../../configuration/type';
+import { Configuration, DatabaseConfig } from '../../configuration/type';
 import { DatabaseEngine } from '../../sql/engine';
-import { loader } from './connections.$connectionSlug';
+import { loader as connectionLoader } from './connections.$connectionSlug';
+import { loader as databaseLoader } from './connections.$connectionSlug.$databaseName';
+import { loader as databaseIndexLoader } from './connections.$connectionSlug.$databaseName._index';
+import { loader as connectionIndexLoader } from './connections.$connectionSlug._index';
 
+const params = { connectionSlug: 'connectionSlug', databaseName: 'app' };
+
+/** Stores `activeDatabase` as the app does, so a loader reading it after the write sees it. */
 function setConfiguration(
-  connectionSlug: string | undefined,
-  activeDatabase: string | undefined,
-  openTables?: Array<string>
+  activeDatabase: string,
+  configByDatabase: Record<string, DatabaseConfig>
 ): void {
   const config: Configuration = {
     version: 1,
     theme: DEFAULT_THEME.name,
     locale: DEFAULT_LOCALE,
-    connections: {},
-  };
-
-  if (connectionSlug && activeDatabase) {
-    config.connections[connectionSlug] = {
-      name: connectionSlug,
-      engine: DatabaseEngine.MySQL,
-      slug: connectionSlug,
-      host: 'localhost',
-      port: 3306,
-      user: 'root',
-      password: '',
-      appState: {
-        activeDatabase: activeDatabase,
-        configByDatabase: openTables
-          ? {
-              [activeDatabase]: { activeTable: '', openTables, tables: {} },
-            }
-          : {},
+    connections: {
+      connectionSlug: {
+        name: 'connectionSlug',
+        engine: DatabaseEngine.MySQL,
+        slug: 'connectionSlug',
+        host: 'localhost',
+        port: 3306,
+        user: 'root',
+        password: '',
+        appState: { activeDatabase, configByDatabase },
       },
-    };
-  }
+    },
+  };
 
   // @ts-expect-error don't care about the whole object here
   window.config = {
-    getConfiguration: () => Promise.resolve(config),
+    getConfiguration: () => Promise.resolve(structuredClone(config)),
+    setActiveDatabase: vi.fn((_slug: string, databaseName: string) => {
+      config.connections.connectionSlug!.appState!.activeDatabase =
+        databaseName;
+
+      return Promise.resolve();
+    }),
   };
 }
 
+function load() {
+  return databaseLoader({ params, request: new Request('http://localhost') });
+}
+
+beforeEach(() => {
+  window.sql = {
+    listDatabases: vi.fn(() => Promise.resolve(['app', 'public'])),
+    listTables: vi.fn(() => Promise.resolve(['orders', 'users'])),
+    getForeignKeys: vi.fn(() => Promise.resolve([])),
+    getAllColumns: vi.fn(() => Promise.resolve([])),
+    getServerTimeZone: vi.fn(() =>
+      Promise.resolve({ name: 'UTC', isAbbreviation: true })
+    ),
+    connectionNameChanged: vi.fn(),
+  } as unknown as typeof window.sql;
+});
+
+afterEach(() => {
+  // @ts-expect-error reset data here, will be re-set in `beforeEach`
+  window.sql = undefined;
+  // @ts-expect-error reset data here, will be re-set in the test
+  window.config = undefined;
+});
+
 describe('loader', () => {
-  beforeEach(() => {
-    // only the metadata calls the loader makes are mocked
-    window.sql = {
-      listDatabases: vi.fn(() =>
-        Promise.resolve(['databaseName1', 'databaseName2'])
-      ),
-      listTables: vi.fn(() => Promise.resolve(['table1', 'table2'])),
-      getForeignKeys: vi.fn(() => Promise.resolve([])),
-      getAllColumns: vi.fn(() => Promise.resolve([])),
-      getServerTimeZone: vi.fn(() =>
-        Promise.resolve({ name: 'UTC', isAbbreviation: true })
-      ),
-      connectionNameChanged: vi.fn(),
-    } as unknown as typeof window.sql;
-  });
+  test('queries the database of the URL, announces and stores it', async () => {
+    setConfiguration('public', {});
 
-  afterEach(() => {
-    // @ts-expect-error reset data here, will be re-set in `beforeEach`
-    window.sql = undefined;
-    // @ts-expect-error reset data here, will be re-set in the test if needed
-    window.config = undefined;
-  });
-
-  test('should redirect to the first database if no database is provided', async () => {
-    const params = { connectionSlug: 'connectionSlug' };
-
-    setConfiguration(undefined, undefined);
-
-    expect(
-      await loader({ params, request: new Request('http://localhost') })
-    ).toEqual(redirect('/connections/connectionSlug/databaseName1'));
-  });
-
-  test('should throw if there is not database (for now)', async () => {
-    // TODO handle this case
-    const params = { connectionSlug: 'connectionSlug' };
-
-    window.sql.listDatabases = vi.fn(() => Promise.resolve([]));
-
-    setConfiguration(undefined, undefined);
-
-    await expect(() =>
-      loader({ params, request: new Request('http://localhost') })
-    ).rejects.toThrowError('No database found. Case not handled for now.');
+    expect(await load()).toEqual({
+      connectionSlug: 'connectionSlug',
+      databaseName: 'app',
+      tableList: ['orders', 'users'],
+      foreignKeys: [],
+      allColumns: [],
+      openTables: [],
+    });
+    expect(window.sql.listTables).toHaveBeenCalledWith('app');
+    expect(window.sql.getForeignKeys).toHaveBeenCalledWith('app');
+    expect(window.sql.getAllColumns).toHaveBeenCalledWith('app');
+    expect(window.sql.connectionNameChanged).toHaveBeenLastCalledWith(
+      'connectionSlug',
+      'app'
+    );
+    expect(window.config.setActiveDatabase).toHaveBeenCalledWith(
+      'connectionSlug',
+      'app'
+    );
   });
 
   test('current database is not in the database list', async () => {
     // TODO handle this case
-    const params = { connectionSlug: 'connectionSlug' };
+    setConfiguration('app', {});
+    window.sql.listDatabases = vi.fn(() => Promise.resolve(['public']));
 
-    setConfiguration('connectionSlug', 'inexistant');
-
-    await expect(() =>
-      loader({ params, request: new Request('http://localhost') })
-    ).rejects.toThrowError(
+    await expect(load).rejects.toThrowError(
       'Database not found in the database list. Case not handled for now.'
     );
   });
 
-  test('get active database from config', async () => {
-    const params = { connectionSlug: 'connectionSlug' };
-
-    setConfiguration('connectionSlug', 'databaseName2');
-
-    expect(
-      await loader({ params, request: new Request('http://localhost') })
-    ).toEqual(redirect('/connections/connectionSlug/databaseName2'));
-  });
-
-  test('do not redirect if we are already on the right page', async () => {
-    const params = { connectionSlug: 'connectionSlug' };
-
-    setConfiguration('connectionSlug', 'databaseName2');
-
-    expect(
-      await loader({
-        params,
-        request: new Request(
-          'http://localhost/connections/connectionSlug/databaseName2'
-        ),
-      })
-    ).toEqual({
-      connectionSlug: 'connectionSlug',
-      activeDatabase: 'databaseName2',
-      openTables: [],
-      databaseList: ['databaseName1', 'databaseName2'],
-      tableList: ['table1', 'table2'],
-      foreignKeys: [],
-      allColumns: [],
-      serverTimeZone: { name: 'UTC', isAbbreviation: true },
-    });
-  });
-
   test('drops the memorised tables the database no longer has', async () => {
-    const params = { connectionSlug: 'connectionSlug' };
-
-    setConfiguration('connectionSlug', 'databaseName2', [
-      'table2',
-      'dropped',
-      'table1',
-    ]);
-
-    const result = await loader({
-      params,
-      request: new Request(
-        'http://localhost/connections/connectionSlug/databaseName2'
-      ),
+    setConfiguration('app', {
+      app: {
+        activeTable: '',
+        openTables: ['users', 'dropped', 'orders'],
+        tables: {},
+      },
     });
 
-    expect(result).toMatchObject({ openTables: ['table2', 'table1'] });
+    expect(await load()).toMatchObject({ openTables: ['users', 'orders'] });
+  });
+});
+
+describe('index loader', () => {
+  test('resumes the last table of the database', async () => {
+    setConfiguration('public', {
+      app: { activeTable: 'orders', tables: {} },
+    });
+
+    expect(
+      await databaseIndexLoader({
+        params,
+        request: new Request('http://localhost'),
+      })
+    ).toEqual(redirect('/connections/connectionSlug/app/tables/orders'));
   });
 
-  // On this path the loader does not redirect, so it queries the database
-  // itself. It must name the database it resolved: the `$databaseName` loader
-  // that announces it runs in parallel, and used to be the only thing keeping
-  // the main process from querying `undefined`.
-  test('queries the resolved database by name, and announces it', async () => {
-    const params = { connectionSlug: 'connectionSlug' };
+  test('stays on the database when no table was left open', async () => {
+    setConfiguration('app', { app: { activeTable: '', tables: {} } });
 
-    setConfiguration('connectionSlug', 'databaseName2');
+    expect(
+      await databaseIndexLoader({
+        params,
+        request: new Request('http://localhost'),
+      })
+    ).toBeNull();
+  });
+});
 
-    await loader({
-      params,
-      request: new Request(
-        'http://localhost/connections/connectionSlug/databaseName2'
-      ),
+describe('routing', () => {
+  // the tree of `app.tsx`, its real loaders included: they run in parallel, as in the app
+  function createRouter(initialEntry: string) {
+    return createMemoryRouter(
+      [
+        {
+          path: '/connections/:connectionSlug',
+          loader: connectionLoader,
+          shouldRevalidate: ({ currentParams, nextParams }) =>
+            currentParams.connectionSlug !== nextParams.connectionSlug,
+          children: [
+            { index: true, loader: connectionIndexLoader },
+            {
+              path: ':databaseName',
+              loader: databaseLoader,
+              shouldRevalidate: ({ currentParams, nextParams }) =>
+                currentParams.connectionSlug !== nextParams.connectionSlug ||
+                currentParams.databaseName !== nextParams.databaseName,
+              children: [
+                { index: true, loader: databaseIndexLoader },
+                { path: 'tables/:tableName', loader: () => null },
+              ],
+            },
+          ],
+        },
+      ],
+      { initialEntries: [initialEntry] }
+    );
+  }
+
+  async function settled(router: ReturnType<typeof createRouter>) {
+    await vi.waitFor(() => {
+      expect(router.state.navigation.state).toBe('idle');
+      expect(router.state.initialized).toBe(true);
     });
 
-    expect(window.sql.listTables).toHaveBeenCalledWith('databaseName2');
-    expect(window.sql.getForeignKeys).toHaveBeenCalledWith('databaseName2');
-    expect(window.sql.getAllColumns).toHaveBeenCalledWith('databaseName2');
-    expect(window.sql.connectionNameChanged).toHaveBeenLastCalledWith(
-      'connectionSlug',
-      'databaseName2'
+    return `${router.state.location.pathname}${router.state.location.search}`;
+  }
+
+  beforeEach(() => {
+    setConfiguration('app', {
+      app: { activeTable: 'orders', tables: {} },
+      public: { activeTable: 'article', tables: {} },
+    });
+  });
+
+  test('opening the connection resumes its last database and table', async () => {
+    const router = createRouter('/connections/connectionSlug');
+
+    expect(await settled(router)).toBe(
+      '/connections/connectionSlug/app/tables/orders'
     );
   });
 
-  test('handle connection name that are url-encoded', async () => {
-    const params = { connectionSlug: 'connection + name' };
+  test('re-entering the connection on screen keeps its database announced', async () => {
+    const router = createRouter(
+      '/connections/connectionSlug/app/tables/orders'
+    );
+    await settled(router);
 
-    setConfiguration('connection + name', 'databaseName2');
+    await router.navigate('/connections/connectionSlug');
 
-    // if we need a redirection
-    expect(
-      await loader({ params, request: new Request('http://localhost') })
-    ).toEqual(redirect('/connections/connection + name/databaseName2'));
+    expect(await settled(router)).toBe(
+      '/connections/connectionSlug/app/tables/orders'
+    );
+    expect(window.sql.connectionNameChanged).toHaveBeenLastCalledWith(
+      'connectionSlug',
+      'app'
+    );
+  });
 
-    // if we are already on the right page
+  test('a link to a table of another database keeps its table and filter', async () => {
+    const router = createRouter(
+      '/connections/connectionSlug/app/tables/orders'
+    );
+    await settled(router);
 
-    expect(
-      await loader({
-        params,
-        request: new Request(
-          'http://localhost/connections/connection + name/database2'
-        ),
-      })
-    ).toEqual(redirect('/connections/connection + name/databaseName2'));
+    await router.navigate(
+      '/connections/connectionSlug/public/tables/users?where=id%20%3D%201'
+    );
+
+    expect(await settled(router)).toBe(
+      '/connections/connectionSlug/public/tables/users?where=id%20%3D%201'
+    );
+  });
+
+  test('picking another database lands on its last table', async () => {
+    const router = createRouter(
+      '/connections/connectionSlug/app/tables/orders'
+    );
+    await settled(router);
+
+    await router.navigate('/connections/connectionSlug/public');
+
+    expect(await settled(router)).toBe(
+      '/connections/connectionSlug/public/tables/article'
+    );
   });
 });
