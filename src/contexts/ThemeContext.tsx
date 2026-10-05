@@ -48,7 +48,6 @@ interface ThemeContextProps {
 }
 const ThemeContext = createContext<ThemeContextProps>({
   themeName: DEFAULT_THEME.name,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   changeTheme: () => {},
 });
 ThemeContext.displayName = 'ThemeContext';
