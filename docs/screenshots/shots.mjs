@@ -286,6 +286,7 @@ try {
       await window.config.setColumnWidth('${CONNECTION}', '${DATABASE}', '${TABLE}', column, width);
     }
     await window.config.setTableFilter('${CONNECTION}', '${DATABASE}', '${TABLE}', "statut <> 'archive'");
+    await window.config.setDateDisplay('local');
   })()`);
 
   const tablePath = `#/connections/${CONNECTION}/${DATABASE}/tables/${TABLE}`;

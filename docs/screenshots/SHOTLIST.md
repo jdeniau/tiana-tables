@@ -7,7 +7,7 @@ docker compose up -d --wait         # the dev databases, see dev/fixtures/README
 node docs/screenshots/shots.mjs     # Node 26; no other Tiana instance running
 ```
 
-The script starts the app on a throwaway profile, creates a "Le Fil (dev)" connection through the form, stages the rest through the app's own `window.config` calls (column order and widths, filter, theme, panel size), then drives it over the devtools protocol and quits.
+The script starts the app on a throwaway profile, creates a "Le Fil (dev)" connection through the form, stages the rest through the app's own `window.config` calls (column order and widths, filter, dates in local time, theme, panel size), then drives it over the devtools protocol and quits.
 
 | File             | What                                                                                                                                                                                 | Theme                                                                                                                     | Note                                                         |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
