@@ -3,7 +3,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -54,14 +53,17 @@ export function OpenTablesContextProvider({
     tableName && !initialOpenTables.includes(tableName) ? tableName : undefined
   );
 
+  const [routeTable, setRouteTable] = useState(tableName);
+
   // The route is the one thing every way of opening a table goes through, the back button included.
   // It follows a change of route and nothing else: on a change of `openTables` it would hand the tab we just closed straight back.
-  useEffect(() => {
+  if (routeTable !== tableName) {
+    setRouteTable(tableName);
+
     if (tableName && !openTables.includes(tableName)) {
       setPreviewTable(tableName);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableName]);
+  }
 
   const persist = useCallback(
     (next: Array<string>) => {

@@ -58,10 +58,6 @@ export default tseslint.config(
           pathGroupsExcludedImportTypes: ['react'],
         },
       ],
-      // New react-hooks v7 rules — disable for now, existing patterns are intentional
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/preserve-manual-memoization': 'off',
-      'react-hooks/refs': 'off',
     },
   }
 );

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { ReactNode, createContext, use, useState } from 'react';
 import type { Preview } from '@storybook/react-vite';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 
@@ -18,15 +18,18 @@ type DecoratorFunction = Extract<Preview['decorators'], Array<any>>[number];
  * clicking a connection leaves the story in its pending state, which is the
  * state worth looking at — and what a server that never answers does.
  */
-type Props = { Story: Parameters<DecoratorFunction>[0] };
+type Story = Parameters<DecoratorFunction>[0];
 
-function DataRouter({ Story }: Props) {
-  // The story is read through a ref, and the router built once: rebuilding it
-  // on a re-render would send the story back to its initial location, losing
-  // the very pending state it is here to show.
-  const storyRef = useRef(Story);
-  storyRef.current = Story;
+const StoryContext = createContext<ReactNode>(null);
 
+function CurrentStory() {
+  return use(StoryContext);
+}
+
+function DataRouter({ Story }: { Story: Story }) {
+  // The story reaches the route through a context, and the router is built
+  // once: rebuilding it on a re-render would send the story back to its
+  // initial location, losing the very pending state it is here to show.
   const [router] = useState(() =>
     createMemoryRouter([
       {
@@ -34,18 +37,15 @@ function DataRouter({ Story }: Props) {
         loader: () => new Promise(() => {}),
         Component: () => null,
       },
-      {
-        path: '*',
-        Component: () => {
-          const CurrentStory = storyRef.current;
-
-          return <CurrentStory />;
-        },
-      },
+      { path: '*', Component: CurrentStory },
     ])
   );
 
-  return <RouterProvider router={router} />;
+  return (
+    <StoryContext value={<Story />}>
+      <RouterProvider router={router} />
+    </StoryContext>
+  );
 }
 
 const dataRouterDecorator: DecoratorFunction = (Story) => (

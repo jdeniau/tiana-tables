@@ -2,6 +2,7 @@ import {
   CSSProperties,
   Ref,
   useEffect,
+  useEffectEvent,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -137,11 +138,9 @@ export function RawSqlEditor({
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoEl = useRef<HTMLDivElement>(null);
-  // Refs to always hold the latest callbacks without triggering effect re-runs
-  const onSubmitRef = useRef(onSubmit);
-  onSubmitRef.current = onSubmit;
-  const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  // the latest callbacks, without re-creating the editor when they change
+  const submit = useEffectEvent(() => onSubmit());
+  const reportChange = useEffectEvent((value: string) => onChange?.(value));
   const theme = useTheme();
 
   useCompletion();
@@ -198,12 +197,12 @@ export function RawSqlEditor({
     createdEditor.addCommand(
       monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter,
       () => {
-        onSubmitRef.current();
+        submit();
       }
     );
 
     createdEditor.onDidChangeModelContent(() => {
-      onChangeRef.current?.(createdEditor.getValue());
+      reportChange(createdEditor.getValue());
     });
 
     setEditor(createdEditor);
