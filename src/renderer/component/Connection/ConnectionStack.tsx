@@ -109,11 +109,11 @@ function ConnectionStack({ children }: Props) {
   );
 
   return (
-    <ConnectionContext.Provider value={connectionContextValue}>
-      <DatabaseContext.Provider value={databateContextValue}>
+    <ConnectionContext value={connectionContextValue}>
+      <DatabaseContext value={databateContextValue}>
         {children}
-      </DatabaseContext.Provider>
-    </ConnectionContext.Provider>
+      </DatabaseContext>
+    </ConnectionContext>
   );
 }
 

@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, use } from 'react';
 
 /** The tables and views of the current database, by name. */
 export type TableListContext = string[];
@@ -13,14 +13,14 @@ export function TableListContextProvider({
   tableList: TableListContext;
 }) {
   return (
-    <TableListContext.Provider value={tableList}>
+    <TableListContext value={tableList}>
       {children}
-    </TableListContext.Provider>
+    </TableListContext>
   );
 }
 
 export function useTableListContext(): TableListContext {
-  const context = useContext(TableListContext);
+  const context = use(TableListContext);
 
   if (context === null) {
     throw new Error(

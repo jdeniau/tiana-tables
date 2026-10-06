@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, use, useMemo } from 'react';
 import { ColumnDetailHelper } from '../sql/ColumnDetailHelper';
 import type { ColumnDetail } from '../sql/dialect/metadata';
 
@@ -18,14 +18,14 @@ export function AllColumnsContextProvider({
   );
 
   return (
-    <AllColumnsContext.Provider value={columnDetailsHelper}>
+    <AllColumnsContext value={columnDetailsHelper}>
       {children}
-    </AllColumnsContext.Provider>
+    </AllColumnsContext>
   );
 }
 
 export function useAllColumnsContext(): ColumnDetailHelper {
-  const context = useContext(AllColumnsContext);
+  const context = use(AllColumnsContext);
 
   if (context === null) {
     throw new Error(

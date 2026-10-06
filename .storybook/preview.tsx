@@ -69,7 +69,7 @@ const preview: Preview = {
       }, [locale]);
 
       return (
-        <ConfigurationContext.Provider
+        <ConfigurationContext
           // weirdly needed to force storybook to re-render
           key={theme}
           value={{
@@ -102,7 +102,7 @@ const preview: Preview = {
           <ThemeContextProvider>
             <Story />
           </ThemeContextProvider>
-        </ConfigurationContext.Provider>
+        </ConfigurationContext>
       );
     },
     // force storybook background to be the same as the theme

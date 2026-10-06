@@ -21,7 +21,7 @@ export const STORY_CONNECTION: EncryptedConnectionObject = {
 
 /** The app on `STORY_CONNECTION`, for a component that reads the current connection or its dialect. */
 const connectionDecorator: DecoratorFunction = (Story) => (
-  <ConnectionContext.Provider
+  <ConnectionContext
     value={{
       currentConnectionSlug: STORY_CONNECTION.slug,
       connectionSlugList: [STORY_CONNECTION.slug],
@@ -34,7 +34,7 @@ const connectionDecorator: DecoratorFunction = (Story) => (
     }}
   >
     <Story />
-  </ConnectionContext.Provider>
+  </ConnectionContext>
 );
 
 export default connectionDecorator;

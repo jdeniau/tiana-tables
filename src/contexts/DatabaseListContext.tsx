@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, use } from 'react';
 
 /** The databases of the connection, by name — the schemas on PostgreSQL. */
 export type DatabaseListContext = string[];
@@ -13,14 +13,14 @@ export function DatabaseListContextProvider({
   databaseList: DatabaseListContext;
 }) {
   return (
-    <DatabaseListContext.Provider value={DatabaseList}>
+    <DatabaseListContext value={DatabaseList}>
       {children}
-    </DatabaseListContext.Provider>
+    </DatabaseListContext>
   );
 }
 
 export function useDatabaseListContext(): DatabaseListContext {
-  const context = useContext(DatabaseListContext);
+  const context = use(DatabaseListContext);
 
   if (context === null) {
     throw new Error(

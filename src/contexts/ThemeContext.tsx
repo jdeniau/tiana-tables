@@ -1,7 +1,7 @@
 import {
   createContext,
+  use,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from 'react';
@@ -284,15 +284,15 @@ export function ThemeContextProvider({
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyle />
-      <ThemeContext.Provider value={themeContextValue}>
+      <ThemeContext value={themeContextValue}>
         <AntdConfigProvider theme={antdThemeValue} splitter={SPLITTER}>
           <LayoutDiv>{children}</LayoutDiv>
         </AntdConfigProvider>
-      </ThemeContext.Provider>
+      </ThemeContext>
     </ThemeProvider>
   );
 }
 
 export function useTheme(): ThemeContextProps {
-  return useContext(ThemeContext);
+  return use(ThemeContext);
 }

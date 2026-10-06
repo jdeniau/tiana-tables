@@ -1,8 +1,8 @@
 import {
   ReactNode,
   createContext,
+  use,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from 'react';
@@ -136,14 +136,14 @@ export function OpenTablesContextProvider({
   );
 
   return (
-    <OpenTablesContext.Provider value={value}>
+    <OpenTablesContext value={value}>
       {children}
-    </OpenTablesContext.Provider>
+    </OpenTablesContext>
   );
 }
 
 export function useOpenTablesContext(): OpenTablesContextProps {
-  const context = useContext(OpenTablesContext);
+  const context = use(OpenTablesContext);
 
   if (context === null) {
     throw new Error(

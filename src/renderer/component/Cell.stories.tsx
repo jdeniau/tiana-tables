@@ -9,7 +9,7 @@ const meta: Meta<typeof Cell> = {
   component: Cell,
   decorators: [
     (Story) => (
-      <ConnectionContext.Provider
+      <ConnectionContext
         value={{
           currentConnectionSlug: 'test',
           connectionSlugList: ['test'],
@@ -21,7 +21,7 @@ const meta: Meta<typeof Cell> = {
           },
         }}
       >
-        <DatabaseContext.Provider
+        <DatabaseContext
           value={{
             database: 'mocked-db',
             setDatabase: () => {},
@@ -36,8 +36,8 @@ const meta: Meta<typeof Cell> = {
           }}
         >
           <Story />
-        </DatabaseContext.Provider>
-      </ConnectionContext.Provider>
+        </DatabaseContext>
+      </ConnectionContext>
     ),
   ],
   parameters: {

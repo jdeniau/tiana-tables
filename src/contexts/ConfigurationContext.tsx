@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, use, useEffect, useMemo, useState } from 'react';
 import type { DateDisplay } from '../configuration/dateDisplay';
 import { PANEL } from '../configuration/panels';
 import { Configuration } from '../configuration/type';
@@ -103,14 +103,14 @@ export function ConfigurationContextProvider({ children }: Props) {
   }
 
   return (
-    <ConfigurationContext.Provider value={value}>
+    <ConfigurationContext value={value}>
       {children}
-    </ConfigurationContext.Provider>
+    </ConfigurationContext>
   );
 }
 
 export function useConfiguration(): ConfigurationContextType {
-  const value = useContext(ConfigurationContext);
+  const value = use(ConfigurationContext);
 
   if (!value) {
     throw new Error(

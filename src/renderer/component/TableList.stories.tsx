@@ -62,7 +62,7 @@ function WithColouredConnection(Story: () => React.ReactElement) {
   const value = useConfiguration();
 
   return (
-    <ConfigurationContext.Provider
+    <ConfigurationContext
       value={{
         ...value,
         configuration: {
@@ -77,7 +77,7 @@ function WithColouredConnection(Story: () => React.ReactElement) {
       }}
     >
       <Story />
-    </ConfigurationContext.Provider>
+    </ConfigurationContext>
   );
 }
 

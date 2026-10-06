@@ -45,7 +45,7 @@ async function renderForm() {
     root.render(
       <MemoryRouter>
         <ThemeProvider theme={DEFAULT_THEME}>
-          <ConfigurationContext.Provider
+          <ConfigurationContext
             value={
               {
                 configuration: { connections: {} },
@@ -54,7 +54,7 @@ async function renderForm() {
             }
           >
             <ConnectionForm />
-          </ConfigurationContext.Provider>
+          </ConfigurationContext>
         </ThemeProvider>
       </MemoryRouter>
     );

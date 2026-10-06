@@ -47,7 +47,7 @@ function renderLink(
     root.render(
       <ThemeProvider theme={DEFAULT_THEME}>
         <MemoryRouter>
-          <ConnectionContext.Provider
+          <ConnectionContext
             value={{
               currentConnectionSlug: 'shop',
               connectionSlugList: ['shop'],
@@ -55,7 +55,7 @@ function renderLink(
               closeConnection: () => {},
             }}
           >
-            <DatabaseContext.Provider
+            <DatabaseContext
               value={{ database: 'db', setDatabase: () => {} }}
             >
               <ForeignKeysContextProvider
@@ -69,8 +69,8 @@ function renderLink(
                   value={value}
                 />
               </ForeignKeysContextProvider>
-            </DatabaseContext.Provider>
-          </ConnectionContext.Provider>
+            </DatabaseContext>
+          </ConnectionContext>
         </MemoryRouter>
       </ThemeProvider>
     );

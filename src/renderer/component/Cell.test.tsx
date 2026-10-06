@@ -113,7 +113,7 @@ describe('the order of the tiers', () => {
     const inZone = (display: DateDisplay, to: string, value: string) =>
       renderToStaticMarkup(
         <ThemeProvider theme={DEFAULT_THEME}>
-          <DateDisplayContext.Provider
+          <DateDisplayContext
             value={{
               display,
               segments: [],
@@ -123,7 +123,7 @@ describe('the order of the tiers', () => {
             }}
           >
             <Cell kind={FieldKind.DateTime} value={value} />
-          </DateDisplayContext.Provider>
+          </DateDisplayContext>
         </ThemeProvider>
       );
 

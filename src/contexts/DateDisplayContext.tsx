@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, use, useMemo } from 'react';
 import { DateDisplay } from '../configuration/dateDisplay';
 import type { ZoneShift } from '../renderer/utils/dateFormatter';
 import {
@@ -58,14 +58,14 @@ export function DateDisplayContextProvider({
   }, [serverTimeZone, preferred, setDateDisplay]);
 
   return (
-    <DateDisplayContext.Provider value={value}>
+    <DateDisplayContext value={value}>
       {children}
-    </DateDisplayContext.Provider>
+    </DateDisplayContext>
   );
 }
 
 export function useDateDisplay(): DateDisplayContextValue {
-  return useContext(DateDisplayContext);
+  return use(DateDisplayContext);
 }
 
 export const testables = {

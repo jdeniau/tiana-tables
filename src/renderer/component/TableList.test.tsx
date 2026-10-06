@@ -47,7 +47,7 @@ async function render(color?: ConnectionColor): Promise<void> {
   await act(async () => {
     root.render(
       <ThemeProvider theme={DEFAULT_THEME}>
-        <ConfigurationContext.Provider
+        <ConfigurationContext
           value={{
             configuration: {
               version: 1,
@@ -75,7 +75,7 @@ async function render(color?: ConnectionColor): Promise<void> {
             changeLanguage: vi.fn(),
           }}
         >
-          <ConnectionContext.Provider
+          <ConnectionContext
             value={{
               currentConnectionSlug: 'test',
               connectionSlugList: ['test'],
@@ -101,8 +101,8 @@ async function render(color?: ConnectionColor): Promise<void> {
                 />
               </Routes>
             </MemoryRouter>
-          </ConnectionContext.Provider>
-        </ConfigurationContext.Provider>
+          </ConnectionContext>
+        </ConfigurationContext>
       </ThemeProvider>
     );
   });

@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, use } from 'react';
 
 export interface ConnexionContextProps {
   currentConnectionSlug: string | null;
@@ -17,5 +17,5 @@ export const ConnectionContext = createContext<ConnexionContextProps>({
 ConnectionContext.displayName = 'ConnectionContext';
 
 export function useConnectionContext(): ConnexionContextProps {
-  return useContext(ConnectionContext);
+  return use(ConnectionContext);
 }

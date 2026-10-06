@@ -2,8 +2,8 @@ import {
   type ReactElement,
   type ReactNode,
   createContext,
+  use,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from 'react';
@@ -101,7 +101,7 @@ export function CellWriteProvider({
   );
 
   return (
-    <CellWriteContext.Provider value={value}>
+    <CellWriteContext value={value}>
       {children}
 
       <CellConflictModal
@@ -109,12 +109,12 @@ export function CellWriteProvider({
         onOverwrite={(write) => void overwrite(write)}
         onClose={close}
       />
-    </CellWriteContext.Provider>
+    </CellWriteContext>
   );
 }
 
 export function useCellWrite(): CellWriteContextValue {
-  const context = useContext(CellWriteContext);
+  const context = use(CellWriteContext);
 
   invariant(context, 'useCellWrite must be used within a CellWriteProvider');
 

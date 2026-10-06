@@ -40,7 +40,7 @@ function resolveTokens(themeName: string): GlobalToken {
   captured = null;
 
   renderToStaticMarkup(
-    <ConfigurationContext.Provider
+    <ConfigurationContext
       value={{
         configuration: {
           version: 1,
@@ -60,7 +60,7 @@ function resolveTokens(themeName: string): GlobalToken {
       <ThemeContextProvider>
         <TokenProbe />
       </ThemeContextProvider>
-    </ConfigurationContext.Provider>
+    </ConfigurationContext>
   );
 
   if (!captured) {

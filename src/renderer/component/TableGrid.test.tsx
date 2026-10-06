@@ -84,7 +84,7 @@ function render(element: ReactElement, allColumns: ColumnDetail[] = []): void {
     root.render(
       <ThemeProvider theme={DEFAULT_THEME}>
         <MemoryRouter>
-          <DatabaseContext.Provider
+          <DatabaseContext
             value={{ database: 'db', setDatabase: () => {} }}
           >
             <ForeignKeysContextProvider foreignKeys={[]} database="db">
@@ -92,7 +92,7 @@ function render(element: ReactElement, allColumns: ColumnDetail[] = []): void {
                 {element}
               </AllColumnsContextProvider>
             </ForeignKeysContextProvider>
-          </DatabaseContext.Provider>
+          </DatabaseContext>
         </MemoryRouter>
       </ThemeProvider>
     );
@@ -587,7 +587,7 @@ describe('the head of a date-time column', () => {
 
   function heads(segments: Array<typeof SERVER>): string[] {
     render(
-      <DateDisplayContext.Provider
+      <DateDisplayContext
         value={{
           display: DateDisplay.Local,
           segments,
@@ -607,7 +607,7 @@ describe('the head of a date-time column', () => {
           ]}
           primaryKeys={['id']}
         />
-      </DateDisplayContext.Provider>
+      </DateDisplayContext>
     );
 
     return [...container.querySelectorAll('th')].map(

@@ -162,7 +162,7 @@ const meta: Meta<typeof TableGrid> = {
       return <Story />;
     },
     (Story) => (
-      <ConnectionContext.Provider
+      <ConnectionContext
         value={{
           currentConnectionSlug: 'test',
           connectionSlugList: ['test'],
@@ -174,7 +174,7 @@ const meta: Meta<typeof TableGrid> = {
           },
         }}
       >
-        <DatabaseContext.Provider
+        <DatabaseContext
           value={{
             database: 'mocked-db',
             setDatabase: () => {},
@@ -210,8 +210,8 @@ const meta: Meta<typeof TableGrid> = {
               </div>
             </AllColumnsContextProvider>
           </ForeignKeysContextProvider>
-        </DatabaseContext.Provider>
-      </ConnectionContext.Provider>
+        </DatabaseContext>
+      </ConnectionContext>
     ),
   ],
 };

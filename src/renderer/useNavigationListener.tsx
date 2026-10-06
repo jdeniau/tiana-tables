@@ -2,8 +2,8 @@ import {
   type JSX,
   ReactNode,
   createContext,
+  use,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -54,19 +54,19 @@ function NavigateModalContextProvider({
   );
 
   return (
-    <NavigateModalContext.Provider value={contextValue}>
+    <NavigateModalContext value={contextValue}>
       <NavigateModal
         isNavigateModalOpen={isNavigateModalOpen}
         setIsNavigateModalOpen={setIsNavigateModalOpen}
       />
 
       {children}
-    </NavigateModalContext.Provider>
+    </NavigateModalContext>
   );
 }
 
 export function useNavigateModalContext(): NavigateModalContext {
-  const context = useContext(NavigateModalContext);
+  const context = use(NavigateModalContext);
 
   if (!context) {
     throw new Error(
