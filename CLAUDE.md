@@ -40,7 +40,7 @@ The mistake made most often here. Before code is built on a claim, or a sentence
 
 ### Learning from corrections
 
-After a correction, write one rule where it will be loaded when it matters: the `.claude/rules/` file whose `paths` cover the code, the relevant skill, or this file when it is cross-cutting — or needed when _creating_ a file, since a path rule loads only when a matching file is read. Format: **one bold sentence stating the rule**, then the non-obvious mechanism or how to check it, three lines at most. No date, quote or story: those go in the commit message. Update a rule rather than add a near-duplicate, and delete one that became false.
+After a correction, write one rule where it will be loaded when it matters: the `.claude/rules/` file whose `paths` cover the code, the relevant skill, or this file when it is cross-cutting — or needed when _creating_ a file, since a path rule loads only when a matching file is read. Format: **one bold sentence stating the rule**, then the non-obvious mechanism or how to check it, three lines at most. No date, quote or story: those go in the commit message. Update a rule rather than add a near-duplicate, and delete one that became false. **Never in the personal auto-memory**: it survives neither teamwork nor a change of machine. A judgement call that is not a rule is written nowhere.
 
 ## Writing code
 
