@@ -1,4 +1,6 @@
 import { configDefaults, defineConfig } from 'vitest/config';
+import babel from '@rolldown/plugin-babel';
+import { reactCompilerPreset } from '@vitejs/plugin-react';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
@@ -14,6 +16,8 @@ export default defineConfig({
     projects: [
       {
         extends: true,
+        // the components run as the app compiles them: they leave their memoisation to React Compiler
+        plugins: [babel({ presets: [reactCompilerPreset()] })],
         test: {
           // ... Specify options here.
           exclude: [...configDefaults.exclude, 'out/**'],
