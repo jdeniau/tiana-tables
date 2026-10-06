@@ -5,6 +5,7 @@ import {
 } from '../configuration/filePaths';
 import { t } from '../i18n';
 import { EDIT_MENU_CHANNEL } from '../preload/editMenuChannel';
+import { NAVIGATION_CHANNEL } from '../preload/navigationChannel';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import connectionStackInstance from '../sql';
 import { isDevApp, isMacPlatform } from './helpers';
@@ -106,6 +107,24 @@ export function createMenu(mainWindow: BrowserWindow) {
           accelerator: 'CmdOrCtrl+N',
           click: () => {
             mainWindow.webContents.send('navigate', '/connect');
+          },
+        },
+        // `Ctrl` on macOS too, the key browsers switch tabs with
+        {
+          label: t('menu.navigate.nextConnection'),
+          accelerator: 'Ctrl+Tab',
+          click: () => {
+            mainWindow.webContents.send(NAVIGATION_CHANNEL.CYCLE_CONNECTION, 1);
+          },
+        },
+        {
+          label: t('menu.navigate.previousConnection'),
+          accelerator: 'Ctrl+Shift+Tab',
+          click: () => {
+            mainWindow.webContents.send(
+              NAVIGATION_CHANNEL.CYCLE_CONNECTION,
+              -1
+            );
           },
         },
         {
@@ -235,8 +254,8 @@ export function createMenu(mainWindow: BrowserWindow) {
    * chords, and `Ctrl+T` never reaches the menu either.
    *
    * Only these two need it. Measured with the editor focused, `Ctrl+N`,
-   * `Ctrl+,`, `Alt+Left` and `Alt+Right` all come back out of the page
-   * unconsumed and reach the menu on their own.
+   * `Ctrl+,`, `Ctrl+Tab`, `Ctrl+Shift+Tab`, `Alt+Left` and `Alt+Right` all
+   * come back out of the page unconsumed and reach the menu on their own.
    *
    * `before-input-event` runs before the page, whatever holds the focus, so
    * these two are triggered from there. Its `preventDefault` drops the native

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useEffectEvent, useState } from 'react';
 import { useMatch, useNavigate } from 'react-router';
 import invariant from 'tiny-invariant';
 import {
@@ -11,6 +11,7 @@ import {
 } from '../../../contexts/DatabaseContext';
 import { databaseUrl } from '../databaseUrl';
 import { closeConnectionTarget } from './closeConnectionTarget';
+import { cycleConnectionTarget } from './cycleConnectionTarget';
 
 interface Props {
   children: ReactNode;
@@ -66,6 +67,26 @@ function ConnectionStack({ children }: Props) {
 
     window.sql.closeConnection(connectionSlug);
   };
+
+  const cycleConnection = useEffectEvent((offset: number) => {
+    const target = cycleConnectionTarget(
+      connectionSlugList,
+      currentConnectionSlug ?? null,
+      offset
+    );
+
+    if (target) {
+      navigate(target);
+    }
+  });
+
+  useEffect(
+    () =>
+      window.navigationListener.onCycleConnection((offset) =>
+        cycleConnection(offset)
+      ),
+    []
+  );
 
   const handleSetDatabase = async (database: string) => {
     invariant(currentConnectionSlug, 'Connection slug is required');
