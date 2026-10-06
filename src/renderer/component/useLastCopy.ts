@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RowsCopied } from './useRowsCopy';
 
 /** how long the region header says what was copied */
@@ -14,11 +14,11 @@ export function useLastCopy(): [
 
   useEffect(() => () => clearTimeout(timeout.current), []);
 
-  const onCopied = useCallback((next: RowsCopied) => {
+  const onCopied = (next: RowsCopied) => {
     clearTimeout(timeout.current);
     setCopied(next);
     timeout.current = setTimeout(() => setCopied(null), SHOWN_MS);
-  }, []);
+  };
 
   return [copied, onCopied];
 }

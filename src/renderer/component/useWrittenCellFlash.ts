@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useRef } from 'react';
 import { css, keyframes } from 'styled-components';
 import { background, stringForeground } from '../theme';
 
@@ -50,11 +50,11 @@ export function useWrittenCellFlash(): {
 } {
   const cellRef = useRef<HTMLTableCellElement | null>(null);
 
-  const rememberCell = useCallback((cell: HTMLTableCellElement) => {
+  const rememberCell = (cell: HTMLTableCellElement) => {
     cellRef.current = cell;
-  }, []);
+  };
 
-  const flashCell = useCallback(() => {
+  const flashCell = () => {
     const cell = cellRef.current;
 
     if (!cell) {
@@ -67,7 +67,7 @@ export function useWrittenCellFlash(): {
       () => cell.removeAttribute(WRITTEN_ATTRIBUTE),
       { once: true }
     );
-  }, []);
+  };
 
   return { rememberCell, flashCell };
 }

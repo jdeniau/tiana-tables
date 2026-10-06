@@ -1,4 +1,4 @@
-import { MouseEvent, ReactNode, memo } from 'react';
+import { MouseEvent, ReactNode } from 'react';
 import { styled } from 'styled-components';
 import { DateDisplay } from '../../configuration/dateDisplay';
 import { useDateDisplay } from '../../contexts/DateDisplayContext';
@@ -205,7 +205,7 @@ function BinaryCell({ value }: CellProps<Uint8Array>) {
  * to text. A cell renders something whatever arrives: blanking the grid on a
  * type nobody thought of is the one outcome worth ruling out.
  */
-const TableCellFactory = memo(function TableCellFactory({
+function TableCellFactory({
   kind,
   value,
 }: TableCellFactoryProps) {
@@ -242,26 +242,18 @@ const TableCellFactory = memo(function TableCellFactory({
     default:
       return <TextCell value={String(value)} />;
   }
-});
+}
 
-const TableCellFactoryContainer = memo(
-  function TableCellFactoryContainer({
-    link,
-    ...rest
-  }: TableCellFactoryProps & { link?: ReactNode }) {
-    return (
-      <>
-        <TableCellFactory {...rest} />
-        {link}
-      </>
-    );
-  },
-  (prevProps, nextProps) => {
-    return (
-      prevProps.kind === nextProps.kind && prevProps.value === nextProps.value
-      // prevProps.link === nextProps.link // omit link from comparison to avoid re-renders
-    );
-  }
-);
+function TableCellFactoryContainer({
+  link,
+  ...rest
+}: TableCellFactoryProps & { link?: ReactNode }) {
+  return (
+    <>
+      <TableCellFactory {...rest} />
+      {link}
+    </>
+  );
+}
 
 export default TableCellFactoryContainer;

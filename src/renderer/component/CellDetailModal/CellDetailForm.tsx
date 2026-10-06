@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Alert, Button, Checkbox, Flex, Typography } from 'antd';
 import { useTranslation } from '../../../i18n';
 import {
@@ -35,10 +35,7 @@ export default function CellDetailForm({
   const fieldKind = detail.column.kind;
 
   /** the loaded value as text: what the editor opens on, and what "unchanged" means */
-  const baseEditable = useMemo(
-    () => toEditableValue(detail.value),
-    [detail.value]
-  );
+  const baseEditable = toEditableValue(detail.value);
 
   const [edited, setEdited] = useState(baseEditable);
   const [isSaving, setIsSaving] = useState(false);

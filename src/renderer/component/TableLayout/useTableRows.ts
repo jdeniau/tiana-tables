@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import { useDialect } from '../../hooks/useDialect';
@@ -33,65 +33,60 @@ export function useTableRows({
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
 
-  const fetchTableData = useCallback(
-    (offset: number) => {
-      const query = buildTableQuery(dialect, {
-        database,
-        tableName,
-        primaryKeys,
-        where,
-        sorting,
-        limit: DEFAULT_LIMIT,
-        offset,
-      });
+  const fetchTableData = (offset: number) => {
+    const query = buildTableQuery(dialect, {
+      database,
+      tableName,
+      primaryKeys,
+      where,
+      sorting,
+      limit: DEFAULT_LIMIT,
+      offset,
+    });
 
-      window.sql
-        .executeQuery<ResultRow[]>(query)
-        .then(([result, fields]) => {
-          setError(null);
-          setCurrentOffset(offset);
-          setFields(fields.map((field) => ({ ...field, table: tableName })));
-          setResult((prev) =>
-            offset > 0 && prev ? prev.concat(result) : result
-          );
-        })
-        .catch((err) => {
-          setError(err);
-          setResult(null);
-        });
-    },
-    [dialect, database, tableName, primaryKeys, where, sorting]
-  );
+    window.sql
+      .executeQuery<ResultRow[]>(query)
+      .then(([result, fields]) => {
+        setError(null);
+        setCurrentOffset(offset);
+        setFields(fields.map((field) => ({ ...field, table: tableName })));
+        setResult((prev) =>
+          offset > 0 && prev ? prev.concat(result) : result
+        );
+      })
+      .catch((err) => {
+        setError(err);
+        setResult(null);
+      });
+  };
 
   // a new query starts over from the first page; the next ones are fetched by "load more"
   useEffect(() => {
     fetchTableData(0);
   }, [fetchTableData]);
 
-  const loadMore = useCallback(
-    () => fetchTableData(currentOffset + DEFAULT_LIMIT),
-    [fetchTableData, currentOffset]
-  );
+  const loadMore = () => fetchTableData(currentOffset + DEFAULT_LIMIT);
 
   // patched in place, not re-fetched: the value is the server's (see `updateCell`),
   // as fresh as a reload, without losing the rows loaded nor the scroll
-  const updateValue = useCallback(
-    (rowIndex: number, columnName: string, value: unknown) => {
-      setResult((previous) => {
-        const row = previous?.[rowIndex];
+  const updateValue = (
+    rowIndex: number,
+    columnName: string,
+    value: unknown
+  ) => {
+    setResult((previous) => {
+      const row = previous?.[rowIndex];
 
-        if (!previous || !row) {
-          return previous;
-        }
+      if (!previous || !row) {
+        return previous;
+      }
 
-        const next = [...previous];
-        next[rowIndex] = { ...row, [columnName]: value };
+      const next = [...previous];
+      next[rowIndex] = { ...row, [columnName]: value };
 
-        return next;
-      });
-    },
-    []
-  );
+      return next;
+    });
+  };
 
   return { result, fields, error, loadMore, updateValue };
 }

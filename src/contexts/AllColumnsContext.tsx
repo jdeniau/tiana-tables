@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, use } from 'react';
 import { ColumnDetailHelper } from '../sql/ColumnDetailHelper';
 import type { ColumnDetail } from '../sql/dialect/metadata';
 
@@ -11,21 +11,17 @@ export function AllColumnsContextProvider({
   children: React.ReactNode;
   allColumns: ColumnDetail[];
 }) {
-  // a new helper on every render would invalidate every memo built on it
-  const columnDetailsHelper = useMemo(
-    () => new ColumnDetailHelper(columnDetails),
-    [columnDetails]
-  );
+  const columnDetailsHelper = new ColumnDetailHelper(columnDetails);
 
   return (
-    <AllColumnsContext.Provider value={columnDetailsHelper}>
+    <AllColumnsContext value={columnDetailsHelper}>
       {children}
-    </AllColumnsContext.Provider>
+    </AllColumnsContext>
   );
 }
 
 export function useAllColumnsContext(): ColumnDetailHelper {
-  const context = useContext(AllColumnsContext);
+  const context = use(AllColumnsContext);
 
   if (context === null) {
     throw new Error(

@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, use } from 'react';
 import { DateDisplay } from '../configuration/dateDisplay';
 import type { ZoneShift } from '../renderer/utils/dateFormatter';
 import {
@@ -42,30 +42,24 @@ export function DateDisplayContextProvider({
   const { configuration, setDateDisplay } = useConfiguration();
   const preferred = configuration.dateDisplay ?? DateDisplay.Server;
 
-  const value = useMemo((): DateDisplayContextValue => {
-    const localZone = Temporal.Now.timeZoneId();
-    const serverZone = resolveServerZone(serverTimeZone);
-    const segments = dateDisplaySegments(serverZone, localZone);
-    const display = effectiveDateDisplay(preferred, segments);
+  const localZone = Temporal.Now.timeZoneId();
+  const serverZone = resolveServerZone(serverTimeZone);
+  const segments = dateDisplaySegments(serverZone, localZone);
+  const display = effectiveDateDisplay(preferred, segments);
 
-    return {
-      display,
-      segments,
-      shift: zoneShiftOf(display, serverZone, localZone),
-      serverZone,
-      setDisplay: setDateDisplay,
-    };
-  }, [serverTimeZone, preferred, setDateDisplay]);
+  const value: DateDisplayContextValue = {
+    display,
+    segments,
+    shift: zoneShiftOf(display, serverZone, localZone),
+    serverZone,
+    setDisplay: setDateDisplay,
+  };
 
-  return (
-    <DateDisplayContext.Provider value={value}>
-      {children}
-    </DateDisplayContext.Provider>
-  );
+  return <DateDisplayContext value={value}>{children}</DateDisplayContext>;
 }
 
 export function useDateDisplay(): DateDisplayContextValue {
-  return useContext(DateDisplayContext);
+  return use(DateDisplayContext);
 }
 
 export const testables = {

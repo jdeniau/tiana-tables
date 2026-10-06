@@ -1,11 +1,4 @@
-import {
-  ReactNode,
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from 'react';
+import { ReactNode, createContext, use, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   TableTab,
@@ -65,85 +58,59 @@ export function OpenTablesContextProvider({
     }
   }
 
-  const persist = useCallback(
-    (next: Array<string>) => {
-      setOpenTables(next);
-      window.config.setOpenTables(connectionSlug, database, next);
-    },
-    [connectionSlug, database]
-  );
+  const persist = (next: Array<string>) => {
+    setOpenTables(next);
+    window.config.setOpenTables(connectionSlug, database, next);
+  };
 
-  const memoriseTable = useCallback(
-    (name: string) => {
-      if (openTables.includes(name)) {
-        return;
+  const memoriseTable = (name: string) => {
+    if (openTables.includes(name)) {
+      return;
+    }
+
+    persist([...openTables, name]);
+
+    // the click before this one opened the table, so the temporary slot is its own — landed, or still on its way
+    setPreviewTable(undefined);
+  };
+
+  const closeTable = async (name: string) => {
+    // the tab we are on is the only one whose closing has somewhere to go
+    if (name === tableName) {
+      const target = tableAfterClose(
+        buildTableTabs(openTables, previewTable),
+        name
+      );
+
+      if (target) {
+        navigate(`/connections/${connectionSlug}/${database}/tables/${target}`);
+      } else {
+        // nothing left to open, and the database page redirects to the active table: clear it, or the closed one comes back
+        await window.config.setActiveTable(connectionSlug, database, null);
+        navigate(`/connections/${connectionSlug}/${database}`);
       }
+    }
 
-      persist([...openTables, name]);
-
-      // the click before this one opened the table, so the temporary slot is its own — landed, or still on its way
+    if (previewTable === name) {
       setPreviewTable(undefined);
-    },
-    [openTables, persist]
-  );
+    }
 
-  const closeTable = useCallback(
-    async (name: string) => {
-      // the tab we are on is the only one whose closing has somewhere to go
-      if (name === tableName) {
-        const target = tableAfterClose(
-          buildTableTabs(openTables, previewTable),
-          name
-        );
+    if (openTables.includes(name)) {
+      persist(openTables.filter((table) => table !== name));
+    }
+  };
 
-        if (target) {
-          navigate(
-            `/connections/${connectionSlug}/${database}/tables/${target}`
-          );
-        } else {
-          // nothing left to open, and the database page redirects to the active table: clear it, or the closed one comes back
-          await window.config.setActiveTable(connectionSlug, database, null);
-          navigate(`/connections/${connectionSlug}/${database}`);
-        }
-      }
+  const value = {
+    tabs: buildTableTabs(openTables, previewTable),
+    memoriseTable,
+    closeTable,
+  };
 
-      if (previewTable === name) {
-        setPreviewTable(undefined);
-      }
-
-      if (openTables.includes(name)) {
-        persist(openTables.filter((table) => table !== name));
-      }
-    },
-    [
-      connectionSlug,
-      database,
-      navigate,
-      openTables,
-      persist,
-      previewTable,
-      tableName,
-    ]
-  );
-
-  const value = useMemo(
-    () => ({
-      tabs: buildTableTabs(openTables, previewTable),
-      memoriseTable,
-      closeTable,
-    }),
-    [closeTable, memoriseTable, openTables, previewTable]
-  );
-
-  return (
-    <OpenTablesContext.Provider value={value}>
-      {children}
-    </OpenTablesContext.Provider>
-  );
+  return <OpenTablesContext value={value}>{children}</OpenTablesContext>;
 }
 
 export function useOpenTablesContext(): OpenTablesContextProps {
-  const context = useContext(OpenTablesContext);
+  const context = use(OpenTablesContext);
 
   if (context === null) {
     throw new Error(

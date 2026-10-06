@@ -51,7 +51,7 @@ function switchOf(
 ) {
   return (
     <ThemeProvider theme={DEFAULT_THEME}>
-      <DateDisplayContext.Provider
+      <DateDisplayContext
         value={{
           display: DateDisplay.Server,
           segments,
@@ -61,7 +61,7 @@ function switchOf(
         }}
       >
         <DateDisplaySwitch fields={fields} />
-      </DateDisplayContext.Provider>
+      </DateDisplayContext>
     </ThemeProvider>
   );
 }

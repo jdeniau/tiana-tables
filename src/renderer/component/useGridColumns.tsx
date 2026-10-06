@@ -57,6 +57,7 @@ export function useGridColumns<Row extends ResultRow>({
   extraColumns,
   rowsAsArray,
 }: Options<Row>): GridColumns<Row> {
+  // useMemo, not React Compiler: it would cache these three as one, and a date display change would re-render every cell
   // pin primary key columns to the left, in the order of `fields`
   const columnPinning = useMemo(
     () => ({

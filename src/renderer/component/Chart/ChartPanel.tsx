@@ -1,4 +1,4 @@
-import { ReactElement, useMemo, useRef, useState } from 'react';
+import { ReactElement, useRef, useState } from 'react';
 import {
   CheckOutlined,
   CopyOutlined,
@@ -95,7 +95,7 @@ function ChartPanel({
     defaultChartConfig(fields)
   );
 
-  const chartTheme = useMemo(() => buildChartTheme(theme), [theme]);
+  const chartTheme = buildChartTheme(theme);
 
   function chartSvg(): SVGSVGElement | null {
     return chartAreaRef.current?.querySelector('svg') ?? null;
@@ -150,40 +150,29 @@ function ChartPanel({
     await writable.close();
   }
 
-  const columnOptions = useMemo(
-    () =>
-      fields.map((field, index) => ({ value: index, label: field.name ?? '' })),
-    [fields]
-  );
+  const columnOptions = fields.map((field, index) => ({
+    value: index,
+    label: field.name ?? '',
+  }));
 
-  const numericOptions = useMemo(
-    () =>
-      numericFieldIndexes(fields).map((index) => ({
-        value: index,
-        label: fields[index].name ?? '',
-      })),
-    [fields]
-  );
+  const numericOptions = numericFieldIndexes(fields).map((index) => ({
+    value: index,
+    label: fields[index].name ?? '',
+  }));
 
   const dateShift = useDateDisplay().shift;
 
-  const rendered = useMemo(() => {
-    if (!config) {
-      return null;
-    }
-
-    const input = { rows: result, fields, config, rowsAsArray, dateShift };
-
-    return config.kind === 'line'
-      ? { kind: 'line' as const, ...toLineSeries(input) }
-      : { kind: 'bar' as const, ...toBarData(input) };
-  }, [result, fields, config, rowsAsArray, dateShift]);
-
   // `chartUnavailableReason` already gated the tab, so this is only reachable
   // while the user is between two selections
-  if (!config || !rendered) {
+  if (!config) {
     return null;
   }
+
+  const input = { rows: result, fields, config, rowsAsArray, dateShift };
+  const rendered =
+    config.kind === 'line'
+      ? { kind: 'line' as const, ...toLineSeries(input) }
+      : { kind: 'bar' as const, ...toBarData(input) };
 
   const axisBottom = {
     tickRotation: -45,

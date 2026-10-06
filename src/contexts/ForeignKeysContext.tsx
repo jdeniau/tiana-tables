@@ -1,8 +1,8 @@
-import { createContext, useContext } from 'react';
+import { createContext, use } from 'react';
 import { ForeignKeysHelper } from '../sql/ForeignKeysHelper';
 import type { ForeignKey } from '../sql/dialect/metadata';
 
-const foreignKeysContext = createContext<ForeignKeysHelper | null>(null);
+const ForeignKeysContext = createContext<ForeignKeysHelper | null>(null);
 
 export function ForeignKeysContextProvider({
   children,
@@ -17,14 +17,14 @@ export function ForeignKeysContextProvider({
   const foreignKeysHelper = new ForeignKeysHelper(foreignKeys, database);
 
   return (
-    <foreignKeysContext.Provider value={foreignKeysHelper}>
+    <ForeignKeysContext value={foreignKeysHelper}>
       {children}
-    </foreignKeysContext.Provider>
+    </ForeignKeysContext>
   );
 }
 
 export function useForeignKeysContext(): ForeignKeysHelper {
-  const context = useContext(foreignKeysContext);
+  const context = use(ForeignKeysContext);
 
   if (context === null) {
     throw new Error(

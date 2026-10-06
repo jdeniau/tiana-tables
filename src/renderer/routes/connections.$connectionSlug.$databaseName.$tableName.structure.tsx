@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from 'react';
 import {
   LoaderFunctionArgs,
   Params,
@@ -70,67 +69,52 @@ export default function TableStructure() {
     displayAfterByColumn,
   } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
 
-  const columnNames = useMemo(
-    () => result.map((column) => column.Column),
-    [result]
-  );
+  const columnNames = result.map((column) => column.Column);
 
-  const displayAfterOverriddenByPrimaryKey = useMemo(
-    () =>
-      listDisplayAfterOverriddenByPrimaryKey(
-        columnNames,
-        displayAfterByColumn,
-        primaryKeys
-      ),
-    [columnNames, displayAfterByColumn, primaryKeys]
-  );
-
-  // written, then read back by the loader, rather than mirrored in a state that the next table would leave stale
-  const handleDisplayAfterChange = useCallback(
-    async (columnName: string, displayAfter: string | null) => {
-      invariant(connectionSlug && databaseName && tableName);
-
-      await window.config.setColumnDisplayAfter(
-        connectionSlug,
-        databaseName,
-        tableName,
-        columnName,
-        displayAfter
-      );
-
-      revalidate();
-    },
-    [connectionSlug, databaseName, tableName, revalidate]
-  );
-
-  const extraColumns = useMemo(
-    (): Array<ExtraColumn<TableStructureRow>> => [
-      {
-        id: 'displayAfter',
-        header: t('table.structure.displayAfter'),
-        size: DISPLAY_AFTER_COLUMN_WIDTH,
-        after: 'Column',
-        render: (row) => (
-          <DisplayAfterSelect
-            columnName={row.Column}
-            columns={columnNames}
-            displayAfter={displayAfterByColumn[row.Column] ?? null}
-            overriddenByPrimaryKey={displayAfterOverriddenByPrimaryKey.has(
-              row.Column
-            )}
-            onChange={handleDisplayAfterChange}
-          />
-        ),
-      },
-    ],
-    [
-      t,
+  const displayAfterOverriddenByPrimaryKey =
+    listDisplayAfterOverriddenByPrimaryKey(
       columnNames,
       displayAfterByColumn,
-      displayAfterOverriddenByPrimaryKey,
-      handleDisplayAfterChange,
-    ]
-  );
+      primaryKeys
+    );
+
+  // written, then read back by the loader, rather than mirrored in a state that the next table would leave stale
+  const handleDisplayAfterChange = async (
+    columnName: string,
+    displayAfter: string | null
+  ) => {
+    invariant(connectionSlug && databaseName && tableName);
+
+    await window.config.setColumnDisplayAfter(
+      connectionSlug,
+      databaseName,
+      tableName,
+      columnName,
+      displayAfter
+    );
+
+    revalidate();
+  };
+
+  const extraColumns: Array<ExtraColumn<TableStructureRow>> = [
+    {
+      id: 'displayAfter',
+      header: t('table.structure.displayAfter'),
+      size: DISPLAY_AFTER_COLUMN_WIDTH,
+      after: 'Column',
+      render: (row) => (
+        <DisplayAfterSelect
+          columnName={row.Column}
+          columns={columnNames}
+          displayAfter={displayAfterByColumn[row.Column] ?? null}
+          overriddenByPrimaryKey={displayAfterOverriddenByPrimaryKey.has(
+            row.Column
+          )}
+          onChange={handleDisplayAfterChange}
+        />
+      ),
+    },
+  ];
 
   // the same header as the data region — name, meta, then the view tabs — so
   // moving between the two views only changes the body

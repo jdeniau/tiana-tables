@@ -57,7 +57,7 @@ async function render(where?: string): Promise<void> {
     root.render(
       <ThemeProvider theme={DEFAULT_THEME}>
         <MemoryRouter>
-          <DatabaseContext.Provider
+          <DatabaseContext
             value={{ database: 'shop', setDatabase: () => {} }}
           >
             <ForeignKeysContextProvider foreignKeys={[]} database="shop">
@@ -74,7 +74,7 @@ async function render(where?: string): Promise<void> {
                 />
               </AllColumnsContextProvider>
             </ForeignKeysContextProvider>
-          </DatabaseContext.Provider>
+          </DatabaseContext>
         </MemoryRouter>
       </ThemeProvider>
     );

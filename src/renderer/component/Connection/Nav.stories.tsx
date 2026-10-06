@@ -23,7 +23,7 @@ const meta: Meta<typeof Nav> = {
       </Layout>
     ),
     (Story) => (
-      <ConnectionContext.Provider
+      <ConnectionContext
         value={{
           currentConnectionSlug: 'production',
           connectionSlugList: ['test', 'production', 'staging', 'development'],
@@ -34,7 +34,7 @@ const meta: Meta<typeof Nav> = {
         }}
       >
         <Story />
-      </ConnectionContext.Provider>
+      </ConnectionContext>
     ),
     reactRouterDecorator,
   ],

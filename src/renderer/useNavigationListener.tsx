@@ -2,10 +2,8 @@ import {
   type JSX,
   ReactNode,
   createContext,
-  useCallback,
-  useContext,
+  use,
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 import NavigateModal from './component/NavigateModal';
@@ -33,9 +31,9 @@ function useNavigationListener(): NavigationListener {
     []
   );
 
-  const openNavigateModal = useCallback(() => {
+  const openNavigateModal = () => {
     setIsNavigateModalOpen(true);
-  }, []);
+  };
 
   return { isNavigateModalOpen, setIsNavigateModalOpen, openNavigateModal };
 }
@@ -48,25 +46,22 @@ function NavigateModalContextProvider({
   const { isNavigateModalOpen, setIsNavigateModalOpen, openNavigateModal } =
     useNavigationListener();
 
-  const contextValue = useMemo(
-    () => ({ openNavigateModal }),
-    [openNavigateModal]
-  );
+  const contextValue = { openNavigateModal };
 
   return (
-    <NavigateModalContext.Provider value={contextValue}>
+    <NavigateModalContext value={contextValue}>
       <NavigateModal
         isNavigateModalOpen={isNavigateModalOpen}
         setIsNavigateModalOpen={setIsNavigateModalOpen}
       />
 
       {children}
-    </NavigateModalContext.Provider>
+    </NavigateModalContext>
   );
 }
 
 export function useNavigateModalContext(): NavigateModalContext {
-  const context = useContext(NavigateModalContext);
+  const context = use(NavigateModalContext);
 
   if (!context) {
     throw new Error(

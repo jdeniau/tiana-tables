@@ -1,10 +1,4 @@
-import {
-  ReactElement,
-  WheelEvent,
-  useCallback,
-  useEffect,
-  useRef,
-} from 'react';
+import { ReactElement, WheelEvent, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { useOpenTablesContext } from '../../contexts/OpenTablesContext';
@@ -35,7 +29,7 @@ export default function TableTabs(): ReactElement | null {
 
   // A mouse has one wheel, and it turns the wrong way for a run of tabs: its vertical notches scroll it sideways.
   // A trackpad's own horizontal gesture arrives as `deltaX`, and is left to the browser.
-  const handleWheel = useCallback((event: WheelEvent<HTMLDivElement>) => {
+  const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
     const strip = event.currentTarget;
 
     if (!event.deltaY || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
@@ -43,7 +37,7 @@ export default function TableTabs(): ReactElement | null {
     }
 
     strip.scrollLeft += event.deltaY;
-  }, []);
+  };
 
   // no tab, no bar: an empty 32px row and its rule would frame nothing
   if (!tabs.length) {

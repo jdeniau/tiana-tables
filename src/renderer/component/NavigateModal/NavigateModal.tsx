@@ -1,4 +1,4 @@
-import { ReactElement, useCallback, useEffect, useState } from 'react';
+import { ReactElement, useEffect, useState } from 'react';
 import { Flex, Input, Modal } from 'antd';
 import Fuse from 'fuse.js';
 import { styled } from 'styled-components';
@@ -43,14 +43,11 @@ export default function NavigateModal({
   const activeItem =
     activeIndex === -1 ? undefined : filteredTableStatusList[activeIndex];
 
-  const navigateToItem = useCallback(
-    (item: NavigationItem) => {
-      setIsNavigateModalOpen(false);
+  const navigateToItem = (item: NavigationItem) => {
+    setIsNavigateModalOpen(false);
 
-      item.open();
-    },
-    [setIsNavigateModalOpen]
-  );
+    item.open();
+  };
 
   // handle keyboard navigation
   useEffect(() => {

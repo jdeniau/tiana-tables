@@ -1,4 +1,4 @@
-import { KeyboardEvent, useCallback, useEffect, useRef } from 'react';
+import { KeyboardEvent, useEffect, useRef } from 'react';
 import type { Table, Row as TanstackRow } from '@tanstack/react-table';
 import type { ResultRow } from '../../sql/types';
 import { registerSelectAllRows } from '../selectAll';
@@ -54,31 +54,28 @@ export function useRowSelection<Row extends ResultRow>(
   }, [table, rowsById]);
 
   // the table is reached through the row, which keeps this stable
-  const selectRow = useCallback<SelectRow<Row>>(
-    (row, modifiers) => {
-      const core = row.table;
-      const next = nextRowSelection(
-        core.atoms.rowSelection.get(),
-        anchorRef.current,
-        row.id,
-        core.getRowModel().rows.map(({ id }) => id),
-        modifiers
-      );
+  const selectRow: SelectRow<Row> = (row, modifiers) => {
+    const core = row.table;
+    const next = nextRowSelection(
+      core.atoms.rowSelection.get(),
+      anchorRef.current,
+      row.id,
+      core.getRowModel().rows.map(({ id }) => id),
+      modifiers
+    );
 
-      anchorRef.current = next.anchorId;
-      core.setRowSelection(next.selection);
-      // a modified click prevented its mousedown, and with it the focus Escape and Ctrl+C need
-      scrollElement?.focus({ preventScroll: true });
-    },
-    [scrollElement]
-  );
+    anchorRef.current = next.anchorId;
+    core.setRowSelection(next.selection);
+    // a modified click prevented its mousedown, and with it the focus Escape and Ctrl+C need
+    scrollElement?.focus({ preventScroll: true });
+  };
 
-  const selectAllRows = useCallback((): void => {
+  const selectAllRows = (): void => {
     table.toggleAllRowsSelected(true);
     anchorRef.current = table.getRowModel().rows[0]?.id ?? null;
     // Ctrl+C copies the rows of the focused grid only
     scrollElement?.focus({ preventScroll: true });
-  }, [table, scrollElement]);
+  };
 
   // Ctrl+A and the Edit menu's Select All, wherever the focus is short of text
   useEffect(

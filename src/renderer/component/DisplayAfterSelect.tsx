@@ -1,4 +1,4 @@
-import { ReactElement, useMemo } from 'react';
+import { ReactElement } from 'react';
 import { WarningOutlined } from '@ant-design/icons';
 import { Select, Tooltip } from 'antd';
 import { styled } from 'styled-components';
@@ -31,13 +31,9 @@ export default function DisplayAfterSelect({
   const { t } = useTranslation();
 
   // a pair following each other is left to the user, and resolved by `applyColumnOrder`
-  const options = useMemo(
-    () =>
-      columns
-        .filter((column) => column !== columnName)
-        .map((column) => ({ value: column, label: column })),
-    [columns, columnName]
-  );
+  const options = columns
+    .filter((column) => column !== columnName)
+    .map((column) => ({ value: column, label: column }));
 
   return (
     <Select

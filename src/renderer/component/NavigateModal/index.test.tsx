@@ -28,10 +28,10 @@ async function render(setDatabase: (database: string) => void) {
       {
         path: '*',
         element: (
-          <ConnectionContext.Provider
+          <ConnectionContext
             value={{ currentConnectionSlug: 'connectionSlug' } as never}
           >
-            <DatabaseContext.Provider value={{ database: 'app', setDatabase }}>
+            <DatabaseContext value={{ database: 'app', setDatabase }}>
               <DatabaseListContextProvider databaseList={['app', 'public']}>
                 <TableListContextProvider tableList={['orders']}>
                   <NavigateModalContainer
@@ -40,8 +40,8 @@ async function render(setDatabase: (database: string) => void) {
                   />
                 </TableListContextProvider>
               </DatabaseListContextProvider>
-            </DatabaseContext.Provider>
-          </ConnectionContext.Provider>
+            </DatabaseContext>
+          </ConnectionContext>
         ),
       },
     ],

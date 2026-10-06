@@ -22,7 +22,7 @@ const meta: Meta<typeof ConnectionForm> = {
     ),
     reactRouterDecorator,
     (Story, { globals: { theme, locale } }) => (
-      <ConfigurationContext.Provider
+      <ConfigurationContext
         value={{
           configuration: {
             version: 1,
@@ -55,7 +55,7 @@ const meta: Meta<typeof ConnectionForm> = {
         }}
       >
         <Story />
-      </ConfigurationContext.Provider>
+      </ConfigurationContext>
     ),
   ],
 };

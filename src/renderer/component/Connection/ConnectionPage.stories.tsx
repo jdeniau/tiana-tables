@@ -21,7 +21,7 @@ const meta: Meta<typeof ConnectionPage> = {
     ),
     dataRouterDecorator,
     (Story) => (
-      <ConnectionContext.Provider
+      <ConnectionContext
         value={{
           currentConnectionSlug: null,
           connectionSlugList: [],
@@ -34,10 +34,10 @@ const meta: Meta<typeof ConnectionPage> = {
         }}
       >
         <Story />
-      </ConnectionContext.Provider>
+      </ConnectionContext>
     ),
     (Story) => (
-      <ConfigurationContext.Provider
+      <ConfigurationContext
         value={{
           configuration: {
             version: 1,
@@ -90,7 +90,7 @@ const meta: Meta<typeof ConnectionPage> = {
         }}
       >
         <Story />
-      </ConfigurationContext.Provider>
+      </ConfigurationContext>
     ),
   ],
 };

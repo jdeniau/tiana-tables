@@ -57,10 +57,10 @@ async function render(element: ReactElement): Promise<HTMLElement> {
   await act(async () => {
     root.render(
       <ThemeProvider theme={DEFAULT_THEME}>
-        <ConfigurationContext.Provider
+        <ConfigurationContext
           value={{ configuration: { connections } } as never}
         >
-          <ConnectionContext.Provider
+          <ConnectionContext
             value={
               {
                 connectionSlugList: ['docker-dev', 'pg-dev'],
@@ -69,8 +69,8 @@ async function render(element: ReactElement): Promise<HTMLElement> {
             }
           >
             <RouterProvider router={router} />
-          </ConnectionContext.Provider>
-        </ConfigurationContext.Provider>
+          </ConnectionContext>
+        </ConfigurationContext>
       </ThemeProvider>
     );
   });

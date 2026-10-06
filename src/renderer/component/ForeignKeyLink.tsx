@@ -1,4 +1,4 @@
-import { type JSX, memo } from 'react';
+import { type JSX } from 'react';
 import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
@@ -25,7 +25,7 @@ const StyledLink = styled(Link)`
   }
 `;
 
-const ForeignKeyLink = memo(function ForeignKeyLink({
+function ForeignKeyLink({
   dialect,
   tableName,
   columnName,
@@ -59,6 +59,6 @@ const ForeignKeyLink = memo(function ForeignKeyLink({
   const to = `/connections/${currentConnectionSlug}/${foreignKey.referencedDatabaseName}/tables/${foreignKey.referencedTableName}?where=${encodeURIComponent(where)}`;
 
   return <StyledLink to={to}>↗️</StyledLink>;
-});
+}
 
 export default ForeignKeyLink;

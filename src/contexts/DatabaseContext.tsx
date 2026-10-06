@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, use } from 'react';
 
 interface SetDatabaseFunc {
   (theme: string): void;
@@ -15,5 +15,5 @@ export const DatabaseContext = createContext<DatabaseContextProps>({
 DatabaseContext.displayName = 'DatabaseContext';
 
 export function useDatabaseContext(): DatabaseContextProps {
-  return useContext(DatabaseContext);
+  return use(DatabaseContext);
 }

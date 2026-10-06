@@ -1,9 +1,4 @@
-import {
-  type Dispatch,
-  type SetStateAction,
-  useCallback,
-  useState,
-} from 'react';
+import { type Dispatch, type SetStateAction, useState } from 'react';
 import invariant from 'tiny-invariant';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { UpdateCellStatus } from '../../sql/updateCell';
@@ -47,56 +42,52 @@ export function useCellDialogs(
   const [cellDetail, setCellDetail] = useState<CellDetail | null>(null);
   const { rememberCell, flashCell } = useWrittenCellFlash();
 
-  const showCellDetail = useCallback<ShowCellDetail>(
-    (detail, cell) => {
-      rememberCell(cell);
-      setCellDetail(detail);
-    },
-    [rememberCell]
-  );
+  const showCellDetail: ShowCellDetail = (detail, cell) => {
+    rememberCell(cell);
+    setCellDetail(detail);
+  };
 
   // the cell the context menu is open on, `null` when it is closed
   const [menuTarget, setMenuTarget] = useState<CellMenuTarget | null>(null);
 
-  const openCellMenu = useCallback<OpenCellMenu>(
-    (target, cell) => {
-      // the menu can write the cell too, which then flashes like any write
-      rememberCell(cell);
-      setMenuTarget(target);
-    },
-    [rememberCell]
-  );
+  const openCellMenu: OpenCellMenu = (target, cell) => {
+    // the menu can write the cell too, which then flashes like any write
+    rememberCell(cell);
+    setMenuTarget(target);
+  };
 
   const { database } = useDatabaseContext();
 
-  const saveCell = useCallback(
-    async ({ detail, newValue, originalValue, force }: SaveCellParams) => {
-      const { rowKey, column } = detail;
+  const saveCell = async ({
+    detail,
+    newValue,
+    originalValue,
+    force,
+  }: SaveCellParams) => {
+    const { rowKey, column } = detail;
 
-      invariant(database, 'A database must be selected to write a cell');
-      invariant(rowKey, 'A cell of an unidentified row cannot be written');
-      invariant(column.tableName, 'A cell of no table cannot be written');
+    invariant(database, 'A database must be selected to write a cell');
+    invariant(rowKey, 'A cell of an unidentified row cannot be written');
+    invariant(column.tableName, 'A cell of no table cannot be written');
 
-      const outcome = await window.sql.updateCell({
-        database,
-        table: column.tableName,
-        column: column.name,
-        primaryKey: rowKey,
-        newValue,
-        originalValue: toBoundValue(originalValue),
-        isJsonColumn: column.detail?.json ?? false,
-        force,
-      });
+    const outcome = await window.sql.updateCell({
+      database,
+      table: column.tableName,
+      column: column.name,
+      primaryKey: rowKey,
+      newValue,
+      originalValue: toBoundValue(originalValue),
+      isJsonColumn: column.detail?.json ?? false,
+      force,
+    });
 
-      if (outcome.status === UpdateCellStatus.Updated) {
-        flashCell();
-        onValueUpdated?.(detail.rowIndex, column.name, outcome.value);
-      }
+    if (outcome.status === UpdateCellStatus.Updated) {
+      flashCell();
+      onValueUpdated?.(detail.rowIndex, column.name, outcome.value);
+    }
 
-      return outcome;
-    },
-    [database, flashCell, onValueUpdated]
-  );
+    return outcome;
+  };
 
   return {
     cellDetail,

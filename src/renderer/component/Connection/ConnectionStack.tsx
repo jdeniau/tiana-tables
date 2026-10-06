@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useMatch, useNavigate } from 'react-router';
 import invariant from 'tiny-invariant';
 import {
@@ -37,83 +37,64 @@ function ConnectionStack({ children }: Props) {
   }, []);
 
   // TODO we might need to change that into the proper route as reload will not work
-  const addConnectionToList = useCallback(async (connectionSlug: string) => {
+  const addConnectionToList = async (connectionSlug: string) => {
     setConnectionNameList((prev) =>
       Array.from(new Set([...prev, connectionSlug]))
     );
-  }, []);
+  };
 
-  const closeConnection = useCallback(
-    (connectionSlug: string) => {
-      const target = closeConnectionTarget(
-        connectionSlugList,
-        connectionSlug,
-        currentConnectionSlug ?? null
-      );
+  const closeConnection = (connectionSlug: string) => {
+    const target = closeConnectionTarget(
+      connectionSlugList,
+      connectionSlug,
+      currentConnectionSlug ?? null
+    );
 
-      if (target) {
-        // Leave the route of the closed connection: the page effect would put the slug straight back.
-        navigate(target);
+    if (target) {
+      // Leave the route of the closed connection: the page effect would put the slug straight back.
+      navigate(target);
 
-        if (target === '/connect') {
-          // No loader announces the connection list, and the menu would keep reopening the connection we just closed.
-          window.sql.connectionNameChanged(undefined, undefined);
-        }
+      if (target === '/connect') {
+        // No loader announces the connection list, and the menu would keep reopening the connection we just closed.
+        window.sql.connectionNameChanged(undefined, undefined);
       }
+    }
 
-      setConnectionNameList((prev) =>
-        prev.filter((slug) => slug !== connectionSlug)
-      );
+    setConnectionNameList((prev) =>
+      prev.filter((slug) => slug !== connectionSlug)
+    );
 
-      window.sql.closeConnection(connectionSlug);
-    },
-    [connectionSlugList, currentConnectionSlug, navigate]
-  );
+    window.sql.closeConnection(connectionSlug);
+  };
 
-  const handleSetDatabase = useCallback(
-    async (database: string) => {
-      invariant(currentConnectionSlug, 'Connection slug is required');
+  const handleSetDatabase = async (database: string) => {
+    invariant(currentConnectionSlug, 'Connection slug is required');
 
-      navigate(
-        databaseUrl(
-          await window.config.getConfiguration(),
-          currentConnectionSlug,
-          database
-        )
-      );
-    },
-    [currentConnectionSlug, navigate]
-  );
+    navigate(
+      databaseUrl(
+        await window.config.getConfiguration(),
+        currentConnectionSlug,
+        database
+      )
+    );
+  };
 
-  const connectionContextValue = useMemo(
-    (): ConnexionContextProps => ({
-      connectionSlugList,
-      currentConnectionSlug: currentConnectionSlug ?? null,
-      addConnectionToList,
-      closeConnection,
-    }),
-    [
-      connectionSlugList,
-      currentConnectionSlug,
-      addConnectionToList,
-      closeConnection,
-    ]
-  );
+  const connectionContextValue: ConnexionContextProps = {
+    connectionSlugList,
+    currentConnectionSlug: currentConnectionSlug ?? null,
+    addConnectionToList,
+    closeConnection,
+  };
 
-  const databateContextValue = useMemo(
-    (): DatabaseContextProps => ({
-      database: databaseName ?? null,
-      setDatabase: handleSetDatabase,
-    }),
-    [databaseName, handleSetDatabase]
-  );
+  const databateContextValue: DatabaseContextProps = {
+    database: databaseName ?? null,
+    setDatabase: handleSetDatabase,
+  };
 
   return (
-    <ConnectionContext.Provider value={connectionContextValue}>
-      <DatabaseContext.Provider value={databateContextValue}>
-        {children}
-      </DatabaseContext.Provider>
-    </ConnectionContext.Provider>
+    <ConnectionContext value={connectionContextValue}>
+      <DatabaseContext value={databateContextValue}>{children}</DatabaseContext>
+    </ConnectionContext>
   );
 }
 
