@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 import { EntityContextType } from 'dt-sql-parser';
 import { MarkerSeverity, Position, editor, languages } from 'monaco-editor';
 import { setupLanguageFeatures } from 'monaco-sql-languages';
@@ -327,15 +327,14 @@ export default function useCompletion(): void {
     return () => providers.forEach((provider) => provider.dispose());
   }, [allColumns, foreignKeys, tableList]);
 
-  // read through a ref: the schema changes identity on every render of its
+  // an effect event: the schema changes identity on every render of its
   // provider, and rebuilding the watchers would reset their debounce each time
-  const schemaRef = useRef(schema);
-  schemaRef.current = schema;
+  const validate = useEffectEvent((model: editor.ITextModel) =>
+    validateModel(model, schema)
+  );
 
   useEffect(() => {
     const watchers = new Map<string, { dispose: () => void }>();
-    const validate = (model: editor.ITextModel) =>
-      validateModel(model, schemaRef.current);
 
     const watch = (model: editor.ITextModel) => {
       if (engineOf(model.getLanguageId())) {

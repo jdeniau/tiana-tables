@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 import type monaco from 'monaco-editor';
 import type { DatabaseEngine } from '../../../sql/engine';
 import {
@@ -21,8 +21,9 @@ export default function useCurrentStatementHighlight(
   engine: DatabaseEngine,
   onStatementCountChange: ((count: number) => void) | undefined
 ): void {
-  const onStatementCountChangeRef = useRef(onStatementCountChange);
-  onStatementCountChangeRef.current = onStatementCountChange;
+  const reportStatementCount = useEffectEvent((count: number) =>
+    onStatementCountChange?.(count)
+  );
 
   useEffect(() => {
     if (!monacoInstance || !editor) {
@@ -54,7 +55,7 @@ export default function useCurrentStatementHighlight(
 
       if (statements.length !== reportedCount) {
         reportedCount = statements.length;
-        onStatementCountChangeRef.current?.(reportedCount);
+        reportStatementCount(reportedCount);
       }
 
       const current =

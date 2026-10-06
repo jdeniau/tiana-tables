@@ -1,4 +1,4 @@
-import i18n, { changeLanguage, t } from 'i18next';
+import { changeLanguage, init, use as loadPlugin, t } from 'i18next';
 import ICU from 'i18next-icu';
 import { initReactI18next, useTranslation } from 'react-i18next';
 import en from '../locales/en';
@@ -21,25 +21,23 @@ const resources = {
   },
 } as const;
 
-// eslint-disable-next-line import-x/no-named-as-default-member
-i18n
-  // ICU MessageFormat, so that a message with several variants stays ONE key
-  // with a `select` inside it — instead of one key per variant picked by
-  // building its name at the call site, which no extractor can follow and no
-  // type can check
-  .use(ICU)
-  .use(initReactI18next) // passes i18n down to react-i18next
-  .init({
-    // the translations
-    // (tip move them in a JSON file and import them,
-    // or even better, manage them via a UI: https://react.i18next.com/guides/multiple-translation-files#manage-your-translations-with-a-management-gui)
-    resources,
-    // lng: 'en', // if you're using a language detector, do not define the lng option
-    fallbackLng: DEFAULT_LOCALE,
+// ICU MessageFormat, so that a message with several variants stays ONE key
+// with a `select` inside it — instead of one key per variant picked by
+// building its name at the call site, which no extractor can follow and no
+// type can check
+loadPlugin(ICU);
+loadPlugin(initReactI18next); // passes i18n down to react-i18next
+init({
+  // the translations
+  // (tip move them in a JSON file and import them,
+  // or even better, manage them via a UI: https://react.i18next.com/guides/multiple-translation-files#manage-your-translations-with-a-management-gui)
+  resources,
+  // lng: 'en', // if you're using a language detector, do not define the lng option
+  fallbackLng: DEFAULT_LOCALE,
 
-    interpolation: {
-      escapeValue: false, // react already safes from xss => https://www.i18next.com/translation-function/interpolation#unescape
-    },
-  });
+  interpolation: {
+    escapeValue: false, // react already safes from xss => https://www.i18next.com/translation-function/interpolation#unescape
+  },
+});
 
 export { useTranslation, t, changeLanguage };

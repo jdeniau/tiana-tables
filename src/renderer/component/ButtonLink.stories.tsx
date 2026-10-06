@@ -30,7 +30,7 @@ type Story = StoryObj<typeof ButtonLink>;
  */
 export const Default: Story = {};
 
-export const primary: Story = {
+export const Primary: Story = {
   args: {
     type: 'primary',
   },

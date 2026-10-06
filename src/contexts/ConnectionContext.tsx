@@ -11,9 +11,7 @@ export interface ConnexionContextProps {
 export const ConnectionContext = createContext<ConnexionContextProps>({
   currentConnectionSlug: null,
   connectionSlugList: [],
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   addConnectionToList: () => {},
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   closeConnection: () => {},
 });
 ConnectionContext.displayName = 'ConnectionContext';

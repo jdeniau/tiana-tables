@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import type monaco from 'monaco-editor';
 import useMonaco, { MONACO_THEME } from '../MonacoEditor/useMonaco';
 
@@ -34,10 +34,9 @@ export default function JsonCellEditor({
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
 
-  // read through a ref so that a new closure on every render does not tear the
+  // an effect event, so that a new closure on every render does not tear the
   // content listener down and up again (as in RawSqlEditor)
-  const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  const reportChange = useEffectEvent((newValue: string) => onChange(newValue));
 
   // the initial value is only read when the editor is created; afterwards the
   // editor holds the truth and the effect below only pushes outside changes
@@ -61,7 +60,7 @@ export default function JsonCellEditor({
     });
 
     const subscription = createdEditor.onDidChangeModelContent(() => {
-      onChangeRef.current(createdEditor.getValue());
+      reportChange(createdEditor.getValue());
     });
 
     setEditor(createdEditor);

@@ -30,7 +30,7 @@ afterEach(() => {
 async function render(
   openTables: Array<string>,
   tableName?: string
-): Promise<void> {
+): Promise<ReturnType<typeof createMemoryRouter>> {
   container = document.createElement('div');
   document.body.append(container);
 
@@ -76,6 +76,8 @@ async function render(
       </ThemeProvider>
     );
   });
+
+  return router;
 }
 
 /** the run, as it reads: `article*` is the temporary tab, `article <` the active one */
@@ -130,6 +132,14 @@ describe('TableTabs', () => {
     await render([]);
 
     expect(container.innerHTML).toBe('');
+  });
+
+  test('opening another table that has not been memorised takes over the temporary tab', async () => {
+    const router = await render(['users'], 'shipments');
+
+    await act(() => router.navigate('/connections/test/shop/tables/invoices'));
+
+    expect(strip()).toEqual(['users', 'invoices* <']);
   });
 
   test('a double click memorises the temporary tab, where it stands', async () => {

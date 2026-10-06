@@ -1,12 +1,14 @@
 import js from '@eslint/js';
-import importPlugin from 'eslint-plugin-import-x';
+import { defineConfig } from 'eslint/config';
+import { flatConfigs as importConfigs } from 'eslint-plugin-import-x';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
-import storybook from 'eslint-plugin-storybook';
+import { configs as storybookConfigs } from 'eslint-plugin-storybook';
 import globals from 'globals';
-import tseslint from 'typescript-eslint';
+import reactPackage from 'react/package.json' with { type: 'json' };
+import { configs as tsConfigs } from 'typescript-eslint';
 
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: [
       'forge.config.ts',
@@ -17,14 +19,14 @@ export default tseslint.config(
     ],
   },
   js.configs.recommended,
-  tseslint.configs.recommended,
-  importPlugin.flatConfigs.recommended,
-  importPlugin.flatConfigs.electron,
-  importPlugin.flatConfigs.typescript,
+  tsConfigs.recommended,
+  importConfigs.recommended,
+  importConfigs.electron,
+  importConfigs.typescript,
   react.configs.flat.recommended,
   react.configs.flat['jsx-runtime'],
   reactHooks.configs.flat['recommended-latest'],
-  storybook.configs['flat/recommended'],
+  storybookConfigs['flat/recommended'],
   {
     languageOptions: {
       globals: {
@@ -35,7 +37,8 @@ export default tseslint.config(
     },
     settings: {
       react: {
-        version: '18.3',
+        // `detect` calls `context.getFilename`, which ESLint 10 removed
+        version: reactPackage.version,
       },
     },
     rules: {
@@ -58,10 +61,6 @@ export default tseslint.config(
           pathGroupsExcludedImportTypes: ['react'],
         },
       ],
-      // New react-hooks v7 rules — disable for now, existing patterns are intentional
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/preserve-manual-memoization': 'off',
-      'react-hooks/refs': 'off',
     },
   }
 );

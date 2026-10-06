@@ -10,7 +10,6 @@ export interface DatabaseContextProps {
 
 export const DatabaseContext = createContext<DatabaseContextProps>({
   database: null,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   setDatabase: () => {},
 });
 DatabaseContext.displayName = 'DatabaseContext';

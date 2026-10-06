@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from 'react';
+import { ReactElement, useState } from 'react';
 import { type Atom, createAtom, useSelector } from '@tanstack/react-store';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Empty, Spin } from 'antd';
@@ -211,10 +211,6 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
   const [chosen, setChosen] = useState<number | null>(null);
   const [view, setView] = useState<View>(View.Data);
 
-  useEffect(() => {
-    setChosen(null);
-  }, [outcomes]);
-
   // a result is selected by position, which means nothing in the next one
   const [selections, setSelections] = useState(() =>
     emptySelections(outcomes, 0)
@@ -222,6 +218,7 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
 
   if (selections.outcomes !== outcomes) {
     setSelections(emptySelections(outcomes, selections.gridKey + 1));
+    setChosen(null);
   }
 
   // A run stops at the first error, so a failed statement is always the last

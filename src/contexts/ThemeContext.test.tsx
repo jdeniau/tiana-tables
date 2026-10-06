@@ -34,7 +34,6 @@ function TokenProbe(): null {
   return null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
 
 function resolveTokens(themeName: string): GlobalToken {
