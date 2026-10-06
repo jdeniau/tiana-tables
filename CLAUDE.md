@@ -32,14 +32,15 @@ The mistake made most often here. Before code is built on a claim, or a sentence
 
 ### Before handing a change over
 
-- `yarn lint && yarn knip && yarn test` are clean (a PostToolUse hook runs them after every edit).
+- `yarn lint && yarn knip && yarn test` are clean. After every edit, a PostToolUse hook runs lint, knip and only the Node tests of the edited file (`vitest related`); the Storybook tests run in the full `yarn test`, after the Node ones.
+- **Never start a `yarn test` while another one runs**: a full run peaks at ~8 GiB, two at once have OOM-killed the desktop.
 - Every new test has been checked by breaking what it covers.
 - List the comment blocks the diff adds that run over two lines, and every `//` pair: each justifies itself or becomes one line. Re-read the comments above what a refactor touched — a stale comment is worse than a long one.
 - After a change to the main process or an IPC contract, say the app needs a full restart.
 
 ### Learning from corrections
 
-After a correction, write one rule where it will be loaded when it matters: the `.claude/rules/` file whose `paths` cover the code, the relevant skill, or this file when it is cross-cutting — or needed when _creating_ a file, since a path rule loads only when a matching file is read. Format: **one bold sentence stating the rule**, then the non-obvious mechanism or how to check it, three lines at most. No date, quote or story: those go in the commit message. Update a rule rather than add a near-duplicate, and delete one that became false.
+After a correction, write one rule where it will be loaded when it matters: the `.claude/rules/` file whose `paths` cover the code, the relevant skill, or this file when it is cross-cutting — or needed when _creating_ a file, since a path rule loads only when a matching file is read. Format: **one bold sentence stating the rule**, then the non-obvious mechanism or how to check it, three lines at most. No date, quote or story: those go in the commit message. Update a rule rather than add a near-duplicate, and delete one that became false. **Never in the personal auto-memory**: it survives neither teamwork nor a change of machine. A judgement call that is not a rule is written nowhere.
 
 ## Writing code
 

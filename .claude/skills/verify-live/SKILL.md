@@ -53,6 +53,7 @@ Ask the user to test in their place only once this harness has been tried.
 - Count long tasks with `PerformanceObserver({ entryTypes: ['longtask'] })`. On a hidden page (`document.hidden`) rAF runs at ~1 Hz: dispatch `new Event('scroll')` by hand.
 - Hard-reload before measuring (repeated HMR inflates mounts ~4×). Machine load skews absolutes 2-3×: interleave A and B on the same page state and compare ratios.
 - A React DevTools dev profile is fine for A/B: `measureHostInstance` inflates both sides equally.
+- **A memory peak is measured in a capped scope, never on the bare desktop**: `systemd-run --user --scope --unit=<name> -p MemoryMax=6G -p MemorySwapMax=0 -- <cmd>` OOM-kills inside the scope only. While it runs, sample `/sys/fs/cgroup/user.slice/user-$UID.slice/user@$UID.service/app.slice/<name>.scope/`: `memory.peak`, `memory.stat` (`anon` vs `file`, the peak counts page cache) and `cgroup.procs` for who holds it; the directory vanishes with the command. A run that hits the cap exits 137 or 143, and `journalctl --user` names the unit the OOM killer hit.
 
 ## Stories headless
 

@@ -17,6 +17,8 @@ export default defineConfig({
         test: {
           // ... Specify options here.
           exclude: [...configDefaults.exclude, 'out/**'],
+          // one worker per core peaked at 6 GiB on 16 cores
+          maxWorkers: '50%',
         },
       },
       {
@@ -30,6 +32,8 @@ export default defineConfig({
         ],
         test: {
           name: 'storybook',
+          // after the Node project: run alongside it, the two took 13 GiB
+          sequence: { groupOrder: 1 },
           browser: {
             enabled: true,
             headless: true,
