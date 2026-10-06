@@ -5,6 +5,7 @@ import {
 } from '../configuration/filePaths';
 import { t } from '../i18n';
 import { EDIT_MENU_CHANNEL } from '../preload/editMenuChannel';
+import { NAVIGATION_CHANNEL } from '../preload/navigationChannel';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import connectionStackInstance from '../sql';
 import { isDevApp, isMacPlatform } from './helpers';
@@ -17,7 +18,7 @@ export function createMenu(mainWindow: BrowserWindow) {
     label: t('menu.settings'),
     accelerator: 'CmdOrCtrl+,',
     click: () => {
-      mainWindow.webContents.send('navigate', '/settings');
+      mainWindow.webContents.send(NAVIGATION_CHANNEL.NAVIGATE, '/settings');
     },
   };
 
@@ -91,21 +92,42 @@ export function createMenu(mainWindow: BrowserWindow) {
           label: t('menu.navigate.previous'),
           accelerator: 'Alt+Left',
           click: () => {
-            mainWindow.webContents.send('navigate', -1);
+            mainWindow.webContents.send(NAVIGATION_CHANNEL.NAVIGATE, -1);
           },
         },
         {
           label: t('menu.navigate.next'),
           accelerator: 'Alt+Right',
           click: () => {
-            mainWindow.webContents.send('navigate', 1);
+            mainWindow.webContents.send(NAVIGATION_CHANNEL.NAVIGATE, 1);
           },
         },
         {
           label: t('menu.navigate.newConnection'),
           accelerator: 'CmdOrCtrl+N',
           click: () => {
-            mainWindow.webContents.send('navigate', '/connect');
+            mainWindow.webContents.send(
+              NAVIGATION_CHANNEL.NAVIGATE,
+              '/connect'
+            );
+          },
+        },
+        // `Ctrl` on macOS too, the key browsers switch tabs with
+        {
+          label: t('menu.navigate.nextConnection'),
+          accelerator: 'Ctrl+Tab',
+          click: () => {
+            mainWindow.webContents.send(NAVIGATION_CHANNEL.CYCLE_CONNECTION, 1);
+          },
+        },
+        {
+          label: t('menu.navigate.previousConnection'),
+          accelerator: 'Ctrl+Shift+Tab',
+          click: () => {
+            mainWindow.webContents.send(
+              NAVIGATION_CHANNEL.CYCLE_CONNECTION,
+              -1
+            );
           },
         },
         {
@@ -123,7 +145,7 @@ export function createMenu(mainWindow: BrowserWindow) {
             }
 
             mainWindow.webContents.send(
-              'navigate',
+              NAVIGATION_CHANNEL.NAVIGATE,
               `/connections/${currentConnectionSlug}/${databaseName}/sql`
             );
           },
@@ -134,7 +156,9 @@ export function createMenu(mainWindow: BrowserWindow) {
           accelerator: 'CmdOrCtrl+K',
           enabled: false,
           click: () => {
-            mainWindow.webContents.send('openNavigationPanel');
+            mainWindow.webContents.send(
+              NAVIGATION_CHANNEL.OPEN_NAVIGATION_PANEL
+            );
           },
         },
       ],
@@ -163,7 +187,7 @@ export function createMenu(mainWindow: BrowserWindow) {
               checked: isDevApp(),
               click: (item: Electron.MenuItem) => {
                 mainWindow.webContents.send(
-                  'pathBarVisibilityChange',
+                  NAVIGATION_CHANNEL.PATH_BAR_VISIBILITY_CHANGE,
                   item.checked
                 );
               },
@@ -235,8 +259,8 @@ export function createMenu(mainWindow: BrowserWindow) {
    * chords, and `Ctrl+T` never reaches the menu either.
    *
    * Only these two need it. Measured with the editor focused, `Ctrl+N`,
-   * `Ctrl+,`, `Alt+Left` and `Alt+Right` all come back out of the page
-   * unconsumed and reach the menu on their own.
+   * `Ctrl+,`, `Ctrl+Tab`, `Ctrl+Shift+Tab`, `Alt+Left` and `Alt+Right` all
+   * come back out of the page unconsumed and reach the menu on their own.
    *
    * `before-input-event` runs before the page, whatever holds the focus, so
    * these two are triggered from there. Its `preventDefault` drops the native
