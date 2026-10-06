@@ -1,4 +1,4 @@
-import { createContext, use, useEffect, useMemo, useState } from 'react';
+import { createContext, use, useEffect, useState } from 'react';
 import type { DateDisplay } from '../configuration/dateDisplay';
 import { PANEL } from '../configuration/panels';
 import { Configuration } from '../configuration/type';
@@ -76,37 +76,28 @@ export function ConfigurationContextProvider({ children }: Props) {
     };
   }
 
-  const value: ConfigurationContextType = useMemo(
-    (): ConfigurationContextType => ({
-      // force `as` here as we will break if configuration is null, but the hook needs to be before it.
-      // We don't want to use ts-expect-error, as we want to test other properties of the object.
-      configuration: configuration as Configuration,
-      addConnectionToConfig: willChangeConfiguration(
-        window.config.addConnectionToConfig
-      ),
-      setActiveDatabase: window.config.setActiveDatabase,
-      setActiveTable: window.config.setActiveTable,
-      setPanelSize: willChangeConfiguration(window.config.setPanelSize),
-      setDateDisplay: willChangeConfiguration(window.config.setDateDisplay),
-      editConnection: willChangeConfiguration(window.config.editConnection),
-      changeLanguage: willChangeConfiguration((lang: string) => {
-        changeLanguage(lang);
-
-        return window.config.changeLanguage(lang);
-      }),
-    }),
-    [configuration]
-  );
-
   if (!configuration) {
     return null;
   }
 
-  return (
-    <ConfigurationContext value={value}>
-      {children}
-    </ConfigurationContext>
-  );
+  const value: ConfigurationContextType = {
+    configuration,
+    addConnectionToConfig: willChangeConfiguration(
+      window.config.addConnectionToConfig
+    ),
+    setActiveDatabase: window.config.setActiveDatabase,
+    setActiveTable: window.config.setActiveTable,
+    setPanelSize: willChangeConfiguration(window.config.setPanelSize),
+    setDateDisplay: willChangeConfiguration(window.config.setDateDisplay),
+    editConnection: willChangeConfiguration(window.config.editConnection),
+    changeLanguage: willChangeConfiguration((lang: string) => {
+      changeLanguage(lang);
+
+      return window.config.changeLanguage(lang);
+    }),
+  };
+
+  return <ConfigurationContext value={value}>{children}</ConfigurationContext>;
 }
 
 export function useConfiguration(): ConfigurationContextType {

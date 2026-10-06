@@ -1,4 +1,4 @@
-import { ReactElement, useMemo } from 'react';
+import { ReactElement } from 'react';
 import { Menu, MenuProps } from 'antd';
 import { Link, useParams } from 'react-router-dom';
 import { styled } from 'styled-components';
@@ -46,32 +46,21 @@ export default function TableList({ tableList }: Props): ReactElement | null {
   const { tableName } = useParams();
   const selectedBorderColor = useCurrentConnectionTint()?.background;
 
-  const items: MenuItem[] = useMemo(
-    () =>
-      tableList?.map((name) => ({
-        key: name,
-        label: (
-          // the second click of a double memorises the table; the first navigated to the same place, so there is nothing to undo
-          <TableLink
-            $selected={name === tableName}
-            $selectedBorderColor={selectedBorderColor}
-            to={`/connections/${currentConnectionSlug}/${database}/tables/${name}`}
-            onDoubleClick={() => memoriseTable(name)}
-          >
-            {name}
-          </TableLink>
-        ),
-        title: name,
-      })),
-    [
-      currentConnectionSlug,
-      database,
-      memoriseTable,
-      selectedBorderColor,
-      tableList,
-      tableName,
-    ]
-  );
+  const items: MenuItem[] = tableList?.map((name) => ({
+    key: name,
+    label: (
+      // the second click of a double memorises the table; the first navigated to the same place, so there is nothing to undo
+      <TableLink
+        $selected={name === tableName}
+        $selectedBorderColor={selectedBorderColor}
+        to={`/connections/${currentConnectionSlug}/${database}/tables/${name}`}
+        onDoubleClick={() => memoriseTable(name)}
+      >
+        {name}
+      </TableLink>
+    ),
+    title: name,
+  }));
 
   if (!tableList) {
     return null;

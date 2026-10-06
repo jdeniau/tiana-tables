@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Alert, Flex, Input, InputNumber, Select } from 'antd';
 import { useDateDisplay } from '../../../contexts/DateDisplayContext';
 import { useTranslation } from '../../../i18n';
@@ -40,14 +39,10 @@ export default function CellEditor({
   const kind = resolveEditorKind(column, fieldKind, value.text);
   const nullable = column.nullable;
 
-  const enumValues = useMemo(
-    () =>
-      column.allowedValues.map((allowed) => ({
-        value: allowed,
-        label: allowed === '' ? '(empty)' : allowed,
-      })),
-    [column.allowedValues]
-  );
+  const enumValues = column.allowedValues.map((allowed) => ({
+    value: allowed,
+    label: allowed === '' ? '(empty)' : allowed,
+  }));
 
   // clearing an editor means NULL on a nullable column, and an empty value
   // otherwise — which MySQL is then free to reject

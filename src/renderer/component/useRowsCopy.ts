@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import type { Table } from '@tanstack/react-table';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useDateDisplay } from '../../contexts/DateDisplayContext';
@@ -75,7 +75,7 @@ export function useRowsCopy<Row extends ResultRow>(
   const { shift, serverZone } = useDateDisplay();
   const zone = serverZone?.zone ?? null;
 
-  const selectedRows = useCallback((): Array<Array<RowCell>> => {
+  const selectedRows = (): Array<Array<RowCell>> => {
     const columns = columnsMeta.filter((column) => !column.render);
 
     return table
@@ -87,58 +87,55 @@ export function useRowsCopy<Row extends ResultRow>(
           value: columnValue(row.original, column, rowsAsArray),
         }))
       );
-  }, [table, columnsMeta, rowsAsArray]);
+  };
 
-  const contentOf = useCallback(
-    (
-      format: RowFormat,
-      rows: ReadonlyArray<ReadonlyArray<RowCell>>
-    ): ClipboardContent | undefined => {
-      const shown = { shift, serverZone: zone };
-      const withColumnNames = columnNamesAtom.get();
+  const contentOf = (
+    format: RowFormat,
+    rows: ReadonlyArray<ReadonlyArray<RowCell>>
+  ): ClipboardContent | undefined => {
+    const shown = { shift, serverZone: zone };
+    const withColumnNames = columnNamesAtom.get();
 
-      switch (format) {
-        case RowFormat.Tsv:
-          return {
-            text: rowsToTsv(rows, shown, withColumnNames),
-            html: rowsToHtmlTable(rows, shown, withColumnNames),
-          };
-        case RowFormat.Csv:
-          return { text: rowsToCsv(rows, zone, withColumnNames) };
-        case RowFormat.Markdown:
-          return { text: rowsToMarkdown(rows, shown) };
-        case RowFormat.Json:
-          return { text: rowsToJson(rows, zone) };
-        case RowFormat.SqlInsert: {
-          const insert = rowsToInsert(dialect, database, rows);
+    switch (format) {
+      case RowFormat.Tsv:
+        return {
+          text: rowsToTsv(rows, shown, withColumnNames),
+          html: rowsToHtmlTable(rows, shown, withColumnNames),
+        };
+      case RowFormat.Csv:
+        return { text: rowsToCsv(rows, zone, withColumnNames) };
+      case RowFormat.Markdown:
+        return { text: rowsToMarkdown(rows, shown) };
+      case RowFormat.Json:
+        return { text: rowsToJson(rows, zone) };
+      case RowFormat.SqlInsert: {
+        const insert = rowsToInsert(dialect, database, rows);
 
-          return insert === undefined ? undefined : { text: insert };
-        }
+        return insert === undefined ? undefined : { text: insert };
       }
-    },
-    [shift, zone, dialect, database]
-  );
+    }
+  };
 
-  const copyRows = useCallback(
-    (format: RowFormat, rows: ReadonlyArray<ReadonlyArray<RowCell>>): void => {
-      const content = rows.length > 0 ? contentOf(format, rows) : undefined;
+  const copyRows = (
+    format: RowFormat,
+    rows: ReadonlyArray<ReadonlyArray<RowCell>>
+  ): void => {
+    const content = rows.length > 0 ? contentOf(format, rows) : undefined;
 
-      if (content) {
-        writeClipboard(content).then(
-          () => onCopied?.({ rowCount: rows.length, format }),
-          // nothing to say in the header for a write that did not happen
-          (error: unknown) => console.error('The rows were not copied', error)
-        );
-      }
-    },
-    [contentOf, onCopied]
-  );
+    if (content) {
+      writeClipboard(content).then(
+        () => onCopied?.({ rowCount: rows.length, format }),
+        // nothing to say in the header for a write that did not happen
+        (error: unknown) => console.error('The rows were not copied', error)
+      );
+    }
+  };
 
-  const canCopyAs = useCallback(
-    (format: RowFormat, rows: ReadonlyArray<ReadonlyArray<RowCell>>): boolean =>
-      rows.length > 0 && contentOf(format, rows.slice(0, 1)) !== undefined,
-    [contentOf]
-  );
+  const canCopyAs = (
+    format: RowFormat,
+    rows: ReadonlyArray<ReadonlyArray<RowCell>>
+  ): boolean =>
+    rows.length > 0 && contentOf(format, rows.slice(0, 1)) !== undefined;
 
   // Ctrl+C and the Edit menu's Copy on the focused grid, short of a text highlighted in a cell
   useEffect(() => {

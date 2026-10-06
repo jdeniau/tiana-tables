@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import {
   DEFAULT_PANEL_SIZES,
   MAX_PANEL_PERCENT,
@@ -42,21 +41,18 @@ export function usePanelSize(panel: PANEL): PanelSize {
   const { configuration, setPanelSize } = useConfiguration();
   const storedSize = parsePanelSize(configuration.panelSizes?.[panel]);
 
-  const onResizeEnd = useCallback(
-    (sizes: Array<number>) => {
-      const size = sizes[0];
-      // the panel sizes add up to the splitter itself, so their sum is the
-      // container to compare against
-      const total = sizes.reduce((sum, current) => sum + current, 0);
+  const onResizeEnd = (sizes: Array<number>) => {
+    const size = sizes[0];
+    // the panel sizes add up to the splitter itself, so their sum is the
+    // container to compare against
+    const total = sizes.reduce((sum, current) => sum + current, 0);
 
-      if (size === undefined || total <= 0) {
-        return;
-      }
+    if (size === undefined || total <= 0) {
+      return;
+    }
 
-      setPanelSize(panel, formatPanelSize((size / total) * 100));
-    },
-    [panel, setPanelSize]
-  );
+    setPanelSize(panel, formatPanelSize((size / total) * 100));
+  };
 
   return {
     panelProps: {

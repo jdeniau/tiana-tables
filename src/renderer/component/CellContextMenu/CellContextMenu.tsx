@@ -1,11 +1,4 @@
-import {
-  ReactElement,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
 import { useSelector } from '@tanstack/react-store';
 import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
@@ -116,13 +109,10 @@ export default function CellContextMenu({
     };
   }, [target, onFilterChange]);
 
-  const applyFilter = useCallback(
-    (where: string) => {
-      onFilterChange?.(where);
-      onClose();
-    },
-    [onFilterChange, onClose]
-  );
+  const applyFilter = (where: string) => {
+    onFilterChange?.(where);
+    onClose();
+  };
 
   const columnNames = useSelector(columnNamesAtom);
 

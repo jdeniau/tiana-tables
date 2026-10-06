@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { DownOutlined } from '@ant-design/icons';
 import { Dropdown } from 'antd';
 import { styled } from 'styled-components';
@@ -54,12 +53,9 @@ export default function DatabaseSelector({
 }) {
   const { database, setDatabase } = useDatabaseContext();
 
-  const handleClick = useCallback(
-    ({ key }: { key: string }) => {
-      setDatabase(key);
-    },
-    [setDatabase]
-  );
+  const handleClick = ({ key }: { key: string }) => {
+    setDatabase(key);
+  };
 
   return (
     <Dropdown

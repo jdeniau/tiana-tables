@@ -3,7 +3,6 @@ import {
   ReactNode,
   memo,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -285,12 +284,12 @@ function TableGrid<Row extends ResultRow>({
   // everything the body needs to render a cell, resolved once per column
   // (foreign keys, pinning offsets, widths) instead of once per cell.
   // Read from the column sources, never `table`: a new object whenever its options are (a new `result` included), it would hand every row new props.
-  const columnsMeta: Array<ColumnMeta> = useMemo(() => {
-    const ids = columnSources.map((source) => columnId(source, rowsAsArray));
-    // TanStack's `getIsLastColumn('start')`: the last of the pinned ids the grid holds
-    const lastPinned = columnPinning.start.findLast((id) => ids.includes(id));
+  const ids = columnSources.map((source) => columnId(source, rowsAsArray));
+  // TanStack's `getIsLastColumn('start')`: the last of the pinned ids the grid holds
+  const lastPinned = columnPinning.start.findLast((id) => ids.includes(id));
 
-    return columnSources.map(({ field, fieldIndex, extra }, index) => {
+  const columnsMeta: Array<ColumnMeta> = columnSources.map(
+    ({ field, fieldIndex, extra }, index) => {
       const id = ids[index];
       const isPinned = columnPinning.start.includes(id);
       const foreignKey = field
@@ -316,15 +315,8 @@ function TableGrid<Row extends ResultRow>({
           : undefined,
         render: extra?.render as ColumnMeta['render'],
       };
-    });
-  }, [
-    columnSources,
-    rowsAsArray,
-    columnPinning,
-    foreignKeys,
-    allColumns,
-    dialect,
-  ]);
+    }
+  );
 
   useColumnWidthVars({
     table,

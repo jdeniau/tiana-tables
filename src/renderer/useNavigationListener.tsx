@@ -3,9 +3,7 @@ import {
   ReactNode,
   createContext,
   use,
-  useCallback,
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 import NavigateModal from './component/NavigateModal';
@@ -33,9 +31,9 @@ function useNavigationListener(): NavigationListener {
     []
   );
 
-  const openNavigateModal = useCallback(() => {
+  const openNavigateModal = () => {
     setIsNavigateModalOpen(true);
-  }, []);
+  };
 
   return { isNavigateModalOpen, setIsNavigateModalOpen, openNavigateModal };
 }
@@ -48,10 +46,7 @@ function NavigateModalContextProvider({
   const { isNavigateModalOpen, setIsNavigateModalOpen, openNavigateModal } =
     useNavigationListener();
 
-  const contextValue = useMemo(
-    () => ({ openNavigateModal }),
-    [openNavigateModal]
-  );
+  const contextValue = { openNavigateModal };
 
   return (
     <NavigateModalContext value={contextValue}>

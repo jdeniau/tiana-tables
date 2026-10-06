@@ -3,8 +3,6 @@ import {
   type ReactNode,
   createContext,
   use,
-  useCallback,
-  useMemo,
   useState,
 } from 'react';
 import invariant from 'tiny-invariant';
@@ -48,42 +46,36 @@ export function CellWriteProvider({
 }: CellWriteProviderProps): ReactElement {
   const [pending, setPending] = useState<PendingIssue | null>(null);
 
-  const writeCell = useCallback(
-    async (write: CellWrite) => {
-      const issue = issueOf(await save({ ...write, force: false }));
+  const writeCell = async (write: CellWrite) => {
+    const issue = issueOf(await save({ ...write, force: false }));
+
+    if (issue) {
+      setPending({ write, issue });
+    }
+  };
+
+  const reportFailure = (write: CellWrite, error: unknown) => {
+    setPending({ write, issue: failureOf(error) });
+  };
+
+  // the modal closes at once: the cell flashes once written, and the modal
+  // reopens on what the forced write still meets (a row deleted in between, a SQL error)
+  const overwrite = async (write: CellWrite) => {
+    setPending(null);
+
+    try {
+      const issue = issueOf(await save({ ...write, force: true }));
 
       if (issue) {
         setPending({ write, issue });
       }
-    },
-    [save]
-  );
-
-  const reportFailure = useCallback((write: CellWrite, error: unknown) => {
-    setPending({ write, issue: failureOf(error) });
-  }, []);
-
-  // the modal closes at once: the cell flashes once written, and the modal
-  // reopens on what the forced write still meets (a row deleted in between, a SQL error)
-  const overwrite = useCallback(
-    async (write: CellWrite) => {
-      setPending(null);
-
-      try {
-        const issue = issueOf(await save({ ...write, force: true }));
-
-        if (issue) {
-          setPending({ write, issue });
-        }
-      } catch (error) {
-        reportFailure(write, error);
-      }
-    },
-    [save, reportFailure]
-  );
+    } catch (error) {
+      reportFailure(write, error);
+    }
+  };
 
   // cancelling a changed cell keeps the server's value, which the grid then shows
-  const close = useCallback(() => {
+  const close = () => {
     if (pending?.issue.reason === WriteIssueReason.Changed) {
       onValueUpdated?.(
         pending.write.detail.rowIndex,
@@ -93,12 +85,9 @@ export function CellWriteProvider({
     }
 
     setPending(null);
-  }, [pending, onValueUpdated]);
+  };
 
-  const value = useMemo(
-    () => ({ writeCell, reportFailure }),
-    [writeCell, reportFailure]
-  );
+  const value = { writeCell, reportFailure };
 
   return (
     <CellWriteContext value={value}>

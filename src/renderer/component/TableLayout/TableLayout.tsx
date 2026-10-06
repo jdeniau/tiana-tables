@@ -1,4 +1,4 @@
-import { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement } from 'react';
 import { useCreateAtom, useSelector } from '@tanstack/react-store';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { Button, Splitter } from 'antd';
@@ -83,33 +83,25 @@ export function TableLayout({
   });
 
   // the query stays a `SELECT *`: ordering here means a column added to or dropped from the table needs no new query to be placed
-  const orderedFields = useMemo(() => {
-    if (!fields) {
-      return null;
-    }
-
-    const byName = new Map(fields.map((field) => [field.name, field]));
-
-    return applyColumnOrder(
-      fields.map((field) => field.name),
-      displayAfterByColumn
-    ).flatMap((name) => byName.get(name) ?? []);
-  }, [fields, displayAfterByColumn]);
+  const fieldsByName = new Map(fields?.map((field) => [field.name, field]));
+  const orderedFields = fields
+    ? applyColumnOrder(
+        fields.map((field) => field.name),
+        displayAfterByColumn
+      ).flatMap((name) => fieldsByName.get(name) ?? [])
+    : null;
 
   // written, then read back by the loader on the next visit, rather than
   // mirrored in a state that the next table would leave stale
-  const handleColumnResized = useCallback(
-    (columnName: string, width: number) => {
-      window.config.setColumnWidth(
-        connectionSlug,
-        database,
-        tableName,
-        columnName,
-        width
-      );
-    },
-    [connectionSlug, database, tableName]
-  );
+  const handleColumnResized = (columnName: string, width: number) => {
+    window.config.setColumnWidth(
+      connectionSlug,
+      database,
+      tableName,
+      columnName,
+      width
+    );
+  };
 
   // a filter's own `ORDER BY` wins, so the headers have nothing to sort
   const sortable = !hasOrderByToken(dialect, where);
@@ -117,12 +109,9 @@ export function TableLayout({
   // the filter built by the grid's context menu replaces the current one, and
   // takes the same route as the filter form: the loader reads `?where`, saves it
   // and remounts this layout, so the editor reopens on the clause
-  const handleFilterChange = useCallback(
-    (where: string) => {
-      navigate(`?where=${encodeURIComponent(where)}`);
-    },
-    [navigate]
-  );
+  const handleFilterChange = (where: string) => {
+    navigate(`?where=${encodeURIComponent(where)}`);
+  };
 
   // the same two-region split as the SQL page, so the two screens read as
   // siblings: filters on top, data below
@@ -192,11 +181,7 @@ export function TableLayout({
 
           {!error && (
             <RegionFoot>
-              <Button
-                type="text"
-                size="small"
-                onClick={loadMore}
-              >
+              <Button type="text" size="small" onClick={loadMore}>
                 {t('table.rows.loadMore')}
               </Button>
             </RegionFoot>

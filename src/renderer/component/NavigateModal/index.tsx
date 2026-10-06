@@ -1,4 +1,4 @@
-import { type JSX, useMemo } from 'react';
+import { type JSX } from 'react';
 import { DatabaseOutlined, TableOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
@@ -19,34 +19,24 @@ export default function NavigateModalContainer(props: Props): JSX.Element {
   const { database, setDatabase } = useDatabaseContext();
   const databaseList = useDatabaseListContext();
 
-  const navigationItemList: Array<NavigationItem> = useMemo(
-    () => [
-      ...tableList.map((table) => ({
-        key: `Table-${table}`,
-        name: table,
-        open: () =>
-          navigate(
-            `/connections/${currentConnectionSlug}/${database}/tables/${table}`
-          ),
-        Icon: TableOutlined,
-      })),
-      ...databaseList.map((databaseName) => ({
-        key: `Database-${databaseName}`,
-        name: databaseName,
-        // the selector's way in: straight to the database's last table
-        open: () => setDatabase(databaseName),
-        Icon: DatabaseOutlined,
-      })),
-    ],
-    [
-      currentConnectionSlug,
-      database,
-      databaseList,
-      navigate,
-      setDatabase,
-      tableList,
-    ]
-  );
+  const navigationItemList: Array<NavigationItem> = [
+    ...tableList.map((table) => ({
+      key: `Table-${table}`,
+      name: table,
+      open: () =>
+        navigate(
+          `/connections/${currentConnectionSlug}/${database}/tables/${table}`
+        ),
+      Icon: TableOutlined,
+    })),
+    ...databaseList.map((databaseName) => ({
+      key: `Database-${databaseName}`,
+      name: databaseName,
+      // the selector's way in: straight to the database's last table
+      open: () => setDatabase(databaseName),
+      Icon: DatabaseOutlined,
+    })),
+  ];
 
   return <NavigateModal navigationItemList={navigationItemList} {...props} />;
 }

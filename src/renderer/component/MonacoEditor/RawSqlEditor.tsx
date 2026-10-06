@@ -4,7 +4,6 @@ import {
   useEffect,
   useEffectEvent,
   useImperativeHandle,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -146,8 +145,6 @@ export function RawSqlEditor({
   useCompletion();
   useSemanticTokens();
 
-  const memoizedMonacoOptions = useMemo(() => monacoOptions, [monacoOptions]);
-
   useImperativeHandle(
     ref,
     () => ({
@@ -181,7 +178,7 @@ export function RawSqlEditor({
         'semanticHighlighting.enabled': true,
         automaticLayout: true,
         ...BASE_OPTIONS,
-        ...memoizedMonacoOptions,
+        ...monacoOptions,
       });
 
       const model = createdEditor.getModel();

@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Select } from 'antd';
 import { styled } from 'styled-components';
 import { AppTheme, THEME_LIST } from '../../configuration/themes';
@@ -35,37 +34,35 @@ export default function ThemeSelector() {
   const { t } = useTranslation();
   const { themeName, changeTheme } = useTheme();
 
-  const options = useMemo(() => {
-    const toOption = (theme: AppTheme) => ({
-      value: theme.name,
-      label: (
-        <OptionLabel>
-          <ThemePreview theme={theme} />
-          {theme.name}
-        </OptionLabel>
-      ),
-    });
+  const toOption = (theme: AppTheme) => ({
+    value: theme.name,
+    label: (
+      <OptionLabel>
+        <ThemePreview theme={theme} />
+        {theme.name}
+      </OptionLabel>
+    ),
+  });
 
-    const byName = (a: AppTheme, b: AppTheme) => a.name.localeCompare(b.name);
-    const themes = Object.values(THEME_LIST);
+  const byName = (a: AppTheme, b: AppTheme) => a.name.localeCompare(b.name);
+  const themes = Object.values(THEME_LIST);
 
-    return [
-      {
-        label: t('theme.group.dark'),
-        options: themes
-          .filter((theme) => theme.variant === 'dark')
-          .sort(byName)
-          .map(toOption),
-      },
-      {
-        label: t('theme.group.light'),
-        options: themes
-          .filter((theme) => theme.variant === 'light')
-          .sort(byName)
-          .map(toOption),
-      },
-    ];
-  }, [t]);
+  const options = [
+    {
+      label: t('theme.group.dark'),
+      options: themes
+        .filter((theme) => theme.variant === 'dark')
+        .sort(byName)
+        .map(toOption),
+    },
+    {
+      label: t('theme.group.light'),
+      options: themes
+        .filter((theme) => theme.variant === 'light')
+        .sort(byName)
+        .map(toOption),
+    },
+  ];
 
   return (
     <Select
