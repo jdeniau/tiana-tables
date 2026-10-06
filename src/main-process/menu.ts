@@ -18,7 +18,7 @@ export function createMenu(mainWindow: BrowserWindow) {
     label: t('menu.settings'),
     accelerator: 'CmdOrCtrl+,',
     click: () => {
-      mainWindow.webContents.send('navigate', '/settings');
+      mainWindow.webContents.send(NAVIGATION_CHANNEL.NAVIGATE, '/settings');
     },
   };
 
@@ -92,21 +92,24 @@ export function createMenu(mainWindow: BrowserWindow) {
           label: t('menu.navigate.previous'),
           accelerator: 'Alt+Left',
           click: () => {
-            mainWindow.webContents.send('navigate', -1);
+            mainWindow.webContents.send(NAVIGATION_CHANNEL.NAVIGATE, -1);
           },
         },
         {
           label: t('menu.navigate.next'),
           accelerator: 'Alt+Right',
           click: () => {
-            mainWindow.webContents.send('navigate', 1);
+            mainWindow.webContents.send(NAVIGATION_CHANNEL.NAVIGATE, 1);
           },
         },
         {
           label: t('menu.navigate.newConnection'),
           accelerator: 'CmdOrCtrl+N',
           click: () => {
-            mainWindow.webContents.send('navigate', '/connect');
+            mainWindow.webContents.send(
+              NAVIGATION_CHANNEL.NAVIGATE,
+              '/connect'
+            );
           },
         },
         // `Ctrl` on macOS too, the key browsers switch tabs with
@@ -142,7 +145,7 @@ export function createMenu(mainWindow: BrowserWindow) {
             }
 
             mainWindow.webContents.send(
-              'navigate',
+              NAVIGATION_CHANNEL.NAVIGATE,
               `/connections/${currentConnectionSlug}/${databaseName}/sql`
             );
           },
@@ -153,7 +156,9 @@ export function createMenu(mainWindow: BrowserWindow) {
           accelerator: 'CmdOrCtrl+K',
           enabled: false,
           click: () => {
-            mainWindow.webContents.send('openNavigationPanel');
+            mainWindow.webContents.send(
+              NAVIGATION_CHANNEL.OPEN_NAVIGATION_PANEL
+            );
           },
         },
       ],
@@ -182,7 +187,7 @@ export function createMenu(mainWindow: BrowserWindow) {
               checked: isDevApp(),
               click: (item: Electron.MenuItem) => {
                 mainWindow.webContents.send(
-                  'pathBarVisibilityChange',
+                  NAVIGATION_CHANNEL.PATH_BAR_VISIBILITY_CHANGE,
                   item.checked
                 );
               },

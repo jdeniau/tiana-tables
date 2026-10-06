@@ -14,14 +14,14 @@ type NavigationListener = {
 };
 
 export const navigationListener: NavigationListener = {
-  onNavigate: (callback) => subscribe('navigate', callback),
+  onNavigate: (callback) => subscribe(NAVIGATION_CHANNEL.NAVIGATE, callback),
 
   onOpenNavigationPanel: (callback) =>
-    subscribe('openNavigationPanel', callback),
+    subscribe(NAVIGATION_CHANNEL.OPEN_NAVIGATION_PANEL, callback),
 
   onCycleConnection: (callback) =>
     subscribe(NAVIGATION_CHANNEL.CYCLE_CONNECTION, callback),
 
   onPathBarVisibilityChange: (callback) =>
-    subscribe('pathBarVisibilityChange', callback),
+    subscribe(NAVIGATION_CHANNEL.PATH_BAR_VISIBILITY_CHANGE, callback),
 };

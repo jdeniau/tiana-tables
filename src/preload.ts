@@ -6,6 +6,7 @@ console.info(
 );
 
 import { contextBridge, ipcRenderer } from 'electron';
+import { APP_CHANNEL } from './preload/appChannel';
 import { clipboard } from './preload/clipboard';
 import { config } from './preload/config';
 import { editMenu } from './preload/editMenu';
@@ -28,11 +29,11 @@ contextBridge.exposeInMainWorld('update', update);
 contextBridge.exposeInMainWorld('titleBar', titleBar);
 contextBridge.exposeInMainWorld('editMenu', editMenu);
 
-ipcRenderer.invoke('get-is-dev').then((isDev) => {
+ipcRenderer.invoke(APP_CHANNEL.GET_IS_DEV).then((isDev) => {
   contextBridge.exposeInMainWorld('isDev', isDev);
 });
 
-ipcRenderer.invoke('get-is-mac').then((isMac) => {
+ipcRenderer.invoke(APP_CHANNEL.GET_IS_MAC).then((isMac) => {
   contextBridge.exposeInMainWorld('isMac', isMac);
 });
 

@@ -92,7 +92,7 @@ Tiana Tables is an **Electron desktop app** for browsing and querying MySQL/Mari
 
 ### IPC channels
 
-1. `src/preload/*Channel.ts` defines a `XXXX_CHANNEL` enum. These files **must stay separate**: preload and main both import them, and no other preload file may be imported into the main process.
+1. `src/preload/*Channel.ts` defines a `XXXX_CHANNEL` enum, **which names every channel: never a bare string on either side**. These files **must stay separate**: preload and main both import them, and no other preload file may be imported into the main process.
 2. `src/preload/xxx.ts` exposes the channel to the renderer (`window.sql.executeQuery()`) via `bindChannel.ts`.
 3. Each domain registers its handlers from `src/main.ts`: `bindIpcMainConfiguration` (`src/configuration/index.ts`), `bindIpcMainSqlFileStorage` (`src/main-process/sqlFileStorage.ts`), `bindIpcMainClipboard` (`src/main-process/clipboard.ts`), `connectionStackInstance.bindIpcMain` (`src/sql/index.ts`).
 

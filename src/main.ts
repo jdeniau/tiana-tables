@@ -26,6 +26,7 @@ import {
 } from './main-process/titleBar';
 import { bindIpcMainUpdate, startAutoUpdate } from './main-process/updateCheck';
 import WindowStateKeeper from './main-process/windowState';
+import { APP_CHANNEL } from './preload/appChannel';
 import connectionStackInstance from './sql';
 
 const isMac = isMacPlatform();
@@ -166,11 +167,11 @@ app.whenReady().then(async () => {
   connectionStackInstance.bindIpcMain(ipcMain);
   logStartupMilestone('ipc-bound');
 
-  ipcMain.handle('get-is-dev', () => {
+  ipcMain.handle(APP_CHANNEL.GET_IS_DEV, () => {
     return isDev;
   });
 
-  ipcMain.handle('get-is-mac', () => {
+  ipcMain.handle(APP_CHANNEL.GET_IS_MAC, () => {
     return isMac;
   });
 
