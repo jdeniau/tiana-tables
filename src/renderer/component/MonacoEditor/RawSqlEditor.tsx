@@ -169,50 +169,55 @@ export function RawSqlEditor({
     onStatementCountChange
   );
 
+  // the content, the prefix and the options are read once: the editor holds them from then on
+  const mountEditor = useEffectEvent(
+    (instance: typeof monaco, container: HTMLDivElement) => {
+      const createdEditor = instance.editor.create(container, {
+        value: defaultValue,
+        language: languageOf(engine),
+        theme: MONACO_THEME,
+        // standalone themes cannot opt in, `StandaloneTheme` hardcodes
+        // `semanticHighlighting = false`
+        'semanticHighlighting.enabled': true,
+        automaticLayout: true,
+        ...BASE_OPTIONS,
+        ...memoizedMonacoOptions,
+      });
+
+      const model = createdEditor.getModel();
+
+      if (model) {
+        // before Monaco asks for the first semantic tokens: the provider has
+        // no `onDidChange`, they are only recomputed on a content change
+        setQueryPrefix(model, queryPrefix);
+      }
+
+      createdEditor.addCommand(
+        instance.KeyMod.CtrlCmd | instance.KeyCode.Enter,
+        () => {
+          submit();
+        }
+      );
+
+      createdEditor.onDidChangeModelContent(() => {
+        reportChange(createdEditor.getValue());
+      });
+
+      setEditor(createdEditor);
+
+      return () => {
+        createdEditor.dispose();
+        setEditor(null);
+      };
+    }
+  );
+
   useEffect(() => {
     if (!monacoInstance || !monacoEl.current) {
       return;
     }
 
-    const createdEditor = monacoInstance.editor.create(monacoEl.current, {
-      value: defaultValue,
-      language: languageOf(engine),
-      theme: MONACO_THEME,
-      // standalone themes cannot opt in, `StandaloneTheme` hardcodes
-      // `semanticHighlighting = false`
-      'semanticHighlighting.enabled': true,
-      automaticLayout: true,
-      ...BASE_OPTIONS,
-      ...memoizedMonacoOptions,
-    });
-
-    const model = createdEditor.getModel();
-
-    if (model) {
-      // before Monaco asks for the first semantic tokens: the provider has
-      // no `onDidChange`, they are only recomputed on a content change
-      setQueryPrefix(model, queryPrefix);
-    }
-
-    createdEditor.addCommand(
-      monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter,
-      () => {
-        submit();
-      }
-    );
-
-    createdEditor.onDidChangeModelContent(() => {
-      reportChange(createdEditor.getValue());
-    });
-
-    setEditor(createdEditor);
-
-    return () => {
-      createdEditor.dispose();
-      setEditor(null);
-    };
-    // the content, the prefix and the options are read once: the editor holds them from then on
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return mountEditor(monacoInstance, monacoEl.current);
   }, [monacoInstance]);
 
   useEffect(() => {
