@@ -6,6 +6,14 @@ import { buildMonacoTheme } from './themes';
 /** the name every editor passes as `theme`, defined from the current theme */
 export const MONACO_THEME = 'currentTheme';
 
+// out of the hook, which React Compiler would skip for its `import()`
+function loadMonaco(): Promise<typeof monaco> {
+  // `userWorker` configures Monaco workers through module side effects
+  return Promise.all([import('monaco-editor'), import('./userWorker')]).then(
+    ([loadedMonaco]) => loadedMonaco
+  );
+}
+
 /**
  * Monaco, loaded on first use with its workers, `null` until then.
  * `MONACO_THEME` follows the theme of the app from then on.
@@ -16,14 +24,13 @@ export default function useMonaco(
   const [monacoInstance, setMonacoInstance] = useState<typeof monaco | null>(
     null
   );
-  const monacoTheme = buildMonacoTheme(useTheme());
+  const theme = useTheme();
 
   useEffect(() => {
     let isCanceled = false;
 
-    // `userWorker` configures Monaco workers through module side effects
-    Promise.all([import('monaco-editor'), import('./userWorker')])
-      .then(([loadedMonaco]) => {
+    loadMonaco()
+      .then((loadedMonaco) => {
         if (!isCanceled) {
           setMonacoInstance(loadedMonaco);
         }
@@ -39,8 +46,8 @@ export default function useMonaco(
 
   // before the effects of the caller, which create the editor with this theme
   useEffect(() => {
-    monacoInstance?.editor.defineTheme(MONACO_THEME, monacoTheme);
-  }, [monacoInstance, monacoTheme]);
+    monacoInstance?.editor.defineTheme(MONACO_THEME, buildMonacoTheme(theme));
+  }, [monacoInstance, theme]);
 
   return monacoInstance;
 }
