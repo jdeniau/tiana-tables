@@ -5,7 +5,7 @@
   "homepage": "https://github.com/jdeniau/tiana-tables#readme",
   "license": "MIT",
   "version": "1.16.1",
-  "main": ".vite/build/main.js",
+  "main": ".vite/build/main.cjs",
   "keywords": [],
   "author": {
     "name": "Julien Deniau",
@@ -19,7 +19,7 @@
     "start": "install-electron && electron-forge start",
     "package": "install-electron && electron-forge package",
     "make": "install-electron && electron-forge make",
-    "publish": "install-electron && electron-forge publish",
+    "publish": "install-electron && electron-forge release",
     "lint": "yarn lint:types && yarn lint:eslint",
     "lint:eslint": "eslint --quiet .",
     "lint:types": "tsc --noEmit",
@@ -76,15 +76,15 @@
     "@ant-design/cli": "^6.4.2",
     "@babel/core": "^7.29.7",
     "@chromatic-com/storybook": "^5.3.1",
-    "@electron-forge/cli": "^7.11.1",
-    "@electron-forge/maker-deb": "^7.11.1",
-    "@electron-forge/maker-dmg": "^7.11.1",
-    "@electron-forge/maker-rpm": "patch:@electron-forge/maker-rpm@npm%3A7.11.1#~/.yarn/patches/@electron-forge-maker-rpm-npm-7.11.1-dba4602758.patch",
-    "@electron-forge/maker-squirrel": "^7.11.1",
-    "@electron-forge/maker-zip": "^7.11.1",
-    "@electron-forge/plugin-vite": "^7.11.1",
-    "@electron-forge/publisher-github": "^7.11.1",
-    "@electron-forge/shared-types": "^7.11.1",
+    "@electron-forge/cli": "^8.0.1",
+    "@electron-forge/maker-deb": "^8.0.1",
+    "@electron-forge/maker-dmg": "^8.0.1",
+    "@electron-forge/maker-rpm": "^8.0.1",
+    "@electron-forge/maker-squirrel": "^8.0.1",
+    "@electron-forge/maker-zip": "^8.0.1",
+    "@electron-forge/plugin-vite": "^8.0.1",
+    "@electron-forge/publisher-github": "^8.0.1",
+    "@electron-forge/shared-types": "^8.0.1",
     "@eslint/js": "^9.39.0",
     "@rolldown/plugin-babel": "^0.2.4",
     "@storybook/addon-a11y": "^10.6.1",
@@ -136,6 +136,6 @@
     }
   },
   "resolutions": {
-    "electron-installer-redhat@npm:^3.2.0": "patch:electron-installer-redhat@npm%3A4.0.0#~/.yarn/patches/electron-installer-redhat-npm-4.0.0-4caad34a9a.patch"
+    "electron-installer-redhat@npm:^4.0.0": "patch:electron-installer-redhat@npm%3A4.0.0#~/.yarn/patches/electron-installer-redhat-npm-4.0.0-4caad34a9a.patch"
   }
 }

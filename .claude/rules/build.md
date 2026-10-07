@@ -23,7 +23,7 @@ paths:
 
 - **Yarn's secure defaults stay unset in `.yarnrc.yml`: install scripts off, versions younger than a day refused, no git repository approved.** They hold because `yarn.lock` is v10: Yarn writes `enableScripts: true` and `npmMinimalAgeGate: 0` back only when it migrates an older lockfile. An urgent fix younger than a day goes through `npmPreapprovedPackages`, removed afterwards.
 - **A dependency whose install script matters gets `built: true` in `dependenciesMeta`**: only `electron-winstaller`, whose script copies the `vendor/7z.exe` the Squirrel maker needs. `esbuild` and `unrs-resolver` work without theirs (measured): the warning they raise at each install is expected.
-- **`approvedGitRepositories` does not cover a GitHub-hosted dependency**: Yarn downloads its archive over HTTPS and packs it from source. Forge 7's `@electron/node-gyp` is the only one, gone with forge 8.
+- **`approvedGitRepositories` does not cover a GitHub-hosted dependency**: Yarn downloads its archive over HTTPS and packs it from source.
 
 ## React Compiler
 
@@ -40,16 +40,11 @@ paths:
 - **Search the upstream trackers first, and cite the issue URL and the date it was last checked** next to the patch.
 - **An upstream PR is a hypothesis until it is run**, and a packaging claim is built, not argued.
 
-## Packaging runs on Node 24
-
-- **`package`, `make` and `publish` run on Node 24, the tests on Node 26**: on Node ≥ 26.1, forge 7's `extract-zip` 2.0.1 stalls while extracting Electron, Node exits 0, and forge stops after "Packaging app for platform" with no `out/` — the release job goes green with no assets ([extract-zip#154](https://github.com/max-mapper/extract-zip/issues/154), [nodejs/node#63487](https://github.com/nodejs/node/issues/63487), checked 2026-09-29).
-- Forcing `@electron/packager` 20 under forge 7 fails with `done is not a function` (promise-based hooks). Move `publish.yml` to Node 26 with forge 8 stable, which depends on packager ≥ 20.0.1 (`@electron-internal/extract-zip`), and restore its `npm install -g corepack` step, with the Windows `npm uninstall -g yarn` before it (#244).
-
 ## The RPM build
 
-Two local `yarn patch`es in `.yarn/patches/`, and `electron-installer-redhat` forced to 4.0.0 through `resolutions` (forge still asks for `^3.2.0`):
+One local `yarn patch`, on `electron-installer-redhat` 4.0.0, applied through `resolutions`:
 
-- `electron-installer-redhat`, two lines of `resources/spec.ejs`: `%global _build_id_links none`, without which our `/usr/lib/.build-id/` symlinks collide with every other Electron app's and dnf refuses to install ([forge#3594](https://github.com/electron/forge/issues/3594)); and `cp -r %{_topdir}/BUILD/usr/*`, without which the build fails on rpm ≥ 4.20 ([installer-redhat#343](https://github.com/electron-userland/electron-installer-redhat/issues/343)). Not `%{_builddir}`: since rpm 4.20 it is the per-package subdirectory the installer never writes into, which is why upstream PRs #344 and #347 fail. Measured on rpm 4.18.2, 4.20.1 and 6.0.2.
-- `@electron-forge/maker-rpm`, one line of `dist/MakerRpm.js`: `electron-installer-redhat` is ESM since 4.0.0, so forge's CJS `require()` returns `{ default, Installer }`; the patch reads `.default` when present. Forge only drops the `require()` in its ESM rewrite (8.x).
-- A version bump of either package makes `yarn install` fail to apply its patch: the signal to check whether upstream landed the fixes.
-- **Verify by building the real thing**, never on the Fedora host (rpm ≥ 4.20 breaks the installer for an unrelated reason): `node node_modules/.bin/electron-forge make --targets @electron-forge/maker-rpm` in a `node:24-bookworm` image with `rpm` installed (the CI runner's rpm 4.18), then `rpm -qlp out/make/rpm/x64/*.rpm | grep build-id`.
+- Two lines of `resources/spec.ejs`: `%global _build_id_links none`, without which our `/usr/lib/.build-id/` symlinks collide with every other Electron app's and dnf refuses to install ([forge#3594](https://github.com/electron/forge/issues/3594)); and `cp -r %{_topdir}/BUILD/usr/*`, without which the build fails on rpm ≥ 4.20 ([installer-redhat#343](https://github.com/electron-userland/electron-installer-redhat/issues/343)). Not `%{_builddir}`: since rpm 4.20 it is the per-package subdirectory the installer never writes into, which is why upstream PRs #344 and #347 fail. Measured on rpm 4.18.2, 4.20.1 and 6.0.2.
+- **The `resolutions` key is the range `@electron-forge/maker-rpm` declares** (`npm view @electron-forge/maker-rpm@<v> optionalDependencies`): when forge moves it, the old key matches nothing and the patch stops applying without an error. After a forge bump, `grep build_id_links node_modules/electron-installer-redhat/resources/spec.ejs`.
+- **A new `electron-installer-redhat` release is never picked up**: the resolution pins the patched 4.0.0. Check the two issues above before a release replaces the patch.
+- **Verify by building the real thing**, never on the Fedora host (rpm ≥ 4.20 breaks the installer for an unrelated reason): `node node_modules/.bin/electron-forge make --targets @electron-forge/maker-rpm` in a `node:26-bookworm` image with `rpm` installed (the CI runner's rpm 4.18), then `rpm -qlp out/make/rpm/x64/*.rpm | grep build-id`.
