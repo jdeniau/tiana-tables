@@ -22,7 +22,7 @@ paths:
 ## Yarn
 
 - **Yarn's secure defaults stay unset in `.yarnrc.yml`: install scripts off, versions younger than a day refused, no git repository approved.** They hold because `yarn.lock` is v10: Yarn writes `enableScripts: true` and `npmMinimalAgeGate: 0` back only when it migrates an older lockfile. An urgent fix younger than a day goes through `npmPreapprovedPackages`, removed afterwards.
-- **A dependency whose install script matters gets `built: true` in `dependenciesMeta`**: only `electron-winstaller`, whose script copies the `vendor/7z.exe` the Squirrel maker needs. `esbuild` and `unrs-resolver` work without theirs (measured), so they are `built: false`, which silences the warning.
+- **A dependency whose install script matters gets `built: true` in `dependenciesMeta`**: only `electron-winstaller`, whose script copies the `vendor/7z.exe` the Squirrel maker needs. `esbuild` and `unrs-resolver` work without theirs (measured): the warning they raise at each install is expected.
 - **`approvedGitRepositories` does not cover a GitHub-hosted dependency**: Yarn downloads its archive over HTTPS and packs it from source. Forge 7's `@electron/node-gyp` is the only one, gone with forge 8.
 
 ## React Compiler

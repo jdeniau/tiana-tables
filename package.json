@@ -133,12 +133,6 @@
   "dependenciesMeta": {
     "electron-winstaller": {
       "built": true
-    },
-    "esbuild": {
-      "built": false
-    },
-    "unrs-resolver": {
-      "built": false
     }
   },
   "resolutions": {
