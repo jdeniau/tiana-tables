@@ -86,9 +86,10 @@ enum ExtendedFormat {
  * either — `TIME`, `BIT` and `GEOMETRY` all carry it without holding text — so
  * it is asked of the kinds that hold characters, and of no other.
  *
- * MariaDB's extended metadata says what the wire type cannot: its `JSON` column
- * and a JSON expression come with the format `json` (MariaDB 10.5.2 and later,
- * measured on 10.11 and 11.8). An older server sends none, and its JSON reads as text.
+ * MariaDB's extended metadata says what the wire type cannot: a column with a
+ * `CHECK (json_valid(col))`, which is all `JSON` adds to a `LONGTEXT`, and a JSON
+ * expression come with the format `json` (MariaDB 10.5.2 and later, measured on
+ * 10.11 and 11.8). An older server sends none, and its JSON reads as text.
  */
 export function toFieldKind(
   type: number | undefined,
