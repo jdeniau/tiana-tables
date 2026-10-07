@@ -1,5 +1,5 @@
 import type { Dialect } from '../../../sql/dialect/types';
-import type { FieldKind } from '../../../sql/resultField';
+import { FieldKind } from '../../../sql/resultField';
 import {
   type ZoneShift,
   dateTextToIso,
@@ -77,6 +77,11 @@ function toJsonValue(
     return dateTextToIso(value, kind, serverZone);
   }
 
+  // the server's text of a JSON column goes out as the JSON it holds, not as a string
+  if (typeof value === 'string' && kind === FieldKind.Json) {
+    return parseJsonText(value);
+  }
+
   if (value instanceof Uint8Array) {
     return toHexLiteral(value);
   }
@@ -87,6 +92,15 @@ function toJsonValue(
   }
 
   return value;
+}
+
+/** What JSON text holds, or the text itself when it holds no JSON. */
+function parseJsonText(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
 }
 
 /**

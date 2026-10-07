@@ -65,7 +65,8 @@ const ROW: RowCell[] = [
   cell('name', FieldKind.String, 'Le "bon", coin'),
   cell('note', FieldKind.String, null),
   cell('createdAt', FieldKind.DateTime, CREATED_AT),
-  cell('payload', FieldKind.Json, { tags: ['a', 'b'] }),
+  // the server's text, as both drivers hand a JSON column over
+  cell('payload', FieldKind.Json, '{"tags":["a","b"]}'),
   cell('hash', FieldKind.Binary, new Uint8Array([0xca, 0xfe])),
 ];
 
@@ -100,6 +101,22 @@ describe('rowsToJson, on one row: the object alone', () => {
         rowsToJson([[cell('createdAt', FieldKind.DateTime, CREATED_AT)]], null)
       )
     ).toEqual({ createdAt: '2026-09-25T12:03:07' });
+  });
+
+  it("writes a JSON column's text as the JSON it holds, a scalar included", () => {
+    expect(
+      JSON.parse(
+        rowsToJson(
+          [
+            [
+              cell('spaced', FieldKind.Json, '{"a": 1}'),
+              cell('scalar', FieldKind.Json, '"foo"'),
+            ],
+          ],
+          SERVER_ZONE
+        )
+      )
+    ).toEqual({ spaced: { a: 1 }, scalar: 'foo' });
   });
 
   it('writes a bigint as text rather than throwing', () => {
