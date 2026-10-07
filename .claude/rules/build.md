@@ -24,6 +24,7 @@ paths:
 - **Yarn's secure defaults stay unset in `.yarnrc.yml`: install scripts off, versions younger than a day refused, no git repository approved.** They hold because `yarn.lock` is v10: Yarn writes `enableScripts: true` and `npmMinimalAgeGate: 0` back only when it migrates an older lockfile. An urgent fix younger than a day goes through `npmPreapprovedPackages`, removed afterwards.
 - **A dependency whose install script matters gets `built: true` in `dependenciesMeta`**: only `electron-winstaller`, whose script copies the `vendor/7z.exe` the Squirrel maker needs. `esbuild` and `unrs-resolver` work without theirs (measured): the warning they raise at each install is expected.
 - **`approvedGitRepositories` does not cover a GitHub-hosted dependency**: Yarn downloads its archive over HTTPS and packs it from source.
+- **After a `yarn dedupe`, `react` and `react-dom` resolve to one same version** (`yarn why react-dom`): forge's terminal screen depends on `react` itself, so a dedupe can lift our `react` alone, and `react-dom` then throws "Incompatible React versions" at import. The four React packages move together, then `yarn dedupe react-dom`: Storybook's `addon-docs` keeps its own `react-dom` entry.
 
 ## React Compiler
 
