@@ -13,9 +13,7 @@ export function DatabaseListContextProvider({
   databaseList: DatabaseListContext;
 }) {
   return (
-    <DatabaseListContext value={DatabaseList}>
-      {children}
-    </DatabaseListContext>
+    <DatabaseListContext value={DatabaseList}>{children}</DatabaseListContext>
   );
 }
 

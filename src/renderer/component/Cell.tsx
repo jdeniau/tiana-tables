@@ -206,10 +206,7 @@ function BinaryCell({ value }: CellProps<Uint8Array>) {
  * to text. A cell renders something whatever arrives: blanking the grid on a
  * type nobody thought of is the one outcome worth ruling out.
  */
-function TableCellFactory({
-  kind,
-  value,
-}: TableCellFactoryProps) {
+function TableCellFactory({ kind, value }: TableCellFactoryProps) {
   if (isNullish(value)) {
     return <NullCell />;
   }

@@ -13,8 +13,7 @@ export enum NotEditableReason {
 }
 
 export type CellEditability =
-  | { editable: true }
-  | { editable: false; reason: NotEditableReason };
+  { editable: true } | { editable: false; reason: NotEditableReason };
 
 const EDITABLE: CellEditability = { editable: true };
 

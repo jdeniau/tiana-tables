@@ -12,11 +12,7 @@ export function TableListContextProvider({
   children: React.ReactNode;
   tableList: TableListContext;
 }) {
-  return (
-    <TableListContext value={tableList}>
-      {children}
-    </TableListContext>
-  );
+  return <TableListContext value={tableList}>{children}</TableListContext>;
 }
 
 export function useTableListContext(): TableListContext {

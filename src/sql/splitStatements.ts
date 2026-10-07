@@ -43,7 +43,8 @@ export function splitStatements(
     if (hasCode) {
       const segment = content.slice(segmentStart, segmentEnd);
       const sql = segment.trim();
-      const start = segmentStart + (segment.length - segment.trimStart().length);
+      const start =
+        segmentStart + (segment.length - segment.trimStart().length);
 
       statements.push({ sql, start, end: start + sql.length });
     }

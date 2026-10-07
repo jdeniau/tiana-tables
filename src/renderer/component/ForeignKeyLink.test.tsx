@@ -55,9 +55,7 @@ function renderLink(
               closeConnection: () => {},
             }}
           >
-            <DatabaseContext
-              value={{ database: 'db', setDatabase: () => {} }}
-            >
+            <DatabaseContext value={{ database: 'db', setDatabase: () => {} }}>
               <ForeignKeysContextProvider
                 foreignKeys={foreignKeys}
                 database="db"

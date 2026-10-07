@@ -123,17 +123,15 @@ export function buildCompletionProvider(
 
       // the grammar itself tells us which keywords are valid right here
       items.push(
-        ...suggestions.keywords.map(
-          (keyword): languages.CompletionItem => ({
-            label: keyword,
-            kind: languages.CompletionItemKind.Keyword,
-            detail: 'keyword',
-            insertText: keyword,
-            range,
-            // schema names first, keywords after
-            sortText: `2${keyword}`,
-          })
-        )
+        ...suggestions.keywords.map((keyword): languages.CompletionItem => ({
+          label: keyword,
+          kind: languages.CompletionItemKind.Keyword,
+          detail: 'keyword',
+          insertText: keyword,
+          range,
+          // schema names first, keywords after
+          sortText: `2${keyword}`,
+        }))
       );
 
       return { suggestions: items };
@@ -209,16 +207,16 @@ function columnCompletions(
   range: CompletionRange
 ): languages.CompletionItem[] {
   return tableNames.flatMap((tableName) =>
-    allColumns.getColumnsForTable(tableName).map(
-      (column): languages.CompletionItem => ({
+    allColumns
+      .getColumnsForTable(tableName)
+      .map((column): languages.CompletionItem => ({
         label: column.name,
         insertText: column.name,
         kind: languages.CompletionItemKind.Field,
         detail: tableName,
         range,
         sortText: `1${column.name}`,
-      })
-    )
+      }))
   );
 }
 
