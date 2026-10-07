@@ -88,8 +88,16 @@ describe('toFieldKind', () => {
 
   // MariaDB aliases `JSON` to `LONGTEXT`, and the alias carries `BINARY_FLAG`
   // while answering a string — which is why the flags are not what is read
-  test('reads a MariaDB JSON column, a LONGTEXT, as text', () => {
+  test('reads a MariaDB JSON column with no extended metadata as text', () => {
     expect(toFieldKind(Types.BLOB, UTF8)).toBe(FieldKind.Text);
+  });
+
+  // measured on MariaDB 10.11 and 11.8: a JSON column comes as a BLOB, a JSON
+  // expression as a VAR_STRING, both with the format `json`
+  test('reads what MariaDB marks as JSON as JSON', () => {
+    expect(toFieldKind(Types.BLOB, UTF8, 'json')).toBe(FieldKind.Json);
+    expect(toFieldKind(Types.VAR_STRING, UTF8, 'json')).toBe(FieldKind.Json);
+    expect(toFieldKind(Types.BLOB, UTF8, 'uuid')).toBe(FieldKind.Text);
   });
 
   test('reads a type it does not know as Unknown', () => {

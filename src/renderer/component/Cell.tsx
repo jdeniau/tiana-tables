@@ -146,15 +146,16 @@ function TextCell({ value }: CellProps<string>) {
 /**
  * Anything the driver handed over as an object, which React refuses to render
  * ("Objects are not valid as a React child"): a MySQL `GEOMETRY` column,
- * answered as `{ x, y }` (measured). It is serialized back to a compact one-liner; the indented form belongs to the detail modal (see
+ * answered as `{ x, y }` (measured). It is serialized back to a compact
+ * one-liner; the indented form belongs to the detail modal (see
  * `cellValueToText`), and the grid body is too hot for anything more (see the
  * performance note in TableGrid).
  *
  * A `string` here is the server's text of a `JSON` column, which both drivers
- * keep as it came, and is shown as is. JSON stored in a text
- * column never reaches this branch — it is announced as TEXT/BLOB and routed
- * to `TextCell`, and on MariaDB, where `JSON` is only an alias for `LONGTEXT`,
- * so is a real JSON column.
+ * keep as it came, and is shown as is. JSON stored in a text column never
+ * reaches this branch: it is announced as TEXT/BLOB and routed to `TextCell`,
+ * as is MariaDB's `JSON`, a `LONGTEXT`, from a server that sends no extended
+ * metadata (before 10.5.2).
  */
 function JsonCell({ value }: CellProps<unknown>) {
   const text = typeof value === 'string' ? value : JSON.stringify(value);
