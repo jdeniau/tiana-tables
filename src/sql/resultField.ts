@@ -27,4 +27,6 @@ export interface ResultField {
   /** what it was selected from — the alias when it has one, `null` for an expression */
   table: string | null;
   kind: FieldKind;
+  /** MariaDB's extended type (`json`, `uuid`, `inet6`…) from its extended metadata; absent elsewhere */
+  extendedType?: string;
 }

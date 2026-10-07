@@ -24,6 +24,7 @@ import {
 } from '../component/Style/Region';
 import TableGrid, { ExtraColumn } from '../component/TableGrid';
 import TableViewSwitch from '../component/TableViewSwitch';
+import { loadDialect } from '../hooks/useDialect';
 
 interface RouteParams extends LoaderFunctionArgs {
   params: Params<'connectionSlug' | 'databaseName' | 'tableName'>;
@@ -31,6 +32,9 @@ interface RouteParams extends LoaderFunctionArgs {
 
 /** wide enough for a column name and the clear button */
 const DISPLAY_AFTER_COLUMN_WIDTH = 220;
+
+/** wide enough for its header */
+const EXTENDED_TYPE_COLUMN_WIDTH = 140;
 
 // TODO : migrate this loader in the `table` root url. This way we can use the foreigns keys in the table result to make some links direcly on the table grid
 export async function loader({ params }: RouteParams) {
@@ -40,10 +44,23 @@ export async function loader({ params }: RouteParams) {
   invariant(databaseName, 'Database name is required');
   invariant(tableName, 'Table name is required');
 
-  const [data, primaryKeys] = await Promise.all([
+  const dialect = await loadDialect(connectionSlug);
+
+  window.sql.connectionNameChanged(connectionSlug, databaseName);
+
+  const [data, primaryKeys, [, probedFields]] = await Promise.all([
     window.sql.getTableStructure(databaseName, tableName),
     window.sql.getPrimaryKeyColumns(databaseName, tableName),
+    // no row, only the description of the columns: MariaDB's extended type is
+    // there, and in no INFORMATION_SCHEMA table
+    window.sql.executeQuery(
+      `SELECT * FROM ${dialect.qualify(databaseName, tableName)} LIMIT 0`
+    ),
   ]);
+
+  const extendedTypeByColumn = new Map(
+    probedFields.map((field) => [field.name, field.extendedType])
+  );
 
   const configuration = await window.config.getConfiguration();
 
@@ -56,6 +73,7 @@ export async function loader({ params }: RouteParams) {
     data,
     primaryKeys,
     displayAfterByColumn,
+    extendedTypeByColumn,
   };
 }
 
@@ -67,6 +85,7 @@ export default function TableStructure() {
     data: [result, fields],
     primaryKeys,
     displayAfterByColumn,
+    extendedTypeByColumn,
   } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
 
   const columnNames = result.map((column) => column.Column);
@@ -97,6 +116,13 @@ export default function TableStructure() {
   };
 
   const extraColumns: Array<ExtraColumn<TableStructureRow>> = [
+    {
+      id: 'extendedType',
+      header: t('table.structure.extendedType'),
+      size: EXTENDED_TYPE_COLUMN_WIDTH,
+      after: 'Type',
+      render: (row) => extendedTypeByColumn.get(row.Column),
+    },
     {
       id: 'displayAfter',
       header: t('table.structure.displayAfter'),

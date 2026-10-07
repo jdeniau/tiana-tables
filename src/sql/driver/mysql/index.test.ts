@@ -11,6 +11,8 @@ function column(overrides: {
   orgTable?: string;
   type?: number;
   characterSet?: number;
+  extendedFormat?: string;
+  extendedTypeName?: string;
 }) {
   return {
     name: 'c',
@@ -105,6 +107,20 @@ describe('toResultFields', () => {
       table: 'items',
       kind: FieldKind.Number,
     });
+  });
+
+  // measured on MariaDB 10.11 and 11.8: a JSON column comes with the format,
+  // a UUID column with the type name, a plain column with neither
+  test("hands MariaDB's extended type over, a type name or a format", () => {
+    const [json, uuid, plain] = toResultFields([
+      column({ type: 252, extendedFormat: 'json' }),
+      column({ type: 254, extendedTypeName: 'uuid' }),
+      column({}),
+    ]);
+
+    expect(json.extendedType).toBe('json');
+    expect(uuid.extendedType).toBe('uuid');
+    expect(plain.extendedType).toBeUndefined();
   });
 
   // mysql2 types it as an array, and answers `undefined` for a write

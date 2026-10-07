@@ -26,10 +26,15 @@ function toQueryReturn(result: MySqlResult): QueryReturnType {
   };
 }
 
-/** The five things read of a mysql2 column, of the twenty it ships. */
+/** The six things read of a mysql2 column, of the twenty it ships. */
 type MySqlField = Pick<
   FieldPacket,
-  'name' | 'orgTable' | 'type' | 'characterSet' | 'extendedFormat'
+  | 'name'
+  | 'orgTable'
+  | 'type'
+  | 'characterSet'
+  | 'extendedFormat'
+  | 'extendedTypeName'
 >;
 
 /** The columns of a result, as the renderer reads them. */
@@ -43,6 +48,8 @@ function toResultFields(fields: MySqlField[] | undefined): ResultField[] {
     // belongs to none, and mysql2 spells that as an empty string
     table: field.orgTable || null,
     kind: toFieldKind(field.type, field.characterSet, field.extendedFormat),
+    // measured: a UUID column carries the type name, a JSON one the format
+    extendedType: field.extendedTypeName ?? field.extendedFormat,
   }));
 }
 

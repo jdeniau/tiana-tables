@@ -194,6 +194,7 @@ export default {
     '{selected, plural, one {# row} other {# rows}} / {count, plural, one {# row} other {# rows}}',
   'table.rows.loadMore': 'Load more…',
   'table.sort.hint': 'Click to sort, Shift+click to add to the sort',
+  'table.structure.extendedType': 'Extended type',
   'table.structure.displayAfter': 'Displays after',
   'table.structure.displayAfter.none': 'Database order',
   'table.structure.displayAfter.overriddenByPrimaryKey':
