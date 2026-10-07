@@ -9,8 +9,8 @@ import { testables, toFieldKind } from './fieldKind';
  *
  * Its `Types` maps both ways at runtime, and only this direction is complete:
  * the reverse one is missing `VECTOR`, so enumerating the numeric keys would
- * let a type through. The named constants below come from `mysql` instead,
- * whose `Types` is a `const enum` — inlined, so it cannot be enumerated at all.
+ * let a type through. The named constants below come from `mysql`, whose own
+ * `Types` dates from 2020: it lacks `VECTOR`, so it is never enumerated.
  */
 const { KIND_BY_TYPE } = testables;
 
