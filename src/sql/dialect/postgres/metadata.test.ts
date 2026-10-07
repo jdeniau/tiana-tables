@@ -111,7 +111,8 @@ describe('listColumns', () => {
 
   test('an enum carries its labels, one at a time', () => {
     expect(
-      readColumn({ typname: 'mood', enum_labels: ['sad', 'ok', 'happy'] })
+      // `json_agg`, which the driver hands over as the server's text
+      readColumn({ typname: 'mood', enum_labels: '["sad","ok","happy"]' })
     ).toMatchObject({
       allowedValues: ['sad', 'ok', 'happy'],
       multiValued: false,
