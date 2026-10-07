@@ -41,7 +41,7 @@
     ]
   },
   "dependencies": {
-    "@ant-design/icons": "^6.0.0",
+    "@ant-design/icons": "^6.3.4",
     "@fontsource/oswald": "5.3.0",
     "@fontsource/syne-mono": "5.3.0",
     "@icons-pack/react-simple-icons": "^13.15.1",
@@ -51,7 +51,7 @@
     "@tanstack/react-store": "^0.11.1",
     "@tanstack/react-table": "^9.1.2",
     "@tanstack/react-virtual": "^3.14.9",
-    "antd": "^6.4.2",
+    "antd": "^6.6.5",
     "compare-versions": "^6.1.1",
     "dt-sql-parser": "^4.5.0",
     "electron-log": "^5.4.3",
@@ -73,7 +73,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@ant-design/cli": "^6.4.2",
+    "@ant-design/cli": "^6.6.5",
     "@babel/core": "^7.29.7",
     "@chromatic-com/storybook": "^5.3.1",
     "@electron-forge/cli": "^8.0.1",
