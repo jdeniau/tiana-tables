@@ -36,7 +36,7 @@ export default function CellEditor({
 }: CellEditorProps) {
   const { t } = useTranslation();
   const { serverZone } = useDateDisplay();
-  const kind = resolveEditorKind(column, fieldKind, value.text);
+  const kind = resolveEditorKind(column, fieldKind);
   const nullable = column.nullable;
 
   const enumValues = column.allowedValues.map((allowed) => ({

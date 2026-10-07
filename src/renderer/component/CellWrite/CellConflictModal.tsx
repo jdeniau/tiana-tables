@@ -57,7 +57,10 @@ export default function CellConflictModal({
               />
               <ValueText
                 label={t('cell.write.serverValue')}
-                text={cellValueToText(issue.currentValue)}
+                text={cellValueToText(
+                  issue.currentValue,
+                  pending.write.detail.column.kind
+                )}
               />
               <ValueText
                 label={t('cell.write.yourValue')}

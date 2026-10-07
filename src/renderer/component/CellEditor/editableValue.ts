@@ -1,7 +1,7 @@
+import type { FieldKind } from '../../../sql/resultField';
 import type { SqlBoundValue } from '../../../sql/types';
 import { isNullish } from '../../utils/isNullish';
 import cellValueToText from '../cellValueToText';
-import { looksLikeJson } from './editorKind';
 
 /**
  * What every editor works on: the value as text, or the absence of a value.
@@ -20,15 +20,17 @@ export interface EditableValue {
  * The value a cell was loaded with, as the editor opens on it.
  *
  * The text is the one the read-only view shows, indentation included: a JSON
- * value opens indented, which is what makes it editable at all. The
+ * column's value opens indented, which is what makes it editable at all. The
  * consequence is deliberate — saving an edited JSON value stores it indented,
- * even in a text column, since only a value the user actually changed is ever
- * written.
+ * since only a value the user actually changed is ever written.
  */
-export function toEditableValue(value: unknown): EditableValue {
+export function toEditableValue(
+  value: unknown,
+  kind: FieldKind
+): EditableValue {
   return {
     isNull: isNullish(value),
-    text: cellValueToText(value),
+    text: cellValueToText(value, kind),
   };
 }
 
@@ -76,10 +78,6 @@ export enum ValidationError {
  * produces a value the server rejects outright rather than coerces, and where
  * the editor can say so before a round trip. Everything else is left to MySQL,
  * whose own rules on ranges, character sets and dates are the ones that count.
- *
- * A text column that merely *holds* JSON is not checked, even though it gets
- * the JSON editor: turning its content into something else is a legitimate
- * edit, and Monaco already underlines what is no longer valid JSON.
  */
 export function findValidationError(
   value: EditableValue,
@@ -89,15 +87,8 @@ export function findValidationError(
     return null;
   }
 
-  const trimmed = value.text.trim();
-
-  // a JSON column also accepts a bare scalar, which `looksLikeJson` skips
-  if (looksLikeJson(trimmed)) {
-    return null;
-  }
-
   try {
-    JSON.parse(trimmed);
+    JSON.parse(value.text.trim());
 
     return null;
   } catch {

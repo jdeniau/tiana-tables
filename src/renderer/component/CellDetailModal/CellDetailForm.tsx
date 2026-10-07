@@ -35,7 +35,7 @@ export default function CellDetailForm({
   const fieldKind = detail.column.kind;
 
   /** the loaded value as text: what the editor opens on, and what "unchanged" means */
-  const baseEditable = toEditableValue(detail.value);
+  const baseEditable = toEditableValue(detail.value, fieldKind);
 
   const [edited, setEdited] = useState(baseEditable);
   const [isSaving, setIsSaving] = useState(false);
@@ -45,7 +45,11 @@ export default function CellDetailForm({
 
   if (!editability.editable) {
     return (
-      <ReadOnlyCellValue value={detail.value} reason={editability.reason} />
+      <ReadOnlyCellValue
+        value={detail.value}
+        kind={fieldKind}
+        reason={editability.reason}
+      />
     );
   }
 
@@ -55,6 +59,7 @@ export default function CellDetailForm({
     return (
       <ReadOnlyCellValue
         value={detail.value}
+        kind={fieldKind}
         reason={NotEditableReason.UnknownColumn}
       />
     );
