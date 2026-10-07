@@ -1099,12 +1099,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@formatjs/icu-messageformat-parser@npm:3.5.17":
-  version: 3.5.17
-  resolution: "@formatjs/icu-messageformat-parser@npm:3.5.17"
+"@formatjs/icu-messageformat-parser@npm:3.5.18":
+  version: 3.5.18
+  resolution: "@formatjs/icu-messageformat-parser@npm:3.5.18"
   dependencies:
     "@formatjs/icu-skeleton-parser": "npm:2.1.11"
-  checksum: 10c0/ad22981a2a96da0256aa8aa4990e540a03e1eb0c8f61c4ac94e8c91f3af1819b5cd9204ccf209433857b11a2d8afc5c66332768d5ea92e5c9523074ce6cbfb36
+  checksum: 10c0/4c4ecfb9e99e4f644c934279f91f034dc607e1935d0116e7fc7524c70f2708e9847ab2b335baeb2fbecb21da6f5cb629d2d713c56cd545f189ea0f45673028e9
   languageName: node
   linkType: hard
 
@@ -5766,10 +5766,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-log@npm:^5.4.3":
-  version: 5.4.3
-  resolution: "electron-log@npm:5.4.3"
-  checksum: 10c0/84d398d2a53cd73fdd1118f7b376b08d74938c79cb4aa3454aa176b61ebf1522f5cc92179355e69e0053301df7a19fbe6cf302319e5fbe5fc6a1600f282a2646
+"electron-log@npm:^5.4.4":
+  version: 5.4.4
+  resolution: "electron-log@npm:5.4.4"
+  checksum: 10c0/bdcf44eb9d35306352d8ee827159c4b95c171f3c0c77e2a75c05c7da626e8f83588a82d6c02e6e18ff6d70056cdbc9a845a820e905151aa8a0040b46c8143b13
   languageName: node
   linkType: hard
 
@@ -6757,10 +6757,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fuse.js@npm:^7.3.0":
-  version: 7.3.0
-  resolution: "fuse.js@npm:7.3.0"
-  checksum: 10c0/5e60b6687f3f23dc242d387f355ba970caf6f5cbaedb5767e849ef4014fa71a6109c71810ff06a1c3d4f05e4a6ab7d1fc3c8e2ef98e286a60ff0052ae30e930a
+"fuse.js@npm:^7.5.0":
+  version: 7.5.0
+  resolution: "fuse.js@npm:7.5.0"
+  checksum: 10c0/1fa51a66063b9b0579921ed1d774864e5e027719d3a4fdb469e6636befa4a9f2f7da626c07da757c6e1ef8a761c7bd3a217e6ecc8e16f0276e1a0f8dd941ff77
   languageName: node
   linkType: hard
 
@@ -7089,12 +7089,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next-icu@npm:^2.4.4":
-  version: 2.4.4
-  resolution: "i18next-icu@npm:2.4.4"
+"i18next-icu@npm:^2.5.0":
+  version: 2.5.0
+  resolution: "i18next-icu@npm:2.5.0"
   peerDependencies:
-    intl-messageformat: ">=10.3.3 <12.0.0"
-  checksum: 10c0/6db3072f732ea9c88046976540ab55720393b9d703729d3bcc64dc3423de6735a3efc5feaf2a538eef8ce87c79ad096a6feec8a413da1afdf8f1c1f328626ef6
+    intl-messageformat: ">=10.3.3 <13.0.0"
+  checksum: 10c0/90e0f959e385383b6629330574cadd082df6f6139610ea3b762c00facff275df644309a8ee565c816374e4e21e9f2941a8e0e7134ad6c44a6c323cbd469b55b7
   languageName: node
   linkType: hard
 
@@ -7258,13 +7258,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"intl-messageformat@npm:^11.2.14":
-  version: 11.2.14
-  resolution: "intl-messageformat@npm:11.2.14"
+"intl-messageformat@npm:^11.2.15":
+  version: 11.2.15
+  resolution: "intl-messageformat@npm:11.2.15"
   dependencies:
     "@formatjs/fast-memoize": "npm:3.1.7"
-    "@formatjs/icu-messageformat-parser": "npm:3.5.17"
-  checksum: 10c0/b29d319f22af64d3faf70c81e7ac43c1685ad0065e9a3e618872c1f77e6ee361054254366077f4481636fa57b633a6af28efc6c479d7aa61ffd5cc34711c87ce
+    "@formatjs/icu-messageformat-parser": "npm:3.5.18"
+  checksum: 10c0/868247481c9a1bf8ae5041f2264de79ea7bb9efc7f5fdd7419ae9aad30ebd2b18e5d6f611283c9efed2409338290f2628be12685043aaff56f136cf714ebfff0
   languageName: node
   linkType: hard
 
@@ -10786,7 +10786,7 @@ __metadata:
     dt-sql-parser: "npm:^4.5.0"
     electron: "npm:^44.5.1"
     electron-devtools-installer: "npm:^4.0.0"
-    electron-log: "npm:^5.4.3"
+    electron-log: "npm:^5.4.4"
     electron-squirrel-startup: "npm:^1.0.1"
     eslint: "npm:^10.3.0"
     eslint-import-resolver-typescript: "npm:^4.4.4"
@@ -10794,13 +10794,13 @@ __metadata:
     eslint-plugin-react: "npm:^7.37.5"
     eslint-plugin-react-hooks: "npm:^7.1.1"
     eslint-plugin-storybook: "npm:^10.6.1"
-    fuse.js: "npm:^7.3.0"
+    fuse.js: "npm:^7.5.0"
     globals: "npm:^16.0.0"
     happy-dom: "npm:^20.9.0"
     husky: "npm:^9.1.7"
     i18next: "npm:^23.16.8"
-    i18next-icu: "npm:^2.4.4"
-    intl-messageformat: "npm:^11.2.14"
+    i18next-icu: "npm:^2.5.0"
+    intl-messageformat: "npm:^11.2.15"
     knip: "npm:^6.34.0"
     lint-staged: "npm:^15.5.2"
     monaco-editor: "npm:^0.55.1"
@@ -10821,7 +10821,7 @@ __metadata:
     tiny-invariant: "npm:^1.3.3"
     typescript: "npm:^6.0.3"
     typescript-eslint: "npm:^8.59.3"
-    update-electron-app: "npm:^3.2.0"
+    update-electron-app: "npm:^3.3.0"
     vite: "npm:^8.3.3"
     vitest: "npm:^4.1.11"
     zod: "npm:^4.6.5"
@@ -11257,13 +11257,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"update-electron-app@npm:^3.2.0":
-  version: 3.2.0
-  resolution: "update-electron-app@npm:3.2.0"
+"update-electron-app@npm:^3.3.0":
+  version: 3.3.0
+  resolution: "update-electron-app@npm:3.3.0"
   dependencies:
     github-url-to-object: "npm:^4.0.4"
     ms: "npm:^2.1.1"
-  checksum: 10c0/b8e29d384d5ae5c65705879863afe662fb5853c4350ebd8f7dab1a0c1db6413096b43d9b27a1f6215ce93d8424a8945be0b6b527f9e51cdf5201ff2b33541f90
+  checksum: 10c0/692d82ecb9df4824f0d712f69a38fbf5c05ec42c9ffc3bb85bbdb7142e80eaf0c7668a465242cdce9bda022f6bd0896ffa305d292e6e187bee0e0a28d9d7f257
   languageName: node
   linkType: hard
 
