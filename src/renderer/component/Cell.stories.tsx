@@ -115,22 +115,21 @@ export const WithTextType: Story = {
   },
 };
 
-// What a real JSON column looks like: mysql2 parses it before it reaches the
-// renderer, so the value is an object, never its serialized form.
+// What a real JSON column looks like: the server's text, spacing included,
+// as both drivers hand it over.
 export const WithJSONType: Story = {
   args: {
     kind: FieldKind.Json,
-    value: { backgroundColor: 'red', tags: ['a', 'b'], nested: { count: 2 } },
+    value:
+      '{"backgroundColor": "red", "tags": ["a", "b"], "nested": {"count": 2}}',
   },
 };
 
-// The only string that reaches a JSON cell is a JSON scalar: mysql2 parses
-// `CAST('"foo"' AS JSON)` into `foo`, which is rendered without its quotes.
-// (JSON stored in a TEXT column is announced as text and rendered as such.)
+// A JSON scalar is its JSON text too, quotes included.
 export const WithJSONScalar: Story = {
   args: {
     kind: FieldKind.Json,
-    value: 'a scalar string, not an object',
+    value: '"a scalar string, not an object"',
   },
 };
 

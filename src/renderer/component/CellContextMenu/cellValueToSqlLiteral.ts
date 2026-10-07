@@ -41,6 +41,6 @@ export function cellValueToSqlLiteral(
     return undefined;
   }
 
-  // all that is left is a JSON column, which mysql2 hands over already parsed
+  // all that is left is an object, a spatial value mysql2 answers as `{ x, y }`: JSON comes as text
   return dialect.escapeLiteral(JSON.stringify(value));
 }

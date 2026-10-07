@@ -79,25 +79,16 @@ function isConnectionLost(error: unknown): boolean {
 /**
  * The types `pg` decodes, each into what the app reads it as: the rest stays as the server spells it.
  *
- * A boolean, a number and bytes as a `Buffer`, as mysql2 answers them; JSON as an object, where mysql2 keeps the text.
- * A date stays text, as mysql2's `dateStrings` answers it: a `Date` would drop the microseconds.
+ * A boolean, a number and bytes as a `Buffer`, as mysql2 answers them.
+ * A date and JSON stay text, as mysql2's `dateStrings` and `jsonStrings` answer them:
+ * a `Date` would drop the microseconds, parsed JSON an integer past 2^53.
  * `pg` would also decode an array, an interval or a point into
  * objects that no editor can write back: `{math,poetry}` is what PostgreSQL reads.
  */
 const DECODED: ReadonlySet<number> = new Set(
-  (
-    [
-      'BOOL',
-      'INT2',
-      'INT4',
-      'OID',
-      'FLOAT4',
-      'FLOAT8',
-      'JSON',
-      'JSONB',
-      'BYTEA',
-    ] as const
-  ).map((name) => pg.types.builtins[name])
+  (['BOOL', 'INT2', 'INT4', 'OID', 'FLOAT4', 'FLOAT8', 'BYTEA'] as const).map(
+    (name) => pg.types.builtins[name]
+  )
 );
 
 const types = {

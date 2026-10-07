@@ -146,7 +146,7 @@ Monaco, with `monaco-sql-languages` for the `mysql` / `pgsql` languages and thei
 ## Gotchas
 
 - **Tests default to the node environment.** A test file that needs the DOM starts with `/** @vitest-environment happy-dom */`.
-- **A date is the server's text from the driver to the renderer**, as a `DECIMAL` is: a typed value kept as text so that nothing is lost, its `FieldKind` telling how to read it, and what the server reads back. It becomes Temporal only where it is computed on (`utils/dateFormatter.ts`); a Temporal object crosses neither IPC (not clonable) nor the context bridge (it arrives as `{}`).
+- **A date is the server's text from the driver to the renderer**, as a `DECIMAL` and a JSON value are: a typed value kept as text so that nothing is lost, its `FieldKind` telling how to read it, and what the server reads back. It becomes Temporal only where it is computed on (`utils/dateFormatter.ts`); a Temporal object crosses neither IPC (not clonable) nor the context bridge (it arrives as `{}`).
 - **The drivers are main-process only.** `mysql2` and `pg` are CommonJS and fail in the renderer, which reaches SQL through `src/sql/dialect/` alone; the MySQL dialect escapes literals with `mysql` (v2), the one driver package the renderer can load. A column's type reaches the renderer as a `FieldKind`, never as a wire-protocol number.
 
 ## Where knowledge lives

@@ -41,8 +41,8 @@ describe('cellValueToText', () => {
     expect(cellValueToText('"quoted"')).toBe('"quoted"');
   });
 
-  test('indents a JSON column already parsed by mysql2', () => {
-    expect(cellValueToText({ a: 1 })).toBe('{\n  "a": 1\n}');
+  test('indents an object a driver answered, a spatial point', () => {
+    expect(cellValueToText({ x: 1, y: 2 })).toBe('{\n  "x": 1,\n  "y": 2\n}');
   });
 
   test('stringifies numbers', () => {

@@ -30,7 +30,7 @@ export default function cellValueToText(value: unknown): string {
     return toHexLiteral(value, MAX_BINARY_BYTES);
   }
 
-  // pg hands `json` and `jsonb` columns over as already parsed objects
+  // a spatial value mysql2 answers as `{ x, y }`: JSON comes as text, indented above
   if (typeof value === 'object') {
     return JSON.stringify(value, null, 2);
   }

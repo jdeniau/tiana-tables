@@ -40,10 +40,9 @@ export function toSqlValue({ isNull, text }: EditableValue): string | null {
 /**
  * A loaded value, turned into something the write can be guarded on.
  *
- * A value goes back as what the server compares the same way: a scalar as
- * the driver answered it — a date is the server's own text, microseconds
- * included —, an object (a `JSON` column) as the JSON text the server parses
- * again.
+ * A value goes back as what the server compares the same way: as the driver
+ * answered it — a date or a JSON value is the server's own text —, an object
+ * as its JSON text.
  */
 export function toBoundValue(value: unknown): SqlBoundValue {
   if (isNullish(value)) {
@@ -54,8 +53,7 @@ export function toBoundValue(value: unknown): SqlBoundValue {
     return value;
   }
 
-  // all that is left is a PostgreSQL `json` or `jsonb` column, which pg hands
-  // over already parsed: the only editable kind a driver answers with no scalar
+  // all that is left is an object, a spatial value mysql2 answers as `{ x, y }`: JSON comes as text
   return JSON.stringify(value);
 }
 
