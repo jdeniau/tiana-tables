@@ -95,6 +95,8 @@ export const mysqlDriver: Driver = {
       connectTimeout: options.connectTimeoutMs,
       // the server's own text: a `Date` drops microseconds, and shifts a wall clock the machine's zone skips
       dateStrings: true,
+      // the server's text too: parsed, JSON loses integers past 2^53, and on MariaDB the spacing the edit guard compares
+      jsonStrings: true,
     });
 
     connection.on('end', options.onClosed);

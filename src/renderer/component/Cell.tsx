@@ -145,15 +145,16 @@ function TextCell({ value }: CellProps<string>) {
 
 /**
  * Anything the driver handed over as an object, which React refuses to render
- * ("Objects are not valid as a React child"). A MySQL `JSON` column is the
- * common one — mysql2 parses it, `jsonStrings` being off — and a `GEOMETRY`
- * column the other, answered as `{ x, y }` (measured). It is serialized back
+ * ("Objects are not valid as a React child"). A PostgreSQL `json` or `jsonb`
+ * column is the common one — pg parses it — and a MySQL `GEOMETRY` column the
+ * other, answered as `{ x, y }` (measured). It is serialized back
  * to a compact one-liner; the indented form belongs to the detail modal (see
  * `cellValueToText`), and the grid body is too hot for anything more (see the
  * performance note in TableGrid).
  *
- * A `string` here is a JSON *scalar*: `CAST('"foo"' AS JSON)` parses to
- * `'foo'`, and re-serializing it would show the quotes. JSON stored in a text
+ * A `string` here is shown as is: the server's text of a MySQL `JSON` column
+ * (`jsonStrings`), or a JSON scalar pg parsed, which re-serializing would
+ * wrap in quotes. JSON stored in a text
  * column never reaches this branch — it is announced as TEXT/BLOB and routed
  * to `TextCell`, and on MariaDB, where `JSON` is only an alias for `LONGTEXT`,
  * so is a real JSON column.

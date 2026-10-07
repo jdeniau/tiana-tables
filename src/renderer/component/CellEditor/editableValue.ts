@@ -54,8 +54,8 @@ export function toBoundValue(value: unknown): SqlBoundValue {
     return value;
   }
 
-  // all that is left is a JSON column, which mysql2 hands over already parsed —
-  // the only editable kind the driver does not answer with a scalar
+  // all that is left is a PostgreSQL `json` or `jsonb` column, which pg hands
+  // over already parsed: the only editable kind a driver answers with no scalar
   return JSON.stringify(value);
 }
 

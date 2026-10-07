@@ -5525,13 +5525,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"denque@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "denque@npm:2.1.0"
-  checksum: 10c0/f9ef81aa0af9c6c614a727cb3bd13c5d7db2af1abf9e6352045b86e85873e629690f6222f4edd49d10e4ccf8f078bbeec0794fafaf61b659c0589d0c511ec363
-  languageName: node
-  linkType: hard
-
 "deprecation@npm:^2.0.0":
   version: 2.3.1
   resolution: "deprecation@npm:2.3.1"
@@ -7019,12 +7012,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"iconv-lite@npm:^0.7.2":
-  version: 0.7.2
-  resolution: "iconv-lite@npm:0.7.2"
+"iconv-lite@npm:^0.7.3":
+  version: 0.7.3
+  resolution: "iconv-lite@npm:0.7.3"
   dependencies:
     safer-buffer: "npm:>= 2.1.2 < 3.0.0"
-  checksum: 10c0/3c228920f3bd307f56bf8363706a776f4a060eb042f131cd23855ceca962951b264d0997ab38a1ad340e1c5df8499ed26e1f4f0db6b2a2ad9befaff22f14b722
+  checksum: 10c0/be2fd2414f7e94be3a63063fa0ad5919c16bc7b6e00c77eea0765ced6db405739f38dd51016583058fba25cc1d0106ba30b83fbb7a7e32f824d4db76f23d8d33
   languageName: node
   linkType: hard
 
@@ -8302,21 +8295,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mysql2@npm:^3.22.3":
-  version: 3.22.3
-  resolution: "mysql2@npm:3.22.3"
+"mysql2@npm:^3.24.5":
+  version: 3.24.5
+  resolution: "mysql2@npm:3.24.5"
   dependencies:
     aws-ssl-profiles: "npm:^1.1.2"
-    denque: "npm:^2.1.0"
     generate-function: "npm:^2.3.1"
-    iconv-lite: "npm:^0.7.2"
+    iconv-lite: "npm:^0.7.3"
     long: "npm:^5.3.2"
     lru.min: "npm:^1.1.4"
     named-placeholders: "npm:^1.1.6"
-    sql-escaper: "npm:^1.3.3"
+    sql-escaper: "npm:^1.5.1"
   peerDependencies:
     "@types/node": ">= 8"
-  checksum: 10c0/04df7128a1a117f014d611324918387ac17e8126eeb418ef840bcb814ca3639423895df009d77e605a14c1c2fc62573449f75540402f817963259c77c9bf2360
+  checksum: 10c0/8d90aa81d5976d6be92c9031ea0c86c0f6823161c219e945cbc20e0e09aca8d7a05e314ba2a1a5f01e6c376ca43eaa14a110c980e2c1c0690a52152a00ea8f04
   languageName: node
   linkType: hard
 
@@ -10162,10 +10154,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sql-escaper@npm:^1.3.3":
-  version: 1.3.3
-  resolution: "sql-escaper@npm:1.3.3"
-  checksum: 10c0/aa6545685745f4d457a6993cd7b442ac39d54aae6780d15e5ed1ff929f298f6c10562b9e09ddcbedcdf5c3601161e5ee39d3e8d435b1d168775f121946d1bf44
+"sql-escaper@npm:^1.5.1":
+  version: 1.5.2
+  resolution: "sql-escaper@npm:1.5.2"
+  checksum: 10c0/44a3dec22687b25b4f2866dbf736dbf85397475ab0ece65e0e0cd7da002cd1e9c8e45325e0e64c373278a77e23aa734f8b168e3a0b08dd824ab6675b77895aa1
   languageName: node
   linkType: hard
 
@@ -10630,7 +10622,7 @@ __metadata:
     monaco-editor: "npm:^0.55.1"
     monaco-sql-languages: "npm:^1.2.0"
     mysql: "npm:^2.18.1"
-    mysql2: "npm:^3.22.3"
+    mysql2: "npm:^3.24.5"
     pg: "npm:^8.23.1"
     playwright: "npm:^1.63.0"
     prettier: "npm:^3.8.3"

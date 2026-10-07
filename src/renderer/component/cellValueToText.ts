@@ -30,7 +30,7 @@ export default function cellValueToText(value: unknown): string {
     return toHexLiteral(value, MAX_BINARY_BYTES);
   }
 
-  // mysql2 hands JSON columns over as already parsed objects
+  // pg hands `json` and `jsonb` columns over as already parsed objects
   if (typeof value === 'object') {
     return JSON.stringify(value, null, 2);
   }

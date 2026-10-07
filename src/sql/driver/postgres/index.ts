@@ -79,7 +79,7 @@ function isConnectionLost(error: unknown): boolean {
 /**
  * The types `pg` decodes, each into what the app reads it as: the rest stays as the server spells it.
  *
- * A boolean, a number, JSON as an object and bytes as a `Buffer`, as mysql2 answers them.
+ * A boolean, a number and bytes as a `Buffer`, as mysql2 answers them; JSON as an object, where mysql2 keeps the text.
  * A date stays text, as mysql2's `dateStrings` answers it: a `Date` would drop the microseconds.
  * `pg` would also decode an array, an interval or a point into
  * objects that no editor can write back: `{math,poetry}` is what PostgreSQL reads.
