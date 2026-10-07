@@ -10596,9 +10596,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"styled-components@npm:^6.4.1":
-  version: 6.4.1
-  resolution: "styled-components@npm:6.4.1"
+"styled-components@npm:^6.5.3":
+  version: 6.5.3
+  resolution: "styled-components@npm:6.5.3"
   dependencies:
     "@emotion/is-prop-valid": "npm:1.4.0"
     css-to-react-native: "npm:3.2.0"
@@ -10616,7 +10616,7 @@ __metadata:
       optional: true
     react-native:
       optional: true
-  checksum: 10c0/33b43f55be02cecc4dd1904f0f4397c8a9f245ee67cd12893c9117651048a442555b527fdd25b4db8a0365701713cb0e91b09df16a4d46e175e3990041b45099
+  checksum: 10c0/76b525c7cbf4febdf52e6b15eeddb3782bb50e11f078e5d0a299b221067314386c7b05cf703f141f3eb15c541f41b20e43386405322986e441e8bb07324adf06
   languageName: node
   linkType: hard
 
@@ -10816,7 +10816,7 @@ __metadata:
     react-router: "npm:^6.30.6"
     react-router-dom: "npm:^6.30.6"
     storybook: "npm:^10.6.1"
-    styled-components: "npm:^6.4.1"
+    styled-components: "npm:^6.5.3"
     temporal-polyfill: "npm:^1.0.5"
     tiny-invariant: "npm:^1.3.3"
     typescript: "npm:^6.0.3"
