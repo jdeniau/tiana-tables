@@ -68,7 +68,7 @@ const createWindow = () => {
     ...titleBarWindowOptions(THEME_LIST[configuration.theme] ?? DEFAULT_THEME),
     icon: 'images/icons/icon.png',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.cjs'),
     },
   });
   logStartupMilestone('main-window-created');
