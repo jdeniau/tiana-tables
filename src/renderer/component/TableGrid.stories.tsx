@@ -346,10 +346,13 @@ function readBack(
     return null;
   }
 
-  return fields.find((field) => field.name === column)?.kind ===
-    FieldKind.Number
-    ? Number(newValue)
-    : newValue;
+  const kind = fields.find((field) => field.name === column)?.kind;
+
+  if (kind === FieldKind.Number) {
+    return Number(newValue);
+  }
+
+  return newValue;
 }
 
 /**
