@@ -48,7 +48,7 @@ paths:
 ## The monaco-sql-languages patch
 
 - **`monaco-sql-languages` 1.2.0 is patched to reach Monaco through its `exports` map**: since 0.56, `monaco-editor` maps `./*` to `./esm/vs/*.js`, so the package's `monaco-editor/esm/vs/editor/editor.api` fails the Rolldown build, and under `skipLibCheck` turns its Monaco types into `any` without an error. The patch rewrites that one filler (`esm/fillers/monaco-editor-core.{js,d.ts}`) to `monaco-editor/editor/editor.api`; its `*.worker.js`, never loaded here, keep the old path.
-- No upstream issue, and their `main` is still on Monaco 0.54 (checked 2026-10-08). After a bump, `yarn tsc --traceResolution | grep "editor/editor.api' was"` must say "successfully resolved".
+- Reported as [monaco-sql-languages#231](https://github.com/DTStack/monaco-sql-languages/issues/231); their `main` is still on Monaco 0.54 (checked 2026-10-08). After a bump, `yarn tsc --traceResolution | grep "editor/editor.api' was"` must say "successfully resolved".
 
 ## The RPM build
 
