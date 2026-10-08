@@ -30,7 +30,6 @@
     "prepare": "husky",
     "knip": "knip"
   },
-  "pre-commit": "lint-staged",
   "lint-staged": {
     "*.{json,css,md}": [
       "prettier --write"
