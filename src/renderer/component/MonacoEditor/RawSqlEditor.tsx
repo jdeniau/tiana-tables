@@ -101,6 +101,8 @@ type Props = {
   /** whose grammar reads the content, and whose tokenizer colors it: fixed, since a connection change remounts the page */
   engine: DatabaseEngine;
   defaultValue?: string;
+  /** takes the focus once created, the caret after the last character */
+  autoFocus?: boolean;
   ref?: Ref<RawSqlEditorHandle>;
   onChange?: (value: string) => void;
   /**
@@ -123,6 +125,7 @@ type Props = {
 export function RawSqlEditor({
   engine,
   defaultValue,
+  autoFocus,
   onChange,
   onStatementCountChange,
   onSubmit,
@@ -166,7 +169,7 @@ export function RawSqlEditor({
     onStatementCountChange
   );
 
-  // the content, the prefix and the options are read once: the editor holds them from then on
+  // the content, the prefix, the focus and the options are read once: the editor holds them from then on
   const mountEditor = useEffectEvent(
     (instance: typeof monaco, container: HTMLDivElement) => {
       const createdEditor = instance.editor.create(container, {
@@ -187,6 +190,14 @@ export function RawSqlEditor({
         // before Monaco asks for the first semantic tokens: the provider has
         // no `onDidChange`, they are only recomputed on a content change
         setQueryPrefix(model, queryPrefix);
+      }
+
+      if (autoFocus && model) {
+        const end = model.getFullModelRange().getEndPosition();
+
+        createdEditor.setPosition(end);
+        createdEditor.revealPosition(end);
+        createdEditor.focus();
       }
 
       createdEditor.addCommand(
