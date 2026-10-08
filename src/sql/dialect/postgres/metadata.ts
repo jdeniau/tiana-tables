@@ -98,7 +98,7 @@ function columnExtra(row: DescribedColumnRow): string | null {
 /** Types holding bytes, which a text editor would corrupt. */
 const BINARY_TYPES: ReadonlySet<string> = new Set(['bytea']);
 
-/** `json` has no equality operator, `jsonb` does: both are JSON to the editor. */
+/** `json` has no equality operator, `jsonb` does: the write compares both as `jsonb`. */
 const JSON_TYPES: ReadonlySet<string> = new Set(['json', 'jsonb']);
 
 /**

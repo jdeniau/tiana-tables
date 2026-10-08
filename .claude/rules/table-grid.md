@@ -42,7 +42,7 @@ Scrolling _mounts_ hundreds of cells per tick, so `memo` does nothing there: the
 - **The `<td>` of `BodyRowInner` owns the pointer gestures** (double-click, context menu); what the cell renders owns only the rendering. The `<div>` covers neither the padding nor the foreign-key `<a>`.
 - **A transient mark on one element is set imperatively on that element**, its CSS and timing in one module (`useWrittenCellFlash`, `setTitleIfTruncated`). Every prop added to `BodyRow` is a comparison paid by every row.
 - **A cell renders in three tiers**: the shape of the value (`null`, bytes, any other object), then its `FieldKind` — which alone tells a date, the server's text, from any other string —, then `String(value)` — so no value can blank the grid.
-- **JSON is what the server declares, never guessed from the value or a convention**: only `FieldKind.Json` (MySQL's `JSON`, MariaDB's `CHECK (json_valid(col))` from 10.5.2, PostgreSQL's `json` / `jsonb`) gets the JSON cell, editor, indentation and copy. JSON stored in a `TEXT` column stays text; on MariaDB, adding the `CHECK` is the fix. The editor follows the kind alone, so typing never swaps it.
+- **JSON is what the server declares, never guessed from the value or a convention**: only `FieldKind.Json` (MySQL's `JSON`, MariaDB's `CHECK (json_valid(col))` from 10.5.2, PostgreSQL's `json` / `jsonb`) gets the JSON cell, editor, indentation and copy. JSON stored in a `TEXT` column stays text; on MariaDB, adding the `CHECK` is the fix. The editor and the check before Save follow the kind alone, so typing never swaps the editor; `ColumnDetail.json` drives only the write's `CAST`, and is false on MariaDB.
 
 ## Copy formats (`CellContextMenu/rowFormats.ts`)
 

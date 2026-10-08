@@ -55,28 +55,32 @@ describe('isSameValue', () => {
 
 describe('findValidationError', () => {
   it.each(['{"a":1}', '[1,2]', '42', '"text"', 'null'])(
-    'accepts %s in a JSON column',
+    'accepts %s in a JSON cell',
     (text) => {
-      expect(findValidationError({ isNull: false, text }, true)).toBeNull();
+      expect(
+        findValidationError({ isNull: false, text }, FieldKind.Json)
+      ).toBeNull();
     }
   );
 
-  it.each(['{"a":', '', 'not json'])('refuses %s in a JSON column', (text) => {
-    expect(findValidationError({ isNull: false, text }, true)).toBe(
+  it.each(['{"a":', '', 'not json'])('refuses %s in a JSON cell', (text) => {
+    expect(findValidationError({ isNull: false, text }, FieldKind.Json)).toBe(
       'invalidJson'
     );
   });
 
-  it('accepts NULL in a JSON column', () => {
-    expect(findValidationError({ isNull: true, text: '' }, true)).toBeNull();
+  it('accepts NULL in a JSON cell', () => {
+    expect(
+      findValidationError({ isNull: true, text: '' }, FieldKind.Json)
+    ).toBeNull();
   });
 
-  it('leaves a text column alone, even one that held JSON', () => {
+  it('leaves a text cell alone, even one that held JSON', () => {
     // turning a text column that happened to hold JSON into something else is
     // a legitimate edit
-    expect(findValidationError({ isNull: false, text: 'plain' }, false)).toBe(
-      null
-    );
+    expect(
+      findValidationError({ isNull: false, text: 'plain' }, FieldKind.Text)
+    ).toBeNull();
   });
 });
 

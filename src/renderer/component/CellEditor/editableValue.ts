@@ -1,4 +1,4 @@
-import type { FieldKind } from '../../../sql/resultField';
+import { FieldKind } from '../../../sql/resultField';
 import type { SqlBoundValue } from '../../../sql/types';
 import { isNullish } from '../../utils/isNullish';
 import cellValueToText from '../cellValueToText';
@@ -74,16 +74,17 @@ export enum ValidationError {
 /**
  * Why a value cannot be saved yet, or `null` when it can.
  *
- * Only a declared JSON column is checked: it is the one kind where a typo
- * produces a value the server rejects outright rather than coerces, and where
- * the editor can say so before a round trip. Everything else is left to MySQL,
- * whose own rules on ranges, character sets and dates are the ones that count.
+ * Only a JSON cell is checked, by the kind that also picks its editor: it is the
+ * one kind where a typo produces a value the server rejects outright rather than
+ * coerces, and where the editor can say so before a round trip. Everything else
+ * is left to the server, whose own rules on ranges, character sets and dates are
+ * the ones that count.
  */
 export function findValidationError(
   value: EditableValue,
-  isJsonColumn: boolean
+  kind: FieldKind
 ): ValidationError | null {
-  if (value.isNull || !isJsonColumn) {
+  if (value.isNull || kind !== FieldKind.Json) {
     return null;
   }
 

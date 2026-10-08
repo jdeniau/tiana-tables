@@ -23,6 +23,7 @@ export interface ColumnDetail {
   generated: boolean;
   /** bytes rather than text, which a text editor would corrupt */
   binary: boolean;
+  /** a JSON type the write casts to: never on MariaDB, whose `information_schema` calls it `longtext` */
   json: boolean;
   /** what a closed set accepts, empty where the column is not one */
   allowedValues: string[];
