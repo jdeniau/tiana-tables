@@ -27,7 +27,7 @@ The layout and colour rules themselves are in `DESIGN.md`; this file is what app
 
 ## antd behaviours
 
-- **An error the server answered is shown by `Query/SqlErrorComponent`, handed the caught object as is.** What `window.sql` throws is `decodeError`'s plain object, so `instanceof Error` is false once it carries a code (`String()` gives `[object Object]`). Before writing anything that shows an error, a warning or an empty state, grep for the component the other pages use.
+- **An error the server answered is shown by `Query/SqlErrorComponent`, handed the caught object narrowed by `isErrorLike`, never cast `as Error`.** What `window.sql` throws is `decodeError`'s plain object, so `instanceof Error` is false once it carries a code (`String()` gives `[object Object]`). Before writing anything that shows an error, a warning or an empty state, grep for the component the other pages use.
 - **A zero-sized anchor is never aligned by rc-trigger**: `isVisible` reads `offsetParent`, null on a fixed element, then the rect size. Give it 1px and `pointer-events: none`. A popup parked at `top: -1000vh` means alignment never ran.
 - **A controlled `Dropdown` still declares `trigger={['contextMenu']}`**: rc-trigger derives from it the window listeners that dismiss the popup and close it on scroll.
 - **A tooltip is proven with `document.elementsFromPoint`, not by reading the markup.** An SVG hit-tests its strokes only, and an antd Menu item stretches its link over the row (`::before { inset: 0 }`): put the `title` on a `position: relative` box.

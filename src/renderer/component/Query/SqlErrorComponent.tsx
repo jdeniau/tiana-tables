@@ -1,10 +1,11 @@
 import { Alert } from 'antd';
 import { styled } from 'styled-components';
+import type { ErrorLike } from '../../../sql/errorSerializer';
 import type { SqlErrorDetail } from '../../../sql/sqlError';
 import { space } from '../../theme';
 
 // an error boundary falls back here for any error, and most carry neither code
-type ShownError = Error & Partial<SqlErrorDetail>;
+type ShownError = ErrorLike & Partial<SqlErrorDetail>;
 
 type Props = { error: ShownError; className?: string };
 

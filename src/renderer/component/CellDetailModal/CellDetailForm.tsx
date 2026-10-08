@@ -6,6 +6,7 @@ import {
   NotEditableReason,
   getCellEditability,
 } from '../../../sql/columnEditing';
+import { type ErrorLike, isErrorLike } from '../../../sql/errorSerializer';
 import CellEditor from '../CellEditor/CellEditor';
 import {
   findValidationError,
@@ -48,7 +49,7 @@ export default function CellDetailForm({
 
   const [edited, setEdited] = useState(baseEditable);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<Error | null>(null);
+  const [saveError, setSaveError] = useState<ErrorLike | null>(null);
 
   const editability = getCellEditability(columnDetail, detail.rowKey !== null);
 
@@ -91,9 +92,14 @@ export default function CellDetailForm({
       });
       onClose();
     } catch (error) {
-      // a SQL error stays here: it is the draft that has to be fixed
-      setSaveError(error as Error);
       setIsSaving(false);
+
+      if (!isErrorLike(error)) {
+        throw error;
+      }
+
+      // a SQL error stays here: it is the draft that has to be fixed
+      setSaveError(error);
     }
   };
 

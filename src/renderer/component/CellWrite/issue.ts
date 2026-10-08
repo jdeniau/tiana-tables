@@ -1,3 +1,4 @@
+import { isErrorLike } from '../../../sql/errorSerializer';
 import {
   ConflictReason,
   type UpdateCellOutcome,
@@ -41,6 +42,6 @@ export function issueOf(outcome: UpdateCellOutcome): WriteIssue | null {
 export function failureOf(error: unknown): WriteIssue {
   return {
     reason: WriteIssueReason.Failed,
-    message: (error as Error).message,
+    message: isErrorLike(error) ? error.message : String(error),
   };
 }

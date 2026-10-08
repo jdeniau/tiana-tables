@@ -85,3 +85,20 @@ export function decodeError({
 
   return e;
 }
+
+/** What a call through the preload throws: `decodeError`'s plain object as well as an `Error`. */
+export interface ErrorLike {
+  name: string;
+  message: string;
+}
+
+export function isErrorLike(e: unknown): e is ErrorLike {
+  return (
+    typeof e === 'object' &&
+    e !== null &&
+    'name' in e &&
+    typeof e.name === 'string' &&
+    'message' in e &&
+    typeof e.message === 'string'
+  );
+}
