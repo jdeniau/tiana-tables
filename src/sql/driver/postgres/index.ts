@@ -16,12 +16,14 @@ type PostgresField = Pick<pg.FieldDef, 'name' | 'tableID' | 'dataTypeID'>;
 /**
  * What `pg` answered, in the shape the app reads.
  *
- * A statement that selects columns answers rows, `UPDATE … RETURNING` included;
+ * A statement that selects columns answers rows, `UPDATE … RETURNING` included,
+ * and so does `SELECT FROM t`, whose rows have no column;
  * any other answers the rows it touched. PostgreSQL hands no generated key
  * back without `RETURNING`.
  */
 function toQueryReturn(result: pg.QueryResult): QueryReturnType {
-  if (result.fields.length > 0) {
+  // a `SELECT FROM t` finding nothing reads as a write: pg answers it as a `CREATE TABLE … AS` of no row
+  if (result.fields.length > 0 || result.rows.length > 0) {
     return result.rows as ResultRow[];
   }
 
