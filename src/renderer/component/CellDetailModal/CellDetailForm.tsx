@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Alert, Button, Checkbox, Flex, Typography } from 'antd';
+import { Button, Checkbox, Flex, Typography } from 'antd';
+import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import {
   NotEditableReason,
   getCellEditability,
 } from '../../../sql/columnEditing';
+import { type ErrorLike, isErrorLike } from '../../../sql/errorSerializer';
 import CellEditor from '../CellEditor/CellEditor';
 import {
   findValidationError,
@@ -13,8 +15,16 @@ import {
   toSqlValue,
 } from '../CellEditor/editableValue';
 import { useCellWrite } from '../CellWrite';
+import SqlErrorComponent from '../Query/SqlErrorComponent';
 import ReadOnlyCellValue from './ReadOnlyCellValue';
 import type { CellDetail } from './types';
+
+// lined up with the editor: the modal's padding already holds it off the edges
+const SaveError = styled(SqlErrorComponent)`
+  && {
+    margin: 0;
+  }
+`;
 
 interface CellDetailFormProps {
   detail: CellDetail;
@@ -39,7 +49,7 @@ export default function CellDetailForm({
 
   const [edited, setEdited] = useState(baseEditable);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<ErrorLike | null>(null);
 
   const editability = getCellEditability(columnDetail, detail.rowKey !== null);
 
@@ -82,15 +92,20 @@ export default function CellDetailForm({
       });
       onClose();
     } catch (error) {
-      // a SQL error stays here: it is the draft that has to be fixed
-      setSaveError(error instanceof Error ? error.message : String(error));
       setIsSaving(false);
+
+      if (!isErrorLike(error)) {
+        throw error;
+      }
+
+      // a SQL error stays here: it is the draft that has to be fixed
+      setSaveError(error);
     }
   };
 
   return (
     <Flex vertical gap="small">
-      {saveError && <Alert type="error" showIcon title={saveError} />}
+      {saveError && <SaveError error={saveError} />}
 
       {column.nullable && (
         <Checkbox
