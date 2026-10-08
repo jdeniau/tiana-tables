@@ -140,7 +140,7 @@ Monaco, with `monaco-sql-languages` for the `mysql` / `pgsql` languages and thei
 | i18next + react-i18next    | EN/FR internationalization (ICU messages)                    |
 | Vite 8 + electron-forge    | Build tooling                                                |
 | Vitest 5                   | Testing (node env; happy-dom opt-in per file)                |
-| Storybook 8                | Component development                                        |
+| Storybook 10               | Component development                                        |
 | TypeScript 6               | Type checking                                                |
 
 ## Gotchas

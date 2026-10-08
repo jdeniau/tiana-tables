@@ -7,7 +7,7 @@ import path from 'node:path';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
 
-// a plugin upgraded by Yarn changes the transforms with no config option to tell the module cache
+// the module cache ignores the plugins' versions and survives a `yarn up`: the lockfile joins its key
 const lockfileHash = createHash('sha256')
   .update(readFileSync(path.join(import.meta.dirname, 'yarn.lock')))
   .digest('hex');
