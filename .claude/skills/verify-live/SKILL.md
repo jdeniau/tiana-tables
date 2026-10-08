@@ -33,7 +33,7 @@ Traps that each cost half an hour:
 - **Native menu items**: add `--inspect-electron`, a forge flag that goes before the `--`; the main-process inspector listens on **9229**. `require` is not global there, use `process.mainModule.require('electron')`. `MenuItem`'s wrapper toggles `checked` before calling the handler, so a programmatic `item.click()` is exactly a real click.
 - **Quitting rewrites `config.json`** from memory: test persistence through the app's action, never by editing the file while it runs.
 - **Timing**: sample with a 1 ms sampler installed through `Page.addScriptToEvaluateOnNewDocument` rather than reasoning about async order (e.g. `window.isDev` is defined ~90 ms in, while `Root` first renders at ~650 ms because `ConfigurationContextProvider` waits for its IPC answer).
-- **After a hot reload, reload the page** (`Page.reload`) before measuring anything: Vite leaves listeners from older module versions registered (stale Monaco markers, inflated mounts).
+- **After a hot reload, reload the page** (`Page.reload`) before measuring anything: Vite leaves listeners from older module versions registered (stale Monaco markers, inflated mounts). After a lockfile change too: the dev server re-optimizes its dependencies on the first load, and a lazy route shows "Failed to fetch dynamically imported module" until the page is reloaded.
 
 Ask the user to test in their place only once this harness has been tried.
 

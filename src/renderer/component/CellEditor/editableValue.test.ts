@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { FieldKind } from '../../../sql/resultField';
 import {
   findValidationError,
   isSameValue,
@@ -9,14 +10,20 @@ import {
 
 describe('toEditableValue', () => {
   it('marks an absent value as NULL, with no text', () => {
-    expect(toEditableValue(null)).toEqual({
+    expect(toEditableValue(null, FieldKind.Text)).toEqual({
       isNull: true,
       text: '',
     });
   });
 
-  it('indents a JSON value so that it can be read and edited', () => {
-    expect(toEditableValue('{"a":1}').text).toBe('{\n  "a": 1\n}');
+  it("indents a JSON column's value so that it can be read and edited", () => {
+    expect(toEditableValue('{"a":1}', FieldKind.Json).text).toBe(
+      '{\n  "a": 1\n}'
+    );
+  });
+
+  it('opens JSON stored in a text column as it is written', () => {
+    expect(toEditableValue('{"a":1}', FieldKind.Text).text).toBe('{"a":1}');
   });
 });
 

@@ -12,6 +12,7 @@ import {
   buildFilterClause,
   operatorTakesValue,
 } from '../../../sql/filterClause';
+import type { FieldKind } from '../../../sql/resultField';
 import { useDialect } from '../../hooks/useDialect';
 import { commentForeground } from '../../theme';
 import { isNullish } from '../../utils/isNullish';
@@ -318,7 +319,7 @@ function buildMenuItems({
       // there is no text to a NULL, and copying an empty one would silently
       // wipe what the clipboard held
       disabled: isNullish(value),
-      onClick: () => onCopy(toCopiedText(value)),
+      onClick: () => onCopy(toCopiedText(value, column.kind)),
     },
     ...copyRowsItems
   );
@@ -337,10 +338,10 @@ function buildMenuItems({
  * The whole value, as the detail modal shows it — except bytes, which the
  * modal cuts off after a few kilobytes: a copy must never be truncated.
  */
-function toCopiedText(value: unknown): string {
+function toCopiedText(value: unknown, kind: FieldKind): string {
   return value instanceof Uint8Array
     ? toHexLiteral(value)
-    : cellValueToText(value);
+    : cellValueToText(value, kind);
 }
 
 interface FilterItemParams {

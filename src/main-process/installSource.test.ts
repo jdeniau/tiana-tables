@@ -48,7 +48,10 @@ describe('detectInstallSource', () => {
   test('a system prefix means a package manager put it there', () => {
     expect(detectInstallSource(linux)).toBe('linuxPackage');
     expect(
-      detectInstallSource({ ...linux, execPath: '/opt/Tiana Tables/tiana-tables' })
+      detectInstallSource({
+        ...linux,
+        execPath: '/opt/Tiana Tables/tiana-tables',
+      })
     ).toBe('linuxPackage');
   });
 
@@ -65,7 +68,8 @@ describe('detectInstallSource', () => {
     expect(
       detectInstallSource({
         platform: 'win32',
-        execPath: 'C:\\Users\\user\\AppData\\Local\\tiana_tables\\app-1.1.0\\tiana-tables.exe',
+        execPath:
+          'C:\\Users\\user\\AppData\\Local\\tiana_tables\\app-1.1.0\\tiana-tables.exe',
         env: {},
       })
     ).toBe('selfUpdating');

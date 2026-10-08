@@ -61,20 +61,21 @@ Adding a member to `DatabaseEngine` stops the build until every `Record<Database
 
 ## MySQL and PostgreSQL side by side
 
-| Concern            | MySQL / MariaDB                                                                        | PostgreSQL                                                          |
-| ------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Identifier         | `` `name` ``                                                                           | `"name"`                                                            |
-| Boolean literal    | `1` / `0`                                                                              | `TRUE` / `FALSE`                                                    |
-| Bytes literal      | `X'…'` (valid when empty, unlike `0x…`)                                                | `decode('…', 'hex')` (independent of `standard_conforming_strings`) |
-| Switch database    | `USE db`                                                                               | `SET search_path TO "schema"`                                       |
-| Null-safe equality | `<=>`                                                                                  | `IS NOT DISTINCT FROM`                                              |
-| Guarded write      | `affectedRows` is ambiguous (same value rewritten), so a read-back with `guardMatches` | `RETURNING` settles the common case in one query                    |
-| JSON in the guard  | —                                                                                      | `json` has no `=`: `CAST(… AS jsonb)` on both sides                 |
-| Placeholders       | `named-placeholders` (mysql2 option, per query)                                        | our `:name` → `$n` rewriter                                         |
-| SQL error          | `code` + `errno`                                                                       | SQLSTATE in `code`, no `errno`                                      |
-| Enum labels        | parsed from `COLUMN_TYPE`                                                              | `pg_enum`                                                           |
-| JSON column        | MariaDB: `LONGTEXT` + `CHECK`, reads `json: false`                                     | `json` / `jsonb`                                                    |
-| Editor language    | `mysql`                                                                                | `pgsql` (colours `"quoted"` identifiers as strings)                 |
+| Concern            | MySQL / MariaDB                                                                                                                       | PostgreSQL                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Identifier         | `` `name` ``                                                                                                                          | `"name"`                                                            |
+| Boolean literal    | `1` / `0`                                                                                                                             | `TRUE` / `FALSE`                                                    |
+| Bytes literal      | `X'…'` (valid when empty, unlike `0x…`)                                                                                               | `decode('…', 'hex')` (independent of `standard_conforming_strings`) |
+| Switch database    | `USE db`                                                                                                                              | `SET search_path TO "schema"`                                       |
+| Null-safe equality | `<=>`                                                                                                                                 | `IS NOT DISTINCT FROM`                                              |
+| Guarded write      | `affectedRows` is ambiguous (same value rewritten), so a read-back with `guardMatches`                                                | `RETURNING` settles the common case in one query                    |
+| JSON in the guard  | —                                                                                                                                     | `json` has no `=`: `CAST(… AS jsonb)` on both sides                 |
+| Placeholders       | `named-placeholders` (mysql2 option, per query)                                                                                       | our `:name` → `$n` rewriter                                         |
+| SQL error          | `code` + `errno`                                                                                                                      | SQLSTATE in `code`, no `errno`                                      |
+| Enum labels        | parsed from `COLUMN_TYPE`                                                                                                             | `pg_enum`                                                           |
+| JSON column        | MariaDB: `LONGTEXT` + `CHECK`, reads `json: false`; its result field is `FieldKind.Json` through the extended format `json` (10.5.2+) | `json` / `jsonb`                                                    |
+| JSON value         | the server's text (`jsonStrings`)                                                                                                     | the server's text (`json` / `jsonb` left out of the decoded types)  |
+| Editor language    | `mysql`                                                                                                                               | `pgsql` (colours `"quoted"` identifiers as strings)                 |
 
 ## Verifying an engine
 

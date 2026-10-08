@@ -197,6 +197,7 @@ const fr: Translation = {
     '{selected, plural, one {# ligne} other {# lignes}} / {count, plural, one {# ligne} other {# lignes}}',
   'table.rows.loadMore': 'Charger plus…',
   'table.sort.hint': 'Clic pour trier, Maj+clic pour ajouter au tri',
+  'table.structure.extendedType': 'Type étendu',
   'table.structure.displayAfter': "S'affiche après",
   'table.structure.displayAfter.none': 'Ordre de la base',
   'table.structure.displayAfter.overriddenByPrimaryKey':

@@ -97,8 +97,8 @@ function makeRows(rowCount: number, columnCount: number): ResultRow[] {
             .replace('T', ' ');
           break;
         case 'payload':
-          // an object, like mysql2 hands JSON columns over
-          row.payload = random() > 0.8 ? null : { index: rowIndex };
+          // the server's text, as both drivers hand JSON columns over
+          row.payload = random() > 0.8 ? null : `{"index": ${rowIndex}}`;
           break;
         default:
           row[field.name] = WORDS.slice(0, 1 + Math.floor(random() * 7)).join(
@@ -336,7 +336,7 @@ export const WithFilterContextMenu: Story = {
 
 /**
  * What the server would answer a write with, for the types the story uses:
- * mysql2 hands a JSON column back parsed, not as the text that was sent.
+ * a number as a number, the rest (JSON included) as the text that was sent.
  */
 function readBack(
   fields: ResultField[],
@@ -346,14 +346,13 @@ function readBack(
     return null;
   }
 
-  switch (fields.find((field) => field.name === column)?.kind) {
-    case FieldKind.Json:
-      return JSON.parse(newValue);
-    case FieldKind.Number:
-      return Number(newValue);
-    default:
-      return newValue;
+  const kind = fields.find((field) => field.name === column)?.kind;
+
+  if (kind === FieldKind.Number) {
+    return Number(newValue);
   }
+
+  return newValue;
 }
 
 /**

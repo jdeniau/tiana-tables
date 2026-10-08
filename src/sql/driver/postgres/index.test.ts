@@ -181,7 +181,6 @@ describe('types', () => {
   test.each([
     ['a boolean', builtins.BOOL, 't', true],
     ['an integer', builtins.INT4, '42', 42],
-    ['a JSON object', builtins.JSONB, '{"a": 1}', { a: 1 }],
   ])('decodes %s into what the app reads', (_label, oid, text, value) => {
     expect(decode(oid, text)).toEqual(value);
   });
@@ -191,6 +190,12 @@ describe('types', () => {
     ['an array', 1009, '{math,poetry}'],
     ['an interval', builtins.INTERVAL, '1 day 02:00:00'],
     ['a point', 600, '(1,2)'],
+    ['a json value, its spacing kept', builtins.JSON, '{"a": 1}'],
+    [
+      'a jsonb integer, which parsing would round',
+      builtins.JSONB,
+      '{"big": 9007199254740993}',
+    ],
     [
       'a bigint, which a number would round',
       builtins.INT8,

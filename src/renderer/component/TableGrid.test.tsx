@@ -84,9 +84,7 @@ function render(element: ReactElement, allColumns: ColumnDetail[] = []): void {
     root.render(
       <ThemeProvider theme={DEFAULT_THEME}>
         <MemoryRouter>
-          <DatabaseContext
-            value={{ database: 'db', setDatabase: () => {} }}
-          >
+          <DatabaseContext value={{ database: 'db', setDatabase: () => {} }}>
             <ForeignKeysContextProvider foreignKeys={[]} database="db">
               <AllColumnsContextProvider allColumns={allColumns}>
                 {element}
@@ -266,12 +264,10 @@ describe('context menu', () => {
   const SCHEMA = [columnDetail('id', false), columnDetail('name', true)];
 
   const writeText = vi.fn<(text: string) => Promise<void>>(async () => {});
-  const updateCell = vi.fn(
-    async (): Promise<UpdateCellOutcome> => ({
-      status: UpdateCellStatus.Updated,
-      value: null,
-    })
-  );
+  const updateCell = vi.fn(async (): Promise<UpdateCellOutcome> => ({
+    status: UpdateCellStatus.Updated,
+    value: null,
+  }));
 
   function renderGrid({
     primaryKeys = ['id'],

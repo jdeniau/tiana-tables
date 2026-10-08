@@ -145,18 +145,17 @@ function TextCell({ value }: CellProps<string>) {
 
 /**
  * Anything the driver handed over as an object, which React refuses to render
- * ("Objects are not valid as a React child"). A MySQL `JSON` column is the
- * common one — mysql2 parses it, `jsonStrings` being off — and a `GEOMETRY`
- * column the other, answered as `{ x, y }` (measured). It is serialized back
- * to a compact one-liner; the indented form belongs to the detail modal (see
+ * ("Objects are not valid as a React child"): a MySQL `GEOMETRY` column,
+ * answered as `{ x, y }` (measured). It is serialized back to a compact
+ * one-liner; the indented form belongs to the detail modal (see
  * `cellValueToText`), and the grid body is too hot for anything more (see the
  * performance note in TableGrid).
  *
- * A `string` here is a JSON *scalar*: `CAST('"foo"' AS JSON)` parses to
- * `'foo'`, and re-serializing it would show the quotes. JSON stored in a text
- * column never reaches this branch — it is announced as TEXT/BLOB and routed
- * to `TextCell`, and on MariaDB, where `JSON` is only an alias for `LONGTEXT`,
- * so is a real JSON column.
+ * A `string` here is the server's text of a `JSON` column, which both drivers
+ * keep as it came, and is shown as is. JSON stored in a text column never
+ * reaches this branch: it is announced as TEXT/BLOB and routed to `TextCell`,
+ * as is MariaDB's `JSON`, a `LONGTEXT`, from a server that sends no extended
+ * metadata (before 10.5.2).
  */
 function JsonCell({ value }: CellProps<unknown>) {
   const text = typeof value === 'string' ? value : JSON.stringify(value);
@@ -205,10 +204,7 @@ function BinaryCell({ value }: CellProps<Uint8Array>) {
  * to text. A cell renders something whatever arrives: blanking the grid on a
  * type nobody thought of is the one outcome worth ruling out.
  */
-function TableCellFactory({
-  kind,
-  value,
-}: TableCellFactoryProps) {
+function TableCellFactory({ kind, value }: TableCellFactoryProps) {
   if (isNullish(value)) {
     return <NullCell />;
   }

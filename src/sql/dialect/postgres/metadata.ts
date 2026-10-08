@@ -35,8 +35,12 @@ const columnRow = z.object({
   /** `a` for `GENERATED ALWAYS AS IDENTITY`, `d` for `BY DEFAULT`, empty otherwise */
   attidentity: z.string(),
   typname: z.string(),
-  /** in their declared order, `null` when the type is no enum */
-  enum_labels: z.array(z.string()).nullable(),
+  /** in their declared order, `null` when the type is no enum; JSON text, as the driver keeps JSON */
+  enum_labels: z
+    .string()
+    .transform((text): unknown => JSON.parse(text))
+    .pipe(z.array(z.string()))
+    .nullable(),
 });
 
 const timeZoneRow = z.object({ current_setting: z.string() });
@@ -196,8 +200,8 @@ export const postgresMetadata: DialectMetadata = {
       read: (rows) => rows.map((row) => row.attname),
     }),
 
-  // an enum's labels live in `pg_enum` and nowhere else, so they come with it;
-  // as JSON, the one array shape the driver decodes
+  // an enum's labels live in `pg_enum` and nowhere else, so they come with it,
+  // as JSON text: the driver decodes no array, and the row schema parses it
   listColumns: (databaseName) =>
     readQuery('listColumns', {
       sql: `

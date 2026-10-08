@@ -26,10 +26,15 @@ function toQueryReturn(result: MySqlResult): QueryReturnType {
   };
 }
 
-/** The four things read of a mysql2 column, of the twenty it ships. */
+/** The six things read of a mysql2 column, of the twenty it ships. */
 type MySqlField = Pick<
   FieldPacket,
-  'name' | 'orgTable' | 'type' | 'characterSet'
+  | 'name'
+  | 'orgTable'
+  | 'type'
+  | 'characterSet'
+  | 'extendedFormat'
+  | 'extendedTypeName'
 >;
 
 /** The columns of a result, as the renderer reads them. */
@@ -42,7 +47,9 @@ function toResultFields(fields: MySqlField[] | undefined): ResultField[] {
     // one: every reader of this looks a real table up by name. An expression
     // belongs to none, and mysql2 spells that as an empty string
     table: field.orgTable || null,
-    kind: toFieldKind(field.type, field.characterSet),
+    kind: toFieldKind(field.type, field.characterSet, field.extendedFormat),
+    // measured: a UUID column carries the type name, a JSON one the format
+    extendedType: field.extendedTypeName ?? field.extendedFormat,
   }));
 }
 
@@ -95,6 +102,8 @@ export const mysqlDriver: Driver = {
       connectTimeout: options.connectTimeoutMs,
       // the server's own text: a `Date` drops microseconds, and shifts a wall clock the machine's zone skips
       dateStrings: true,
+      // the server's text too: parsed, JSON loses integers past 2^53, and on MariaDB the spacing the edit guard compares
+      jsonStrings: true,
     });
 
     connection.on('end', options.onClosed);

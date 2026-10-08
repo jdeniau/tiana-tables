@@ -68,6 +68,11 @@ const KIND_BY_TYPE: Readonly<Record<number, FieldKind>> = {
 /** The collation of a column holding bytes rather than characters. */
 const BINARY_CHARSET = 63;
 
+/** The `format` MariaDB's extended metadata gives a column, which mysql2 reads. */
+enum ExtendedFormat {
+  Json = 'json',
+}
+
 /**
  * The kind of a column, `Unknown` for a type the table does not cover.
  *
@@ -80,13 +85,23 @@ const BINARY_CHARSET = 63;
  * carries `BINARY_FLAG` while answering a string. And 63 alone means nothing
  * either — `TIME`, `BIT` and `GEOMETRY` all carry it without holding text — so
  * it is asked of the kinds that hold characters, and of no other.
+ *
+ * MariaDB's extended metadata says what the wire type cannot: a column with a
+ * `CHECK (json_valid(col))`, which is all `JSON` adds to a `LONGTEXT`, and a JSON
+ * expression come with the format `json` (MariaDB 10.5.2 and later, measured on
+ * 10.11 and 11.8). An older server sends none, and its JSON reads as text.
  */
 export function toFieldKind(
   type: number | undefined,
-  characterSet: number | undefined
+  characterSet: number | undefined,
+  extendedFormat?: string
 ): FieldKind {
   if (type === undefined) {
     return FieldKind.Unknown;
+  }
+
+  if (extendedFormat === ExtendedFormat.Json) {
+    return FieldKind.Json;
   }
 
   const kind = KIND_BY_TYPE[type] ?? FieldKind.Unknown;

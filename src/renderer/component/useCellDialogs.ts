@@ -35,8 +35,7 @@ interface CellDialogs {
 /** the cell the detail modal and the context menu are open on, and the write either of them sends */
 export function useCellDialogs(
   onValueUpdated:
-    | ((rowIndex: number, columnName: string, value: unknown) => void)
-    | undefined
+    ((rowIndex: number, columnName: string, value: unknown) => void) | undefined
 ): CellDialogs {
   // the value shown by the detail modal, `null` when it is closed
   const [cellDetail, setCellDetail] = useState<CellDetail | null>(null);
