@@ -76,7 +76,7 @@ export default function CellDetailForm({
   }
 
   const column = columnDetail;
-  const validationError = findValidationError(edited, column.json);
+  const validationError = findValidationError(edited, fieldKind);
   const isUnchanged = isSameValue(edited, baseEditable);
   const canSave = !isSaving && !isUnchanged && validationError === null;
 

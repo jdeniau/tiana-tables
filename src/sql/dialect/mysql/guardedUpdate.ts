@@ -19,16 +19,16 @@ function qualifiedTable({
 }
 
 /**
- * The value expression of a placeholder. A JSON column goes through
+ * The value expression of a placeholder. A column of a JSON type goes through
  * `CAST(? AS JSON)` so that both the write and the guard talk JSON: comparing
- * a JSON column against a text literal would depend on key order and spacing,
+ * such a column against a text literal would depend on key order and spacing,
  * and would report a conflict on every edit of a re-serialized object.
  */
 function valueExpression(
   parameter: string,
-  isJsonColumn: boolean | undefined
+  hasJsonType: boolean | undefined
 ): string {
-  return isJsonColumn ? `CAST(:${parameter} AS JSON)` : `:${parameter}`;
+  return hasJsonType ? `CAST(:${parameter} AS JSON)` : `:${parameter}`;
 }
 
 /**
@@ -45,17 +45,17 @@ function valueExpression(
  * far smaller accident than a whole table.
  */
 function buildWrite(request: UpdateCellRequest): BuiltQuery {
-  const { column, newValue, originalValue, isJsonColumn, force } = request;
+  const { column, newValue, originalValue, hasJsonType, force } = request;
   const escapedColumn = escapeIdentifier(column);
   const primaryKeyPart = primaryKeyClause(request.primaryKey, escapeIdentifier);
 
   const guard = force
     ? null
-    : `${escapedColumn} <=> ${valueExpression('originalValue', isJsonColumn)}`;
+    : `${escapedColumn} <=> ${valueExpression('originalValue', hasJsonType)}`;
 
   const sql = [
     `UPDATE ${qualifiedTable(request)}`,
-    `SET ${escapedColumn} = ${valueExpression('newValue', isJsonColumn)}`,
+    `SET ${escapedColumn} = ${valueExpression('newValue', hasJsonType)}`,
     `WHERE ${primaryKeyPart.sql}${guard ? ` AND ${guard}` : ''}`,
     'LIMIT 1',
   ].join(' ');
@@ -90,7 +90,7 @@ function buildReadBack(request: UpdateCellRequest): BuiltQuery {
 
   const sql = [
     `SELECT ${escapedColumn} AS \`value\`,`,
-    `(${escapedColumn} <=> ${valueExpression('originalValue', request.isJsonColumn)}) AS \`guardMatches\``,
+    `(${escapedColumn} <=> ${valueExpression('originalValue', request.hasJsonType)}) AS \`guardMatches\``,
     `FROM ${qualifiedTable(request)}`,
     `WHERE ${primaryKeyPart.sql}`,
     'LIMIT 1',

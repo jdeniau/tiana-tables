@@ -26,7 +26,7 @@ function makeColumnDetail(
     nullable: true,
     generated: false,
     binary: false,
-    json: false,
+    hasJsonType: false,
     allowedValues: [],
     multiValued: false,
     ...overrides,
@@ -113,10 +113,46 @@ export const Json: Story = {
       makeColumn(
         'payload',
         FieldKind.Json,
-        makeColumnDetail('payload', { json: true })
+        makeColumnDetail('payload', { hasJsonType: true })
       ),
       '{"nested":{"list":[1,2,3],"flag":true},"name":"tiana"}'
     ),
+  },
+};
+
+// MariaDB's information_schema calls a JSON column `longtext`: the column is not `json`, the cell still is
+export const InvalidJsonOnMariadb: Story = {
+  args: {
+    detail: makeDetail(
+      makeColumn('payload', FieldKind.Json, makeColumnDetail('payload')),
+      '{"name":"tiana"}'
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const monaco = await import('monaco-editor');
+    const editor = await waitFor(
+      () => {
+        const [mounted] = monaco.editor.getEditors();
+
+        if (!mounted) {
+          throw new Error('Monaco has not mounted yet');
+        }
+
+        return mounted;
+      },
+      // its first load takes a few seconds
+      { timeout: 10_000 }
+    );
+
+    // Monaco reads keys through Chromium's EditContext, out of userEvent's reach: run what a keystroke runs
+    editor.trigger('keyboard', 'cursorBottom', null);
+    editor.trigger('keyboard', 'type', { text: ' {broken' });
+
+    await expect(
+      await body.findByText('This is not valid JSON.')
+    ).toBeVisible();
+    await expect(body.getByRole('button', { name: 'Save' })).toBeDisabled();
   },
 };
 
@@ -171,7 +207,7 @@ export const NullValue: Story = {
       makeColumn(
         'payload',
         FieldKind.Json,
-        makeColumnDetail('payload', { json: true })
+        makeColumnDetail('payload', { hasJsonType: true })
       ),
       null
     ),

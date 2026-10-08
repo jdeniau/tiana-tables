@@ -76,7 +76,7 @@ export function useCellDialogs(
       primaryKey: rowKey,
       newValue,
       originalValue: toBoundValue(originalValue),
-      isJsonColumn: column.detail?.json ?? false,
+      hasJsonType: column.detail?.hasJsonType ?? false,
       force,
     });
 

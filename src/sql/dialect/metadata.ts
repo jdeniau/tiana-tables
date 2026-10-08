@@ -23,7 +23,8 @@ export interface ColumnDetail {
   generated: boolean;
   /** bytes rather than text, which a text editor would corrupt */
   binary: boolean;
-  json: boolean;
+  /** the server's own JSON type, which the write casts to: never on MariaDB, whose `information_schema` calls it `longtext` */
+  hasJsonType: boolean;
   /** what a closed set accepts, empty where the column is not one */
   allowedValues: string[];
   /** several of `allowedValues` at once: a MySQL `SET` */

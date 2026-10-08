@@ -97,7 +97,7 @@ describe('the write', () => {
     const { sql, values } = write(
       makeRequest({
         column: 'payload',
-        isJsonColumn: true,
+        hasJsonType: true,
         newValue: '{"a": 1}',
         originalValue: '{"a":1}',
       })
@@ -149,7 +149,7 @@ describe('the read-back', () => {
 
   it('compares as JSON on a JSON column', () => {
     const { sql } = readBack(
-      makeRequest({ column: 'payload', isJsonColumn: true })
+      makeRequest({ column: 'payload', hasJsonType: true })
     );
 
     expect(sql).toContain(

@@ -66,7 +66,7 @@ describe('the write', () => {
   // `json` has no `=` at all; `jsonb` compares values, whatever the key order
   it('compares a JSON column as jsonb on both sides, written with CAST', () => {
     const { sql } = postgresGuardedUpdate(
-      makeRequest({ isJsonColumn: true })
+      makeRequest({ hasJsonType: true })
     ).write;
 
     expect(sql).toContain(

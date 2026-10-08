@@ -41,7 +41,7 @@ Adding a member to `DatabaseEngine` stops the build until every `Record<Database
   - the reading is code, never the `AS` of a `SELECT` (PostgreSQL folds unquoted aliases to lower case);
   - names come back in any order — `ConnectionStack` sorts them by code unit, since collations disagree;
   - `listForeignKeys` keeps the pairs of a composite key (on PostgreSQL through `pg_constraint.conkey`/`confkey` `unnest … WITH ORDINALITY`; `information_schema.constraint_column_usage` has no ordinal and yields a cross product), and leaves out a key to another schema — a missing link beats a wrong one;
-  - `ColumnDetail` is facts (`nullable`, `generated`, `binary`, `json`, `allowedValues`, `multiValued`), resolved by the dialect: a PostgreSQL enum's labels are only in `pg_enum`, so the renderer could not derive them;
+  - `ColumnDetail` is facts (`nullable`, `generated`, `binary`, `hasJsonType`, `allowedValues`, `multiValued`), resolved by the dialect: a PostgreSQL enum's labels are only in `pg_enum`, so the renderer could not derive them;
   - `DescribedColumn` keeps MySQL's vocabulary (the structure page's heads: `Key` = `PRI`/`UNI`/`MUL`, `Extra`); another engine synthesises it and names the gap (PostgreSQL marks every column of a composite index `MUL`). `References` is computed in neutral code from `listForeignKeys`.
 - **The guarded write** (`GuardedUpdate`): `write` changes the cell only if it still holds what the grid showed; `outcomeOfWrite` settles it from the write alone or answers `undefined`; then `readBack` (a `readQuery`) and `outcomeOfReadBack` tell a conflict from a deleted row. `updateCell` has no engine branch. Each dialect's decision table is tested on hand-written answers.
 
@@ -73,7 +73,7 @@ Adding a member to `DatabaseEngine` stops the build until every `Record<Database
 | Placeholders       | `named-placeholders` (mysql2 option, per query)                                                                                       | our `:name` → `$n` rewriter                                         |
 | SQL error          | `code` + `errno`                                                                                                                      | SQLSTATE in `code`, no `errno`                                      |
 | Enum labels        | parsed from `COLUMN_TYPE`                                                                                                             | `pg_enum`                                                           |
-| JSON column        | MariaDB: `LONGTEXT` + `CHECK`, reads `json: false`; its result field is `FieldKind.Json` through the extended format `json` (10.5.2+) | `json` / `jsonb`                                                    |
+| JSON column        | MariaDB: `LONGTEXT` + `CHECK`, reads `hasJsonType: false`; its result field is `FieldKind.Json` through the extended format `json` (10.5.2+) | `json` / `jsonb`                                                    |
 | JSON value         | the server's text (`jsonStrings`)                                                                                                     | the server's text (`json` / `jsonb` left out of the decoded types)  |
 | Editor language    | `mysql`                                                                                                                               | `pgsql` (colours `"quoted"` identifiers as strings)                 |
 
