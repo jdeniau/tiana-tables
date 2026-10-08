@@ -195,6 +195,7 @@ export default function SqlPage() {
                     editor in a few divs that would not pass the height down */}
                 <Form.Item name="raw" valuePropName="defaultValue" noStyle>
                   <RawSqlEditor
+                    autoFocus
                     engine={engine}
                     ref={editorRef}
                     style={{ height: '100%' }}

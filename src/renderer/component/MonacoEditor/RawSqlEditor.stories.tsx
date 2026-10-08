@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, waitFor } from 'storybook/test';
 import { AllColumnsContextProvider } from '../../../contexts/AllColumnsContext';
 import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext';
 import { TableListContextProvider } from '../../../contexts/TableListContext';
@@ -120,5 +121,33 @@ export const AsATableFilter: Story = {
     defaultValue: `e.gender = 'F'`,
     queryPrefix: 'SELECT * FROM `employe` e WHERE ',
     monacoOptions: { lineNumbers: 'off' },
+  },
+};
+
+/** the SQL page: focused once mounted, the caret after the last character and scrolled into view */
+export const AutoFocus: Story = {
+  args: {
+    autoFocus: true,
+    defaultValue: `${'SELECT * FROM employe;\n'.repeat(40)}SELECT * FROM title;`,
+  },
+  play: async () => {
+    const monaco = await import('monaco-editor');
+    const editor = await waitFor(
+      () => {
+        const [mounted] = monaco.editor.getEditors();
+
+        if (!mounted) {
+          throw new Error('Monaco has not mounted yet');
+        }
+
+        return mounted;
+      },
+      // its first load takes a few seconds
+      { timeout: 10_000 }
+    );
+
+    await expect(editor.hasTextFocus()).toBe(true);
+    await expect(editor.getPosition()).toEqual({ lineNumber: 41, column: 21 });
+    await expect(editor.getScrollTop()).toBeGreaterThan(0);
   },
 };
