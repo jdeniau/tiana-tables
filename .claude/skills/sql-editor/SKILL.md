@@ -27,7 +27,7 @@ setupLanguageFeatures(language, {
 });
 ```
 
-Those features run in a worker it creates through Monaco's **pre-0.45** API. In Monaco 0.55 the standalone `createWebWorker` forwards only `opts.worker` and never sends the second message carrying `createData`, so the worker never answers: the suggest widget spins on "Loading" forever and nothing is underlined. Both features are rebuilt on `dt-sql-parser`, on the main thread — fast enough for editor-sized queries. (Their package declares `peerDependency monaco-editor >=0.37.1`, which is wrong.)
+Those features run in a worker it creates through Monaco's **pre-0.45** API. From Monaco 0.55 to 0.57 at least, the standalone `createWebWorker` forwards only `opts.worker` and never sends the second message carrying `createData`, so the worker never answers: the suggest widget spins on "Loading" forever and nothing is underlined. Both features are rebuilt on `dt-sql-parser`, on the main thread — fast enough for editor-sized queries. (Their package declares `peerDependency monaco-editor >=0.37.1`, which is wrong.)
 
 Only the tokenizer and the language registration are kept from that package.
 
@@ -92,7 +92,7 @@ Four of them, and mixing two is a silent off-by-one:
 - **Given no error listener, a dt-sql-parser parser logs to the console** (ANTLR's default listener), and `getAllEntities` passes none: every syntax error of a query being typed was logged, several times with the retries of `collectEntities` (DTStack/dt-sql-parser#431). `getParser` hands out subclasses whose `createParser` defaults to a listener that ignores errors; `validate` passes its own and still reports them. The lexers log nothing.
 - **The `pgsql` Monarch tokenizer colours a quoted identifier as a string**: its grammar sends `"` to `stringDouble` with the `STRING` token, and only a backtick opens a quoted identifier. Not fixable through the theme, since it is the token name of a real string.
 - **Measure an editor change after a full page reload.** Vite's hot reload replaces modules but leaves the watchers older versions registered on the models, and a stale one wrote markers from a grammar the code no longer had.
-- **dt-sql-parser stays on 4.5.0, and monaco-sql-languages on 1.2.0, which pins it**: 4.5.1 underlines `SELECT FROM t` and `EXISTS (SELECT FROM u)` as syntax errors, which PostgreSQL 18 runs (its fix for DTStack/dt-sql-parser#477 made the select list required). Measured with `validate` on both versions; it brings nothing else the editor uses. Re-check both before a bump.
+- **dt-sql-parser stays on 4.5.0, and monaco-sql-languages on 1.2.0, which pins it**: 4.5.1 underlines `SELECT FROM t` and `EXISTS (SELECT FROM u)` as syntax errors, which PostgreSQL 18 runs (its fix for DTStack/dt-sql-parser#477 made the select list required). Measured with `validate` on both versions; it brings nothing else the editor uses. Re-check both before a bump, and redo the `yarn patch` that makes 1.2.0 load under Monaco 0.56+ (`build.md`).
 - The parser caches the parse tree of its last input, so one shared instance per engine (`getParser`, `src/sql/parser/index.ts`) makes completion, validation and highlighting parse the editor content once.
 
 ## Names resolve inside one statement
