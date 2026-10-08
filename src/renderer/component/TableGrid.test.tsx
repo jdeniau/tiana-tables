@@ -254,7 +254,7 @@ describe('context menu', () => {
       nullable,
       generated: false,
       binary: false,
-      json: false,
+      hasJsonType: false,
       allowedValues: [],
       multiValued: false,
     };
@@ -1139,7 +1139,7 @@ describe('copying the selected rows', () => {
         nullable: false,
         generated: false,
         binary: false,
-        json: false,
+        hasJsonType: false,
         allowedValues: [],
         multiValued: false,
       }))

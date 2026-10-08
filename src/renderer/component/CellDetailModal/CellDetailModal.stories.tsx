@@ -26,7 +26,7 @@ function makeColumnDetail(
     nullable: true,
     generated: false,
     binary: false,
-    json: false,
+    hasJsonType: false,
     allowedValues: [],
     multiValued: false,
     ...overrides,
@@ -113,7 +113,7 @@ export const Json: Story = {
       makeColumn(
         'payload',
         FieldKind.Json,
-        makeColumnDetail('payload', { json: true })
+        makeColumnDetail('payload', { hasJsonType: true })
       ),
       '{"nested":{"list":[1,2,3],"flag":true},"name":"tiana"}'
     ),
@@ -207,7 +207,7 @@ export const NullValue: Story = {
       makeColumn(
         'payload',
         FieldKind.Json,
-        makeColumnDetail('payload', { json: true })
+        makeColumnDetail('payload', { hasJsonType: true })
       ),
       null
     ),

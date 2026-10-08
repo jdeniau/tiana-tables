@@ -42,7 +42,7 @@ function column(table: string, name: string): ColumnDetail {
     nullable: false,
     generated: false,
     binary: false,
-    json: false,
+    hasJsonType: false,
     allowedValues: [],
     multiValued: false,
   };

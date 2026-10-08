@@ -239,7 +239,7 @@ describe('listColumns', () => {
       nullable: true,
       generated: false,
       binary: false,
-      json: false,
+      hasJsonType: false,
       allowedValues: ['male', 'female', 'other'],
       multiValued: false,
     });
@@ -269,10 +269,9 @@ describe('listColumns', () => {
     expect(detail('a_blob').binary).toBe(true);
   });
 
-  // measured: the flag says what the server said;
-  // the editor still detects JSON from the value
-  test("MariaDB's JSON, a LONGTEXT underneath, is not a json column", () => {
-    expect(detail('a_json').json).toBe(false);
+  // measured: information_schema answers `longtext`; the cell's kind comes from the extended format
+  test("MariaDB's JSON, a LONGTEXT underneath, has no JSON type", () => {
+    expect(detail('a_json').hasJsonType).toBe(false);
   });
 
   test('a column declared NOT NULL is not nullable', () => {

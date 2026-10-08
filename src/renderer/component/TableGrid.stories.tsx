@@ -130,7 +130,7 @@ const ALL_COLUMNS: ColumnDetail[] = (
   nullable,
   generated: false,
   binary: false,
-  json: name === 'payload',
+  hasJsonType: name === 'payload',
   allowedValues: [],
   multiValued: false,
 }));

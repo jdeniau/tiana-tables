@@ -143,7 +143,7 @@ export const mysqlMetadata: DialectMetadata = {
           nullable: isNullable(row.IS_NULLABLE),
           generated: isGenerated(row.EXTRA),
           binary: isBinary(row.DATA_TYPE),
-          json: isJson(row.DATA_TYPE),
+          hasJsonType: isJson(row.DATA_TYPE),
           // the values of an `ENUM` are published nowhere but in its declaration
           allowedValues: parseEnumValues(row.COLUMN_TYPE),
           multiValued: isMultiValued(row.DATA_TYPE),

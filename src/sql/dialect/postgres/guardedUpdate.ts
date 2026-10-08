@@ -14,8 +14,8 @@ import { escapeIdentifier } from './escape';
  * `json` has no equality operator at all, and `jsonb` ignores key order and spacing.
  * `CAST` and not `::jsonb`, which the placeholder rewriter would read as `:jsonb`.
  */
-function compared(expression: string, isJsonColumn: boolean | undefined) {
-  return isJsonColumn ? `CAST(${expression} AS jsonb)` : expression;
+function compared(expression: string, hasJsonType: boolean | undefined) {
+  return hasJsonType ? `CAST(${expression} AS jsonb)` : expression;
 }
 
 const cellRow = z.object({ value: z.unknown() });
@@ -30,14 +30,14 @@ const cellRow = z.object({ value: z.unknown() });
 export function postgresGuardedUpdate(
   request: UpdateCellRequest
 ): GuardedUpdate<{ value: unknown } | undefined> {
-  const { column, isJsonColumn, force } = request;
+  const { column, hasJsonType, force } = request;
   const table = `${escapeIdentifier(request.database)}.${escapeIdentifier(request.table)}`;
   const escapedColumn = escapeIdentifier(column);
   const primaryKeyPart = primaryKeyClause(request.primaryKey, escapeIdentifier);
 
   const guard = force
     ? null
-    : `${compared(escapedColumn, isJsonColumn)} IS NOT DISTINCT FROM ${compared(':originalValue', isJsonColumn)}`;
+    : `${compared(escapedColumn, hasJsonType)} IS NOT DISTINCT FROM ${compared(':originalValue', hasJsonType)}`;
 
   return {
     // the new value is bound untyped, so the server parses it as the column's type

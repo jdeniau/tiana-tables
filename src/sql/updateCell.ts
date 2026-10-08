@@ -27,8 +27,8 @@ export interface UpdateCellRequest {
   newValue: string | null;
   /** the value the cell held when the row was loaded, guarding the write */
   originalValue: SqlBoundValue;
-  /** JSON columns compare as JSON, so that key order and spacing don't matter */
-  isJsonColumn?: boolean;
+  /** a column of a JSON type compares as JSON, so that key order and spacing don't matter */
+  hasJsonType?: boolean;
   /** skip the guard: the user saw the conflict and chose to overwrite anyway */
   force?: boolean;
 }

@@ -237,7 +237,7 @@ export const postgresMetadata: DialectMetadata = {
           // an `ALWAYS` identity refuses any value but `DEFAULT`, as a generated column does
           generated: row.attgenerated !== '' || row.attidentity === 'a',
           binary: BINARY_TYPES.has(row.typname),
-          json: JSON_TYPES.has(row.typname),
+          hasJsonType: JSON_TYPES.has(row.typname),
           allowedValues: row.enum_labels ?? [],
           multiValued: false,
         })),

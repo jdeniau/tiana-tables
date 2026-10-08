@@ -9,7 +9,7 @@ function makeColumn(overrides: Partial<ColumnDetail> = {}): ColumnDetail {
     nullable: false,
     generated: false,
     binary: false,
-    json: false,
+    hasJsonType: false,
     allowedValues: [],
     multiValued: false,
     ...overrides,

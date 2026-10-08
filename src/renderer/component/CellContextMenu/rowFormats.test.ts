@@ -21,7 +21,7 @@ function detail(name: string, overrides: Partial<ColumnDetail> = {}) {
     nullable: true,
     generated: false,
     binary: false,
-    json: false,
+    hasJsonType: false,
     allowedValues: [],
     multiValued: false,
     ...overrides,

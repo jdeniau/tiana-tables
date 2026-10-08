@@ -64,7 +64,7 @@ function statements(dialect: Dialect): Array<[string, BuiltQuery]> {
     ],
     [
       'a write on a JSON column',
-      guardedUpdate(request({ isJsonColumn: true })).write,
+      guardedUpdate(request({ hasJsonType: true })).write,
     ],
     ['a read-back', guardedUpdate(request()).readBack],
   ];

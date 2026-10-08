@@ -103,7 +103,7 @@ describe('listColumns', () => {
       nullable: false,
       generated: false,
       binary: false,
-      json: false,
+      hasJsonType: false,
       allowedValues: [],
       multiValued: false,
     });
@@ -136,8 +136,8 @@ describe('listColumns', () => {
     expect(readColumn({ typname: 'bytea' }).binary).toBe(true);
   });
 
-  test.each(['json', 'jsonb'])('%s is JSON', (typname) => {
-    expect(readColumn({ typname }).json).toBe(true);
+  test.each(['json', 'jsonb'])('%s has a JSON type', (typname) => {
+    expect(readColumn({ typname }).hasJsonType).toBe(true);
   });
 
   test('a column without NOT NULL is nullable', () => {

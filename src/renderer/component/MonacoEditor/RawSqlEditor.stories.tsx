@@ -14,7 +14,7 @@ function column(table: string, name: string): ColumnDetail {
     nullable: true,
     generated: false,
     binary: false,
-    json: false,
+    hasJsonType: false,
     allowedValues: [],
     multiValued: false,
   };
