@@ -141,7 +141,7 @@ Monaco, with `monaco-sql-languages` for the `mysql` / `pgsql` languages and thei
 | Vite 8 + electron-forge    | Build tooling                                                |
 | Vitest 5                   | Testing (node env; happy-dom opt-in per file)                |
 | Storybook 10               | Component development                                        |
-| TypeScript 6               | Type checking                                                |
+| TypeScript 7               | Type checking (`tsc`; the tools read the 6.0 API)            |
 
 ## Gotchas
 

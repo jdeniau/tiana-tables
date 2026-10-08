@@ -26,6 +26,10 @@ paths:
 - **`approvedGitRepositories` does not cover a GitHub-hosted dependency**: Yarn downloads its archive over HTTPS and packs it from source.
 - **After a `yarn dedupe`, `react` and `react-dom` resolve to one same version** (`yarn why react-dom`): forge's terminal screen depends on `react` itself, so a dedupe can lift our `react` alone, and `react-dom` then throws "Incompatible React versions" at import. The four React packages move together, then `yarn dedupe react-dom`: Storybook's `addon-docs` keeps its own `react-dom` entry.
 
+## TypeScript
+
+- **`tsc` is TypeScript 7 and `typescript` is the 6.0 API: two aliases, never one `yarn up typescript`.** 7.0 ships no API (`require('typescript')` holds only its version), so `typescript` is `@typescript/typescript6` for typescript-eslint and Storybook's docgen, and `@typescript/native` (`npm:typescript@^7`) provides `tsc`. With `typescript` on 7, `yarn lint:eslint` dies on "typescript-eslint does not support TS 7.0".
+
 ## React Compiler
 
 - **`@babel/core` stays on 7 while `babel-plugin-react-compiler` is 1.x**: on Babel 8 the compiler silently skips every component that destructures a prop with a default value (`ButtonLink`, `TabStrip`, `ChartPanel`…). Before a bump, count the skips with the plugin's `logger` option (`CompileError` events) on both versions.
