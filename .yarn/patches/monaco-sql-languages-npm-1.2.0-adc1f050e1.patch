@@ -1,0 +1,17 @@
+diff --git a/esm/fillers/monaco-editor-core.d.ts b/esm/fillers/monaco-editor-core.d.ts
+index e02d40eaa65b230d10aefd6bb56fa3c49b59cebd..aae95178e113924fac395a9036de94976b46d617 100644
+--- a/esm/fillers/monaco-editor-core.d.ts
++++ b/esm/fillers/monaco-editor-core.d.ts
+@@ -1 +1 @@
+-export * from 'monaco-editor/esm/vs/editor/editor.api';
++export * from 'monaco-editor/editor/editor.api';
+diff --git a/esm/fillers/monaco-editor-core.js b/esm/fillers/monaco-editor-core.js
+index aae9085071a89b155af912ff695e57f8262ca2a1..f4a857615cf172aa7cb4fa8d9ed3e5632d710095 100644
+--- a/esm/fillers/monaco-editor-core.js
++++ b/esm/fillers/monaco-editor-core.js
+@@ -2,4 +2,4 @@
+  *  Copyright (c) Microsoft Corporation. All rights reserved.
+  *  Licensed under the MIT License. See License.txt in the project root for license information.
+  *--------------------------------------------------------------------------------------------*/
+-export * from 'monaco-editor/esm/vs/editor/editor.api';
++export * from 'monaco-editor/editor/editor.api';
