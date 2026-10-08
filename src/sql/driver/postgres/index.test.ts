@@ -67,6 +67,21 @@ describe('toQueryReturn', () => {
     ).toEqual([]);
   });
 
+  // measured: `SELECT FROM t` over 3 rows answers 3 empty rows and no field
+  test('answers the rows of a statement that selects no column', () => {
+    const rows = [[], [], []];
+
+    expect(toQueryReturn(result({ rows, rowCount: 3 }))).toBe(rows);
+  });
+
+  // measured: `SELECT … INTO t2` and `CREATE TABLE … AS` answer `SELECT 3`, no field and no row
+  test('answers a write summary for a SELECT that only filled a table', () => {
+    expect(toQueryReturn(result({ rowCount: 3 }))).toEqual({
+      affectedRows: 3,
+      insertId: null,
+    });
+  });
+
   // measured: `UPDATE … WHERE id < 3` answers `rowCount: 2` and no field
   test('answers a write summary for a statement that selects nothing', () => {
     expect(toQueryReturn(result({ command: 'UPDATE', rowCount: 2 }))).toEqual({
