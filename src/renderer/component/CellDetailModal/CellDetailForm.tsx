@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Checkbox, Flex, Typography } from 'antd';
+import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import {
   NotEditableReason,
@@ -16,6 +17,13 @@ import { useCellWrite } from '../CellWrite';
 import SqlErrorComponent from '../Query/SqlErrorComponent';
 import ReadOnlyCellValue from './ReadOnlyCellValue';
 import type { CellDetail } from './types';
+
+// lined up with the editor: the modal's padding already holds it off the edges
+const SaveError = styled(SqlErrorComponent)`
+  && {
+    margin: 0;
+  }
+`;
 
 interface CellDetailFormProps {
   detail: CellDetail;
@@ -91,7 +99,7 @@ export default function CellDetailForm({
 
   return (
     <Flex vertical gap="small">
-      {saveError && <SqlErrorComponent error={saveError} />}
+      {saveError && <SaveError error={saveError} />}
 
       {column.nullable && (
         <Checkbox
