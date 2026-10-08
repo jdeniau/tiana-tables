@@ -30,7 +30,6 @@
     "prepare": "husky",
     "knip": "knip"
   },
-  "pre-commit": "lint-staged",
   "lint-staged": {
     "*.{json,css,md}": [
       "prettier --write"
@@ -85,7 +84,7 @@
     "@electron-forge/plugin-vite": "^8.0.1",
     "@electron-forge/publisher-github": "^8.0.1",
     "@electron-forge/shared-types": "^8.0.1",
-    "@eslint/js": "^9.39.0",
+    "@eslint/js": "^10.0.1",
     "@rolldown/plugin-babel": "^0.2.4",
     "@storybook/addon-a11y": "^10.6.1",
     "@storybook/addon-docs": "^10.6.1",
@@ -112,11 +111,11 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-storybook": "^10.6.1",
-    "globals": "^16.0.0",
+    "globals": "^17.13.0",
     "happy-dom": "^20.14.5",
     "husky": "^9.1.7",
     "knip": "^6.39.0",
-    "lint-staged": "^15.5.2",
+    "lint-staged": "^17.6.0",
     "mysql2": "^3.24.5",
     "pg": "^8.23.1",
     "playwright": "^1.63.0",
