@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { action } from 'storybook/actions';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
 import { FieldKind } from '../../../sql/resultField';
@@ -272,7 +272,7 @@ export const SqlErrorOnSave: Story = {
 
       throw {
         name: 'Error',
-        message: 'Data too long for column \'name\' at row 1',
+        message: "Data too long for column 'name' at row 1",
         kind: 'sql',
         code: 'ER_DATA_TOO_LONG',
         errno: 1406,
@@ -290,5 +290,52 @@ export const SqlErrorOnSave: Story = {
       await body.findByText("Data too long for column 'name' at row 1")
     ).toBeVisible();
     await expect(body.getByText('1406: ER_DATA_TOO_LONG')).toBeVisible();
+  },
+};
+
+// the cell changed in between, and the server refuses the overwrite: the conflict modal shows why
+export const SqlErrorOnOverwrite: Story = {
+  args: {
+    detail: makeDetail(
+      makeColumn('name', FieldKind.String, makeColumnDetail('name')),
+      'the value I loaded'
+    ),
+  },
+  parameters: {
+    save: (async ({ newValue, force }) => {
+      action('save')(newValue, { force });
+
+      if (!force) {
+        return {
+          status: UpdateCellStatus.Conflict,
+          reason: ConflictReason.Changed,
+          currentValue: 'what someone else wrote',
+        };
+      }
+
+      throw {
+        name: 'Error',
+        message: "Data too long for column 'name' at row 1",
+        kind: 'sql',
+        code: 'ER_DATA_TOO_LONG',
+        errno: 1406,
+      } satisfies SqlError;
+    }) satisfies SaveCell,
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+
+    await userEvent.type(body.getByRole('textbox'), ' and more');
+    await userEvent.click(body.getByRole('button', { name: 'Save' }));
+    await userEvent.click(
+      await body.findByRole('button', { name: 'Overwrite' })
+    );
+
+    // the modal closes on the click and reopens on the error: it fades in
+    await waitFor(() =>
+      expect(
+        body.getByText("Data too long for column 'name' at row 1")
+      ).toBeVisible()
+    );
   },
 };
