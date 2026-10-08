@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Button, Checkbox, Flex, Typography } from 'antd';
+import { Button, Checkbox, Flex, Typography } from 'antd';
 import { useTranslation } from '../../../i18n';
 import {
   NotEditableReason,
@@ -13,6 +13,7 @@ import {
   toSqlValue,
 } from '../CellEditor/editableValue';
 import { useCellWrite } from '../CellWrite';
+import SqlErrorComponent from '../Query/SqlErrorComponent';
 import ReadOnlyCellValue from './ReadOnlyCellValue';
 import type { CellDetail } from './types';
 
@@ -39,7 +40,7 @@ export default function CellDetailForm({
 
   const [edited, setEdited] = useState(baseEditable);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<Error | null>(null);
 
   const editability = getCellEditability(columnDetail, detail.rowKey !== null);
 
@@ -83,14 +84,14 @@ export default function CellDetailForm({
       onClose();
     } catch (error) {
       // a SQL error stays here: it is the draft that has to be fixed
-      setSaveError(error instanceof Error ? error.message : String(error));
+      setSaveError(error as Error);
       setIsSaving(false);
     }
   };
 
   return (
     <Flex vertical gap="small">
-      {saveError && <Alert type="error" showIcon title={saveError} />}
+      {saveError && <SqlErrorComponent error={saveError} />}
 
       {column.nullable && (
         <Checkbox

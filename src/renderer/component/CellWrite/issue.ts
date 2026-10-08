@@ -41,6 +41,6 @@ export function issueOf(outcome: UpdateCellOutcome): WriteIssue | null {
 export function failureOf(error: unknown): WriteIssue {
   return {
     reason: WriteIssueReason.Failed,
-    message: error instanceof Error ? error.message : String(error),
+    message: (error as Error).message,
   };
 }
