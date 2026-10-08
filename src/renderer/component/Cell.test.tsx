@@ -22,27 +22,23 @@ function renderCell(kind: FieldKind, value: unknown): string {
 }
 
 describe('JSON cells', () => {
-  // mysql2 parses JSON columns (`jsonStrings` is off), so the value reaching
-  // the cell is an object: rendering it as-is would throw.
-  test('an object is serialized to a compact one-liner', () => {
-    expect(renderCell(FieldKind.Json, { a: 1, b: ['x'] })).toContain(
-      '{&quot;a&quot;:1,&quot;b&quot;:[&quot;x&quot;]}'
+  // the server's text (mysql2's `jsonStrings`), spaced as MariaDB stored it
+  test('the text is shown as the server wrote it', () => {
+    expect(renderCell(FieldKind.Json, '{"a": 1, "b": ["x"]}')).toContain(
+      '{&quot;a&quot;: 1, &quot;b&quot;: [&quot;x&quot;]}'
     );
   });
 
-  test('an array is serialized too', () => {
-    expect(renderCell(FieldKind.Json, [1, 2])).toContain('>[1,2]<');
-  });
-
-  // A JSON column can hold a scalar: `CAST('"foo"' AS JSON)` is parsed by
-  // mysql2 into the string `foo`, which must not be re-serialized (it would
-  // come back with its quotes).
-  test('a JSON scalar is left as-is', () => {
-    expect(renderCell(FieldKind.Json, 'foo')).toContain('>foo<');
+  // the quotes of a JSON scalar string are part of its text
+  test('a JSON scalar string keeps its quotes', () => {
+    expect(renderCell(FieldKind.Json, '"foo"')).toContain('>&quot;foo&quot;<');
   });
 
   test('a long payload is cut down to the readable part', () => {
-    const rendered = renderCell(FieldKind.Json, { a: 'x'.repeat(1000) });
+    const rendered = renderCell(
+      FieldKind.Json,
+      JSON.stringify({ a: 'x'.repeat(1000) })
+    );
 
     expect(rendered).toContain('\u2026');
     expect(rendered).not.toContain('x'.repeat(1000));
