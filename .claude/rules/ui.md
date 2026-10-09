@@ -38,6 +38,7 @@ The layout and colour rules themselves are in `DESIGN.md`; this file is what app
 ## State
 
 - **One state, one owner.** A component never takes the same state from its props and from its own `useState`: when a second caller needs a piece of it, lift that piece into an owner both reach (`CellWrite/` owns every write of a grid and its conflict modal).
+- **A state set from a Monaco listener is set inside `flushSync`** when a key handler reads it: Monaco reports outside React's events, so the update renders a task later, and a key pressed in between reads the previous value. A change with `event.isFlush` is our own `setValue`, run from an effect: it is never reported back — its echo turned a NULL into an empty text — and `flushSync` could not render there (`JsonCellEditor`).
 - **A value written through a context and read back through it goes through the context state**, never straight to `window.config` (`usePanelSize`). A context change re-renders consumers, it does not remount them.
 - **An IPC answer must never erase the UI**: `ConfigurationContextProvider` renders `null` without a configuration, so guard the setter and keep the previous value.
 - **A `useState` whose setter is never used is not a way to freeze a value** — read the value directly.

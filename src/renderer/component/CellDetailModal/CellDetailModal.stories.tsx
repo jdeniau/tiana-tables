@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import type monaco from 'monaco-editor';
 import { action } from 'storybook/actions';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
 import { FieldKind } from '../../../sql/resultField';
@@ -73,6 +74,47 @@ const saveSucceeds: SaveCell = async ({
   return { status: UpdateCellStatus.Updated, value: newValue };
 };
 
+async function findMonacoEditor(): Promise<monaco.editor.ICodeEditor> {
+  const { editor } = await import('monaco-editor');
+
+  const mounted = await waitFor(
+    () => {
+      const [found] = editor.getEditors();
+
+      if (!found) {
+        throw new Error('Monaco has not mounted yet');
+      }
+
+      return found;
+    },
+    // its first load takes a few seconds
+    { timeout: 10_000 }
+  );
+
+  // a space, a colon or a quote asks the JSON worker for completions, whose answer
+  // throws "TextModelPart is disposed!" if it lands once the next story has unmounted the editor
+  mounted.updateOptions({
+    quickSuggestions: false,
+    suggestOnTriggerCharacters: false,
+  });
+
+  return mounted;
+}
+
+/** Ctrl+Enter on the focused element, with the `keyCode` Monaco matches its bindings on and userEvent never sets. */
+function pressCtrlEnter(): void {
+  document.activeElement?.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      key: 'Enter',
+      code: 'Enter',
+      keyCode: 13,
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+  );
+}
+
 const meta: Meta<typeof CellDetailModal> = {
   component: CellDetailModal,
   args: {
@@ -130,20 +172,7 @@ export const InvalidJsonOnMariadb: Story = {
   },
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
-    const monaco = await import('monaco-editor');
-    const editor = await waitFor(
-      () => {
-        const [mounted] = monaco.editor.getEditors();
-
-        if (!mounted) {
-          throw new Error('Monaco has not mounted yet');
-        }
-
-        return mounted;
-      },
-      // its first load takes a few seconds
-      { timeout: 10_000 }
-    );
+    const editor = await findMonacoEditor();
 
     // Monaco reads keys through Chromium's EditContext, out of userEvent's reach: run what a keystroke runs
     editor.trigger('keyboard', 'cursorBottom', null);
@@ -152,7 +181,93 @@ export const InvalidJsonOnMariadb: Story = {
     await expect(
       await body.findByText('This is not valid JSON.')
     ).toBeVisible();
-    await expect(body.getByRole('button', { name: 'Save' })).toBeDisabled();
+    await expect(body.getByRole('button', { name: /^Save/ })).toBeDisabled();
+  },
+};
+
+const saveTextOnKey = fn(saveSucceeds);
+
+export const SaveTextWithCtrlEnter: Story = {
+  args: {
+    detail: makeDetail(
+      makeColumn('name', FieldKind.String, makeColumnDetail('name')),
+      'the value I loaded'
+    ),
+    onClose: fn(),
+  },
+  parameters: { save: saveTextOnKey },
+  play: async ({ args, canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+
+    await userEvent.type(body.getByRole('textbox'), ' and more');
+    await userEvent.keyboard('{Control>}{Enter}{/Control}');
+
+    await expect(saveTextOnKey).toHaveBeenCalledWith(
+      expect.objectContaining({ newValue: 'the value I loaded and more' })
+    );
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+  },
+};
+
+const saveJsonOnKey = fn(saveSucceeds);
+
+// Monaco binds the same key to "Insert Line Below": the form must claim it first
+export const SaveJsonWithCtrlEnter: Story = {
+  args: {
+    detail: makeDetail(
+      makeColumn(
+        'payload',
+        FieldKind.Json,
+        makeColumnDetail('payload', { hasJsonType: true })
+      ),
+      '{"name":"tiana"}'
+    ),
+  },
+  parameters: { save: saveJsonOnKey },
+  play: async () => {
+    const editor = await findMonacoEditor();
+
+    editor.focus();
+    editor.trigger('keyboard', 'cursorBottom', null);
+    // pressed in the same task as the keystroke: the draft must be rendered already
+    editor.trigger('keyboard', 'type', { text: ' ' });
+    pressCtrlEnter();
+
+    await expect(editor.getValue()).toBe('{\n  "name": "tiana"\n} ');
+    await expect(saveJsonOnKey).toHaveBeenCalledWith(
+      expect.objectContaining({ newValue: '{\n  "name": "tiana"\n} ' })
+    );
+  },
+};
+
+const saveJsonNull = fn(saveSucceeds);
+
+// checking NULL empties the editor, and that must not uncheck it
+export const SetJsonToNull: Story = {
+  args: {
+    detail: makeDetail(
+      makeColumn(
+        'payload',
+        FieldKind.Json,
+        makeColumnDetail('payload', { hasJsonType: true })
+      ),
+      '{"name":"tiana"}'
+    ),
+  },
+  parameters: { save: saveJsonNull },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const editor = await findMonacoEditor();
+    const setNull = body.getByRole('checkbox', { name: 'Set to NULL' });
+
+    await userEvent.click(setNull);
+    await waitFor(() => expect(editor.getValue()).toBe(''));
+    await userEvent.click(body.getByRole('button', { name: /^Save/ }));
+
+    await expect(setNull).toBeChecked();
+    await expect(saveJsonNull).toHaveBeenCalledWith(
+      expect.objectContaining({ newValue: null })
+    );
   },
 };
 
@@ -320,7 +435,7 @@ export const SqlErrorOnSave: Story = {
     const body = within(canvasElement.ownerDocument.body);
 
     await userEvent.type(body.getByRole('textbox'), ' and more');
-    await userEvent.click(body.getByRole('button', { name: 'Save' }));
+    await userEvent.click(body.getByRole('button', { name: /^Save/ }));
 
     await expect(
       await body.findByText("Data too long for column 'name' at row 1")
@@ -362,7 +477,7 @@ export const SqlErrorOnOverwrite: Story = {
     const body = within(canvasElement.ownerDocument.body);
 
     await userEvent.type(body.getByRole('textbox'), ' and more');
-    await userEvent.click(body.getByRole('button', { name: 'Save' }));
+    await userEvent.click(body.getByRole('button', { name: /^Save/ }));
     await userEvent.click(
       await body.findByRole('button', { name: 'Overwrite' })
     );

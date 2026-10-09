@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import type monaco from 'monaco-editor';
+import { flushSync } from 'react-dom';
 import useMonaco, { MONACO_THEME } from '../MonacoEditor/useMonaco';
 
 interface JsonCellEditorProps {
@@ -59,8 +60,15 @@ export default function JsonCellEditor({
       tabSize: 2,
     });
 
-    const subscription = createdEditor.onDidChangeModelContent(() => {
-      reportChange(createdEditor.getValue());
+    const subscription = createdEditor.onDidChangeModelContent((event) => {
+      // a flush is the `setValue` below: reporting the value it came with
+      // would turn the NULL the checkbox set into an empty text
+      if (event.isFlush) {
+        return;
+      }
+
+      // a keystroke renders at once, or a Ctrl+Enter pressed right after reads the previous draft
+      flushSync(() => reportChange(createdEditor.getValue()));
     });
 
     setEditor(createdEditor);
@@ -73,8 +81,8 @@ export default function JsonCellEditor({
   }, [monacoInstance, container]);
 
   useEffect(() => {
-    // an outside change — reloading the value the server holds after a
-    // conflict — must reach the editor, an echo of our own typing must not
+    // an outside change — the NULL checkbox emptying or restoring the text —
+    // must reach the editor, an echo of our own typing must not
     if (editor && editor.getValue() !== value) {
       editor.setValue(value);
     }

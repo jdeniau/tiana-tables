@@ -533,7 +533,7 @@ describe('context menu', () => {
     });
     await act(async () => {
       [...document.querySelectorAll<HTMLButtonElement>('.ant-modal button')]
-        .find((candidate) => candidate.textContent === 'Save')
+        .find((candidate) => candidate.textContent?.startsWith('Save'))
         ?.click();
     });
 
