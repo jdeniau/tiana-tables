@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type KeyboardEvent, useState } from 'react';
 import { Button, Checkbox, Flex, Typography } from 'antd';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
@@ -15,9 +15,13 @@ import {
   toSqlValue,
 } from '../CellEditor/editableValue';
 import { useCellWrite } from '../CellWrite';
+import { KeyboardShortcut } from '../KeyboardShortcut';
 import SqlErrorComponent from '../Query/SqlErrorComponent';
 import ReadOnlyCellValue from './ReadOnlyCellValue';
 import type { CellDetail } from './types';
+
+/** pressed with Ctrl (⌘ on macOS), the key that saves the draft, as it runs a query in the SQL editor */
+const SAVE_KEY = 'Enter';
 
 // lined up with the editor: the modal's padding already holds it off the edges
 const SaveError = styled(SqlErrorComponent)`
@@ -103,8 +107,28 @@ export default function CellDetailForm({
     }
   };
 
+  // in the capture phase, so that the form claims the key before the editor:
+  // Monaco binds it to "Insert Line Below", a Select to opening or picking
+  const handleSaveKey = (event: KeyboardEvent): void => {
+    if (
+      event.key !== SAVE_KEY ||
+      !(event.ctrlKey || event.metaKey) ||
+      event.altKey ||
+      event.shiftKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (canSave) {
+      void save();
+    }
+  };
+
   return (
-    <Flex vertical gap="small">
+    <Flex vertical gap="small" onKeyDownCapture={handleSaveKey}>
       {saveError && <SaveError error={saveError} />}
 
       {column.nullable && (
@@ -150,6 +174,7 @@ export default function CellDetailForm({
           onClick={() => void save()}
         >
           {t('save')}
+          <KeyboardShortcut cmdOrCtrl pressedKey={SAVE_KEY} />
         </Button>
       </Flex>
     </Flex>
