@@ -240,6 +240,37 @@ export const SaveJsonWithCtrlEnter: Story = {
   },
 };
 
+const saveJsonNull = fn(saveSucceeds);
+
+// checking NULL empties the editor, and that must not uncheck it
+export const SetJsonToNull: Story = {
+  args: {
+    detail: makeDetail(
+      makeColumn(
+        'payload',
+        FieldKind.Json,
+        makeColumnDetail('payload', { hasJsonType: true })
+      ),
+      '{"name":"tiana"}'
+    ),
+  },
+  parameters: { save: saveJsonNull },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const editor = await findMonacoEditor();
+    const setNull = body.getByRole('checkbox', { name: 'Set to NULL' });
+
+    await userEvent.click(setNull);
+    await waitFor(() => expect(editor.getValue()).toBe(''));
+    await userEvent.click(body.getByRole('button', { name: /^Save/ }));
+
+    await expect(setNull).toBeChecked();
+    await expect(saveJsonNull).toHaveBeenCalledWith(
+      expect.objectContaining({ newValue: null })
+    );
+  },
+};
+
 export const Enum: Story = {
   args: {
     detail: makeDetail(

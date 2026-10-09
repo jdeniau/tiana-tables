@@ -61,15 +61,14 @@ export default function JsonCellEditor({
     });
 
     const subscription = createdEditor.onDidChangeModelContent((event) => {
-      const newValue = createdEditor.getValue();
-
-      // a keystroke renders at once, or a Ctrl+Enter pressed right after reads the previous draft;
-      // a flush is the `setValue` below, run inside an effect, where React cannot render
+      // a flush is the `setValue` below: reporting the value it came with
+      // would turn the NULL the checkbox set into an empty text
       if (event.isFlush) {
-        reportChange(newValue);
-      } else {
-        flushSync(() => reportChange(newValue));
+        return;
       }
+
+      // a keystroke renders at once, or a Ctrl+Enter pressed right after reads the previous draft
+      flushSync(() => reportChange(createdEditor.getValue()));
     });
 
     setEditor(createdEditor);
@@ -82,8 +81,8 @@ export default function JsonCellEditor({
   }, [monacoInstance, container]);
 
   useEffect(() => {
-    // an outside change — reloading the value the server holds after a
-    // conflict — must reach the editor, an echo of our own typing must not
+    // an outside change — the NULL checkbox emptying or restoring the text —
+    // must reach the editor, an echo of our own typing must not
     if (editor && editor.getValue() !== value) {
       editor.setValue(value);
     }
