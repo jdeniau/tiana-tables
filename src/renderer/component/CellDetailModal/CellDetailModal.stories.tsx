@@ -77,19 +77,28 @@ const saveSucceeds: SaveCell = async ({
 async function findMonacoEditor(): Promise<monaco.editor.ICodeEditor> {
   const { editor } = await import('monaco-editor');
 
-  return waitFor(
+  const mounted = await waitFor(
     () => {
-      const [mounted] = editor.getEditors();
+      const [found] = editor.getEditors();
 
-      if (!mounted) {
+      if (!found) {
         throw new Error('Monaco has not mounted yet');
       }
 
-      return mounted;
+      return found;
     },
     // its first load takes a few seconds
     { timeout: 10_000 }
   );
+
+  // a space, a colon or a quote asks the JSON worker for completions, whose answer
+  // throws "TextModelPart is disposed!" if it lands once the next story has unmounted the editor
+  mounted.updateOptions({
+    quickSuggestions: false,
+    suggestOnTriggerCharacters: false,
+  });
+
+  return mounted;
 }
 
 /** Ctrl+Enter on the focused element, with the `keyCode` Monaco matches its bindings on and userEvent never sets. */
@@ -215,17 +224,13 @@ export const SaveJsonWithCtrlEnter: Story = {
     ),
   },
   parameters: { save: saveJsonOnKey },
-  play: async ({ canvasElement }) => {
-    const body = within(canvasElement.ownerDocument.body);
+  play: async () => {
     const editor = await findMonacoEditor();
 
     editor.focus();
     editor.trigger('keyboard', 'cursorBottom', null);
+    // pressed in the same task as the keystroke: the draft must be rendered already
     editor.trigger('keyboard', 'type', { text: ' ' });
-    // the key is read by the render that holds the draft, as a person's next keystroke would be
-    await waitFor(() =>
-      expect(body.getByRole('button', { name: /^Save/ })).toBeEnabled()
-    );
     pressCtrlEnter();
 
     await expect(editor.getValue()).toBe('{\n  "name": "tiana"\n} ');

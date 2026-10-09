@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import type monaco from 'monaco-editor';
+import { flushSync } from 'react-dom';
 import useMonaco, { MONACO_THEME } from '../MonacoEditor/useMonaco';
 
 interface JsonCellEditorProps {
@@ -59,8 +60,16 @@ export default function JsonCellEditor({
       tabSize: 2,
     });
 
-    const subscription = createdEditor.onDidChangeModelContent(() => {
-      reportChange(createdEditor.getValue());
+    const subscription = createdEditor.onDidChangeModelContent((event) => {
+      const newValue = createdEditor.getValue();
+
+      // a keystroke renders at once, or a Ctrl+Enter pressed right after reads the previous draft;
+      // a flush is the `setValue` below, run inside an effect, where React cannot render
+      if (event.isFlush) {
+        reportChange(newValue);
+      } else {
+        flushSync(() => reportChange(newValue));
+      }
     });
 
     setEditor(createdEditor);
