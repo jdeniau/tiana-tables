@@ -22,6 +22,7 @@ const fr: Translation = {
     ' none {Heure du serveur : la valeur est lue et écrite telle que le serveur la stocke, quel que soit le fuseau d’affichage de la grille.}' +
     ' other {Heure du serveur ({zone}) : la valeur est lue et écrite telle que le serveur la stocke, quel que soit le fuseau d’affichage de la grille.}}',
   'cell.detail.setNull': 'Mettre à NULL',
+  'cell.foreignKey.open': 'Ouvrir la ligne référencée',
   'cell.write.cancel': 'Annuler ma modification',
   'cell.write.changed.description':
     "Cette cellule a été modifiée par quelqu'un d'autre depuis le chargement de la ligne. Écrasez-la avec votre valeur, ou annulez votre modification.",
