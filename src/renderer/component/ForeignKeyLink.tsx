@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
+import { t } from '../../i18n';
 import type { Dialect } from '../../sql/dialect/types';
 import { FilterOperator, buildFilterClause } from '../../sql/filterClause';
-import { foreground, supportForeground } from '../theme';
+import { foreground, space, supportForeground } from '../theme';
 import { cellValueToSqlLiteral } from './CellContextMenu/cellValueToSqlLiteral';
 
 type Props = {
@@ -17,8 +18,15 @@ type Props = {
 };
 
 const StyledLink = styled(Link)`
+  display: inline-flex;
   color: ${supportForeground};
   text-decoration: none;
+
+  svg {
+    display: block;
+    width: ${space.lg};
+    height: ${space.lg};
+  }
 
   &:hover {
     color: ${foreground};
@@ -58,7 +66,19 @@ function ForeignKeyLink({
 
   const to = `/connections/${currentConnectionSlug}/${foreignKey.referencedDatabaseName}/tables/${foreignKey.referencedTableName}?where=${encodeURIComponent(where)}`;
 
-  return <StyledLink to={to}>↗️</StyledLink>;
+  return (
+    <StyledLink to={to} aria-label={t('cell.foreignKey.open')}>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        aria-hidden
+      >
+        <path d="M7 17L17 7M9 7h8v8" />
+      </svg>
+    </StyledLink>
+  );
 }
 
 export default ForeignKeyLink;

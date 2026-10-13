@@ -21,6 +21,7 @@ export default {
     ' none {Server time: the value is read and written as the server holds it, whichever zone the grid shows dates in.}' +
     ' other {Server time ({zone}): the value is read and written as the server holds it, whichever zone the grid shows dates in.}}',
   'cell.detail.setNull': 'Set to NULL',
+  'cell.foreignKey.open': 'Open the referenced row',
   'cell.write.cancel': 'Cancel my change',
   'cell.write.changed.description':
     'This cell was written by someone else since the row was loaded. Overwrite it with your value, or cancel your change.',
