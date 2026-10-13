@@ -1,6 +1,6 @@
 import type { DateDisplay } from '../configuration/dateDisplay';
 import { PANEL } from '../configuration/panels';
-import type { Configuration } from '../configuration/type';
+import type { Configuration, TableSorting } from '../configuration/type';
 import type { ConnectionObjectWithoutSlug } from '../sql/types';
 import { bindChannel } from './bindChannel';
 import { CONFIGURATION_CHANNEL } from './configurationChannel';
@@ -40,6 +40,14 @@ interface Config {
     filter: string
   ): Promise<Array<string>>;
 
+  /** stores the columns a table is now sorted on */
+  setTableSorting(
+    connectionSlug: string,
+    database: string,
+    tableName: string,
+    sorting: TableSorting
+  ): Promise<void>;
+
   setColumnDisplayAfter(
     connectionSlug: string,
     database: string,
@@ -76,6 +84,7 @@ export const config: Config = {
   setActiveTable: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE),
   setOpenTables: bindChannel(CONFIGURATION_CHANNEL.SET_OPEN_TABLES),
   setTableFilter: bindChannel(CONFIGURATION_CHANNEL.SET_TABLE_FILTER),
+  setTableSorting: bindChannel(CONFIGURATION_CHANNEL.SET_TABLE_SORTING),
   setColumnDisplayAfter: bindChannel(
     CONFIGURATION_CHANNEL.SET_COLUMN_DISPLAY_AFTER
   ),

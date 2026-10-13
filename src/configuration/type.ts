@@ -37,10 +37,16 @@ type TableConfig = {
 
   /** the width a column was dragged to, by column name */
   columnWidthByColumn?: ColumnWidthByColumn;
+
+  /** the columns the rows are sorted on, empty for the primary key's order */
+  sorting?: TableSorting;
 };
 
 /** The width, in pixels, of each column the user resized. */
 export type ColumnWidthByColumn = Record<string, number>;
+
+/** The sorted columns, first one first: TanStack's `SortingState`, which the grid takes as is. */
+export type TableSorting = Array<{ id: string; desc: boolean }>;
 
 export type DatabaseConfig = {
   /** the table the database opens on, `''` once its last tab is closed */

@@ -1,4 +1,4 @@
-import { ReactElement } from 'react';
+import { ReactElement, useEffect } from 'react';
 import { useCreateAtom, useSelector } from '@tanstack/react-store';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { Button, Splitter } from 'antd';
@@ -8,7 +8,10 @@ import {
   applyColumnOrder,
 } from '../../../configuration/columnOrder';
 import { PANEL } from '../../../configuration/panels';
-import type { ColumnWidthByColumn } from '../../../configuration/type';
+import type {
+  ColumnWidthByColumn,
+  TableSorting,
+} from '../../../configuration/type';
 import { useTranslation } from '../../../i18n';
 import { useDialect } from '../../hooks/useDialect';
 import { usePanelSize } from '../../hooks/usePanelSize';
@@ -30,6 +33,7 @@ import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
 import { useLastCopy } from '../useLastCopy';
 import { hasOrderByToken } from './tableQuery';
+import { tableSearch } from './tableSearch';
 import { useTableRows } from './useTableRows';
 
 interface TableNameProps {
@@ -41,6 +45,9 @@ interface TableNameProps {
 
   /** the filters this table was given, most recent first */
   filterHistory: Array<string>;
+
+  /** the order the URL gives, which the rows are fetched in */
+  sorting: TableSorting;
 
   /** set on the structure page */
   displayAfterByColumn: DisplayAfterByColumn;
@@ -56,6 +63,7 @@ export function TableLayout({
   primaryKeys,
   where,
   filterHistory,
+  sorting,
   displayAfterByColumn,
   columnWidths,
 }: TableNameProps): ReactElement {
@@ -63,9 +71,8 @@ export function TableLayout({
   const navigate = useNavigate();
   const dialect = useDialect();
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.TABLE_FILTERS);
-  // empty until a header is clicked, and again once its sort is removed: the key's order
-  const sortingAtom = useCreateAtom<SortingState>([]);
-  const sorting = useSelector(sortingAtom);
+  // what the headers show: a click writes it, then the URL, whose loader hands the rows their order
+  const sortingAtom = useCreateAtom<SortingState>(sorting);
   // by primary key, so it follows its rows to the next page; a new order empties it
   const selectionAtom = useCreateAtom<RowSelectionState>({});
   const [lastCopy, onRowsCopied] = useLastCopy();
@@ -73,6 +80,14 @@ export function TableLayout({
     selectionAtom,
     (selection) => Object.keys(selection).length
   );
+
+  useEffect(() => {
+    const sorts = sortingAtom.subscribe((next) => {
+      navigate(tableSearch(where ?? '', next), { replace: true });
+    });
+
+    return () => sorts.unsubscribe();
+  }, [sortingAtom, navigate, where]);
 
   const { result, fields, error, loadMore, updateValue } = useTableRows({
     database,

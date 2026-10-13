@@ -8,6 +8,7 @@ export enum CONFIGURATION_CHANNEL {
   SET_ACTIVE_TABLE = 'config:connection:setActiveTable',
   SET_OPEN_TABLES = 'config:connection:setOpenTables',
   SET_TABLE_FILTER = 'config:connection:setTableFilter',
+  SET_TABLE_SORTING = 'config:connection:setTableSorting',
   SET_COLUMN_DISPLAY_AFTER = 'config:connection:setColumnDisplayAfter',
   SET_COLUMN_WIDTH = 'config:connection:setColumnWidth',
   SET_PANEL_SIZE = 'config:panel:setSize',
