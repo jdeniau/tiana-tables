@@ -20,6 +20,7 @@ import {
   Configuration,
   DatabaseConfig,
   EncryptedConnectionObject,
+  TableSorting,
 } from './type';
 import { uniqueSlug } from './utils';
 
@@ -337,6 +338,39 @@ export function setTableFilter(
   return filterHistory;
 }
 
+/** Stores the columns a table is now sorted on. */
+export function setTableSorting(
+  connectionSlug: string,
+  database: string,
+  tableName: string,
+  sorting: TableSorting
+): void {
+  const config = getConfiguration();
+
+  if (!config.connections[connectionSlug]) {
+    return;
+  }
+
+  const connection = ensureConnectionAppStateExist(
+    config.connections[connectionSlug]
+  );
+
+  const newConfig = ensureConnectionAppStateIsCorrect(
+    connection.appState.configByDatabase[database]
+  );
+
+  newConfig.tables[tableName] = {
+    ...newConfig.tables[tableName],
+    sorting,
+  };
+
+  connection.appState.configByDatabase[database] = {
+    ...newConfig,
+  };
+
+  writeConfiguration(config);
+}
+
 /** `null` puts the column back in the place the database gives it. */
 export function setColumnDisplayAfter(
   connectionSlug: string,
@@ -509,6 +543,7 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE]: setActiveTable,
   [CONFIGURATION_CHANNEL.SET_OPEN_TABLES]: setOpenTables,
   [CONFIGURATION_CHANNEL.SET_TABLE_FILTER]: setTableFilter,
+  [CONFIGURATION_CHANNEL.SET_TABLE_SORTING]: setTableSorting,
   [CONFIGURATION_CHANNEL.SET_COLUMN_DISPLAY_AFTER]: setColumnDisplayAfter,
   [CONFIGURATION_CHANNEL.SET_COLUMN_WIDTH]: setColumnWidth,
   [CONFIGURATION_CHANNEL.SET_PANEL_SIZE]: setPanelSize,

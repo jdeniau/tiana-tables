@@ -3,16 +3,22 @@
  */
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { MemoryRouter } from 'react-router-dom';
+import {
+  RouterProvider,
+  createMemoryRouter,
+  useLoaderData,
+} from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_THEME } from '../../../configuration/themes';
+import type { TableSorting } from '../../../configuration/type';
 import { AllColumnsContextProvider } from '../../../contexts/AllColumnsContext';
 import { DatabaseContext } from '../../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
 import { FieldKind } from '../../../sql/resultField';
 import { TableLayout } from './TableLayout';
+import { readOrderParams } from './tableSearch';
 
 vi.mock('../../hooks/useDialect', () => ({ useDialect: () => mysqlDialect }));
 vi.mock('../../hooks/usePanelSize', () => ({
@@ -34,6 +40,7 @@ const executeQuery = vi.fn();
 
 let container: HTMLElement;
 let unmount: () => void;
+let router: ReturnType<typeof createMemoryRouter>;
 
 beforeEach(() => {
   executeQuery.mockReset();
@@ -46,34 +53,59 @@ afterEach(() => {
   container.remove();
 });
 
-async function render(where?: string): Promise<void> {
+function Page({ where }: { where?: string }) {
+  const { primaryKeys, sorting } = useLoaderData() as {
+    primaryKeys: Array<string>;
+    sorting: TableSorting;
+  };
+
+  return (
+    <TableLayout
+      connectionSlug="shop"
+      tableName="items"
+      database="shop"
+      primaryKeys={primaryKeys}
+      where={where}
+      filterHistory={[]}
+      sorting={sorting}
+      displayAfterByColumn={{}}
+      columnWidths={{}}
+    />
+  );
+}
+
+/** the table page at `url`, behind a loader that answers as the route's: a new key array each time, the URL's order */
+async function render(where?: string, url = '/'): Promise<void> {
   container = document.createElement('div');
   document.body.append(container);
 
   const root = createRoot(container);
   unmount = () => root.unmount();
 
+  router = createMemoryRouter(
+    [
+      {
+        path: '/',
+        loader: ({ request }) => ({
+          primaryKeys: ['id'],
+          sorting: readOrderParams(new URL(request.url).searchParams) ?? [],
+        }),
+        element: <Page where={where} />,
+      },
+    ],
+    { initialEntries: [url] }
+  );
+
   await act(async () => {
     root.render(
       <ThemeProvider theme={DEFAULT_THEME}>
-        <MemoryRouter>
-          <DatabaseContext value={{ database: 'shop', setDatabase: () => {} }}>
-            <ForeignKeysContextProvider foreignKeys={[]} database="shop">
-              <AllColumnsContextProvider allColumns={[]}>
-                <TableLayout
-                  connectionSlug="shop"
-                  tableName="items"
-                  database="shop"
-                  primaryKeys={['id']}
-                  where={where}
-                  filterHistory={[]}
-                  displayAfterByColumn={{}}
-                  columnWidths={{}}
-                />
-              </AllColumnsContextProvider>
-            </ForeignKeysContextProvider>
-          </DatabaseContext>
-        </MemoryRouter>
+        <DatabaseContext value={{ database: 'shop', setDatabase: () => {} }}>
+          <ForeignKeysContextProvider foreignKeys={[]} database="shop">
+            <AllColumnsContextProvider allColumns={[]}>
+              <RouterProvider router={router} />
+            </AllColumnsContextProvider>
+          </ForeignKeysContextProvider>
+        </DatabaseContext>
       </ThemeProvider>
     );
   });
@@ -177,6 +209,41 @@ describe('sorting', () => {
 
     expect(lastQuery()).toContain('ORDER BY `id` ASC LIMIT 100 OFFSET 0');
     expect(container.textContent).not.toContain('no ordering operator');
+  });
+
+  test('opens in the order of the URL', async () => {
+    await render(undefined, '/?order[name]=DESC');
+
+    expect(lastQuery()).toContain(
+      'ORDER BY `name` DESC, `id` LIMIT 100 OFFSET 0'
+    );
+    expect(header('name').getAttribute('aria-sort')).toBe('descending');
+  });
+
+  test('a click writes its order into the URL, next to the filter', async () => {
+    await render('id > 1');
+
+    await click(header('name').querySelector('button'));
+    await click(header('id').querySelector('button'), { shiftKey: true });
+
+    expect(router.state.location.search).toBe(
+      '?where=id%20%3E%201&order[name]=ASC&order[id]=ASC'
+    );
+
+    // a click without Shift sorts on that column alone: descending, then not at all
+    await click(header('name').querySelector('button'));
+    await click(header('name').querySelector('button'));
+
+    expect(router.state.location.search).toBe('?where=id%20%3E%201&order=');
+  });
+
+  test('a click asks for its rows once', async () => {
+    await render();
+    executeQuery.mockClear();
+
+    await click(header('name').querySelector('button'));
+
+    expect(executeQuery).toHaveBeenCalledTimes(1);
   });
 
   test("a filter's own order leaves the headers inert", async () => {

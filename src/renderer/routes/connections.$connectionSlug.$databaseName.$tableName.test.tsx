@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_LOCALE } from '../../configuration/locale';
 import { DEFAULT_THEME } from '../../configuration/themes';
-import { Configuration } from '../../configuration/type';
+import { Configuration, TableSorting } from '../../configuration/type';
 import { DatabaseEngine } from '../../sql/engine';
 import { loader } from './connections.$connectionSlug.$databaseName.$tableName';
 
@@ -14,7 +14,10 @@ const params = {
   tableName: 'tableName',
 };
 
-function setStoredFilter(currentFilter: string): void {
+function setStoredFilter(
+  currentFilter: string,
+  sorting?: TableSorting
+): void {
   const config: Configuration = {
     version: 1,
     theme: DEFAULT_THEME.name,
@@ -33,7 +36,7 @@ function setStoredFilter(currentFilter: string): void {
           configByDatabase: {
             databaseName: {
               activeTable: 'tableName',
-              tables: { tableName: { currentFilter } },
+              tables: { tableName: { currentFilter, sorting } },
             },
           },
         },
@@ -46,6 +49,7 @@ function setStoredFilter(currentFilter: string): void {
     getConfiguration: () => Promise.resolve(config),
     setActiveTable: vi.fn(),
     setTableFilter: vi.fn(() => Promise.resolve([])),
+    setTableSorting: vi.fn(),
   };
 }
 
@@ -106,5 +110,49 @@ describe('loader', () => {
     );
 
     expect(whereFilter).toBe('a = 1\n  AND b = 2');
+  });
+
+  test('sorts on the `order` params, in their order, and stores it', async () => {
+    setStoredFilter('', [{ id: 'name', desc: false }]);
+
+    const { sorting } = await loadWith(
+      'http://localhost?where=&order[parent_id]=DESC&order[name]=ASC'
+    );
+
+    expect(sorting).toEqual([
+      { id: 'parent_id', desc: true },
+      { id: 'name', desc: false },
+    ]);
+    expect(window.config.setTableSorting).toHaveBeenCalledWith(
+      'connectionSlug',
+      'databaseName',
+      'tableName',
+      [
+        { id: 'parent_id', desc: true },
+        { id: 'name', desc: false },
+      ]
+    );
+  });
+
+  test('a URL without an order keeps the stored one', async () => {
+    setStoredFilter('', [{ id: 'name', desc: true }]);
+
+    const { sorting } = await loadWith('http://localhost?where=id+%3D+1');
+
+    expect(sorting).toEqual([{ id: 'name', desc: true }]);
+  });
+
+  test('an empty `order` param is a sort removed, and is stored as one', async () => {
+    setStoredFilter('', [{ id: 'name', desc: true }]);
+
+    const { sorting } = await loadWith('http://localhost?where=&order=');
+
+    expect(sorting).toEqual([]);
+    expect(window.config.setTableSorting).toHaveBeenCalledWith(
+      'connectionSlug',
+      'databaseName',
+      'tableName',
+      []
+    );
   });
 });

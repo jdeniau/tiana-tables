@@ -21,6 +21,7 @@ import {
   setOpenTables,
   setPanelSize,
   setTableFilter,
+  setTableSorting,
   testables,
 } from '.';
 
@@ -852,6 +853,40 @@ describe('setColumnDisplayAfter', () => {
 
     expect(writtenTableConfig('sometable')).toEqual({
       displayAfterByColumn: { lastname: 'firstname' },
+    });
+  });
+});
+
+describe('setTableSorting', () => {
+  test('replaces the columns the table is sorted on', () => {
+    mockExistingConfig();
+
+    setTableSorting('prod', 'db', 'sometable', [{ id: 'email', desc: false }]);
+    setTableSorting('prod', 'db', 'sometable', [
+      { id: 'lastname', desc: true },
+      { id: 'id', desc: false },
+    ]);
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      sorting: [
+        { id: 'lastname', desc: true },
+        { id: 'id', desc: false },
+      ],
+    });
+  });
+
+  test('leaves the filter and the column widths of the table alone', () => {
+    mockExistingConfig();
+
+    setTableFilter('prod', 'db', 'sometable', 'id = 1');
+    setColumnWidth('prod', 'db', 'sometable', 'lastname', 320);
+    setTableSorting('prod', 'db', 'sometable', []);
+
+    expect(writtenTableConfig('sometable')).toEqual({
+      currentFilter: 'id = 1',
+      filterHistory: ['id = 1'],
+      columnWidthByColumn: { lastname: 320 },
+      sorting: [],
     });
   });
 });

@@ -1,6 +1,9 @@
 import { useParams } from 'react-router-dom';
 import type { DisplayAfterByColumn } from '../../../configuration/columnOrder';
-import type { ColumnWidthByColumn } from '../../../configuration/type';
+import type {
+  ColumnWidthByColumn,
+  TableSorting,
+} from '../../../configuration/type';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
 import { TableLayout } from './TableLayout';
@@ -9,6 +12,7 @@ type Props = {
   primaryKeys: Array<string>;
   where?: string;
   filterHistory: Array<string>;
+  sorting: TableSorting;
   displayAfterByColumn: DisplayAfterByColumn;
   columnWidths: ColumnWidthByColumn;
 };
@@ -17,6 +21,7 @@ function TableLayoutPageContent({
   primaryKeys,
   where,
   filterHistory,
+  sorting,
   displayAfterByColumn,
   columnWidths,
 }: Props) {
@@ -37,6 +42,7 @@ function TableLayoutPageContent({
       primaryKeys={primaryKeys}
       where={where}
       filterHistory={filterHistory}
+      sorting={sorting}
       displayAfterByColumn={displayAfterByColumn}
       columnWidths={columnWidths}
     />

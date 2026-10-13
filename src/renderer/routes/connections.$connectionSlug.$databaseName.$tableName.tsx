@@ -4,6 +4,7 @@ import { getDatabaseAppState } from '../../configuration/appState';
 import type { DisplayAfterByColumn } from '../../configuration/columnOrder';
 import type { ColumnWidthByColumn } from '../../configuration/type';
 import TableLayout from '../component/TableLayout';
+import { readOrderParams } from '../component/TableLayout/tableSearch';
 
 interface RouteParams extends LoaderFunctionArgs {
   params: Params<'connectionSlug' | 'databaseName' | 'tableName'>;
@@ -37,9 +38,11 @@ export async function loader({ params, request }: RouteParams) {
   const columnWidthByColumn: ColumnWidthByColumn =
     tableConfig?.columnWidthByColumn ?? {};
 
+  const searchParams = new URL(request.url).searchParams;
+
   // An empty `where` param is a filter the user just cleared, not an absent
   // one: only fall back to the stored filter when the param is not there.
-  const whereParam = new URL(request.url).searchParams.get('where');
+  const whereParam = searchParams.get('where');
 
   // A filter is its clause, and a clause of blank is no filter: left as it
   // came it would go out as `WHERE   LIMIT 100`, be stored, and fail again at
@@ -56,10 +59,21 @@ export async function loader({ params, request }: RouteParams) {
     where
   );
 
+  // the order the headers write, kept like the filter: `order=` is a sort removed
+  const sorting = readOrderParams(searchParams) ?? tableConfig?.sorting ?? [];
+
+  window.config.setTableSorting(
+    connectionSlug,
+    databaseName,
+    tableName,
+    sorting
+  );
+
   return {
     primaryKeys,
     whereFilter: where,
     filterHistory,
+    sorting,
     displayAfterByColumn,
     columnWidthByColumn,
   };
@@ -70,6 +84,7 @@ export default function TableNamePage() {
     primaryKeys,
     whereFilter,
     filterHistory,
+    sorting,
     displayAfterByColumn,
     columnWidthByColumn,
   } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
@@ -80,6 +95,7 @@ export default function TableNamePage() {
       primaryKeys={primaryKeys}
       where={whereFilter}
       filterHistory={filterHistory}
+      sorting={sorting}
       displayAfterByColumn={displayAfterByColumn}
       columnWidths={columnWidthByColumn}
     />
