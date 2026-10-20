@@ -1,8 +1,9 @@
 import { ComponentProps, useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useCreateAtom } from '@tanstack/react-store';
-import type { SortingState } from '@tanstack/react-table';
+import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { action } from 'storybook/actions';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import reactRouterDecorator from '../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
@@ -416,4 +417,61 @@ export const Editable: Story = {
     primaryKeys: ['id'],
   },
   render: (args) => <EditableGrid {...args} />,
+};
+
+function SelectableGrid(args: ComponentProps<typeof TableGrid<ResultRow>>) {
+  const selectionAtom = useCreateAtom<RowSelectionState>({});
+
+  return <TableGrid {...args} selectionAtom={selectionAtom} />;
+}
+
+/**
+ * Click a row, then ↑ and ↓ move the selection, Shift+↑ and Shift+↓ extend
+ * it: the grid scrolls the least that shows the whole row, below the heads.
+ */
+export const Selectable: Story = {
+  args: {
+    fields: makeFields(8),
+    result: makeRows(100, 8),
+    primaryKeys: ['id'],
+  },
+  render: (args) => <SelectableGrid {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const grid = canvasElement.querySelector<HTMLElement>('[tabindex="0"]');
+    const head = grid?.querySelector('thead');
+
+    if (!grid || !head) {
+      throw new Error('No selectable grid');
+    }
+
+    /** how far the row sits inside the part of the grid the heads leave visible */
+    const placeOf = (name: string): { top: number; bottom: number } => {
+      const row = canvas.getByText(name).closest('tr');
+
+      if (!row) {
+        throw new Error(`No row "${name}"`);
+      }
+
+      const { top, bottom } = row.getBoundingClientRect();
+
+      return {
+        top: top - head.getBoundingClientRect().bottom,
+        bottom: grid.getBoundingClientRect().top + grid.clientHeight - bottom,
+      };
+    };
+
+    await userEvent.click(canvas.getByText('lorem-0'));
+    await userEvent.keyboard('{ArrowDown>40/}');
+
+    // the row just came into view: whole, against the bottom edge
+    await waitFor(() => expect(placeOf('lorem-40').bottom).toBeCloseTo(0, 0));
+    expect(placeOf('lorem-40').top).toBeGreaterThan(0);
+    expect(grid.querySelectorAll('tr[data-selected]')).toHaveLength(1);
+
+    await userEvent.keyboard('{ArrowUp>40/}');
+
+    // whole again, against the heads
+    await waitFor(() => expect(placeOf('lorem-0').top).toBeCloseTo(0, 0));
+  },
 };

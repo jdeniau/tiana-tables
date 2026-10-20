@@ -810,10 +810,14 @@ describe('row selection', () => {
     });
   }
 
-  function pressKey(key: string, { ctrlKey = false } = {}): KeyboardEvent {
+  function pressKey(
+    key: string,
+    { ctrlKey = false, shiftKey = false } = {}
+  ): KeyboardEvent {
     const event = new KeyboardEvent('keydown', {
       key,
       ctrlKey,
+      shiftKey,
       bubbles: true,
       cancelable: true,
     });
@@ -919,6 +923,36 @@ describe('row selection', () => {
 
     pressKey('Escape');
     expect(selectionAtom.get()).toEqual({});
+  });
+
+  test('↓ and ↑ move the selection from the last click, Shift extends it from there', () => {
+    const selectionAtom = renderSelectable();
+
+    clickCell('a');
+    const down = pressKey('ArrowDown');
+    expect(selectionAtom.get()).toEqual({ 2: true });
+    // or the grid would scroll as well
+    expect(down.defaultPrevented).toBe(true);
+
+    pressKey('ArrowDown', { shiftKey: true });
+    expect(shownSelected()).toEqual(['b', 'c']);
+
+    clickCell('a', { ctrlKey: true });
+    pressKey('ArrowUp');
+    expect(selectionAtom.get()).toEqual({ 1: true });
+  });
+
+  test('from no selection, ↓ selects the first row; Ctrl+↓ is left to the scroll', () => {
+    const selectionAtom = renderSelectable();
+
+    clickCell('b');
+    pressKey('Escape');
+    pressKey('ArrowDown');
+    expect(selectionAtom.get()).toEqual({ 1: true });
+
+    const ctrlDown = pressKey('ArrowDown', { ctrlKey: true });
+    expect(selectionAtom.get()).toEqual({ 1: true });
+    expect(ctrlDown.defaultPrevented).toBe(false);
   });
 
   test('a secondary click selects its row, unless it is already selected', () => {

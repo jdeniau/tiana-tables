@@ -342,6 +342,7 @@ function TableGrid<Row extends ResultRow>({
   const { selectRow, handleKeyDown } = useRowSelection(table, {
     enabled: selectionAtom !== undefined,
     scrollElement,
+    rowHeight: ROW_HEIGHT,
   });
 
   const { selectedRows, copyRows, canCopyAs } = useRowsCopy(table, {
@@ -356,7 +357,7 @@ function TableGrid<Row extends ResultRow>({
     <Wrapper>
       <ScrollContainer
         ref={setScrollElement}
-        // focusable for Escape
+        // focusable for the keys of the selection
         tabIndex={selectionAtom ? 0 : undefined}
         onKeyDown={handleKeyDown}
       >

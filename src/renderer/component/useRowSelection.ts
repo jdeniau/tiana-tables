@@ -3,7 +3,12 @@ import type { Table, Row as TanstackRow } from '@tanstack/react-table';
 import type { ResultRow } from '../../sql/types';
 import { registerSelectAllRows } from '../selectAll';
 import type { GridFeatures } from './TableGrid';
-import { SelectionModifiers, nextRowSelection } from './rowSelectionGesture';
+import {
+  RowStep,
+  SelectionModifiers,
+  nextRowSelection,
+  nextRowSelectionByArrow,
+} from './rowSelectionGesture';
 
 /** what a click on a row selects, read as a file manager reads its modifiers */
 export type SelectRow<Row extends ResultRow> = (
@@ -14,8 +19,34 @@ export type SelectRow<Row extends ResultRow> = (
 interface RowSelection<Row extends ResultRow> {
   /** stable, so that the `memo` of `BodyRow` still holds; absent on a grid whose rows cannot be selected */
   selectRow: SelectRow<Row> | undefined;
-  /** Escape on the focused grid; absent with `selectRow` */
+  /** Escape, ↑ and ↓ on the focused grid; absent with `selectRow` */
   handleKeyDown: ((event: KeyboardEvent<HTMLDivElement>) => void) | undefined;
+}
+
+const ARROW_STEPS: Partial<Record<string, RowStep>> = {
+  ArrowUp: RowStep.Up,
+  ArrowDown: RowStep.Down,
+};
+
+/** Scrolls the least that shows the whole row, below the sticky heads. */
+function revealRow(
+  scrollElement: HTMLElement,
+  index: number,
+  rowHeight: number
+): void {
+  const headHeight = scrollElement.querySelector('thead')?.offsetHeight ?? 0;
+  // from the top of the body, which starts below the heads
+  const top = index * rowHeight;
+
+  if (top < scrollElement.scrollTop) {
+    scrollElement.scrollTop = top;
+  } else if (
+    headHeight + top + rowHeight >
+    scrollElement.scrollTop + scrollElement.clientHeight
+  ) {
+    scrollElement.scrollTop =
+      headHeight + top + rowHeight - scrollElement.clientHeight;
+  }
 }
 
 /** The gestures that select the rows of a grid, and what empties the selection. */
@@ -24,16 +55,25 @@ export function useRowSelection<Row extends ResultRow>(
   {
     enabled,
     scrollElement,
-  }: { enabled: boolean; scrollElement: HTMLElement | null }
+    rowHeight,
+  }: {
+    enabled: boolean;
+    scrollElement: HTMLElement | null;
+    /** in pixels, the same for every row */
+    rowHeight: number;
+  }
 ): RowSelection<Row> {
   // the row the next Shift+click extends from
   const anchorRef = useRef<string | null>(null);
+  // the row the next arrow moves from
+  const leadRef = useRef<string | null>(null);
 
   // a new order starts with nothing selected
   useEffect(() => {
     const sorts = table.atoms.sorting.subscribe(() => {
       table.resetRowSelection(true);
       anchorRef.current = null;
+      leadRef.current = null;
     });
 
     return () => sorts.unsubscribe();
@@ -65,14 +105,16 @@ export function useRowSelection<Row extends ResultRow>(
     );
 
     anchorRef.current = next.anchorId;
+    leadRef.current = Object.keys(next.selection).length > 0 ? row.id : null;
     core.setRowSelection(next.selection);
-    // a modified click prevented its mousedown, and with it the focus Escape and Ctrl+C need
+    // a modified click prevented its mousedown, and with it the focus the keys and Ctrl+C need
     scrollElement?.focus({ preventScroll: true });
   };
 
   const selectAllRows = (): void => {
     table.toggleAllRowsSelected(true);
     anchorRef.current = table.getRowModel().rows[0]?.id ?? null;
+    leadRef.current = anchorRef.current;
     // Ctrl+C copies the rows of the focused grid only
     scrollElement?.focus({ preventScroll: true });
   };
@@ -90,6 +132,38 @@ export function useRowSelection<Row extends ResultRow>(
     if (event.key === 'Escape') {
       table.resetRowSelection(true);
       anchorRef.current = null;
+      leadRef.current = null;
+
+      return;
+    }
+
+    const step = ARROW_STEPS[event.key];
+
+    // Ctrl, Cmd and Alt keep their native scroll
+    if (step === undefined || event.ctrlKey || event.metaKey || event.altKey) {
+      return;
+    }
+
+    const rowIds = table.getRowModel().rows.map(({ id }) => id);
+    const next = nextRowSelectionByArrow(
+      anchorRef.current,
+      leadRef.current,
+      rowIds,
+      { step, extend: event.shiftKey }
+    );
+
+    if (!next) {
+      return;
+    }
+
+    // the arrow moves the selection, not the scroll
+    event.preventDefault();
+    anchorRef.current = next.anchorId;
+    leadRef.current = next.leadId;
+    table.setRowSelection(next.selection);
+
+    if (scrollElement) {
+      revealRow(scrollElement, rowIds.indexOf(next.leadId), rowHeight);
     }
   };
 
