@@ -6,8 +6,13 @@ import {
   useRef,
   useState,
 } from 'react';
-import { CaretDownFilled, CaretUpFilled } from '@ant-design/icons';
-import { type Atom, useSelector } from '@tanstack/react-store';
+import { CaretDownFilled, CaretUpFilled, EyeOutlined } from '@ant-design/icons';
+import {
+  type Atom,
+  createAtom,
+  useCreateAtom,
+  useSelector,
+} from '@tanstack/react-store';
 import {
   columnOrderingFeature,
   columnPinningFeature,
@@ -30,7 +35,7 @@ import { styled } from 'styled-components';
 import type { ColumnWidthByColumn } from '../../configuration/type';
 import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
-import { useTranslation } from '../../i18n';
+import { t as translate, useTranslation } from '../../i18n';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
 import type { Dialect } from '../../sql/dialect/types';
 import { FieldKind, type ResultField } from '../../sql/resultField';
@@ -54,11 +59,20 @@ import { CellWriteProvider } from './CellWrite';
 import ForeignKeyLink from './ForeignKeyLink';
 import SkeletonBody, { skeletonStyle } from './SkeletonBody';
 import { fill } from './Style/fill';
-import type { SelectionModifiers } from './rowSelectionGesture';
+import { rowIdOf } from './rowId';
+import {
+  NO_CURSOR,
+  type RowCursor,
+  type SelectionModifiers,
+} from './rowSelectionGesture';
 import { OpenCellMenu, ShowCellDetail, useCellDialogs } from './useCellDialogs';
 import { leftVar, useColumnWidthVars, widthVar } from './useColumnWidthVars';
 import { columnId, useGridColumns } from './useGridColumns';
-import { type SelectRow, useRowSelection } from './useRowSelection';
+import {
+  type SelectRow,
+  type ShowRow,
+  useRowSelection,
+} from './useRowSelection';
 import { type RowsCopied, columnValue, useRowsCopy } from './useRowsCopy';
 import { writtenCellFlashStyle } from './useWrittenCellFlash';
 
@@ -81,6 +95,8 @@ const ROW_HEIGHT = parseInt(size.row, 10);
 const NO_TABLE_STATE = (): Record<string, never> => ({});
 
 const EMPTY_DATA: ResultRow[] = [];
+
+const PANEL_CLOSED = createAtom(false);
 
 /** TanStack's values, as `getIsSorted()` answers */
 enum SortDirection {
@@ -140,6 +156,18 @@ interface TableGridProps<R extends ResultRow> {
 
   /** Called once rows have been copied, by Ctrl+C or from the context menu. */
   onRowsCopied?: (copied: RowsCopied) => void;
+
+  /**
+   * Where the next gestures start from, its lead being the row the side panel shows.
+   * The grid holds its own when not given; it must be the same atom for the grid's whole life.
+   */
+  cursorAtom?: Atom<RowCursor>;
+
+  /**
+   * Whether the side panel shows the lead: given with `selectionAtom`, each row gets an eye that opens it.
+   * It closes when nothing is selected; it must be the same atom for the grid's whole life.
+   */
+  panelOpenAtom?: Atom<boolean>;
 }
 
 /**
@@ -220,6 +248,8 @@ function TableGrid<Row extends ResultRow>({
   enableSorting,
   selectionAtom,
   onRowsCopied,
+  cursorAtom,
+  panelOpenAtom,
 }: TableGridProps<Row>): ReactElement {
   const { t } = useTranslation();
 
@@ -275,12 +305,8 @@ function TableGrid<Row extends ResultRow>({
       enableSorting: enableSorting ?? sortingAtom !== undefined,
       sortDescFirst: false,
       enableRowSelection: selectionAtom !== undefined,
-      ...(primaryKeys && primaryKeys.length > 0
-        ? {
-            getRowId: (row: Row) =>
-              primaryKeys.map((pk) => String(row[pk])).join('-'),
-          }
-        : {}),
+      // the side panel finds its row by the same id
+      getRowId: (row: Row, index: number) => rowIdOf(row, index, primaryKeys),
     },
     NO_TABLE_STATE
   );
@@ -339,10 +365,13 @@ function TableGrid<Row extends ResultRow>({
     return () => sorts.unsubscribe();
   }, [table, scrollElement]);
 
-  const { selectRow, handleKeyDown } = useRowSelection(table, {
+  const ownCursorAtom = useCreateAtom<RowCursor>(NO_CURSOR);
+  const { selectRow, handleKeyDown, showRow } = useRowSelection(table, {
     enabled: selectionAtom !== undefined,
     scrollElement,
     rowHeight: ROW_HEIGHT,
+    cursorAtom: cursorAtom ?? ownCursorAtom,
+    panelOpenAtom,
   });
 
   const { selectedRows, copyRows, canCopyAs } = useRowsCopy(table, {
@@ -432,6 +461,7 @@ function TableGrid<Row extends ResultRow>({
                         </HeaderCell>
                       );
                     })}
+                    {showRow && <EyeHeaderCell aria-hidden />}
                   </HeaderRow>
                 ))
               }
@@ -450,6 +480,9 @@ function TableGrid<Row extends ResultRow>({
               onShowCellDetail={showCellDetail}
               onCellContextMenu={openCellMenu}
               onSelectRow={selectRow}
+              cursorAtom={cursorAtom ?? ownCursorAtom}
+              panelOpenAtom={panelOpenAtom ?? PANEL_CLOSED}
+              onShowRow={showRow}
             />
           )}
         </StyledTable>
@@ -531,6 +564,10 @@ interface TableBodyProps<Row extends ResultRow> {
   onCellContextMenu: OpenCellMenu;
   /** absent on a grid whose rows cannot be selected */
   onSelectRow: SelectRow<Row> | undefined;
+  cursorAtom: Atom<RowCursor>;
+  panelOpenAtom: Atom<boolean>;
+  /** absent on a grid with no side panel, whose rows have no eye */
+  onShowRow: ShowRow<Row> | undefined;
 }
 
 // keep the virtualizer in the lowest component possible: it re-renders on
@@ -544,9 +581,15 @@ function TableBody<Row extends ResultRow>({
   onShowCellDetail,
   onCellContextMenu,
   onSelectRow,
+  cursorAtom,
+  panelOpenAtom,
+  onShowRow,
 }: TableBodyProps<Row>): ReactElement {
   const { rows } = table.getRowModel();
   const selection = useSelector(table.atoms.rowSelection);
+  const panelOpen = useSelector(panelOpenAtom);
+  const leadId = useSelector(cursorAtom, (cursor) => cursor.leadId);
+  const shownId = panelOpen ? leadId : null;
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,
@@ -572,6 +615,8 @@ function TableBody<Row extends ResultRow>({
             onCellContextMenu={onCellContextMenu}
             selected={selection[row.id] === true}
             onSelectRow={onSelectRow}
+            shown={shownId === row.id}
+            onShowRow={onShowRow}
           />
         );
       })}
@@ -589,6 +634,9 @@ interface BodyRowProps<Row extends ResultRow> {
   onCellContextMenu: OpenCellMenu;
   selected: boolean;
   onSelectRow: SelectRow<Row> | undefined;
+  /** the row the side panel shows */
+  shown: boolean;
+  onShowRow: ShowRow<Row> | undefined;
 }
 
 function BodyRowInner<Row extends ResultRow>({
@@ -601,6 +649,8 @@ function BodyRowInner<Row extends ResultRow>({
   onCellContextMenu,
   selected,
   onSelectRow,
+  shown,
+  onShowRow,
 }: BodyRowProps<Row>): ReactElement {
   const original = row.original;
   const valueOf = (column: ColumnMeta): unknown =>
@@ -716,6 +766,20 @@ function BodyRowInner<Row extends ResultRow>({
           </td>
         );
       })}
+
+      {onShowRow && (
+        <td className="tg-cell tg-eye">
+          <button
+            type="button"
+            className="tg-eye-button"
+            aria-pressed={shown}
+            title={translate('table.rowDetail.toggle', { shown })}
+            onClick={() => onShowRow(row)}
+          >
+            <EyeOutlined />
+          </button>
+        </td>
+      )}
     </tr>
   );
 }
@@ -733,7 +797,9 @@ const BodyRow = memo(
     prevProps.onShowCellDetail === nextProps.onShowCellDetail &&
     prevProps.onCellContextMenu === nextProps.onCellContextMenu &&
     prevProps.selected === nextProps.selected &&
-    prevProps.onSelectRow === nextProps.onSelectRow
+    prevProps.onSelectRow === nextProps.onSelectRow &&
+    prevProps.shown === nextProps.shown &&
+    prevProps.onShowRow === nextProps.onShowRow
 ) as typeof BodyRowInner;
 
 // one React component per cell (measured free, 2026-08-18 benchmark): hosts
@@ -775,6 +841,9 @@ type StyledProps = Parameters<typeof selection>[0];
 // opaque: a pinned cell must hide the cells scrolling under it
 const selectedBackground = (props: StyledProps): string =>
   `color-mix(in srgb, ${selection(props)} 70%, ${background(props)})`;
+
+// the eye's button, and the padding of a cell around it
+const EYE_WIDTH = `calc(${size.control} + ${space.sm})`;
 
 // the grid scrolls itself, so its host has to bound its height
 const Wrapper = styled.div`
@@ -829,8 +898,41 @@ const ScrollContainer = styled.div`
     border-inline-end: 1px solid ${selection};
   }
 
-  .tg-cell:last-child {
+  .tg-cell:last-child,
+  .tg-cell:has(+ .tg-eye) {
     border-inline-end: none;
+  }
+
+  /* past the columns, or over them while they scroll: never out of view */
+  .tg-eye {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    width: ${EYE_WIDTH};
+    justify-content: center;
+    padding: 0;
+    border-inline-start: 1px solid ${selection};
+  }
+
+  .tg-eye-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: ${size.control};
+    height: ${size.control};
+    padding: 0;
+    border: 0;
+    background: none;
+    color: ${commentForeground};
+    cursor: pointer;
+
+    &:hover {
+      color: ${foreground};
+    }
+
+    &[aria-pressed='true'] {
+      color: ${accent};
+    }
   }
 
   ${writtenCellFlashStyle}
@@ -902,6 +1004,18 @@ const HeaderCell = styled.th`
   &[data-last-pinned] {
     border-inline-end-color: ${commentForeground};
   }
+`;
+
+// the head of the eyes, so that the rule under the heads runs over them too
+const EyeHeaderCell = styled.th`
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  flex-shrink: 0;
+  width: ${EYE_WIDTH};
+  padding: 0;
+  background: ${background};
+  border-inline-start: 1px solid ${selection};
 `;
 
 // the whole head is the target, short of the resize handle; the sorted one reads as body text

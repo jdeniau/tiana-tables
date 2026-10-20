@@ -11,6 +11,7 @@ import { space } from '../../../theme';
 import ChartPanel from '../../Chart/ChartPanel';
 import { chartUnavailableReason } from '../../Chart/chartConfig';
 import DateDisplaySwitch from '../../DateDisplaySwitch';
+import { WithRowDetailPanel } from '../../RowDetailPanel/RowDetailPanel';
 import {
   Centered,
   Region,
@@ -26,6 +27,7 @@ import { RegionSegmented } from '../../Style/RegionSegmented';
 import { TabStrip, TabStripItem } from '../../Style/TabStrip';
 import { fill } from '../../Style/fill';
 import TableGrid from '../../TableGrid';
+import { NO_CURSOR, type RowCursor } from '../../rowSelectionGesture';
 import { useLastCopy } from '../../useLastCopy';
 import type { RowsCopied } from '../../useRowsCopy';
 import SqlErrorComponent from '../SqlErrorComponent';
@@ -78,6 +80,12 @@ const NO_OUTCOMES: StatementOutcome[] = [];
 
 const NO_SELECTION = createAtom<RowSelectionState>({});
 
+const NO_CURSOR_ATOM = createAtom<RowCursor>(NO_CURSOR);
+
+const PANEL_CLOSED = createAtom(false);
+
+const NO_ROWS: Array<never> = [];
+
 /** The rows selected in each result of one execution of the editor. */
 interface ExecutionSelections {
   /** the results of that execution */
@@ -86,6 +94,10 @@ interface ExecutionSelections {
   gridKey: number;
   /** one per result, by position */
   atoms: Array<Atom<RowSelectionState>>;
+  /** where the next gestures start from, one per result */
+  cursors: Array<Atom<RowCursor>>;
+  /** whether the side panel shows the lead, one per result */
+  panelsOpen: Array<Atom<boolean>>;
 }
 
 /** Nothing selected yet in the results of a new execution. */
@@ -97,6 +109,8 @@ function emptySelections(
     outcomes,
     gridKey,
     atoms: outcomes.map(() => createAtom<RowSelectionState>({})),
+    cursors: outcomes.map(() => createAtom<RowCursor>(NO_CURSOR)),
+    panelsOpen: outcomes.map(() => createAtom(false)),
   };
 }
 
@@ -145,6 +159,8 @@ function OutcomePane({
   rowsAsArray,
   gridKey,
   selectionAtom,
+  cursorAtom,
+  panelOpenAtom,
   onRowsCopied,
 }: {
   outcome: StatementOutcome;
@@ -152,6 +168,8 @@ function OutcomePane({
   rowsAsArray: boolean;
   gridKey: number;
   selectionAtom: Atom<RowSelectionState>;
+  cursorAtom: Atom<RowCursor>;
+  panelOpenAtom: Atom<boolean>;
   onRowsCopied: (copied: RowsCopied) => void;
 }): ReactElement {
   const { t } = useTranslation();
@@ -175,6 +193,8 @@ function OutcomePane({
             rowsAsArray={rowsAsArray}
             selectionAtom={selectionAtom}
             onRowsCopied={onRowsCopied}
+            cursorAtom={cursorAtom}
+            panelOpenAtom={panelOpenAtom}
           />
         </Pane>
         <Pane $active={view === View.Chart}>
@@ -305,6 +325,8 @@ export default function RawSqlResult({
               rowsAsArray={rowsAsArray}
               gridKey={selections.gridKey}
               selectionAtom={selections.atoms[index]}
+              cursorAtom={selections.cursors[index]}
+              panelOpenAtom={selections.panelsOpen[index]}
               onRowsCopied={onRowsCopied}
             />
           </Pane>
@@ -313,62 +335,72 @@ export default function RawSqlResult({
     );
   }
 
+  // always the same tree, or a switch of view or statement would remount every grid
   return (
-    <Region>
-      <RegionHeader>
-        <RegionGroup>
-          <RegionName>{t('rawSql.result.title')}</RegionName>
-          {outcomes.length > 1 && (
-            <StatementTabStrip>
-              {outcomes.map((one, index) => (
-                <TabStripItem
-                  key={index}
-                  active={index === active}
-                  failed={one.error !== undefined}
-                  title={one.sql}
-                  onClick={() => setChosen(index)}
-                >
-                  {statementSummary(one.sql)}
-                </TabStripItem>
-              ))}
-            </StatementTabStrip>
-          )}
-        </RegionGroup>
-
-        {outcome && !outcome.error && (
-          <RegionTools>
-            {meta &&
-              (selectedCount > 0 || lastCopy ? (
-                <SelectionRegionMeta>{meta}</SelectionRegionMeta>
-              ) : (
-                <RegionMeta>{meta}</RegionMeta>
-              ))}
-            {rows && <DateDisplaySwitch fields={outcome.result?.[1] ?? []} />}
-            {rows && (
-              <RegionSegmented<View>
-                value={shownView}
-                onChange={setView}
-                options={[
-                  { label: t('chart.tab.data'), value: View.Data },
-                  {
-                    label: t('chart.tab.chart'),
-                    value: View.Chart,
-                    // The option stays in place when it cannot be used: an
-                    // absent option is a mystery, a greyed one that says why
-                    // on hover is not.
-                    disabled: unavailable !== null,
-                    tooltip: unavailable
-                      ? t('chart.unavailable', { reason: unavailable })
-                      : undefined,
-                  },
-                ]}
-              />
+    <WithRowDetailPanel
+      rows={(!submitting && shownView === View.Data && rows) || NO_ROWS}
+      fields={outcome?.result?.[1] ?? []}
+      rowsAsArray={rowsAsArray}
+      selectionAtom={selections.atoms[active] ?? NO_SELECTION}
+      cursorAtom={selections.cursors[active] ?? NO_CURSOR_ATOM}
+      panelOpenAtom={selections.panelsOpen[active] ?? PANEL_CLOSED}
+    >
+      <Region>
+        <RegionHeader>
+          <RegionGroup>
+            <RegionName>{t('rawSql.result.title')}</RegionName>
+            {outcomes.length > 1 && (
+              <StatementTabStrip>
+                {outcomes.map((one, index) => (
+                  <TabStripItem
+                    key={index}
+                    active={index === active}
+                    failed={one.error !== undefined}
+                    title={one.sql}
+                    onClick={() => setChosen(index)}
+                  >
+                    {statementSummary(one.sql)}
+                  </TabStripItem>
+                ))}
+              </StatementTabStrip>
             )}
-          </RegionTools>
-        )}
-      </RegionHeader>
+          </RegionGroup>
 
-      <RegionBody>{body}</RegionBody>
-    </Region>
+          {outcome && !outcome.error && (
+            <RegionTools>
+              {meta &&
+                (selectedCount > 0 || lastCopy ? (
+                  <SelectionRegionMeta>{meta}</SelectionRegionMeta>
+                ) : (
+                  <RegionMeta>{meta}</RegionMeta>
+                ))}
+              {rows && <DateDisplaySwitch fields={outcome.result?.[1] ?? []} />}
+              {rows && (
+                <RegionSegmented<View>
+                  value={shownView}
+                  onChange={setView}
+                  options={[
+                    { label: t('chart.tab.data'), value: View.Data },
+                    {
+                      label: t('chart.tab.chart'),
+                      value: View.Chart,
+                      // The option stays in place when it cannot be used: an
+                      // absent option is a mystery, a greyed one that says why
+                      // on hover is not.
+                      disabled: unavailable !== null,
+                      tooltip: unavailable
+                        ? t('chart.unavailable', { reason: unavailable })
+                        : undefined,
+                    },
+                  ]}
+                />
+              )}
+            </RegionTools>
+          )}
+        </RegionHeader>
+
+        <RegionBody>{body}</RegionBody>
+      </Region>
+    </WithRowDetailPanel>
   );
 }

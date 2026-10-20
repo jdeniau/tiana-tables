@@ -8,10 +8,19 @@ export interface SelectionModifiers {
   extend: boolean;
 }
 
-interface SelectionGesture {
-  selection: RowSelectionState;
+/** Where the next gestures start from. */
+export interface RowCursor {
   /** the row the next Shift+click extends from */
   anchorId: string | null;
+  /** the row the next arrow moves from, and the one the side panel shows */
+  leadId: string | null;
+}
+
+export const NO_CURSOR: RowCursor = { anchorId: null, leadId: null };
+
+/** A selection, and the cursor the gesture that made it leaves. */
+export interface SelectionGesture extends RowCursor {
+  selection: RowSelectionState;
 }
 
 /** The direction of an arrow key, in display order. */
@@ -21,7 +30,6 @@ export enum RowStep {
 }
 
 interface ArrowGesture extends SelectionGesture {
-  /** the row the next arrow moves from */
   leadId: string;
 }
 
@@ -47,7 +55,7 @@ function rangeOf(
 /** What a click on `rowId` selects, `rowIds` being the rows in display order. */
 export function nextRowSelection(
   selection: RowSelectionState,
-  anchorId: string | null,
+  { anchorId, leadId }: RowCursor,
   rowId: string,
   rowIds: ReadonlyArray<string>,
   { toggle, extend }: SelectionModifiers
@@ -61,24 +69,28 @@ export function nextRowSelection(
     return {
       selection: toggle ? { ...selection, ...range } : range,
       anchorId,
+      leadId: rowId,
     };
   }
 
   if (toggle) {
     const { [rowId]: wasSelected, ...others } = selection;
 
-    return {
-      selection: wasSelected ? others : { ...selection, [rowId]: true },
-      anchorId: rowId,
-    };
+    return wasSelected
+      ? { selection: others, anchorId: rowId, leadId }
+      : {
+          selection: { ...selection, [rowId]: true },
+          anchorId: rowId,
+          leadId: rowId,
+        };
   }
 
   const isOnlySelected =
     selection[rowId] === true && Object.keys(selection).length === 1;
 
   return isOnlySelected
-    ? { selection: {}, anchorId: null }
-    : { selection: { [rowId]: true }, anchorId: rowId };
+    ? { selection: {}, ...NO_CURSOR }
+    : { selection: { [rowId]: true }, anchorId: rowId, leadId: rowId };
 }
 
 /**
@@ -86,8 +98,7 @@ export function nextRowSelection(
  * `null` when there is no row to move to.
  */
 export function nextRowSelectionByArrow(
-  anchorId: string | null,
-  leadId: string | null,
+  { anchorId, leadId }: RowCursor,
   rowIds: ReadonlyArray<string>,
   { step, extend }: { step: RowStep; extend: boolean }
 ): ArrowGesture | null {

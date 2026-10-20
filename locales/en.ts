@@ -190,6 +190,24 @@ export default {
   'table.copy.rowsAs': 'Copy {count, plural, one {# row} other {# rows}} as',
   'table.filters.history': 'Filters used before',
   'table.filters.title': 'Filters',
+  'table.rowDetail.close': 'Close the row panel',
+  'table.rowDetail.collapse': 'Collapse',
+  'table.rowDetail.copied': '{name} copied',
+  'table.rowDetail.expand':
+    'Show all · {length, plural, one {# character} other {# characters}}',
+  'table.rowDetail.fieldCount':
+    '{shown, number} / {count, plural, one {# column} other {# columns}}',
+  'table.rowDetail.filter': 'Column or value…',
+  'table.rowDetail.hint': '↑ ↓ in the grid change the row · Esc closes',
+  'table.rowDetail.moreSelected': 'and {count, number} more',
+  'table.rowDetail.noField': 'No column matches.',
+  'table.rowDetail.position': '{position, number} / {count, number}',
+  'table.rowDetail.row': 'row {position, number}',
+  'table.rowDetail.selected':
+    '{count, plural, one {# selected row} other {# selected rows}}',
+  'table.rowDetail.title': 'Row',
+  'table.rowDetail.toggle':
+    '{shown, select, true {Close the row panel} other {Show this row beside the grid}}',
   'table.rows.count': '{count, plural, one {# row} other {# rows}}',
   'table.rows.copied':
     '{count, plural, one {# row copied} other {# rows copied}} as {format, select, tsv {TSV} csv {CSV} markdown {Markdown} json {JSON} sqlInsert {SQL INSERT} other {{format}}}',

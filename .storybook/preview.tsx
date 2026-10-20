@@ -97,6 +97,9 @@ const preview: Preview = {
             setDateDisplay: (dateDisplay) => {
               action('setDateDisplay')(dateDisplay);
             },
+            setPanelSize: (panel, size) => {
+              action('setPanelSize')(panel, size);
+            },
           }}
         >
           <ThemeContextProvider>

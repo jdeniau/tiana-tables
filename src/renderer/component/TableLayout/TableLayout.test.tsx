@@ -28,7 +28,8 @@ import { TableLayout } from './TableLayout';
 import { readOrderParams } from './tableSearch';
 
 vi.mock('../../hooks/useDialect', () => ({ useDialect: () => mysqlDialect }));
-vi.mock('../../hooks/usePanelSize', () => ({
+vi.mock('../../hooks/usePanelSize', async (importOriginal) => ({
+  ...(await importOriginal()),
   usePanelSize: () => ({ panelProps: {}, onResizeEnd: () => {} }),
 }));
 // the filter's editor is Monaco, which has nothing to say about the order
@@ -385,8 +386,11 @@ describe('while the rows are on their way', () => {
       { ...column('id'), table: 'other' },
     ]);
 
+    // the head of the eyes is no column
     expect(
-      [...container.querySelectorAll('th')].map((th) => th.textContent)
+      [...container.querySelectorAll('th:not([aria-hidden])')].map(
+        (th) => th.textContent
+      )
     ).toEqual(['id', 'name']);
     expect(skeletonRows()).toBe(20);
 

@@ -20,6 +20,7 @@ import { usePanelSize } from '../../hooks/usePanelSize';
 import DateDisplaySwitch from '../DateDisplaySwitch';
 import SqlErrorComponent from '../Query/SqlErrorComponent';
 import WhereFilter from '../Query/WhereFilter';
+import { WithRowDetailPanel } from '../RowDetailPanel/RowDetailPanel';
 import {
   Region,
   RegionBody,
@@ -33,6 +34,7 @@ import {
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
+import { NO_CURSOR, type RowCursor } from '../rowSelectionGesture';
 import { useLastCopy } from '../useLastCopy';
 import { hasOrderByToken } from './tableQuery';
 import { tableSearch } from './tableSearch';
@@ -77,6 +79,8 @@ export function TableLayout({
   const sortingAtom = useCreateAtom<SortingState>(sorting);
   // by primary key, so it follows its rows to the next page; a new order empties it
   const selectionAtom = useCreateAtom<RowSelectionState>({});
+  const cursorAtom = useCreateAtom<RowCursor>(NO_CURSOR);
+  const panelOpenAtom = useCreateAtom(false);
   const [lastCopy, onRowsCopied] = useLastCopy();
   const selectedCount = useSelector(
     selectionAtom,
@@ -152,73 +156,85 @@ export function TableLayout({
       </Splitter.Panel>
 
       <Splitter.Panel>
-        <Region>
-          <RegionHeader>
-            <RegionGroup>
-              <RegionName>{tableName}</RegionName>
-              {lastCopy ? (
-                <SelectionRegionMeta>
-                  {t('table.rows.copied', {
-                    count: lastCopy.rowCount,
-                    format: lastCopy.format,
-                  })}
-                </SelectionRegionMeta>
-              ) : (
-                result &&
-                (selectedCount > 0 ? (
+        <WithRowDetailPanel
+          rows={result ?? []}
+          fields={orderedFields}
+          primaryKeys={primaryKeys}
+          rowsAsArray={false}
+          selectionAtom={selectionAtom}
+          cursorAtom={cursorAtom}
+          panelOpenAtom={panelOpenAtom}
+        >
+          <Region>
+            <RegionHeader>
+              <RegionGroup>
+                <RegionName>{tableName}</RegionName>
+                {lastCopy ? (
                   <SelectionRegionMeta>
-                    {t('table.rows.selected', {
-                      selected: selectedCount,
-                      count: result.length,
+                    {t('table.rows.copied', {
+                      count: lastCopy.rowCount,
+                      format: lastCopy.format,
                     })}
                   </SelectionRegionMeta>
                 ) : (
-                  <RegionMeta>
-                    {t('table.rows.count', { count: result.length })}
-                  </RegionMeta>
-                ))
-              )}
-            </RegionGroup>
+                  result &&
+                  (selectedCount > 0 ? (
+                    <SelectionRegionMeta>
+                      {t('table.rows.selected', {
+                        selected: selectedCount,
+                        count: result.length,
+                      })}
+                    </SelectionRegionMeta>
+                  ) : (
+                    <RegionMeta>
+                      {t('table.rows.count', { count: result.length })}
+                    </RegionMeta>
+                  ))
+                )}
+              </RegionGroup>
 
-            <RegionTools>
-              {fields && <DateDisplaySwitch fields={fields} />}
-              <TableViewSwitch />
-            </RegionTools>
-          </RegionHeader>
+              <RegionTools>
+                {fields && <DateDisplaySwitch fields={fields} />}
+                <TableViewSwitch />
+              </RegionTools>
+            </RegionHeader>
 
-          {/* the grid stays under an error: its headers are how a failed sort is left */}
-          <RegionBody>
-            {error && <SqlErrorComponent error={error} />}
+            {/* the grid stays under an error: its headers are how a failed sort is left */}
+            <RegionBody>
+              {error && <SqlErrorComponent error={error} />}
 
-            <TableGrid
-              fields={orderedFields}
-              result={result}
-              loading={loading}
-              primaryKeys={primaryKeys}
-              onValueUpdated={updateValue}
-              onFilterChange={handleFilterChange}
-              columnWidths={columnWidths}
-              onColumnResized={handleColumnResized}
-              sortingAtom={sortingAtom}
-              enableSorting={sortable}
-              selectionAtom={selectionAtom}
-              onRowsCopied={onRowsCopied}
-            />
-          </RegionBody>
+              <TableGrid
+                fields={orderedFields}
+                result={result}
+                loading={loading}
+                primaryKeys={primaryKeys}
+                onValueUpdated={updateValue}
+                onFilterChange={handleFilterChange}
+                columnWidths={columnWidths}
+                onColumnResized={handleColumnResized}
+                sortingAtom={sortingAtom}
+                enableSorting={sortable}
+                selectionAtom={selectionAtom}
+                onRowsCopied={onRowsCopied}
+                cursorAtom={cursorAtom}
+                panelOpenAtom={panelOpenAtom}
+              />
+            </RegionBody>
 
-          {!error && (
-            <RegionFoot>
-              <Button
-                type="text"
-                size="small"
-                loading={loadingMore}
-                onClick={loadMore}
-              >
-                {t('table.rows.loadMore')}
-              </Button>
-            </RegionFoot>
-          )}
-        </Region>
+            {!error && (
+              <RegionFoot>
+                <Button
+                  type="text"
+                  size="small"
+                  loading={loadingMore}
+                  onClick={loadMore}
+                >
+                  {t('table.rows.loadMore')}
+                </Button>
+              </RegionFoot>
+            )}
+          </Region>
+        </WithRowDetailPanel>
       </Splitter.Panel>
     </Splitter>
   );

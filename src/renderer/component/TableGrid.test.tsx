@@ -33,6 +33,7 @@ import {
 import { selectAllFromMenu } from '../selectAll';
 import { columnNamesAtom } from './CellContextMenu/rowsCopyItem';
 import TableGrid from './TableGrid';
+import { NO_CURSOR, type RowCursor } from './rowSelectionGesture';
 
 vi.mock('../hooks/useDialect', () => ({ useDialect: () => mysqlDialect }));
 
@@ -741,10 +742,14 @@ describe('row selection', () => {
     primaryKeys,
     selectionAtom,
     sortingAtom,
+    cursorAtom,
+    panelOpenAtom,
   }: {
     primaryKeys?: Array<string>;
     selectionAtom?: Atom<RowSelectionState>;
     sortingAtom?: Atom<SortingState>;
+    cursorAtom?: Atom<RowCursor>;
+    panelOpenAtom?: Atom<boolean>;
   }): ReactElement {
     const [rows, setRows] = useState(THREE_ROWS);
     showRows = setRows;
@@ -756,6 +761,8 @@ describe('row selection', () => {
         primaryKeys={primaryKeys}
         selectionAtom={selectionAtom}
         sortingAtom={sortingAtom}
+        cursorAtom={cursorAtom}
+        panelOpenAtom={panelOpenAtom}
       />
     );
   }
@@ -763,9 +770,13 @@ describe('row selection', () => {
   function renderSelectable({
     primaryKeys = ['id'],
     sortingAtom,
+    cursorAtom,
+    panelOpenAtom,
   }: {
     primaryKeys?: Array<string>;
     sortingAtom?: Atom<SortingState>;
+    cursorAtom?: Atom<RowCursor>;
+    panelOpenAtom?: Atom<boolean>;
   } = {}): Atom<RowSelectionState> {
     const selectionAtom = createAtom<RowSelectionState>({});
 
@@ -774,6 +785,8 @@ describe('row selection', () => {
         primaryKeys={primaryKeys}
         selectionAtom={selectionAtom}
         sortingAtom={sortingAtom}
+        cursorAtom={cursorAtom}
+        panelOpenAtom={panelOpenAtom}
       />
     );
 
@@ -1007,6 +1020,167 @@ describe('row selection', () => {
 
     expect(shownSelected()).toEqual([]);
     expect(container.querySelector('[tabindex]')).toBeNull();
+  });
+
+  describe('the eye of a row', () => {
+    function renderWithPanel(
+      sortingAtom?: Atom<SortingState>
+    ): [Atom<RowSelectionState>, Atom<RowCursor>] {
+      const cursorAtom = createAtom<RowCursor>(NO_CURSOR);
+      const panelOpenAtom = createAtom(false);
+
+      return [
+        renderSelectable({ sortingAtom, cursorAtom, panelOpenAtom }),
+        cursorAtom,
+      ];
+    }
+
+    function clickEye(name: string): void {
+      const eye = cellOf(name)
+        .closest('tr')
+        ?.querySelector<HTMLButtonElement>('.tg-eye-button');
+
+      if (!eye) {
+        throw new Error(`No eye on the row of "${name}"`);
+      }
+
+      act(() => eye.click());
+    }
+
+    /** the names of the rows whose eye is pressed: the row the panel shows */
+    function pressedEyes(): Array<string | null | undefined> {
+      return [...container.querySelectorAll('[aria-pressed="true"]')].map(
+        (button) => button.closest('tr')?.querySelectorAll('td')[1]?.textContent
+      );
+    }
+
+    test('shows its row alone selected, and gives the grid the keys', () => {
+      const [selectionAtom] = renderWithPanel();
+
+      // set from outside, which leaves the focus where it was
+      act(() => selectionAtom.set({ 1: true }));
+      clickEye('b');
+
+      expect(pressedEyes()).toEqual(['b']);
+      expect(selectionAtom.get()).toEqual({ 2: true });
+      expect(document.activeElement).toBe(
+        container.querySelector('[tabindex="0"]')
+      );
+    });
+
+    test('shows a row of the selection as it stands, and moves the arrows from it', () => {
+      const [selectionAtom, cursorAtom] = renderWithPanel();
+
+      clickCell('a');
+      clickCell('c', { shiftKey: true });
+      clickEye('b');
+      expect(selectionAtom.get()).toEqual({ 1: true, 2: true, 3: true });
+      expect(pressedEyes()).toEqual(['b']);
+
+      // as a chip of the panel picks a row
+      act(() => cursorAtom.set({ ...cursorAtom.get(), leadId: '1' }));
+      expect(pressedEyes()).toEqual(['a']);
+
+      pressKey('ArrowDown');
+      expect(pressedEyes()).toEqual(['b']);
+    });
+
+    test('the open panel follows the selection, and closes with it', () => {
+      renderWithPanel();
+
+      clickEye('a');
+      pressKey('ArrowDown');
+      expect(pressedEyes()).toEqual(['b']);
+
+      clickCell('c');
+      expect(pressedEyes()).toEqual(['c']);
+
+      pressKey('Escape');
+      expect(pressedEyes()).toEqual([]);
+
+      // closed, not only empty
+      clickCell('a');
+      expect(pressedEyes()).toEqual([]);
+    });
+
+    test('Ctrl removing another row leaves the panel, and the arrows, on the row shown', () => {
+      const [selectionAtom] = renderWithPanel();
+
+      clickCell('a');
+      clickCell('c', { shiftKey: true });
+      clickEye('c');
+      clickCell('a', { ctrlKey: true });
+      expect(selectionAtom.get()).toEqual({ 2: true, 3: true });
+      expect(pressedEyes()).toEqual(['c']);
+
+      pressKey('ArrowUp');
+      expect(selectionAtom.get()).toEqual({ 2: true });
+    });
+
+    test('Ctrl removing the row shown closes the panel', () => {
+      renderWithPanel();
+
+      clickCell('a');
+      clickCell('c', { shiftKey: true });
+      clickEye('b');
+      clickCell('b', { ctrlKey: true });
+      expect(pressedEyes()).toEqual([]);
+
+      // closed, not only hidden
+      clickCell('c', { ctrlKey: true });
+      expect(pressedEyes()).toEqual([]);
+    });
+
+    test('a row shown whose key changed closes the panel', () => {
+      renderWithPanel();
+
+      clickCell('a');
+      clickCell('c', { shiftKey: true });
+      clickEye('b');
+      act(() => {
+        showRows([THREE_ROWS[0], { id: 20, name: 'b' }, THREE_ROWS[2]]);
+      });
+      expect(pressedEyes()).toEqual([]);
+
+      clickCell('c', { shiftKey: true });
+      expect(pressedEyes()).toEqual([]);
+    });
+
+    test('a click opens no panel', () => {
+      renderWithPanel();
+
+      clickCell('a');
+
+      expect(pressedEyes()).toEqual([]);
+    });
+
+    test('the eye of the row shown closes the panel, and leaves the selection', () => {
+      const [selectionAtom] = renderWithPanel();
+
+      clickEye('a');
+      clickEye('a');
+
+      expect(pressedEyes()).toEqual([]);
+      expect(selectionAtom.get()).toEqual({ 1: true });
+    });
+
+    test('a new order closes the panel', () => {
+      const sortingAtom = createAtom<SortingState>([]);
+      renderWithPanel(sortingAtom);
+
+      clickEye('a');
+      act(() => sortingAtom.set([{ id: 'name', desc: true }]));
+      expect(pressedEyes()).toEqual([]);
+
+      clickCell('b');
+      expect(pressedEyes()).toEqual([]);
+    });
+
+    test('a grid given no atom for the panel has no eye', () => {
+      renderSelectable();
+
+      expect(container.querySelector('.tg-eye')).toBeNull();
+    });
   });
 });
 

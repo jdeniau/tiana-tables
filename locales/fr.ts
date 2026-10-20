@@ -193,6 +193,24 @@ const fr: Translation = {
     'Copier {count, plural, one {# ligne} other {# lignes}} en',
   'table.filters.history': 'Filtres déjà utilisés',
   'table.filters.title': 'Filtres',
+  'table.rowDetail.close': 'Fermer le panneau de la ligne',
+  'table.rowDetail.collapse': 'Replier',
+  'table.rowDetail.copied': '{name} copié',
+  'table.rowDetail.expand':
+    'Tout afficher · {length, plural, one {# caractère} other {# caractères}}',
+  'table.rowDetail.fieldCount':
+    '{shown, number} / {count, plural, one {# colonne} other {# colonnes}}',
+  'table.rowDetail.filter': 'Colonne ou valeur…',
+  'table.rowDetail.hint': '↑ ↓ dans la grille changent de ligne · Échap ferme',
+  'table.rowDetail.moreSelected': 'et {count, number} de plus',
+  'table.rowDetail.noField': 'Aucune colonne ne correspond.',
+  'table.rowDetail.position': '{position, number} / {count, number}',
+  'table.rowDetail.row': 'ligne {position, number}',
+  'table.rowDetail.selected':
+    '{count, plural, one {# ligne sélectionnée} other {# lignes sélectionnées}}',
+  'table.rowDetail.title': 'Ligne',
+  'table.rowDetail.toggle':
+    '{shown, select, true {Fermer le panneau de la ligne} other {Voir cette ligne à côté de la grille}}',
   'table.rows.count': '{count, plural, one {# ligne} other {# lignes}}',
   'table.rows.copied':
     '{count, plural, one {# ligne copiée} other {# lignes copiées}} en {format, select, tsv {TSV} csv {CSV} markdown {Markdown} json {JSON} sqlInsert {INSERT SQL} other {{format}}}',
