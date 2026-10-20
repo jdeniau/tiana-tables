@@ -27,6 +27,7 @@ import { RegionSegmented } from '../../Style/RegionSegmented';
 import { TabStrip, TabStripItem } from '../../Style/TabStrip';
 import { fill } from '../../Style/fill';
 import TableGrid from '../../TableGrid';
+import { NO_CURSOR, type RowCursor } from '../../rowSelectionGesture';
 import { useLastCopy } from '../../useLastCopy';
 import type { RowsCopied } from '../../useRowsCopy';
 import SqlErrorComponent from '../SqlErrorComponent';
@@ -79,7 +80,9 @@ const NO_OUTCOMES: StatementOutcome[] = [];
 
 const NO_SELECTION = createAtom<RowSelectionState>({});
 
-const NO_ROW_SHOWN = createAtom<string | null>(null);
+const NO_CURSOR_ATOM = createAtom<RowCursor>(NO_CURSOR);
+
+const PANEL_CLOSED = createAtom(false);
 
 const NO_ROWS: Array<never> = [];
 
@@ -91,8 +94,10 @@ interface ExecutionSelections {
   gridKey: number;
   /** one per result, by position */
   atoms: Array<Atom<RowSelectionState>>;
-  /** the row the side panel shows, one per result */
-  shownRows: Array<Atom<string | null>>;
+  /** where the next gestures start from, one per result */
+  cursors: Array<Atom<RowCursor>>;
+  /** whether the side panel shows the lead, one per result */
+  panelsOpen: Array<Atom<boolean>>;
 }
 
 /** Nothing selected yet in the results of a new execution. */
@@ -104,7 +109,8 @@ function emptySelections(
     outcomes,
     gridKey,
     atoms: outcomes.map(() => createAtom<RowSelectionState>({})),
-    shownRows: outcomes.map(() => createAtom<string | null>(null)),
+    cursors: outcomes.map(() => createAtom<RowCursor>(NO_CURSOR)),
+    panelsOpen: outcomes.map(() => createAtom(false)),
   };
 }
 
@@ -153,7 +159,8 @@ function OutcomePane({
   rowsAsArray,
   gridKey,
   selectionAtom,
-  shownRowAtom,
+  cursorAtom,
+  panelOpenAtom,
   onRowsCopied,
 }: {
   outcome: StatementOutcome;
@@ -161,7 +168,8 @@ function OutcomePane({
   rowsAsArray: boolean;
   gridKey: number;
   selectionAtom: Atom<RowSelectionState>;
-  shownRowAtom: Atom<string | null>;
+  cursorAtom: Atom<RowCursor>;
+  panelOpenAtom: Atom<boolean>;
   onRowsCopied: (copied: RowsCopied) => void;
 }): ReactElement {
   const { t } = useTranslation();
@@ -185,7 +193,8 @@ function OutcomePane({
             rowsAsArray={rowsAsArray}
             selectionAtom={selectionAtom}
             onRowsCopied={onRowsCopied}
-            shownRowAtom={shownRowAtom}
+            cursorAtom={cursorAtom}
+            panelOpenAtom={panelOpenAtom}
           />
         </Pane>
         <Pane $active={view === View.Chart}>
@@ -316,7 +325,8 @@ export default function RawSqlResult({
               rowsAsArray={rowsAsArray}
               gridKey={selections.gridKey}
               selectionAtom={selections.atoms[index]}
-              shownRowAtom={selections.shownRows[index]}
+              cursorAtom={selections.cursors[index]}
+              panelOpenAtom={selections.panelsOpen[index]}
               onRowsCopied={onRowsCopied}
             />
           </Pane>
@@ -332,7 +342,8 @@ export default function RawSqlResult({
       fields={outcome?.result?.[1] ?? []}
       rowsAsArray={rowsAsArray}
       selectionAtom={selections.atoms[active] ?? NO_SELECTION}
-      shownRowAtom={selections.shownRows[active] ?? NO_ROW_SHOWN}
+      cursorAtom={selections.cursors[active] ?? NO_CURSOR_ATOM}
+      panelOpenAtom={selections.panelsOpen[active] ?? PANEL_CLOSED}
     >
       <Region>
         <RegionHeader>

@@ -34,6 +34,7 @@ import {
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
+import { NO_CURSOR, type RowCursor } from '../rowSelectionGesture';
 import { useLastCopy } from '../useLastCopy';
 import { hasOrderByToken } from './tableQuery';
 import { tableSearch } from './tableSearch';
@@ -78,7 +79,8 @@ export function TableLayout({
   const sortingAtom = useCreateAtom<SortingState>(sorting);
   // by primary key, so it follows its rows to the next page; a new order empties it
   const selectionAtom = useCreateAtom<RowSelectionState>({});
-  const shownRowAtom = useCreateAtom<string | null>(null);
+  const cursorAtom = useCreateAtom<RowCursor>(NO_CURSOR);
+  const panelOpenAtom = useCreateAtom(false);
   const [lastCopy, onRowsCopied] = useLastCopy();
   const selectedCount = useSelector(
     selectionAtom,
@@ -160,7 +162,8 @@ export function TableLayout({
           primaryKeys={primaryKeys}
           rowsAsArray={false}
           selectionAtom={selectionAtom}
-          shownRowAtom={shownRowAtom}
+          cursorAtom={cursorAtom}
+          panelOpenAtom={panelOpenAtom}
         >
           <Region>
             <RegionHeader>
@@ -213,7 +216,8 @@ export function TableLayout({
                 enableSorting={sortable}
                 selectionAtom={selectionAtom}
                 onRowsCopied={onRowsCopied}
-                shownRowAtom={shownRowAtom}
+                cursorAtom={cursorAtom}
+                panelOpenAtom={panelOpenAtom}
               />
             </RegionBody>
 

@@ -7,7 +7,12 @@ import {
   useState,
 } from 'react';
 import { CaretDownFilled, CaretUpFilled, EyeOutlined } from '@ant-design/icons';
-import { type Atom, createAtom, useSelector } from '@tanstack/react-store';
+import {
+  type Atom,
+  createAtom,
+  useCreateAtom,
+  useSelector,
+} from '@tanstack/react-store';
 import {
   columnOrderingFeature,
   columnPinningFeature,
@@ -55,7 +60,11 @@ import ForeignKeyLink from './ForeignKeyLink';
 import SkeletonBody, { skeletonStyle } from './SkeletonBody';
 import { fill } from './Style/fill';
 import { rowIdOf } from './rowId';
-import type { SelectionModifiers } from './rowSelectionGesture';
+import {
+  NO_CURSOR,
+  type RowCursor,
+  type SelectionModifiers,
+} from './rowSelectionGesture';
 import { OpenCellMenu, ShowCellDetail, useCellDialogs } from './useCellDialogs';
 import { leftVar, useColumnWidthVars, widthVar } from './useColumnWidthVars';
 import { columnId, useGridColumns } from './useGridColumns';
@@ -87,7 +96,7 @@ const NO_TABLE_STATE = (): Record<string, never> => ({});
 
 const EMPTY_DATA: ResultRow[] = [];
 
-const NO_ROW_SHOWN = createAtom<string | null>(null);
+const PANEL_CLOSED = createAtom(false);
 
 /** TanStack's values, as `getIsSorted()` answers */
 enum SortDirection {
@@ -149,10 +158,16 @@ interface TableGridProps<R extends ResultRow> {
   onRowsCopied?: (copied: RowsCopied) => void;
 
   /**
-   * The row the side panel shows, by row id, `null` while it is closed: given with `selectionAtom`, each row gets an eye that opens it.
-   * The open panel follows the selection, and closes when nothing is selected; it must be the same atom for the grid's whole life.
+   * Where the next gestures start from, its lead being the row the side panel shows.
+   * The grid holds its own when not given; it must be the same atom for the grid's whole life.
    */
-  shownRowAtom?: Atom<string | null>;
+  cursorAtom?: Atom<RowCursor>;
+
+  /**
+   * Whether the side panel shows the lead: given with `selectionAtom`, each row gets an eye that opens it.
+   * It closes when nothing is selected; it must be the same atom for the grid's whole life.
+   */
+  panelOpenAtom?: Atom<boolean>;
 }
 
 /**
@@ -233,7 +248,8 @@ function TableGrid<Row extends ResultRow>({
   enableSorting,
   selectionAtom,
   onRowsCopied,
-  shownRowAtom,
+  cursorAtom,
+  panelOpenAtom,
 }: TableGridProps<Row>): ReactElement {
   const { t } = useTranslation();
 
@@ -349,11 +365,13 @@ function TableGrid<Row extends ResultRow>({
     return () => sorts.unsubscribe();
   }, [table, scrollElement]);
 
+  const ownCursorAtom = useCreateAtom<RowCursor>(NO_CURSOR);
   const { selectRow, handleKeyDown, showRow } = useRowSelection(table, {
     enabled: selectionAtom !== undefined,
     scrollElement,
     rowHeight: ROW_HEIGHT,
-    shownRowAtom,
+    cursorAtom: cursorAtom ?? ownCursorAtom,
+    panelOpenAtom,
   });
 
   const { selectedRows, copyRows, canCopyAs } = useRowsCopy(table, {
@@ -462,7 +480,8 @@ function TableGrid<Row extends ResultRow>({
               onShowCellDetail={showCellDetail}
               onCellContextMenu={openCellMenu}
               onSelectRow={selectRow}
-              shownRowAtom={shownRowAtom ?? NO_ROW_SHOWN}
+              cursorAtom={cursorAtom ?? ownCursorAtom}
+              panelOpenAtom={panelOpenAtom ?? PANEL_CLOSED}
               onShowRow={showRow}
             />
           )}
@@ -545,7 +564,8 @@ interface TableBodyProps<Row extends ResultRow> {
   onCellContextMenu: OpenCellMenu;
   /** absent on a grid whose rows cannot be selected */
   onSelectRow: SelectRow<Row> | undefined;
-  shownRowAtom: Atom<string | null>;
+  cursorAtom: Atom<RowCursor>;
+  panelOpenAtom: Atom<boolean>;
   /** absent on a grid with no side panel, whose rows have no eye */
   onShowRow: ShowRow<Row> | undefined;
 }
@@ -561,12 +581,15 @@ function TableBody<Row extends ResultRow>({
   onShowCellDetail,
   onCellContextMenu,
   onSelectRow,
-  shownRowAtom,
+  cursorAtom,
+  panelOpenAtom,
   onShowRow,
 }: TableBodyProps<Row>): ReactElement {
   const { rows } = table.getRowModel();
   const selection = useSelector(table.atoms.rowSelection);
-  const shownId = useSelector(shownRowAtom);
+  const panelOpen = useSelector(panelOpenAtom);
+  const leadId = useSelector(cursorAtom, (cursor) => cursor.leadId);
+  const shownId = panelOpen ? leadId : null;
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,

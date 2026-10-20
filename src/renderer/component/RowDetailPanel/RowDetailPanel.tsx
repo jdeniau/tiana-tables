@@ -36,6 +36,7 @@ import {
   RegionName,
 } from '../Style/Region';
 import { rowIdOf } from '../rowId';
+import type { RowCursor } from '../rowSelectionGesture';
 import { useLastCopy } from '../useLastCopy';
 import {
   type RowDetailField,
@@ -60,7 +61,8 @@ interface RowDetailPanelProps<Row extends ResultRow> {
   rowsAsArray: boolean;
   /** the atoms the grid is given */
   selectionAtom: Atom<RowSelectionState>;
-  shownRowAtom: Atom<string | null>;
+  cursorAtom: Atom<RowCursor>;
+  panelOpenAtom: Atom<boolean>;
 }
 
 /** A grid's region, and beside it, while a row is shown, the region of that row's fields. */
@@ -71,7 +73,8 @@ export function WithRowDetailPanel<Row extends ResultRow>({
   primaryKeys,
   rowsAsArray,
   selectionAtom,
-  shownRowAtom,
+  cursorAtom,
+  panelOpenAtom,
 }: RowDetailPanelProps<Row> & { children: ReactNode }): ReactElement {
   // one width for every page: it is the shape of the window, not of the data
   const { panelProps, onResizeEnd } = usePanelSize(
@@ -80,7 +83,9 @@ export function WithRowDetailPanel<Row extends ResultRow>({
   );
   // antd seeds its sizes at mount only, and this panel mounts later: its size is ours
   const [draggedSize, setDraggedSize] = useState<number>();
-  const shownId = useSelector(shownRowAtom);
+  const panelOpen = useSelector(panelOpenAtom);
+  const leadId = useSelector(cursorAtom, (cursor) => cursor.leadId);
+  const shownId = panelOpen ? leadId : null;
   const index =
     shownId === null
       ? -1
@@ -96,7 +101,8 @@ export function WithRowDetailPanel<Row extends ResultRow>({
       primaryKeys={primaryKeys}
       rowsAsArray={rowsAsArray}
       selectionAtom={selectionAtom}
-      shownRowAtom={shownRowAtom}
+      cursorAtom={cursorAtom}
+      panelOpenAtom={panelOpenAtom}
       index={index}
     />
   );
@@ -126,7 +132,8 @@ function RowDetailPanel<Row extends ResultRow>({
   primaryKeys,
   rowsAsArray,
   selectionAtom,
-  shownRowAtom,
+  cursorAtom,
+  panelOpenAtom,
   index,
 }: RowDetailPanelProps<Row> & { index: number }): ReactElement {
   const { t } = useTranslation();
@@ -189,7 +196,7 @@ function RowDetailPanel<Row extends ResultRow>({
           icon={<CloseOutlined />}
           aria-label={t('table.rowDetail.close')}
           title={t('table.rowDetail.close')}
-          onClick={() => shownRowAtom.set(null)}
+          onClick={() => panelOpenAtom.set(false)}
         />
       </RegionHeader>
 
@@ -203,7 +210,9 @@ function RowDetailPanel<Row extends ResultRow>({
               key={id}
               type="button"
               aria-pressed={id === shownId}
-              onClick={() => shownRowAtom.set(id)}
+              onClick={() =>
+                cursorAtom.set({ ...cursorAtom.get(), leadId: id })
+              }
             >
               {label}
             </Chip>

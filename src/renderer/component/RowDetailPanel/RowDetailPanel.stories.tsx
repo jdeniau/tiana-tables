@@ -17,6 +17,7 @@ import {
   RegionName,
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
+import { NO_CURSOR, type RowCursor } from '../rowSelectionGesture';
 import { WithRowDetailPanel } from './RowDetailPanel';
 
 const field = (name: string, kind: FieldKind): ResultField => ({
@@ -69,7 +70,8 @@ function RowDetailPanelDemo({
   primaryKeys?: Array<string>;
 }) {
   const selectionAtom = useCreateAtom<RowSelectionState>({});
-  const shownRowAtom = useCreateAtom<string | null>(null);
+  const cursorAtom = useCreateAtom<RowCursor>(NO_CURSOR);
+  const panelOpenAtom = useCreateAtom(false);
 
   return (
     <WithRowDetailPanel
@@ -78,7 +80,8 @@ function RowDetailPanelDemo({
       primaryKeys={primaryKeys}
       rowsAsArray={false}
       selectionAtom={selectionAtom}
-      shownRowAtom={shownRowAtom}
+      cursorAtom={cursorAtom}
+      panelOpenAtom={panelOpenAtom}
     >
       <Region>
         <RegionHeader>
@@ -92,7 +95,8 @@ function RowDetailPanelDemo({
             result={rows}
             primaryKeys={primaryKeys}
             selectionAtom={selectionAtom}
-            shownRowAtom={shownRowAtom}
+            cursorAtom={cursorAtom}
+            panelOpenAtom={panelOpenAtom}
           />
         </RegionBody>
       </Region>
