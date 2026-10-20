@@ -389,9 +389,7 @@ const Chip = styled.button`
 `;
 
 const Tools = styled.div`
-  display: flex;
   flex: none;
-  gap: ${space.sm};
   padding: 0 ${space.md} ${space.sm};
   border-bottom: 1px solid ${commentForeground};
 `;
