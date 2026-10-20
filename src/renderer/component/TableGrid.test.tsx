@@ -692,6 +692,39 @@ describe('the primary key columns', () => {
   });
 });
 
+describe('while the rows are on their way', () => {
+  test('the body is a skeleton under the heads, the key pinned', () => {
+    render(
+      <TableGrid fields={FIELDS} result={ROWS} loading primaryKeys={['name']} />
+    );
+
+    const heads = [...container.querySelectorAll('th')];
+    const rows = container.querySelectorAll('tbody tr');
+    const cells = [...rows[0].querySelectorAll<HTMLElement>('td')];
+
+    expect(rows).toHaveLength(20);
+    expect(container.querySelector('tbody')?.textContent).toBe('');
+    expect(heads.map((th) => th.textContent)).toEqual(['name', 'id']);
+    expect(cells.map((td) => td.style.width)).toEqual(
+      heads.map((th) => th.style.width)
+    );
+    expect(cells.map((td) => td.style.left)).toEqual(
+      heads.map((th) => th.style.left)
+    );
+  });
+
+  test('says nothing of an empty result', () => {
+    render(<TableGrid fields={FIELDS} result={[]} />);
+    expect(container.textContent).toContain('No data');
+
+    act(() => unmount());
+    container.remove();
+
+    render(<TableGrid fields={FIELDS} result={[]} loading />);
+    expect(container.textContent).not.toContain('No data');
+  });
+});
+
 describe('row selection', () => {
   mountRows();
 

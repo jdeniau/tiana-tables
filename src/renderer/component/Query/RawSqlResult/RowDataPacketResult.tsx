@@ -1,10 +1,11 @@
 import { ReactElement, useState } from 'react';
 import { type Atom, createAtom, useSelector } from '@tanstack/react-store';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Empty, Spin } from 'antd';
+import { Empty } from 'antd';
 import { Fetcher } from 'react-router';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../../i18n';
+import { FieldKind, type ResultField } from '../../../../sql/resultField';
 import type { SqlError } from '../../../../sql/sqlError';
 import { QueryResult, isWriteResult } from '../../../../sql/types';
 import { space } from '../../../theme';
@@ -52,6 +53,12 @@ export type StatementOutcome =
       hasLimit?: undefined;
       durationMs?: undefined;
     };
+
+// unnamed until the server answers: `rowsAsArray` tells them apart by position
+const PLACEHOLDER_FIELDS: Array<ResultField> = Array.from(
+  { length: 5 },
+  () => ({ name: '', table: null, kind: FieldKind.Unknown })
+);
 
 export type SqlActionReturnTypes = { outcomes: StatementOutcome[] };
 
@@ -269,9 +276,12 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
 
   if (state === 'submitting') {
     body = (
-      <Centered>
-        <Spin />
-      </Centered>
+      <TableGrid
+        loading
+        rowsAsArray
+        fields={PLACEHOLDER_FIELDS}
+        result={null}
+      />
     );
   } else if (data && outcomes.length === 0) {
     body = (

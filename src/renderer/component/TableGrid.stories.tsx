@@ -283,6 +283,16 @@ export const Empty: Story = {
   },
 };
 
+// the skeleton shows after a short delay, so that a fast answer does not flash it
+export const Loading: Story = {
+  args: {
+    fields: makeFields(8),
+    result: null,
+    loading: true,
+    primaryKeys: ['id'],
+  },
+};
+
 export const WithoutPrimaryKey: Story = {
   args: {
     fields: makeFields(8),

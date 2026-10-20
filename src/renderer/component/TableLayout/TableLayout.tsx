@@ -12,7 +12,9 @@ import type {
   ColumnWidthByColumn,
   TableSorting,
 } from '../../../configuration/type';
+import { useAllColumnsContext } from '../../../contexts/AllColumnsContext';
 import { useTranslation } from '../../../i18n';
+import { FieldKind } from '../../../sql/resultField';
 import { useDialect } from '../../hooks/useDialect';
 import { usePanelSize } from '../../hooks/usePanelSize';
 import DateDisplaySwitch from '../DateDisplaySwitch';
@@ -89,22 +91,31 @@ export function TableLayout({
     return () => sorts.unsubscribe();
   }, [sortingAtom, navigate, where]);
 
-  const { result, fields, error, loadMore, updateValue } = useTableRows({
-    database,
-    tableName,
-    primaryKeys,
-    where,
-    sorting,
-  });
+  const allColumns = useAllColumnsContext();
+  const { result, fields, error, loading, loadingMore, loadMore, updateValue } =
+    useTableRows({
+      database,
+      tableName,
+      primaryKeys,
+      where,
+      sorting,
+    });
+
+  // until the first page answers, the schema's columns: their kind comes with the rows
+  const shownFields =
+    fields ??
+    allColumns.getColumnsForTable(tableName).map(({ name }) => ({
+      name,
+      table: tableName,
+      kind: FieldKind.Unknown,
+    }));
 
   // the query stays a `SELECT *`: ordering here means a column added to or dropped from the table needs no new query to be placed
-  const fieldsByName = new Map(fields?.map((field) => [field.name, field]));
-  const orderedFields = fields
-    ? applyColumnOrder(
-        fields.map((field) => field.name),
-        displayAfterByColumn
-      ).flatMap((name) => fieldsByName.get(name) ?? [])
-    : null;
+  const fieldsByName = new Map(shownFields.map((field) => [field.name, field]));
+  const orderedFields = applyColumnOrder(
+    shownFields.map((field) => field.name),
+    displayAfterByColumn
+  ).flatMap((name) => fieldsByName.get(name) ?? []);
 
   // written, then read back by the loader on the next visit, rather than
   // mirrored in a state that the next table would leave stale
@@ -182,6 +193,7 @@ export function TableLayout({
             <TableGrid
               fields={orderedFields}
               result={result}
+              loading={loading}
               primaryKeys={primaryKeys}
               onValueUpdated={updateValue}
               onFilterChange={handleFilterChange}
@@ -196,7 +208,12 @@ export function TableLayout({
 
           {!error && (
             <RegionFoot>
-              <Button type="text" size="small" onClick={loadMore}>
+              <Button
+                type="text"
+                size="small"
+                loading={loadingMore}
+                onClick={loadMore}
+              >
                 {t('table.rows.loadMore')}
               </Button>
             </RegionFoot>

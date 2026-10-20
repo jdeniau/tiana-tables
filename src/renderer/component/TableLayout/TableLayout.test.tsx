@@ -15,6 +15,7 @@ import type { TableSorting } from '../../../configuration/type';
 import { AllColumnsContextProvider } from '../../../contexts/AllColumnsContext';
 import { DatabaseContext } from '../../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext';
+import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
 import { FieldKind } from '../../../sql/resultField';
 import { TableLayout } from './TableLayout';
@@ -75,7 +76,11 @@ function Page({ where }: { where?: string }) {
 }
 
 /** the table page at `url`, behind a loader that answers as the route's: a new key array each time, the URL's order */
-async function render(where?: string, url = '/'): Promise<void> {
+async function render(
+  where?: string,
+  url = '/',
+  allColumns: Array<ColumnDetail> = []
+): Promise<void> {
   container = document.createElement('div');
   document.body.append(container);
 
@@ -101,7 +106,7 @@ async function render(where?: string, url = '/'): Promise<void> {
       <ThemeProvider theme={DEFAULT_THEME}>
         <DatabaseContext value={{ database: 'shop', setDatabase: () => {} }}>
           <ForeignKeysContextProvider foreignKeys={[]} database="shop">
-            <AllColumnsContextProvider allColumns={[]}>
+            <AllColumnsContextProvider allColumns={allColumns}>
               <RouterProvider router={router} />
             </AllColumnsContextProvider>
           </ForeignKeysContextProvider>
@@ -251,5 +256,81 @@ describe('sorting', () => {
 
     expect(container.querySelector('th button')).toBeNull();
     expect(header('id').hasAttribute('aria-sort')).toBe(false);
+  });
+});
+
+describe('while the rows are on their way', () => {
+  /** the answer of the next query, given when the test says */
+  function deferAnswer(): (rows: Array<object>) => Promise<void> {
+    let answer: (value: unknown) => void = () => {};
+    executeQuery.mockReturnValueOnce(
+      new Promise((resolve) => {
+        answer = resolve;
+      })
+    );
+
+    return async (rows) => {
+      await act(async () => answer([rows, FIELDS]));
+    };
+  }
+
+  const skeletonRows = (): number =>
+    container.querySelectorAll('.tg-skeleton-row').length;
+
+  test('the heads are the columns of the schema, in the order of the table', async () => {
+    const answer = deferAnswer();
+    const column = (name: string): ColumnDetail => ({
+      table: 'items',
+      name,
+      nullable: false,
+      generated: false,
+      binary: false,
+      hasJsonType: false,
+      allowedValues: [],
+      multiValued: false,
+    });
+
+    await render(undefined, '/', [
+      column('id'),
+      column('name'),
+      { ...column('id'), table: 'other' },
+    ]);
+
+    expect(
+      [...container.querySelectorAll('th')].map((th) => th.textContent)
+    ).toEqual(['id', 'name']);
+    expect(skeletonRows()).toBe(20);
+
+    await answer([{ id: 1, name: 'a' }]);
+
+    expect(skeletonRows()).toBe(0);
+  });
+
+  test('a new order shows the skeleton until its rows arrive', async () => {
+    await render();
+
+    const answer = deferAnswer();
+    await click(header('name').querySelector('button'));
+
+    expect(skeletonRows()).toBe(20);
+
+    await answer([{ id: 2, name: 'b' }]);
+
+    expect(skeletonRows()).toBe(0);
+  });
+
+  test('the answer of an order already left ends no wait', async () => {
+    await render();
+
+    const answerAscending = deferAnswer();
+    await click(header('name').querySelector('button'));
+    const answerDescending = deferAnswer();
+    await click(header('name').querySelector('button'));
+
+    await answerAscending([{ id: 1, name: 'a' }]);
+    expect(skeletonRows()).toBe(20);
+
+    await answerDescending([{ id: 2, name: 'b' }]);
+    expect(skeletonRows()).toBe(0);
   });
 });
