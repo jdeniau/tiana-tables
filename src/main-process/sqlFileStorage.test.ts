@@ -22,6 +22,7 @@ const groups: Record<string, string | undefined> = {
   ungrouped: undefined,
   'client-a-prod': 'Client A',
   'client-a-staging': 'Client A',
+  'client-a-lower': 'client-a',
   'client-b': 'Client B',
   'no-letter': '日本',
 };
@@ -73,13 +74,23 @@ describe('the file of the latest query', () => {
   });
 
   test('the connections of a group share its file, another group has its own', () => {
-    expect(savedFile('client-a-prod')).toBe('/config/latest-client-a.sql');
-    expect(savedFile('client-a-staging')).toBe('/config/latest-client-a.sql');
-    expect(savedFile('client-b')).toBe('/config/latest-client-b.sql');
+    expect(savedFile('client-a-prod')).toBe(
+      '/config/latest-client-a-e8f848d4.sql'
+    );
+    expect(savedFile('client-a-staging')).toBe(
+      '/config/latest-client-a-e8f848d4.sql'
+    );
+    expect(savedFile('client-b')).toBe('/config/latest-client-b-4d34e9db.sql');
   });
 
-  test('a group with nothing to slugify, and an unknown connection, fall back to `latest.sql`', () => {
-    expect(savedFile('no-letter')).toBe('/config/latest.sql');
+  test('two groups with the same slug, or none, keep a file each', () => {
+    expect(savedFile('client-a-lower')).toBe(
+      '/config/latest-client-a-e0b107f9.sql'
+    );
+    expect(savedFile('no-letter')).toBe('/config/latest-cf2abf0c.sql');
+  });
+
+  test('an unknown connection falls back to `latest.sql`', () => {
     expect(savedFile('deleted')).toBe('/config/latest.sql');
   });
 

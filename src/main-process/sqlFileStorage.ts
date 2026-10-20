@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { z } from 'zod';
@@ -12,9 +13,15 @@ import { SQL_FILE_STORAGE_CHANNEL } from '../preload/sqlFileStorageChannel';
 /** `latest.sql` for a connection with no group, or one unknown */
 function latestSqlFilename(connectionSlug: string): string {
   const group = getConfiguration().connections[connectionSlug]?.group;
-  const groupSlug = group ? slugify(group) : '';
 
-  return groupSlug ? `latest-${groupSlug}.sql` : 'latest.sql';
+  if (!group) {
+    return 'latest.sql';
+  }
+
+  // the slug to read, the hash to tell apart the names it merges
+  const hash = createHash('sha256').update(group).digest('hex').slice(0, 8);
+
+  return `latest-${[slugify(group), hash].filter(Boolean).join('-')}.sql`;
 }
 
 function getSqlFilePath(connectionSlug: string): string {
