@@ -1,6 +1,12 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import {
+  QueryClient,
+  queryOptions,
+  skipToken,
+  useQuery,
+} from '@tanstack/react-query';
 import { Form, Splitter } from 'antd';
-import { ActionFunctionArgs, useFetcher } from 'react-router-dom';
+import { ActionFunctionArgs, useFetcher, useParams } from 'react-router-dom';
 import { styled } from 'styled-components';
 import invariant from 'tiny-invariant';
 import { PANEL } from '../../configuration/panels';
@@ -27,6 +33,7 @@ import {
 import { fill } from '../component/Style/fill';
 import { loadDialect, useDialect } from '../hooks/useDialect';
 import { usePanelSize } from '../hooks/usePanelSize';
+import { queryKeys } from '../queryKeys';
 
 // antd's Form is a block between the region body and the editor
 const FillForm = styled(Form)`
@@ -78,15 +85,42 @@ async function runStatement(
   }
 }
 
-export async function action({
-  request,
-  params,
-}: ActionFunctionArgs): Promise<SqlActionReturnTypes> {
-  const { connectionSlug, databaseName } = params;
+/** the last run of the page: written by the action, never fetched, kept until the connection closes */
+function sqlResultQuery(connectionSlug: string, databaseName: string) {
+  return queryOptions<SqlActionReturnTypes>({
+    queryKey: queryKeys.sqlResult(connectionSlug, databaseName),
+    queryFn: skipToken,
+    gcTime: Infinity,
+  });
+}
 
-  invariant(connectionSlug, 'Connection slug is required');
-  invariant(databaseName, 'Database name is required');
+/** runs the editor's statements, and keeps what they answered for the next visit of the page */
+export const action =
+  (queryClient: QueryClient) =>
+  async ({
+    request,
+    params,
+  }: ActionFunctionArgs): Promise<SqlActionReturnTypes> => {
+    const { connectionSlug, databaseName } = params;
 
+    invariant(connectionSlug, 'Connection slug is required');
+    invariant(databaseName, 'Database name is required');
+
+    const result = await runEditor(request, connectionSlug, databaseName);
+
+    queryClient.setQueryData(
+      sqlResultQuery(connectionSlug, databaseName).queryKey,
+      result
+    );
+
+    return result;
+  };
+
+async function runEditor(
+  request: Request,
+  connectionSlug: string,
+  databaseName: string
+): Promise<SqlActionReturnTypes> {
   const formData = await request.formData();
   const content = formData.get('raw');
   const mode = toRunMode(formData.get('mode'));
@@ -136,7 +170,13 @@ export async function action({
 export default function SqlPage() {
   const { t } = useTranslation();
   const [form] = Form.useForm();
+  const { connectionSlug, databaseName } = useParams();
+
+  invariant(connectionSlug, 'Connection slug is required');
+  invariant(databaseName, 'Database name is required');
+
   const fetcher = useFetcher<SqlActionReturnTypes>();
+  const { data } = useQuery(sqlResultQuery(connectionSlug, databaseName));
   const [sqlQuery, saveSqlQuery] = useSqlFileStorage();
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.SQL_EDITOR);
   const editorRef = useRef<RawSqlEditorHandle>(null);
@@ -210,7 +250,11 @@ export default function SqlPage() {
       </Splitter.Panel>
 
       <Splitter.Panel>
-        <RawSqlResult fetcher={fetcher} rowsAsArray />
+        <RawSqlResult
+          data={data}
+          submitting={state === 'submitting'}
+          rowsAsArray
+        />
       </Splitter.Panel>
     </Splitter>
   );

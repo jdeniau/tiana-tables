@@ -1,4 +1,5 @@
-import { ReactNode, useEffect, useEffectEvent, useState } from 'react';
+import { ReactNode, useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useMatch, useNavigate } from 'react-router';
 import invariant from 'tiny-invariant';
 import {
@@ -9,6 +10,7 @@ import {
   DatabaseContext,
   DatabaseContextProps,
 } from '../../../contexts/DatabaseContext';
+import { queryKeys } from '../../queryKeys';
 import { databaseUrl } from '../databaseUrl';
 import { closeConnectionTarget } from './closeConnectionTarget';
 import { cycleConnectionTarget } from './cycleConnectionTarget';
@@ -19,6 +21,7 @@ interface Props {
 
 function ConnectionStack({ children }: Props) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const currentConnectionSlug = useMatch('connections/:connectionSlug/*')
     ?.params.connectionSlug;
   const databaseName = useMatch('connections/:connectionSlug/:databaseName/*')
@@ -27,6 +30,19 @@ function ConnectionStack({ children }: Props) {
   const [connectionSlugList, setConnectionNameList] = useState<Array<string>>(
     []
   );
+  // closed, their page maybe still on screen: emptied under it, its queries would fetch again (#311)
+  const closedSlugs = useRef(new Set<string>());
+
+  // run on each close (the list) and each landing (the slug):
+  // once a closed connection is no longer the current one, none of its pages is mounted
+  useEffect(() => {
+    for (const slug of closedSlugs.current) {
+      if (slug !== currentConnectionSlug) {
+        queryClient.removeQueries({ queryKey: queryKeys.connection(slug) });
+        closedSlugs.current.delete(slug);
+      }
+    }
+  }, [connectionSlugList, currentConnectionSlug, queryClient]);
 
   useEffect(() => {
     return () => {
@@ -66,6 +82,7 @@ function ConnectionStack({ children }: Props) {
     );
 
     window.sql.closeConnection(connectionSlug);
+    closedSlugs.current.add(connectionSlug);
   };
 
   const cycleConnection = useEffectEvent((offset: number) => {

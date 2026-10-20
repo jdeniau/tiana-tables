@@ -22,3 +22,4 @@ paths:
 - **Chromatic extracts the stories in a Chrome without `Temporal`, whatever its infrastructure version**: its user agent says `Chrome/106 (Chromatic extract)`, its features say 129–143. `temporal-polyfill/global` stays the first import of `.storybook/preview.tsx`; it keeps a native `Temporal`, so the captures (Chrome 149) and a local Storybook run the real one. Reproduce with `--js-flags=--no-harmony-temporal` and `__STORYBOOK_PREVIEW__.extract()`.
 - **`MemoryRouter` navigates synchronously**: a routing regression test uses `createMemoryRouter` with a real `loader` on the target route.
 - Keep analysis modules free of **runtime** `monaco-editor` imports (`import type` only), or the node test dies on `window`.
+- **A test rendering a TanStack Query hook sets `notifyManager.setScheduler(queueMicrotask)`**: the default `setTimeout` delivers an answer after `act` returned, and the page never shows it. Each test gets its own `createQueryClient()`.

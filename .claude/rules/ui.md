@@ -42,6 +42,8 @@ The layout and colour rules themselves are in `DESIGN.md`; this file is what app
 - **A value written through a context and read back through it goes through the context state**, never straight to `window.config` (`usePanelSize`). A context change re-renders consumers, it does not remount them.
 - **An IPC answer must never erase the UI**: `ConfigurationContextProvider` renders `null` without a configuration, so guard the setter and keep the previous value.
 - **A `useState` whose setter is never used is not a way to freeze a value** — read the value directly.
+- **A query is removed from the cache only once no page observes it**: removed under a mounted page, it is fetched again at that page's next render — closing a connection sent its table's query once more while the navigation away was pending. `ConnectionStack` removes a closed connection's entries once it is no longer the current one, from an effect: v6's `navigate()` cannot be awaited in the handler (#311).
+- **An error is shown alone, never over the rows of a fetch that failed**: the query cache keeps the pages loaded when the next fetch fails (a "Load more", a refetch behind), so `useTableRows` returns no rows while there is an error.
 - **A view toggle is local state** until the user asks for it to survive a restart; nothing goes in `config.json` otherwise.
 - **Never persist a pixel size that will be replayed on another screen**: antd's Splitter gives an oversized panel 100% and ignores `min`/`max`. Store a percentage; a persisted value carries its unit (`'32.5%'`) so an older format is recognisable; "not released yet" is not "no migration needed".
 

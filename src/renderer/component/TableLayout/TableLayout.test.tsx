@@ -2,6 +2,11 @@
  * @vitest-environment happy-dom
  */
 import { act } from 'react';
+import {
+  QueryClient,
+  QueryClientProvider,
+  notifyManager,
+} from '@tanstack/react-query';
 import { createRoot } from 'react-dom/client';
 import {
   RouterProvider,
@@ -18,6 +23,7 @@ import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext
 import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
 import { FieldKind } from '../../../sql/resultField';
+import { createQueryClient } from '../../queryClient';
 import { TableLayout } from './TableLayout';
 import { readOrderParams } from './tableSearch';
 
@@ -32,6 +38,9 @@ vi.mock('../Query/WhereFilter', () => ({ default: () => null }));
   globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
+// a `setTimeout` by default: an answer would reach the page after `act` returned
+notifyManager.setScheduler(queueMicrotask);
+
 const FIELDS = [
   { name: 'id', kind: FieldKind.Number },
   { name: 'name', kind: FieldKind.String },
@@ -39,11 +48,25 @@ const FIELDS = [
 
 const executeQuery = vi.fn();
 
+const column = (name: string): ColumnDetail => ({
+  table: 'items',
+  name,
+  nullable: false,
+  generated: false,
+  binary: false,
+  hasJsonType: false,
+  allowedValues: [],
+  multiValued: false,
+});
+
 let container: HTMLElement;
 let unmount: () => void;
 let router: ReturnType<typeof createMemoryRouter>;
+// one per test: a page rendered again in the same test finds what the first one fetched
+let queryClient: QueryClient;
 
 beforeEach(() => {
+  queryClient = createQueryClient();
   executeQuery.mockReset();
   executeQuery.mockResolvedValue([[{ id: 1, name: 'a' }], FIELDS]);
   window.sql = { executeQuery } as unknown as typeof window.sql;
@@ -52,7 +75,14 @@ beforeEach(() => {
 afterEach(() => {
   act(() => unmount());
   container.remove();
+  vi.useRealTimers();
 });
+
+/** past the few seconds in which the rows a page just fetched are not fetched again */
+function ageTheRows(): void {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(Date.now() + 60_000);
+}
 
 function Page({ where }: { where?: string }) {
   const { primaryKeys, sorting } = useLoaderData() as {
@@ -107,7 +137,9 @@ async function render(
         <DatabaseContext value={{ database: 'shop', setDatabase: () => {} }}>
           <ForeignKeysContextProvider foreignKeys={[]} database="shop">
             <AllColumnsContextProvider allColumns={allColumns}>
-              <RouterProvider router={router} />
+              <QueryClientProvider client={queryClient}>
+                <RouterProvider router={router} />
+              </QueryClientProvider>
             </AllColumnsContextProvider>
           </ForeignKeysContextProvider>
         </DatabaseContext>
@@ -159,6 +191,71 @@ describe('load more', () => {
       'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 100;',
     ]);
   });
+
+  test('a failed page shows its error alone, without the rows loaded', async () => {
+    await render();
+    expect(container.textContent).toContain('1 row');
+
+    executeQuery.mockRejectedValueOnce(new Error('connection lost'));
+    await clickLoadMore();
+
+    expect(container.textContent).toContain('connection lost');
+    expect(container.textContent).not.toContain('1 row');
+  });
+});
+
+describe('back on a table seen before', () => {
+  test('shows the rows loaded at once, then fetches every page again behind them', async () => {
+    await render();
+    await clickLoadMore();
+    act(() => unmount());
+    container.remove();
+    ageTheRows();
+
+    executeQuery.mockClear();
+    let answer: (value: unknown) => void = () => {};
+    executeQuery.mockReturnValueOnce(
+      new Promise((resolve) => {
+        answer = resolve;
+      })
+    );
+
+    await render();
+
+    expect(container.querySelectorAll('.tg-skeleton-row')).toHaveLength(0);
+    expect(container.textContent).toContain('2 rows');
+    expect(executeQuery.mock.calls.map(([query]) => query)).toEqual([
+      'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 0;',
+    ]);
+
+    // a row inserted meanwhile: the virtualized body draws no cell here, the count tells the new rows
+    await act(async () =>
+      answer([
+        [
+          { id: 1, name: 'a' },
+          { id: 2, name: 'b' },
+        ],
+        FIELDS,
+      ])
+    );
+
+    expect(executeQuery.mock.calls.map(([query]) => query)).toEqual([
+      'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 0;',
+      'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 100;',
+    ]);
+    expect(container.textContent).toContain('3 rows');
+  });
+
+  test('asks nothing for rows it fetched a moment ago, as the ones its loader started', async () => {
+    await render();
+    act(() => unmount());
+    container.remove();
+    executeQuery.mockClear();
+
+    await render();
+
+    expect(executeQuery).not.toHaveBeenCalled();
+  });
 });
 
 describe('sorting', () => {
@@ -197,13 +294,15 @@ describe('sorting', () => {
     const name = header('name').querySelector('button');
     await click(name);
     await click(name);
+    ageTheRows();
     await click(name);
 
     expect(lastQuery()).toContain('ORDER BY `id` LIMIT 100 OFFSET 0');
   });
 
   test('a failed sort leaves the headers to pick another one', async () => {
-    await render();
+    // a query that failed has no rows, so no columns: the headers are the schema's
+    await render(undefined, '/', [column('id'), column('name')]);
 
     executeQuery.mockRejectedValueOnce(new Error('no ordering operator'));
     await click(header('name').querySelector('button'));
@@ -279,16 +378,6 @@ describe('while the rows are on their way', () => {
 
   test('the heads are the columns of the schema, in the order of the table', async () => {
     const answer = deferAnswer();
-    const column = (name: string): ColumnDetail => ({
-      table: 'items',
-      name,
-      nullable: false,
-      generated: false,
-      binary: false,
-      hasJsonType: false,
-      allowedValues: [],
-      multiValued: false,
-    });
 
     await render(undefined, '/', [
       column('id'),

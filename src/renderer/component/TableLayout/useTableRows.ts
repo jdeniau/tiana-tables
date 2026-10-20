@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
+import {
+  InfiniteData,
+  keepPreviousData,
+  useInfiniteQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type { ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import { useDialect } from '../../hooks/useDialect';
-import { TablePage, buildTableQuery } from './tableQuery';
-
-const DEFAULT_LIMIT = 100;
+import { TablePage } from './tableQuery';
+import { TableRowsPage, tableRowsQuery } from './tableRowsQuery';
 
 interface TableRows {
   /** the pages loaded so far, `null` until the first one arrives and again after an error */
@@ -13,83 +17,38 @@ interface TableRows {
   fields: null | ResultField[];
   /** the last fetch's error, cleared by the next one that succeeds */
   error: null | Error;
-  /** a first page is on its way: the table's, or that of a new order */
+  /** the rows of this query are not there yet: the table's first page, or that of a new order */
   loading: boolean;
   /** the next page is on its way */
   loadingMore: boolean;
   /** fetches the next page and appends it to `result` */
   loadMore: () => void;
-  /** stable: writes the value the server answered into the row already loaded */
+  /** writes the value the server answered into the row already loaded */
   updateValue: (rowIndex: number, columnName: string, value: unknown) => void;
 }
 
-/** the rows of a table, fetched one page at a time */
-export function useTableRows({
-  database,
-  tableName,
-  primaryKeys,
-  where,
-  sorting,
-}: Omit<TablePage, 'limit' | 'offset'>): TableRows {
+/** the rows of a table, fetched one page at a time and kept in the query cache */
+export function useTableRows(
+  connectionSlug: string,
+  page: Omit<TablePage, 'limit' | 'offset'>
+): TableRows {
   const dialect = useDialect();
-  const [result, setResult] = useState<null | ResultRow[]>(null);
-  const [fields, setFields] = useState<null | ResultField[]>(null);
-  const [error, setError] = useState<null | Error>(null);
-  const [currentOffset, setCurrentOffset] = useState<number>(0);
-  // the last first page answered: loading until it is the one the props ask for
-  const [answeredFirstPage, setAnsweredFirstPage] = useState<null | string>(
-    null
-  );
-  const [loadingMore, setLoadingMore] = useState(false);
+  const queryClient = useQueryClient();
+  const rowsQuery = tableRowsQuery(dialect, connectionSlug, page);
+  const {
+    data,
+    error,
+    isPending,
+    isPlaceholderData,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    ...rowsQuery,
+    // the previous order's rows, under the skeleton, keep its headers to click
+    placeholderData: keepPreviousData,
+  });
 
-  const queryAt = (offset: number) =>
-    buildTableQuery(dialect, {
-      database,
-      tableName,
-      primaryKeys,
-      where,
-      sorting,
-      limit: DEFAULT_LIMIT,
-      offset,
-    });
-
-  const firstPage = queryAt(0);
-
-  const fetchTableData = (offset: number) => {
-    const query = queryAt(offset);
-
-    window.sql
-      .executeQuery<ResultRow[]>(query)
-      .then(([result, fields]) => {
-        setError(null);
-        setCurrentOffset(offset);
-        setFields(fields.map((field) => ({ ...field, table: tableName })));
-        setResult((prev) =>
-          offset > 0 && prev ? prev.concat(result) : result
-        );
-      })
-      .catch((err) => {
-        setError(err);
-        setResult(null);
-      })
-      .finally(() => {
-        if (offset > 0) {
-          setLoadingMore(false);
-        } else {
-          setAnsweredFirstPage(query);
-        }
-      });
-  };
-
-  // a new query starts over from the first page; the next ones are fetched by "load more"
-  useEffect(() => {
-    fetchTableData(0);
-  }, [fetchTableData]);
-
-  const loadMore = () => {
-    setLoadingMore(true);
-    fetchTableData(currentOffset + DEFAULT_LIMIT);
-  };
+  const lastPage = data?.pages.at(-1);
 
   // patched in place, not re-fetched: the value is the server's (see `updateCell`),
   // as fresh as a reload, without losing the rows loaded nor the scroll
@@ -98,27 +57,54 @@ export function useTableRows({
     columnName: string,
     value: unknown
   ) => {
-    setResult((previous) => {
-      const row = previous?.[rowIndex];
-
-      if (!previous || !row) {
-        return previous;
-      }
-
-      const next = [...previous];
-      next[rowIndex] = { ...row, [columnName]: value };
-
-      return next;
-    });
+    queryClient.setQueryData(
+      rowsQuery.queryKey,
+      (previous) => previous && patchRow(previous, rowIndex, columnName, value)
+    );
   };
 
   return {
-    result,
-    fields,
+    // the cache keeps the pages of a failed fetch: they are not shown with its error
+    result: error ? null : (data?.pages.flatMap(([rows]) => rows) ?? null),
+    fields:
+      lastPage?.[1].map((field) => ({ ...field, table: page.tableName })) ??
+      null,
     error,
-    loading: answeredFirstPage !== firstPage,
-    loadingMore,
-    loadMore,
+    loading: isPending || isPlaceholderData,
+    loadingMore: isFetchingNextPage,
+    loadMore: () => void fetchNextPage(),
     updateValue,
   };
 }
+
+/** the pages with one row replaced, `rowIndex` counted across all of them */
+function patchRow(
+  data: InfiniteData<TableRowsPage>,
+  rowIndex: number,
+  columnName: string,
+  value: unknown
+): InfiniteData<TableRowsPage> {
+  let start = 0;
+
+  const pages = data.pages.map((page): TableRowsPage => {
+    const [rows, fields] = page;
+    const index = rowIndex - start;
+
+    start += rows.length;
+
+    const row = rows[index];
+
+    if (!row) {
+      return page;
+    }
+
+    const next = [...rows];
+    next[index] = { ...row, [columnName]: value };
+
+    return [next, fields];
+  });
+
+  return { ...data, pages };
+}
+
+export const testables = { patchRow };

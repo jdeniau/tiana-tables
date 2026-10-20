@@ -5,19 +5,24 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DatabaseEngine } from '../../sql/engine';
 import { RunMode } from '../../sql/runMode';
 import type { SqlError } from '../../sql/sqlError';
+import { createQueryClient } from '../queryClient';
 import { action } from './sql.$connectionSlug';
 
 function runAction(
   databaseName: string,
   raw: string,
-  { mode = RunMode.Current, caretOffset = 0 } = {}
+  {
+    mode = RunMode.Current,
+    caretOffset = 0,
+    queryClient = createQueryClient(),
+  } = {}
 ) {
   const formData = new FormData();
   formData.set('raw', raw);
   formData.set('mode', mode);
   formData.set('caretOffset', String(caretOffset));
 
-  return action({
+  return action(queryClient)({
     params: { connectionSlug: 'connectionSlug', databaseName },
     request: new Request('http://localhost', {
       method: 'POST',
@@ -140,6 +145,18 @@ describe('action', () => {
       runAction('shop', 'SELECT * FROM orders LIMIT 10')
     ).resolves.toEqual({
       outcomes: [expect.objectContaining({ hasLimit: true })],
+    });
+  });
+
+  test('keeps what the run answered for the next visit of the page', async () => {
+    const queryClient = createQueryClient();
+
+    await runAction('shop', 'SELECT 1', { queryClient });
+
+    expect(
+      queryClient.getQueryData(['connectionSlug', 'shop', 'sqlResult'])
+    ).toEqual({
+      outcomes: [expect.objectContaining({ sql: 'SELECT 1' })],
     });
   });
 

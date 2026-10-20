@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import pluginQuery from '@tanstack/eslint-plugin-query';
 import { defineConfig } from 'eslint/config';
 import { flatConfigs as importConfigs } from 'eslint-plugin-import-x';
 import react from 'eslint-plugin-react';
@@ -27,6 +28,7 @@ export default defineConfig(
   react.configs.flat['jsx-runtime'],
   reactHooks.configs.flat['recommended-latest'],
   storybookConfigs['flat/recommended'],
+  pluginQuery.configs['flat/recommended-strict'],
   {
     languageOptions: {
       globals: {
