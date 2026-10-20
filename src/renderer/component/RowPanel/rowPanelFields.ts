@@ -1,7 +1,6 @@
 import { keyColumnsFirst } from '../../../configuration/columnOrder';
 import type { ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
-import { isNullish } from '../../utils/isNullish';
 import cellValueToText from '../cellValueToText';
 
 /** One field of the row the side panel shows. */
@@ -38,19 +37,17 @@ export function rowPanelFields(
   );
 }
 
-/** The fields whose name or value holds `query`, whatever the case; the NULL ones left out on demand. */
+/** The fields whose name or value holds `query`, whatever the case. */
 export function filterRowPanelFields(
   fields: ReadonlyArray<RowPanelField>,
-  query: string,
-  hideNull: boolean
+  query: string
 ): Array<RowPanelField> {
   const needle = query.trim().toLowerCase();
 
   return fields.filter(
-    ({ field, value, text }) =>
-      !(hideNull && isNullish(value)) &&
-      (field.name.toLowerCase().includes(needle) ||
-        text.toLowerCase().includes(needle))
+    ({ field, text }) =>
+      field.name.toLowerCase().includes(needle) ||
+      text.toLowerCase().includes(needle)
   );
 }
 

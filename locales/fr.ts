@@ -201,7 +201,6 @@ const fr: Translation = {
   'table.rowPanel.fieldCount':
     '{shown, number} / {count, plural, one {# colonne} other {# colonnes}}',
   'table.rowPanel.filter': 'Colonne ou valeur…',
-  'table.rowPanel.hideNull': 'Masquer les colonnes à NULL',
   'table.rowPanel.hint': '↑ ↓ dans la grille changent de ligne · Échap ferme',
   'table.rowPanel.moreSelected': 'et {count, number} de plus',
   'table.rowPanel.noField': 'Aucune colonne ne correspond.',

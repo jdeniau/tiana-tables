@@ -198,7 +198,6 @@ export default {
   'table.rowPanel.fieldCount':
     '{shown, number} / {count, plural, one {# column} other {# columns}}',
   'table.rowPanel.filter': 'Column or value…',
-  'table.rowPanel.hideNull': 'Hide the columns holding NULL',
   'table.rowPanel.hint': '↑ ↓ in the grid change the row · Esc closes',
   'table.rowPanel.moreSelected': 'and {count, number} more',
   'table.rowPanel.noField': 'No column matches.',

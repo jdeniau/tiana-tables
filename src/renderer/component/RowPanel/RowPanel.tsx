@@ -132,15 +132,13 @@ function RowPanel<Row extends ResultRow>({
   const { t } = useTranslation();
   const dialect = useDialect();
   const [query, setQuery] = useState('');
-  const [hideNull, setHideNull] = useState(false);
   const [lastCopy, onCopied] = useLastCopy<string>();
   const selection = useSelector(selectionAtom);
 
   const row = rows[index];
   const shownId = rowIdOf(row, index, primaryKeys);
   const all = rowPanelFields(row, fields, primaryKeys, rowsAsArray);
-  const shown = filterRowPanelFields(all, query, hideNull);
-  const nullCount = all.filter(({ value }) => isNullish(value)).length;
+  const shown = filterRowPanelFields(all, query);
 
   const chips = rows.flatMap((one, rowIndex) => {
     const id = rowIdOf(one, rowIndex, primaryKeys);
@@ -229,15 +227,6 @@ function RowPanel<Row extends ResultRow>({
           aria-label={t('table.rowPanel.filter')}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <NullToggle
-          type="button"
-          aria-pressed={hideNull}
-          title={t('table.rowPanel.hideNull')}
-          onClick={() => setHideNull(!hideNull)}
-        >
-          <i>NULL</i>
-          <NullCount>{nullCount}</NullCount>
-        </NullToggle>
       </Tools>
 
       <RegionBody>
@@ -405,18 +394,6 @@ const Tools = styled.div`
   gap: ${space.sm};
   padding: 0 ${space.md} ${space.sm};
   border-bottom: 1px solid ${commentForeground};
-`;
-
-const NullToggle = styled(Chip)`
-  height: ${size.control};
-`;
-
-const NullCount = styled.span`
-  color: ${commentForeground};
-
-  ${NullToggle}[aria-pressed='true'] & {
-    color: inherit;
-  }
 `;
 
 const Field = styled.div`

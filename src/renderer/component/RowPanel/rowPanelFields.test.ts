@@ -62,8 +62,8 @@ describe('rowPanelFields', () => {
 
 describe('filterRowPanelFields', () => {
   const all = rowPanelFields(ROW, FIELDS, undefined, false);
-  const names = (query: string, hideNull = false) =>
-    filterRowPanelFields(all, query, hideNull).map(({ field }) => field.name);
+  const names = (query: string) =>
+    filterRowPanelFields(all, query).map(({ field }) => field.name);
 
   test('keeps the fields whose name holds the query, whatever the case', () => {
     expect(names(' DEL ')).toEqual(['deleted_at']);
@@ -71,11 +71,6 @@ describe('filterRowPanelFields', () => {
 
   test('keeps the fields whose value holds the query', () => {
     expect(names('tram')).toEqual(['title']);
-  });
-
-  test('leaves the NULL fields out on demand', () => {
-    expect(names('', true)).toEqual(['title', 'id', 'meta']);
-    expect(names('')).toEqual(['title', 'id', 'deleted_at', 'meta']);
   });
 });
 
