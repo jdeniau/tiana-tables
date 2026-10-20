@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { CaretDownFilled, CaretUpFilled } from '@ant-design/icons';
+import { CaretDownFilled, CaretUpFilled, EyeOutlined } from '@ant-design/icons';
 import { type Atom, createAtom, useSelector } from '@tanstack/react-store';
 import {
   columnOrderingFeature,
@@ -51,7 +51,6 @@ import Cell from './Cell';
 import CellContextMenu from './CellContextMenu';
 import CellDetailModal, { CellDetail } from './CellDetailModal';
 import { CellWriteProvider } from './CellWrite';
-import EyeIcon from './EyeIcon';
 import ForeignKeyLink from './ForeignKeyLink';
 import SkeletonBody, { skeletonStyle } from './SkeletonBody';
 import { fill } from './Style/fill';
@@ -754,7 +753,7 @@ function BodyRowInner<Row extends ResultRow>({
             title={translate('table.rowPanel.toggle', { shown })}
             onClick={() => onShowRow(row)}
           >
-            <EyeIcon />
+            <EyeOutlined />
           </button>
         </td>
       )}
