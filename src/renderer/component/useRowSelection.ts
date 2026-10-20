@@ -1,4 +1,5 @@
 import { KeyboardEvent, useEffect, useRef } from 'react';
+import type { Atom } from '@tanstack/react-store';
 import type { Table, Row as TanstackRow } from '@tanstack/react-table';
 import type { ResultRow } from '../../sql/types';
 import { registerSelectAllRows } from '../selectAll';
@@ -8,6 +9,7 @@ import {
   SelectionModifiers,
   nextRowSelection,
   nextRowSelectionByArrow,
+  nextShownRow,
 } from './rowSelectionGesture';
 
 /** what a click on a row selects, read as a file manager reads its modifiers */
@@ -16,11 +18,18 @@ export type SelectRow<Row extends ResultRow> = (
   modifiers: SelectionModifiers
 ) => void;
 
+/** what the eye of a row does: show it in the side panel, or close the panel on it */
+export type ShowRow<Row extends ResultRow> = (
+  row: TanstackRow<GridFeatures, Row>
+) => void;
+
 interface RowSelection<Row extends ResultRow> {
   /** stable, so that the `memo` of `BodyRow` still holds; absent on a grid whose rows cannot be selected */
   selectRow: SelectRow<Row> | undefined;
   /** Escape, ↑ and ↓ on the focused grid; absent with `selectRow` */
   handleKeyDown: ((event: KeyboardEvent<HTMLDivElement>) => void) | undefined;
+  /** stable as `selectRow`; absent on a grid with no side panel */
+  showRow: ShowRow<Row> | undefined;
 }
 
 const ARROW_STEPS: Partial<Record<string, RowStep>> = {
@@ -56,11 +65,14 @@ export function useRowSelection<Row extends ResultRow>(
     enabled,
     scrollElement,
     rowHeight,
+    shownRowAtom,
   }: {
     enabled: boolean;
     scrollElement: HTMLElement | null;
     /** in pixels, the same for every row */
     rowHeight: number;
+    /** the row the side panel shows, `null` while it is closed */
+    shownRowAtom: Atom<string | null> | undefined;
   }
 ): RowSelection<Row> {
   // the row the next Shift+click extends from
@@ -78,6 +90,35 @@ export function useRowSelection<Row extends ResultRow>(
 
     return () => sorts.unsubscribe();
   }, [table]);
+
+  // the open panel follows the selection, and closes with it
+  useEffect(() => {
+    if (!shownRowAtom) {
+      return undefined;
+    }
+
+    const selections = table.atoms.rowSelection.subscribe((selection) => {
+      shownRowAtom.set(
+        nextShownRow(
+          shownRowAtom.get(),
+          leadRef.current,
+          selection,
+          table.getRowModel().rows.map(({ id }) => id)
+        )
+      );
+    });
+    // a row picked in the panel is the one the next arrow moves from
+    const shownRows = shownRowAtom.subscribe((id) => {
+      if (id !== null && table.atoms.rowSelection.get()[id]) {
+        leadRef.current = id;
+      }
+    });
+
+    return () => {
+      selections.unsubscribe();
+      shownRows.unsubscribe();
+    };
+  }, [table, shownRowAtom]);
 
   const { rowsById } = table.getCoreRowModel();
 
@@ -167,7 +208,35 @@ export function useRowSelection<Row extends ResultRow>(
     }
   };
 
+  const showRow: ShowRow<Row> = (row) => {
+    if (!shownRowAtom) {
+      return;
+    }
+
+    if (shownRowAtom.get() === row.id) {
+      shownRowAtom.set(null);
+    } else {
+      const core = row.table;
+
+      // a row of the selection is shown as it stands, any other one is selected alone
+      if (!core.atoms.rowSelection.get()[row.id]) {
+        anchorRef.current = row.id;
+        leadRef.current = row.id;
+        core.setRowSelection({ [row.id]: true });
+      }
+
+      shownRowAtom.set(row.id);
+    }
+
+    // the arrows then move the row shown
+    scrollElement?.focus({ preventScroll: true });
+  };
+
   return enabled
-    ? { selectRow, handleKeyDown }
-    : { selectRow: undefined, handleKeyDown: undefined };
+    ? {
+        selectRow,
+        handleKeyDown,
+        showRow: shownRowAtom ? showRow : undefined,
+      }
+    : { selectRow: undefined, handleKeyDown: undefined, showRow: undefined };
 }

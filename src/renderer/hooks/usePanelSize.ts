@@ -14,6 +14,12 @@ type SplitterPanelProps = {
   max: string;
 };
 
+/** Where the remembered panel sits among the panels of its `Splitter`. */
+export enum PanelPosition {
+  First = 'first',
+  Last = 'last',
+}
+
 type PanelSize = {
   /** to spread on the `Splitter.Panel` whose size is remembered */
   panelProps: SplitterPanelProps;
@@ -34,15 +40,17 @@ type PanelSize = {
  * seeding a panel at mount, which is why the stored value is validated too.
  *
  * The panel stays uncontrolled while dragging: antd owns the size until the
- * drag ends, so moving the mouse does not re-render the whole tree. The
- * tracked panel is expected to be the **first** one of its `Splitter`.
+ * drag ends, so moving the mouse does not re-render the whole tree.
  */
-export function usePanelSize(panel: PANEL): PanelSize {
+export function usePanelSize(
+  panel: PANEL,
+  position: PanelPosition = PanelPosition.First
+): PanelSize {
   const { configuration, setPanelSize } = useConfiguration();
   const storedSize = parsePanelSize(configuration.panelSizes?.[panel]);
 
   const onResizeEnd = (sizes: Array<number>) => {
-    const size = sizes[0];
+    const size = position === PanelPosition.Last ? sizes.at(-1) : sizes[0];
     // the panel sizes add up to the splitter itself, so their sum is the
     // container to compare against
     const total = sizes.reduce((sum, current) => sum + current, 0);

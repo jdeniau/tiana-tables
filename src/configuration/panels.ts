@@ -11,6 +11,8 @@ export enum PANEL {
   TABLE_FILTERS = 'tableFilters',
   /** query editor above the results, on the SQL page */
   SQL_EDITOR = 'sqlEditor',
+  /** the fields of one row, beside a table's rows and a query's result alike */
+  ROW_DETAIL = 'rowDetail',
 }
 
 /** pixels, used on the first run only — until the panel has been dragged once */
@@ -18,6 +20,7 @@ export const DEFAULT_PANEL_SIZES: Record<PANEL, number> = {
   [PANEL.TABLE_LIST]: 200,
   [PANEL.TABLE_FILTERS]: 90,
   [PANEL.SQL_EDITOR]: 320,
+  [PANEL.ROW_DETAIL]: 360,
 };
 
 /** pixels; antd turns them into a ratio of the current container */
@@ -25,6 +28,7 @@ export const MIN_PANEL_SIZES: Record<PANEL, number> = {
   [PANEL.TABLE_LIST]: 120,
   [PANEL.TABLE_FILTERS]: 60,
   [PANEL.SQL_EDITOR]: 80,
+  [PANEL.ROW_DETAIL]: 280,
 };
 
 /**

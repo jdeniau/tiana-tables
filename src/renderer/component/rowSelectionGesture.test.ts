@@ -3,6 +3,7 @@ import {
   RowStep,
   nextRowSelection,
   nextRowSelectionByArrow,
+  nextShownRow,
 } from './rowSelectionGesture';
 
 const ROW_IDS = ['a', 'b', 'c', 'd', 'e'];
@@ -146,5 +147,27 @@ describe('nextRowSelectionByArrow', () => {
 
   test('moves nowhere in a grid with no row', () => {
     expect(nextRowSelectionByArrow(null, null, [], DOWN)).toBeNull();
+  });
+});
+
+describe('nextShownRow', () => {
+  test('a closed panel stays closed', () => {
+    expect(nextShownRow(null, 'b', { b: true }, ROW_IDS)).toBeNull();
+  });
+
+  test('the open panel follows the lead', () => {
+    expect(nextShownRow('a', 'c', { a: true, c: true }, ROW_IDS)).toBe('c');
+  });
+
+  test('a row still selected stays shown when the lead is gone', () => {
+    expect(nextShownRow('d', null, { b: true, d: true }, ROW_IDS)).toBe('d');
+  });
+
+  test('a row deselected gives way to the first selected one, in the order of the grid', () => {
+    expect(nextShownRow('a', null, { d: true, b: true }, ROW_IDS)).toBe('b');
+  });
+
+  test('closes once nothing is selected', () => {
+    expect(nextShownRow('a', null, {}, ROW_IDS)).toBeNull();
   });
 });

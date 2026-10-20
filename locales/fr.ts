@@ -193,6 +193,25 @@ const fr: Translation = {
     'Copier {count, plural, one {# ligne} other {# lignes}} en',
   'table.filters.history': 'Filtres déjà utilisés',
   'table.filters.title': 'Filtres',
+  'table.rowPanel.close': 'Fermer le panneau de la ligne',
+  'table.rowPanel.collapse': 'Replier',
+  'table.rowPanel.copied': '{name} copié',
+  'table.rowPanel.expand':
+    'Tout afficher · {length, plural, one {# caractère} other {# caractères}}',
+  'table.rowPanel.fieldCount':
+    '{shown, number} / {count, plural, one {# colonne} other {# colonnes}}',
+  'table.rowPanel.filter': 'Colonne ou valeur…',
+  'table.rowPanel.hideNull': 'Masquer les colonnes à NULL',
+  'table.rowPanel.hint': '↑ ↓ dans la grille changent de ligne · Échap ferme',
+  'table.rowPanel.moreSelected': 'et {count, number} de plus',
+  'table.rowPanel.noField': 'Aucune colonne ne correspond.',
+  'table.rowPanel.position': '{position, number} / {count, number}',
+  'table.rowPanel.row': 'ligne {position, number}',
+  'table.rowPanel.selected':
+    '{count, plural, one {# ligne sélectionnée} other {# lignes sélectionnées}}',
+  'table.rowPanel.title': 'Ligne',
+  'table.rowPanel.toggle':
+    '{shown, select, true {Fermer le panneau de la ligne} other {Voir cette ligne à côté de la grille}}',
   'table.rows.count': '{count, plural, one {# ligne} other {# lignes}}',
   'table.rows.copied':
     '{count, plural, one {# ligne copiée} other {# lignes copiées}} en {format, select, tsv {TSV} csv {CSV} markdown {Markdown} json {JSON} sqlInsert {INSERT SQL} other {{format}}}',

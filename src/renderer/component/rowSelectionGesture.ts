@@ -120,3 +120,28 @@ export function nextRowSelectionByArrow(
     leadId: targetId,
   };
 }
+
+/**
+ * The row the side panel shows once the selection changed, `null` closing it:
+ * the lead, else the row it showed while still selected, else the first one selected.
+ */
+export function nextShownRow(
+  shownId: string | null,
+  leadId: string | null,
+  selection: RowSelectionState,
+  rowIds: ReadonlyArray<string>
+): string | null {
+  if (shownId === null) {
+    return null;
+  }
+
+  if (leadId !== null && selection[leadId]) {
+    return leadId;
+  }
+
+  if (selection[shownId]) {
+    return shownId;
+  }
+
+  return rowIds.find((id) => selection[id]) ?? null;
+}
