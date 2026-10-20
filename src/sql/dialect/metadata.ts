@@ -77,6 +77,7 @@ export interface DialectMetadata {
     tableName: string
   ): ReadQuery<string[]>;
 
+  /** Every column of the database, each table's in the order it declares them. */
   listColumns(databaseName: string): ReadQuery<ColumnDetail[]>;
 
   /** Every column of one table, in the order the table declares them. */

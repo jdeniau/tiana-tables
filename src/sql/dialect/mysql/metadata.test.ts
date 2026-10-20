@@ -231,6 +231,13 @@ describe('the statements each question sends', () => {
 });
 
 describe('listColumns', () => {
+  // MySQL 8.4 answers them by name otherwise
+  test('the columns of a table come as it declares them', () => {
+    expect(mysqlMetadata.listColumns('db').sql).toMatch(
+      /ORDER BY TABLE_NAME, ORDINAL_POSITION/
+    );
+  });
+
   test('an ENUM carries the values it accepts, in order', () => {
     // what the select editor is built from, published nowhere but in the declaration
     expect(detail('genre')).toEqual({
