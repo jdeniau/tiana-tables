@@ -47,7 +47,10 @@ const connections = {
   },
 };
 
-async function render(element: ReactElement): Promise<HTMLElement> {
+async function render(
+  element: ReactElement,
+  saved: Record<string, object> = connections
+): Promise<HTMLElement> {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -58,7 +61,7 @@ async function render(element: ReactElement): Promise<HTMLElement> {
     root.render(
       <ThemeProvider theme={DEFAULT_THEME}>
         <ConfigurationContext
-          value={{ configuration: { connections } } as never}
+          value={{ configuration: { connections: saved } } as never}
         >
           <ConnectionContext
             value={
@@ -111,5 +114,41 @@ describe('the engine of a connection', () => {
     );
 
     expect(tab?.getAttribute('title')).toBe('pg (dev) · PostgreSQL');
+  });
+});
+
+describe('the groups of the connections', () => {
+  test('list the ungrouped connections first, then each group by name', async () => {
+    const container = await render(<ConnectionPage />, {
+      'b-prod': {
+        ...connections['docker-dev'],
+        name: 'b prod',
+        slug: 'b-prod',
+        group: 'Client B',
+      },
+      'docker-dev': connections['docker-dev'],
+      'a-prod': {
+        ...connections['pg-dev'],
+        name: 'a prod',
+        slug: 'a-prod',
+        group: 'Client A',
+      },
+      'pg-dev': connections['pg-dev'],
+    });
+    // the title of each group, and the name of each row, from top to bottom
+    const lines = [
+      ...container.querySelectorAll(
+        'div[role="presentation"][title], a[href^="/connections/"] > span:first-child'
+      ),
+    ].map((element) => element.textContent);
+
+    expect(lines).toEqual([
+      'docker (dev)',
+      'pg (dev)',
+      'Client A',
+      'a prod',
+      'Client B',
+      'b prod',
+    ]);
   });
 });

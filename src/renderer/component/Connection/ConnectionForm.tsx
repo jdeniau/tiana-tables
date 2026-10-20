@@ -1,4 +1,12 @@
-import { Button, Flex, Form, Input, InputNumber, Segmented } from 'antd';
+import {
+  AutoComplete,
+  Button,
+  Flex,
+  Form,
+  Input,
+  InputNumber,
+  Segmented,
+} from 'antd';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router';
 import type { EncryptedConnectionObject } from '../../../configuration/type';
@@ -17,6 +25,7 @@ import {
   RegionName,
 } from '../Style/Region';
 import ConnectionColorField from './ConnectionColorField';
+import { groupNames } from './connectionGroups';
 
 type Props = { connection?: EncryptedConnectionObject };
 
@@ -60,6 +69,7 @@ function ConnectionForm({ connection }: Props) {
     database: connection?.database ?? DEFAULT_POSTGRES_DATABASE,
     ssl: connection?.ssl ?? SslMode.Disable,
     color: connection?.color,
+    group: connection?.group,
     // the stored password is a ciphertext the renderer never sees in clear: left empty, it is kept as it is
     password: '',
   };
@@ -99,7 +109,10 @@ function ConnectionForm({ connection }: Props) {
     connection !== undefined ||
     Object.keys(configuration.connections).length > 0;
 
-  const handleSubmit = (formData: FormValues): void => {
+  const handleSubmit = (values: FormValues): void => {
+    // a blank group is no group
+    const formData = { ...values, group: values.group?.trim() || undefined };
+
     if (connection) {
       // edit connection
       editConnection(connection.slug, formData);
@@ -152,7 +165,7 @@ function ConnectionForm({ connection }: Props) {
               />
             </Form.Item>
 
-            {/* what the connection is called, and how it is marked in the frame */}
+            {/* what the connection is called, how it is marked in the frame, and where it is listed */}
             <Flex vertical gap={space.sm}>
               <Form.Item
                 name="name"
@@ -169,6 +182,20 @@ function ConnectionForm({ connection }: Props) {
                 style={ITEM}
               >
                 <ConnectionColorField />
+              </Form.Item>
+
+              <Form.Item
+                name="group"
+                label={t('connection.form.group.label')}
+                style={ITEM}
+              >
+                <AutoComplete
+                  allowClear
+                  placeholder={t('connection.form.group.placeholder')}
+                  options={groupNames(
+                    Object.values(configuration.connections)
+                  ).map((value) => ({ value }))}
+                />
               </Form.Item>
             </Flex>
 

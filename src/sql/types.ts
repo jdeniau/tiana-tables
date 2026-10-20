@@ -47,6 +47,8 @@ export type ConnectionObject = {
   /** absent on a connection saved before the field existed, which stays in the clear */
   ssl?: SslMode;
   color?: ConnectionColor;
+  /** absent: the connection is listed before every group */
+  group?: string;
 };
 
 export type ConnectionObjectWithoutSlug = Omit<ConnectionObject, 'slug'>;

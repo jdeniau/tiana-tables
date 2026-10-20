@@ -94,6 +94,8 @@ const fr: Translation = {
   'connection.form.color.none': 'Aucune couleur',
   'connection.form.color.palette': 'Couleur {hex} du thème',
   'connection.form.database.label': 'Base de données',
+  'connection.form.group.label': 'Groupe',
+  'connection.form.group.placeholder': 'Aucun groupe',
   'connection.form.host.label': 'Hôte',
   'connection.form.name.label': 'Nom',
   'connection.form.password.label': 'Mot de passe',

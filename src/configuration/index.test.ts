@@ -1120,6 +1120,30 @@ describe('edit', () => {
     ]);
     expect(configuration.connections['docker-dev-2'].port).toBe(13308);
   });
+
+  test('a group is saved, and an edit without one removes it from the file', async () => {
+    mockExistingConfig();
+    const local = {
+      name: 'local',
+      engine: DatabaseEngine.MySQL,
+      host: 'localhost',
+      user: 'root',
+      port: 3306,
+      password: '',
+    };
+    const lastWrittenLocal = () =>
+      (
+        JSON.parse(
+          String(vi.mocked(mockWriteFile).mock.lastCall?.[1])
+        ) as Configuration
+      ).connections.local;
+
+    await editConnection('local', { ...local, group: 'Client A' });
+    expect(lastWrittenLocal().group).toBe('Client A');
+
+    await editConnection('local', { ...local, group: undefined });
+    expect(lastWrittenLocal()).not.toHaveProperty('group');
+  });
 });
 
 describe('set panel size', () => {

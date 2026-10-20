@@ -34,7 +34,7 @@ function type(input: HTMLInputElement, text: string): void {
 }
 
 /** the form mounted as the new-connection page does, with the add spied on */
-async function renderForm() {
+async function renderForm(connections: Record<string, object> = {}) {
   const addConnectionToConfig = vi.fn();
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -48,7 +48,7 @@ async function renderForm() {
           <ConfigurationContext
             value={
               {
-                configuration: { connections: {} },
+                configuration: { connections },
                 addConnectionToConfig,
               } as never
             }
@@ -196,5 +196,42 @@ describe('ConnectionForm', () => {
     });
 
     expect(await submit()).toMatchObject({ ssl: 'require' });
+  });
+
+  test('submits the group typed, without the spaces around it', async () => {
+    const { field, submit } = await renderForm();
+
+    await act(async () => {
+      type(field('name')!, 'docker (dev)');
+      type(field('group')!, '  Client A ');
+    });
+
+    expect(await submit()).toMatchObject({ group: 'Client A' });
+  });
+
+  test('a blank group is no group', async () => {
+    const { field, submit } = await renderForm();
+
+    await act(async () => {
+      type(field('name')!, 'docker (dev)');
+      type(field('group')!, '  ');
+    });
+
+    expect((await submit()).group).toBeUndefined();
+  });
+
+  test('suggests the groups already in use', async () => {
+    const { field } = await renderForm({
+      prod: { name: 'prod', slug: 'prod', group: 'Client A' },
+      other: { name: 'other', slug: 'other', group: 'Client B' },
+    });
+
+    await act(async () => {
+      type(field('group')!, 'client a');
+    });
+
+    const options = [...document.querySelectorAll('[role="option"]')];
+
+    expect(options.map((option) => option.textContent)).toEqual(['Client A']);
   });
 });

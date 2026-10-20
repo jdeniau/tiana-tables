@@ -19,6 +19,9 @@ import {
   RegionName,
 } from '../Style/Region';
 import EngineIcon from './EngineIcon';
+import { groupConnections } from './connectionGroups';
+
+type MenuItem = Required<MenuProps>['items'][number];
 
 /**
  * The label fills the row, as the tables of the sidebar do: the name, and
@@ -82,7 +85,9 @@ function ConnectionPage(): JSX.Element {
   }
 
   // the same Menu as the sidebar's tables, so the rows are the same rows
-  const items: MenuProps['items'] = connections.map((connection) => ({
+  const connectionItem = (
+    connection: EncryptedConnectionObject
+  ): MenuItem => ({
     key: connection.slug,
     label: (
       <Open
@@ -118,7 +123,18 @@ function ConnectionPage(): JSX.Element {
         to={`/connect/edit/${connection.slug}`}
       />
     ),
-  }));
+  });
+
+  const { ungrouped, groups } = groupConnections(connections);
+  const items: MenuItem[] = [
+    ...ungrouped.map(connectionItem),
+    ...groups.map(({ name, connections: members }): MenuItem => ({
+      type: 'group',
+      key: `group:${name}`,
+      label: name,
+      children: members.map(connectionItem),
+    })),
+  ];
 
   return (
     <FramedRegion>

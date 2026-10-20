@@ -47,15 +47,19 @@ const RawSqlEditor = lazy(() =>
 );
 
 // const DEFAULT_VALUE = `SELECT *  FROM employees e WHERE e.gender = 'F' LIMIT 10;`;
-function useSqlFileStorage(): [string | null, (value: string) => void] {
+function useSqlFileStorage(
+  connectionSlug: string
+): [string | null, (value: string) => void] {
   const [sqlQuery, setSqlQuery] = useState<string | null>(null);
 
   useEffect(() => {
-    window.sqlFileStorage.loadLatest().then((v) => setSqlQuery(v ?? ''));
-  }, []);
+    window.sqlFileStorage
+      .loadLatest(connectionSlug)
+      .then((v) => setSqlQuery(v ?? ''));
+  }, [connectionSlug]);
 
   const saveValue = (value: string) => {
-    window.sqlFileStorage.saveLatest(value);
+    window.sqlFileStorage.saveLatest(connectionSlug, value);
   };
 
   return [sqlQuery, saveValue];
@@ -167,7 +171,14 @@ async function runEditor(
   return { outcomes };
 }
 
+/** a page per connection: the form of another one starts from its own query */
 export default function SqlPage() {
+  const { connectionSlug } = useParams();
+
+  return <ConnectionSqlPage key={connectionSlug} />;
+}
+
+function ConnectionSqlPage() {
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const { connectionSlug, databaseName } = useParams();
@@ -177,7 +188,7 @@ export default function SqlPage() {
 
   const fetcher = useFetcher<SqlActionReturnTypes>();
   const { data } = useQuery(sqlResultQuery(connectionSlug, databaseName));
-  const [sqlQuery, saveSqlQuery] = useSqlFileStorage();
+  const [sqlQuery, saveSqlQuery] = useSqlFileStorage(connectionSlug);
   const { panelProps, onResizeEnd } = usePanelSize(PANEL.SQL_EDITOR);
   const editorRef = useRef<RawSqlEditorHandle>(null);
   const { engine } = useDialect();

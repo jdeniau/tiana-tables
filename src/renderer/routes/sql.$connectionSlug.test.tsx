@@ -1,12 +1,39 @@
 /**
  * @vitest-environment happy-dom
  */
+import { act } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { createRoot } from 'react-dom/client';
+import { RouterProvider, createMemoryRouter } from 'react-router-dom';
+import { ThemeProvider } from 'styled-components';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { DEFAULT_THEME } from '../../configuration/themes';
 import { DatabaseEngine } from '../../sql/engine';
 import { RunMode } from '../../sql/runMode';
 import type { SqlError } from '../../sql/sqlError';
 import { createQueryClient } from '../queryClient';
-import { action } from './sql.$connectionSlug';
+import SqlPage, { action } from './sql.$connectionSlug';
+
+// the page alone: Monaco, the result grid and the contexts they read stay out
+vi.mock('../component/MonacoEditor/RawSqlEditor', () => ({
+  RawSqlEditor: ({ defaultValue }: { defaultValue?: string }) => (
+    <output>{defaultValue}</output>
+  ),
+}));
+vi.mock('../component/Query/RawSqlResult/RowDataPacketResult', () => ({
+  default: () => null,
+}));
+vi.mock('../hooks/usePanelSize', () => ({
+  usePanelSize: () => ({ panelProps: {}, onResizeEnd: () => {} }),
+}));
+vi.mock('../hooks/useDialect', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../hooks/useDialect')>()),
+  useDialect: () => ({ engine: DatabaseEngine.MySQL }),
+}));
+
+(
+  globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
 
 function runAction(
   databaseName: string,
@@ -166,5 +193,66 @@ describe('action', () => {
     );
 
     expect(window.sql.executeQuery).not.toHaveBeenCalled();
+  });
+});
+
+describe('the page', () => {
+  const latest: Record<string, string> = {
+    'client-a': 'SELECT 1 AS client_a',
+    'client-b': 'SELECT 2 AS client_b',
+  };
+
+  beforeEach(() => {
+    window.sqlFileStorage = {
+      loadLatest: vi.fn((slug: string) =>
+        Promise.resolve(latest[slug] ?? null)
+      ),
+      saveLatest: vi.fn(() => Promise.resolve()),
+    };
+  });
+
+  afterEach(() => {
+    // @ts-expect-error reset data here, will be re-set in `beforeEach`
+    window.sqlFileStorage = undefined;
+  });
+
+  test('going straight from the SQL page of a connection to that of another shows the query of the other', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/connections/:connectionSlug/:databaseName/sql',
+          Component: SqlPage,
+          // a navigation that resolves later, as in the app
+          loader: () => null,
+        },
+      ],
+      { initialEntries: ['/connections/client-a/shop/sql'] }
+    );
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <ThemeProvider theme={DEFAULT_THEME}>
+          <QueryClientProvider client={createQueryClient()}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </ThemeProvider>
+      );
+    });
+
+    expect(container.querySelector('output')?.textContent).toBe(
+      'SELECT 1 AS client_a'
+    );
+
+    await act(() => router.navigate('/connections/client-b/shop/sql'));
+
+    expect(container.querySelector('output')?.textContent).toBe(
+      'SELECT 2 AS client_b'
+    );
+
+    act(() => root.unmount());
+    container.remove();
   });
 });

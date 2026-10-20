@@ -92,6 +92,8 @@ export default {
   'connection.form.color.none': 'No colour',
   'connection.form.color.palette': 'Theme colour {hex}',
   'connection.form.database.label': 'Database',
+  'connection.form.group.label': 'Group',
+  'connection.form.group.placeholder': 'No group',
   'connection.form.host.label': 'Host',
   'connection.form.name.label': 'Name',
   'connection.form.password.label': 'Password',
