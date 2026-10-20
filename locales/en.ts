@@ -190,23 +190,23 @@ export default {
   'table.copy.rowsAs': 'Copy {count, plural, one {# row} other {# rows}} as',
   'table.filters.history': 'Filters used before',
   'table.filters.title': 'Filters',
-  'table.rowPanel.close': 'Close the row panel',
-  'table.rowPanel.collapse': 'Collapse',
-  'table.rowPanel.copied': '{name} copied',
-  'table.rowPanel.expand':
+  'table.rowDetail.close': 'Close the row panel',
+  'table.rowDetail.collapse': 'Collapse',
+  'table.rowDetail.copied': '{name} copied',
+  'table.rowDetail.expand':
     'Show all · {length, plural, one {# character} other {# characters}}',
-  'table.rowPanel.fieldCount':
+  'table.rowDetail.fieldCount':
     '{shown, number} / {count, plural, one {# column} other {# columns}}',
-  'table.rowPanel.filter': 'Column or value…',
-  'table.rowPanel.hint': '↑ ↓ in the grid change the row · Esc closes',
-  'table.rowPanel.moreSelected': 'and {count, number} more',
-  'table.rowPanel.noField': 'No column matches.',
-  'table.rowPanel.position': '{position, number} / {count, number}',
-  'table.rowPanel.row': 'row {position, number}',
-  'table.rowPanel.selected':
+  'table.rowDetail.filter': 'Column or value…',
+  'table.rowDetail.hint': '↑ ↓ in the grid change the row · Esc closes',
+  'table.rowDetail.moreSelected': 'and {count, number} more',
+  'table.rowDetail.noField': 'No column matches.',
+  'table.rowDetail.position': '{position, number} / {count, number}',
+  'table.rowDetail.row': 'row {position, number}',
+  'table.rowDetail.selected':
     '{count, plural, one {# selected row} other {# selected rows}}',
-  'table.rowPanel.title': 'Row',
-  'table.rowPanel.toggle':
+  'table.rowDetail.title': 'Row',
+  'table.rowDetail.toggle':
     '{shown, select, true {Close the row panel} other {Show this row beside the grid}}',
   'table.rows.count': '{count, plural, one {# row} other {# rows}}',
   'table.rows.copied':

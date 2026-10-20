@@ -11,7 +11,7 @@ import { space } from '../../../theme';
 import ChartPanel from '../../Chart/ChartPanel';
 import { chartUnavailableReason } from '../../Chart/chartConfig';
 import DateDisplaySwitch from '../../DateDisplaySwitch';
-import { WithRowPanel } from '../../RowPanel/RowPanel';
+import { WithRowDetailPanel } from '../../RowDetailPanel/RowDetailPanel';
 import {
   Centered,
   Region,
@@ -327,7 +327,7 @@ export default function RawSqlResult({
 
   // always the same tree, or a switch of view or statement would remount every grid
   return (
-    <WithRowPanel
+    <WithRowDetailPanel
       rows={(!submitting && shownView === View.Data && rows) || NO_ROWS}
       fields={outcome?.result?.[1] ?? []}
       rowsAsArray={rowsAsArray}
@@ -390,6 +390,6 @@ export default function RawSqlResult({
 
         <RegionBody>{body}</RegionBody>
       </Region>
-    </WithRowPanel>
+    </WithRowDetailPanel>
   );
 }

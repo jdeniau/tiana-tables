@@ -20,7 +20,7 @@ import { usePanelSize } from '../../hooks/usePanelSize';
 import DateDisplaySwitch from '../DateDisplaySwitch';
 import SqlErrorComponent from '../Query/SqlErrorComponent';
 import WhereFilter from '../Query/WhereFilter';
-import { WithRowPanel } from '../RowPanel/RowPanel';
+import { WithRowDetailPanel } from '../RowDetailPanel/RowDetailPanel';
 import {
   Region,
   RegionBody,
@@ -154,7 +154,7 @@ export function TableLayout({
       </Splitter.Panel>
 
       <Splitter.Panel>
-        <WithRowPanel
+        <WithRowDetailPanel
           rows={result ?? []}
           fields={orderedFields}
           primaryKeys={primaryKeys}
@@ -230,7 +230,7 @@ export function TableLayout({
               </RegionFoot>
             )}
           </Region>
-        </WithRowPanel>
+        </WithRowDetailPanel>
       </Splitter.Panel>
     </Splitter>
   );

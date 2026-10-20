@@ -750,7 +750,7 @@ function BodyRowInner<Row extends ResultRow>({
             type="button"
             className="tg-eye-button"
             aria-pressed={shown}
-            title={translate('table.rowPanel.toggle', { shown })}
+            title={translate('table.rowDetail.toggle', { shown })}
             onClick={() => onShowRow(row)}
           >
             <EyeOutlined />

@@ -193,23 +193,23 @@ const fr: Translation = {
     'Copier {count, plural, one {# ligne} other {# lignes}} en',
   'table.filters.history': 'Filtres déjà utilisés',
   'table.filters.title': 'Filtres',
-  'table.rowPanel.close': 'Fermer le panneau de la ligne',
-  'table.rowPanel.collapse': 'Replier',
-  'table.rowPanel.copied': '{name} copié',
-  'table.rowPanel.expand':
+  'table.rowDetail.close': 'Fermer le panneau de la ligne',
+  'table.rowDetail.collapse': 'Replier',
+  'table.rowDetail.copied': '{name} copié',
+  'table.rowDetail.expand':
     'Tout afficher · {length, plural, one {# caractère} other {# caractères}}',
-  'table.rowPanel.fieldCount':
+  'table.rowDetail.fieldCount':
     '{shown, number} / {count, plural, one {# colonne} other {# colonnes}}',
-  'table.rowPanel.filter': 'Colonne ou valeur…',
-  'table.rowPanel.hint': '↑ ↓ dans la grille changent de ligne · Échap ferme',
-  'table.rowPanel.moreSelected': 'et {count, number} de plus',
-  'table.rowPanel.noField': 'Aucune colonne ne correspond.',
-  'table.rowPanel.position': '{position, number} / {count, number}',
-  'table.rowPanel.row': 'ligne {position, number}',
-  'table.rowPanel.selected':
+  'table.rowDetail.filter': 'Colonne ou valeur…',
+  'table.rowDetail.hint': '↑ ↓ dans la grille changent de ligne · Échap ferme',
+  'table.rowDetail.moreSelected': 'et {count, number} de plus',
+  'table.rowDetail.noField': 'Aucune colonne ne correspond.',
+  'table.rowDetail.position': '{position, number} / {count, number}',
+  'table.rowDetail.row': 'ligne {position, number}',
+  'table.rowDetail.selected':
     '{count, plural, one {# ligne sélectionnée} other {# lignes sélectionnées}}',
-  'table.rowPanel.title': 'Ligne',
-  'table.rowPanel.toggle':
+  'table.rowDetail.title': 'Ligne',
+  'table.rowDetail.toggle':
     '{shown, select, true {Fermer le panneau de la ligne} other {Voir cette ligne à côté de la grille}}',
   'table.rows.count': '{count, plural, one {# ligne} other {# lignes}}',
   'table.rows.copied':

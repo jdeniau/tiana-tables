@@ -2,10 +2,10 @@ import { describe, expect, test } from 'vitest';
 import { FieldKind, type ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import {
-  filterRowPanelFields,
+  filterRowDetailFields,
+  rowDetailFields,
   rowKeyText,
-  rowPanelFields,
-} from './rowPanelFields';
+} from './rowDetailFields';
 
 const field = (name: string, kind: FieldKind): ResultField => ({
   name,
@@ -27,10 +27,10 @@ const ROW = {
   meta: '{"a":1}',
 };
 
-describe('rowPanelFields', () => {
+describe('rowDetailFields', () => {
   test('leads with the key, and keeps each field at its position in the result', () => {
     expect(
-      rowPanelFields(ROW, FIELDS, ['id'], false).map(
+      rowDetailFields(ROW, FIELDS, ['id'], false).map(
         ({ field, fieldIndex }) => [field.name, fieldIndex]
       )
     ).toEqual([
@@ -49,21 +49,21 @@ describe('rowPanelFields', () => {
     const row = [1, 2] as unknown as ResultRow;
 
     expect(
-      rowPanelFields(row, fields, undefined, true).map(({ value }) => value)
+      rowDetailFields(row, fields, undefined, true).map(({ value }) => value)
     ).toEqual([1, 2]);
   });
 
   test('gives the text the detail modal shows', () => {
     expect(
-      rowPanelFields(ROW, FIELDS, undefined, false).map(({ text }) => text)
+      rowDetailFields(ROW, FIELDS, undefined, false).map(({ text }) => text)
     ).toEqual(['Tramway', '12', '', '{\n  "a": 1\n}']);
   });
 });
 
-describe('filterRowPanelFields', () => {
-  const all = rowPanelFields(ROW, FIELDS, undefined, false);
+describe('filterRowDetailFields', () => {
+  const all = rowDetailFields(ROW, FIELDS, undefined, false);
   const names = (query: string) =>
-    filterRowPanelFields(all, query).map(({ field }) => field.name);
+    filterRowDetailFields(all, query).map(({ field }) => field.name);
 
   test('keeps the fields whose name holds the query, whatever the case', () => {
     expect(names(' DEL ')).toEqual(['deleted_at']);

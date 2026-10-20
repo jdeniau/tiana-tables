@@ -17,7 +17,7 @@ import {
   RegionName,
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
-import { WithRowPanel } from './RowPanel';
+import { WithRowDetailPanel } from './RowDetailPanel';
 
 const field = (name: string, kind: FieldKind): ResultField => ({
   name,
@@ -59,7 +59,7 @@ const ROWS: Array<ResultRow> = Array.from({ length: 40 }, (_, index) => ({
   meta: `{"client": "web", "index": ${index}}`,
 }));
 
-function RowPanelDemo({
+function RowDetailPanelDemo({
   rows,
   fields,
   primaryKeys,
@@ -72,7 +72,7 @@ function RowPanelDemo({
   const shownRowAtom = useCreateAtom<string | null>(null);
 
   return (
-    <WithRowPanel
+    <WithRowDetailPanel
       rows={rows}
       fields={fields}
       primaryKeys={primaryKeys}
@@ -96,12 +96,12 @@ function RowPanelDemo({
           />
         </RegionBody>
       </Region>
-    </WithRowPanel>
+    </WithRowDetailPanel>
   );
 }
 
-const meta: Meta<typeof RowPanelDemo> = {
-  component: RowPanelDemo,
+const meta: Meta<typeof RowDetailPanelDemo> = {
+  component: RowDetailPanelDemo,
   decorators: [
     reactRouterDecorator,
     connectionDecorator,
@@ -131,7 +131,7 @@ const meta: Meta<typeof RowPanelDemo> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof RowPanelDemo>;
+type Story = StoryObj<typeof RowDetailPanelDemo>;
 
 /** the eyes of the rows, in view however wide the columns */
 function eyes(canvasElement: HTMLElement): Array<HTMLButtonElement> {

@@ -38,11 +38,11 @@ import {
 import { rowIdOf } from '../rowId';
 import { useLastCopy } from '../useLastCopy';
 import {
-  type RowPanelField,
-  filterRowPanelFields,
+  type RowDetailField,
+  filterRowDetailFields,
+  rowDetailFields,
   rowKeyText,
-  rowPanelFields,
-} from './rowPanelFields';
+} from './rowDetailFields';
 
 /** past this many characters, or lines, a value opens folded */
 const LONG_TEXT_LENGTH = 140;
@@ -51,7 +51,7 @@ const CLAMPED_LINES = 4;
 /** a selection of every row would otherwise mount a button per row */
 const MAX_CHIPS = 50;
 
-interface RowPanelProps<Row extends ResultRow> {
+interface RowDetailPanelProps<Row extends ResultRow> {
   /** the rows of the grid, in its order */
   rows: ReadonlyArray<Row>;
   /** the fields the grid is given, in that order */
@@ -64,7 +64,7 @@ interface RowPanelProps<Row extends ResultRow> {
 }
 
 /** A grid's region, and beside it, while a row is shown, the region of that row's fields. */
-export function WithRowPanel<Row extends ResultRow>({
+export function WithRowDetailPanel<Row extends ResultRow>({
   children,
   rows,
   fields,
@@ -72,7 +72,7 @@ export function WithRowPanel<Row extends ResultRow>({
   rowsAsArray,
   selectionAtom,
   shownRowAtom,
-}: RowPanelProps<Row> & { children: ReactNode }): ReactElement {
+}: RowDetailPanelProps<Row> & { children: ReactNode }): ReactElement {
   // one width for every page: it is the shape of the window, not of the data
   const { panelProps, onResizeEnd } = usePanelSize(
     PANEL.ROW_DETAIL,
@@ -89,8 +89,8 @@ export function WithRowPanel<Row extends ResultRow>({
         );
 
   // built apart from its `Splitter.Panel`, so that a drag re-renders none of it
-  const rowPanel = (
-    <RowPanel
+  const detailPanel = (
+    <RowDetailPanel
       rows={rows}
       fields={fields}
       primaryKeys={primaryKeys}
@@ -113,14 +113,14 @@ export function WithRowPanel<Row extends ResultRow>({
           min={panelProps.min}
           max={panelProps.max}
         >
-          {rowPanel}
+          {detailPanel}
         </Splitter.Panel>
       )}
     </Splitter>
   );
 }
 
-function RowPanel<Row extends ResultRow>({
+function RowDetailPanel<Row extends ResultRow>({
   rows,
   fields,
   primaryKeys,
@@ -128,7 +128,7 @@ function RowPanel<Row extends ResultRow>({
   selectionAtom,
   shownRowAtom,
   index,
-}: RowPanelProps<Row> & { index: number }): ReactElement {
+}: RowDetailPanelProps<Row> & { index: number }): ReactElement {
   const { t } = useTranslation();
   const dialect = useDialect();
   const [query, setQuery] = useState('');
@@ -137,8 +137,8 @@ function RowPanel<Row extends ResultRow>({
 
   const row = rows[index];
   const shownId = rowIdOf(row, index, primaryKeys);
-  const all = rowPanelFields(row, fields, primaryKeys, rowsAsArray);
-  const shown = filterRowPanelFields(all, query);
+  const all = rowDetailFields(row, fields, primaryKeys, rowsAsArray);
+  const shown = filterRowDetailFields(all, query);
 
   const chips = rows.flatMap((one, rowIndex) => {
     const id = rowIdOf(one, rowIndex, primaryKeys);
@@ -150,7 +150,7 @@ function RowPanel<Row extends ResultRow>({
             label:
               primaryKeys && primaryKeys.length > 0
                 ? primaryKeys.map((pk) => String(one[pk])).join(', ')
-                : t('table.rowPanel.row', { position: rowIndex + 1 }),
+                : t('table.rowDetail.row', { position: rowIndex + 1 }),
           },
         ]
       : [];
@@ -158,12 +158,12 @@ function RowPanel<Row extends ResultRow>({
 
   const meta = [
     rowKeyText(row, primaryKeys),
-    t('table.rowPanel.position', {
+    t('table.rowDetail.position', {
       position: index + 1,
       count: rows.length,
     }),
     shown.length < all.length &&
-      t('table.rowPanel.fieldCount', {
+      t('table.rowDetail.fieldCount', {
         shown: shown.length,
         count: all.length,
       }),
@@ -171,15 +171,15 @@ function RowPanel<Row extends ResultRow>({
     .filter(Boolean)
     .join(' · ');
 
-  const copy = ({ field, text }: RowPanelField): void => {
+  const copy = ({ field, text }: RowDetailField): void => {
     void window.clipboard.writeText(text).then(() => onCopied(field.name));
   };
 
   return (
-    <Region as="aside" aria-label={t('table.rowPanel.title')}>
+    <Region as="aside" aria-label={t('table.rowDetail.title')}>
       <RegionHeader>
         <RegionGroup>
-          <RegionName>{t('table.rowPanel.title')}</RegionName>
+          <RegionName>{t('table.rowDetail.title')}</RegionName>
           <RowMeta title={meta}>{meta}</RowMeta>
         </RegionGroup>
 
@@ -187,8 +187,8 @@ function RowPanel<Row extends ResultRow>({
           type="text"
           size="small"
           icon={<CloseOutlined />}
-          aria-label={t('table.rowPanel.close')}
-          title={t('table.rowPanel.close')}
+          aria-label={t('table.rowDetail.close')}
+          title={t('table.rowDetail.close')}
           onClick={() => shownRowAtom.set(null)}
         />
       </RegionHeader>
@@ -196,7 +196,7 @@ function RowPanel<Row extends ResultRow>({
       {chips.length > 1 && (
         <Band>
           <BandLabel>
-            {t('table.rowPanel.selected', { count: chips.length })}
+            {t('table.rowDetail.selected', { count: chips.length })}
           </BandLabel>
           {chips.slice(0, MAX_CHIPS).map(({ id, label }) => (
             <Chip
@@ -210,7 +210,7 @@ function RowPanel<Row extends ResultRow>({
           ))}
           {chips.length > MAX_CHIPS && (
             <BandLabel>
-              {t('table.rowPanel.moreSelected', {
+              {t('table.rowDetail.moreSelected', {
                 count: chips.length - MAX_CHIPS,
               })}
             </BandLabel>
@@ -223,15 +223,15 @@ function RowPanel<Row extends ResultRow>({
           size="small"
           allowClear
           value={query}
-          placeholder={t('table.rowPanel.filter')}
-          aria-label={t('table.rowPanel.filter')}
+          placeholder={t('table.rowDetail.filter')}
+          aria-label={t('table.rowDetail.filter')}
           onChange={(event) => setQuery(event.target.value)}
         />
       </Tools>
 
       <RegionBody>
         {shown.length === 0 ? (
-          <NoField>{t('table.rowPanel.noField')}</NoField>
+          <NoField>{t('table.rowDetail.noField')}</NoField>
         ) : (
           shown.map((entry) => (
             // a new row opens its values folded again
@@ -247,8 +247,8 @@ function RowPanel<Row extends ResultRow>({
 
       <RegionFoot>
         {lastCopy
-          ? t('table.rowPanel.copied', { name: lastCopy })
-          : t('table.rowPanel.hint')}
+          ? t('table.rowDetail.copied', { name: lastCopy })
+          : t('table.rowDetail.hint')}
       </RegionFoot>
     </Region>
   );
@@ -259,9 +259,9 @@ function FieldRow({
   dialect,
   onCopy,
 }: {
-  entry: RowPanelField;
+  entry: RowDetailField;
   dialect: Dialect;
-  onCopy: (entry: RowPanelField) => void;
+  onCopy: (entry: RowDetailField) => void;
 }): ReactElement {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -284,8 +284,8 @@ function FieldRow({
         {isLong && (
           <TextButton type="button" onClick={() => setExpanded(!expanded)}>
             {expanded
-              ? t('table.rowPanel.collapse')
-              : t('table.rowPanel.expand', { length: text.length })}
+              ? t('table.rowDetail.collapse')
+              : t('table.rowDetail.expand', { length: text.length })}
           </TextButton>
         )}
       </FieldValue>

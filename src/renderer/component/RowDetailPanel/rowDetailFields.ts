@@ -4,7 +4,7 @@ import type { ResultRow } from '../../../sql/types';
 import cellValueToText from '../cellValueToText';
 
 /** One field of the row the side panel shows. */
-export interface RowPanelField {
+export interface RowDetailField {
   field: ResultField;
   /** the position of the field in the result, which also tells two homonyms apart */
   fieldIndex: number;
@@ -14,13 +14,13 @@ export interface RowPanelField {
 }
 
 /** The fields of a row in the order of the grid: the primary key first. */
-export function rowPanelFields(
+export function rowDetailFields(
   row: ResultRow,
   fields: ReadonlyArray<ResultField>,
   primaryKeys: ReadonlyArray<string> | undefined,
   rowsAsArray: boolean
-): Array<RowPanelField> {
-  const all = fields.map((field, fieldIndex): RowPanelField => {
+): Array<RowDetailField> {
+  const all = fields.map((field, fieldIndex): RowDetailField => {
     const value = rowsAsArray ? row[fieldIndex] : row[field.name];
 
     return {
@@ -38,10 +38,10 @@ export function rowPanelFields(
 }
 
 /** The fields whose name or value holds `query`, whatever the case. */
-export function filterRowPanelFields(
-  fields: ReadonlyArray<RowPanelField>,
+export function filterRowDetailFields(
+  fields: ReadonlyArray<RowDetailField>,
   query: string
-): Array<RowPanelField> {
+): Array<RowDetailField> {
   const needle = query.trim().toLowerCase();
 
   return fields.filter(
