@@ -52,6 +52,7 @@ import CellContextMenu from './CellContextMenu';
 import CellDetailModal, { CellDetail } from './CellDetailModal';
 import { CellWriteProvider } from './CellWrite';
 import ForeignKeyLink from './ForeignKeyLink';
+import SkeletonBody, { skeletonStyle } from './SkeletonBody';
 import { fill } from './Style/fill';
 import type { SelectionModifiers } from './rowSelectionGesture';
 import { OpenCellMenu, ShowCellDetail, useCellDialogs } from './useCellDialogs';
@@ -91,6 +92,8 @@ interface TableGridProps<R extends ResultRow> {
   rowsAsArray?: boolean;
   result: null | R[];
   fields: null | ResultField[];
+  /** the rows are on their way: the body is a skeleton of the columns, whatever `result` holds */
+  loading?: boolean;
   primaryKeys?: Array<string>;
   /**
    * Called once a cell has been written, with the value the server now holds.
@@ -205,6 +208,7 @@ function buildRowKey(
 function TableGrid<Row extends ResultRow>({
   fields,
   result,
+  loading = false,
   primaryKeys,
   rowsAsArray = false,
   onValueUpdated,
@@ -433,19 +437,23 @@ function TableGrid<Row extends ResultRow>({
             </table.Subscribe>
           </StyledThead>
 
-          <TableBody
-            table={table}
-            columnsMeta={columnsMeta}
-            rowsAsArray={rowsAsArray}
-            primaryKeys={primaryKeys}
-            scrollElement={scrollElement}
-            onShowCellDetail={showCellDetail}
-            onCellContextMenu={openCellMenu}
-            onSelectRow={selectRow}
-          />
+          {loading ? (
+            <SkeletonBody columnsMeta={columnsMeta} />
+          ) : (
+            <TableBody
+              table={table}
+              columnsMeta={columnsMeta}
+              rowsAsArray={rowsAsArray}
+              primaryKeys={primaryKeys}
+              scrollElement={scrollElement}
+              onShowCellDetail={showCellDetail}
+              onCellContextMenu={openCellMenu}
+              onSelectRow={selectRow}
+            />
+          )}
         </StyledTable>
 
-        {result && result.length === 0 && (
+        {!loading && result && result.length === 0 && (
           <EmptyWrapper>
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
           </EmptyWrapper>
@@ -839,6 +847,8 @@ const ScrollContainer = styled.div`
   .tg-cell[data-last-pinned] {
     border-inline-end-color: ${commentForeground};
   }
+
+  ${skeletonStyle}
 
   /* foreign key links (ForeignKeyLink) rendered next to the cell value */
   .tg-cell > a {

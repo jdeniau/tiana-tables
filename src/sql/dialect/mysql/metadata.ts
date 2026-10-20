@@ -133,6 +133,7 @@ export const mysqlMetadata: DialectMetadata = {
           EXTRA
         FROM INFORMATION_SCHEMA.COLUMNS
         WHERE TABLE_SCHEMA = :databaseName
+        ORDER BY TABLE_NAME, ORDINAL_POSITION
       `,
       values: { databaseName },
       row: columnRow,

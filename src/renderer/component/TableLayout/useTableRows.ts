@@ -13,6 +13,10 @@ interface TableRows {
   fields: null | ResultField[];
   /** the last fetch's error, cleared by the next one that succeeds */
   error: null | Error;
+  /** a first page is on its way: the table's, or that of a new order */
+  loading: boolean;
+  /** the next page is on its way */
+  loadingMore: boolean;
   /** fetches the next page and appends it to `result` */
   loadMore: () => void;
   /** stable: writes the value the server answered into the row already loaded */
@@ -32,9 +36,14 @@ export function useTableRows({
   const [fields, setFields] = useState<null | ResultField[]>(null);
   const [error, setError] = useState<null | Error>(null);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
+  // the last first page answered: loading until it is the one the props ask for
+  const [answeredFirstPage, setAnsweredFirstPage] = useState<null | string>(
+    null
+  );
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const fetchTableData = (offset: number) => {
-    const query = buildTableQuery(dialect, {
+  const queryAt = (offset: number) =>
+    buildTableQuery(dialect, {
       database,
       tableName,
       primaryKeys,
@@ -43,6 +52,11 @@ export function useTableRows({
       limit: DEFAULT_LIMIT,
       offset,
     });
+
+  const firstPage = queryAt(0);
+
+  const fetchTableData = (offset: number) => {
+    const query = queryAt(offset);
 
     window.sql
       .executeQuery<ResultRow[]>(query)
@@ -57,6 +71,13 @@ export function useTableRows({
       .catch((err) => {
         setError(err);
         setResult(null);
+      })
+      .finally(() => {
+        if (offset > 0) {
+          setLoadingMore(false);
+        } else {
+          setAnsweredFirstPage(query);
+        }
       });
   };
 
@@ -65,7 +86,10 @@ export function useTableRows({
     fetchTableData(0);
   }, [fetchTableData]);
 
-  const loadMore = () => fetchTableData(currentOffset + DEFAULT_LIMIT);
+  const loadMore = () => {
+    setLoadingMore(true);
+    fetchTableData(currentOffset + DEFAULT_LIMIT);
+  };
 
   // patched in place, not re-fetched: the value is the server's (see `updateCell`),
   // as fresh as a reload, without losing the rows loaded nor the scroll
@@ -88,5 +112,13 @@ export function useTableRows({
     });
   };
 
-  return { result, fields, error, loadMore, updateValue };
+  return {
+    result,
+    fields,
+    error,
+    loading: answeredFirstPage !== firstPage,
+    loadingMore,
+    loadMore,
+    updateValue,
+  };
 }
