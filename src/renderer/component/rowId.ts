@@ -6,7 +6,9 @@ export function rowIdOf(
   index: number,
   primaryKeys: ReadonlyArray<string> | undefined
 ): string {
-  return primaryKeys && primaryKeys.length > 0
-    ? primaryKeys.map((pk) => String(row[pk])).join('-')
-    : String(index);
+  if (primaryKeys && primaryKeys.length > 0) {
+    return primaryKeys.map((pk) => String(row[pk])).join('-');
+  }
+
+  return String(index);
 }
