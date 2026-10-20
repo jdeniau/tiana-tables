@@ -1,4 +1,6 @@
 import React, { Suspense, useEffect } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { createRoot } from 'react-dom/client';
 import {
   Navigate,
@@ -7,6 +9,7 @@ import {
   createHashRouter,
 } from 'react-router-dom';
 import invariant from 'tiny-invariant';
+import { createQueryClient } from './queryClient';
 import Connect from './routes/connect';
 import Create from './routes/connect/create';
 import Edit from './routes/connect/edit.$connectionSlug';
@@ -31,6 +34,8 @@ function logRendererStartupMilestone(name: string): void {
 // import { createMemoryHistory } from 'history';
 // export const history = createMemoryHistory();
 // <Router history={history}>
+
+const queryClient = createQueryClient();
 
 const router = createHashRouter([
   {
@@ -136,7 +141,7 @@ const router = createHashRouter([
                         await import('./routes/connections.$connectionSlug.$databaseName.$tableName');
 
                       return {
-                        loader: routeModule.loader,
+                        loader: routeModule.loader(queryClient),
                         Component: routeModule.default,
                       };
                     },
@@ -163,7 +168,7 @@ const router = createHashRouter([
                     await import('./routes/sql.$connectionSlug');
 
                   return {
-                    action: routeModule.action,
+                    action: routeModule.action(queryClient),
                     Component: routeModule.default,
                   };
                 },
@@ -186,9 +191,13 @@ function App() {
   }, []);
 
   return (
-    <Suspense fallback={null}>
-      <RouterProvider router={router} />
-    </Suspense>
+    <QueryClientProvider client={queryClient}>
+      <Suspense fallback={null}>
+        <RouterProvider router={router} />
+      </Suspense>
+      {/* renders nothing outside development */}
+      <ReactQueryDevtools buttonPosition="bottom-right" />
+    </QueryClientProvider>
   );
 }
 

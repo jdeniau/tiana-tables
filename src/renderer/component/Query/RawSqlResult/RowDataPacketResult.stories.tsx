@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Fetcher } from 'react-router';
 import connectionDecorator from '../../../../../.storybook/decorators/connectionDecorator';
 import reactRouterDecorator from '../../../../../.storybook/decorators/reactRouterDecorator';
 import { AllColumnsContextProvider } from '../../../../contexts/AllColumnsContext';
@@ -7,10 +6,7 @@ import { ForeignKeysContextProvider } from '../../../../contexts/ForeignKeysCont
 import { FieldKind, type ResultField } from '../../../../sql/resultField';
 import type { SqlError } from '../../../../sql/sqlError';
 import type { ResultRow, WriteResult } from '../../../../sql/types';
-import RawSqlResult, {
-  SqlActionReturnTypes,
-  StatementOutcome,
-} from './RowDataPacketResult';
+import RawSqlResult, { StatementOutcome } from './RowDataPacketResult';
 
 const FIELDS: ResultField[] = [
   { name: 'id', kind: FieldKind.Number, table: 'employe' },
@@ -53,12 +49,8 @@ const FAILED: StatementOutcome = {
   error: ERROR,
 };
 
-/** the panel only ever reads `state` and `data` off the fetcher */
-function fetcherOf(outcomes: StatementOutcome[]) {
-  return {
-    state: 'idle',
-    data: { outcomes },
-  } as unknown as Fetcher<SqlActionReturnTypes>;
+function ranWith(outcomes: StatementOutcome[]) {
+  return { data: { outcomes }, submitting: false };
 }
 
 const meta: Meta<typeof RawSqlResult> = {
@@ -85,20 +77,20 @@ type Story = StoryObj<typeof RawSqlResult>;
 
 /** one statement: the result panel is the only thing on screen */
 export const OneStatement: Story = {
-  args: { fetcher: fetcherOf([SELECT]) },
+  args: ranWith([SELECT]),
 };
 
 /** every statement of the editor: one tab each, named after the query */
 export const SeveralStatements: Story = {
-  args: { fetcher: fetcherOf([SELECT, UPDATE, SELECT]) },
+  args: ranWith([SELECT, UPDATE, SELECT]),
 };
 
 /** a run stops at the first error, and opens on it */
 export const StoppedOnAnError: Story = {
-  args: { fetcher: fetcherOf([SELECT, UPDATE, FAILED]) },
+  args: ranWith([SELECT, UPDATE, FAILED]),
 };
 
 /** an editor holding only comments has nothing to run */
 export const NothingToRun: Story = {
-  args: { fetcher: fetcherOf([]) },
+  args: ranWith([]),
 };

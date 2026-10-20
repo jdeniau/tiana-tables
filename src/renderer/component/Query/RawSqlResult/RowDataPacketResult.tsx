@@ -2,7 +2,6 @@ import { ReactElement, useState } from 'react';
 import { type Atom, createAtom, useSelector } from '@tanstack/react-store';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Empty } from 'antd';
-import { Fetcher } from 'react-router';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../../i18n';
 import { FieldKind, type ResultField } from '../../../../sql/resultField';
@@ -64,7 +63,10 @@ export type SqlActionReturnTypes = { outcomes: StatementOutcome[] };
 
 type Props = {
   rowsAsArray: boolean;
-  fetcher: Fetcher<SqlActionReturnTypes>;
+  /** the last run, kept by the page across visits */
+  data: SqlActionReturnTypes | undefined;
+  /** a run is on its way */
+  submitting: boolean;
 };
 
 enum View {
@@ -208,9 +210,12 @@ function OutcomePane({
  * statements of the last run as a strip, what the active one answered in
  * numbers, and the Data / Chart switch. The body shows the active statement.
  */
-export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
+export default function RawSqlResult({
+  data,
+  submitting,
+  rowsAsArray = false,
+}: Props) {
   const { t } = useTranslation();
-  const { data, state } = fetcher;
   const outcomes = data?.outcomes ?? NO_OUTCOMES;
 
   // `null` until the user picks one: a new run, with other statements, must
@@ -274,7 +279,7 @@ export default function RawSqlResult({ fetcher, rowsAsArray = false }: Props) {
 
   let body: ReactElement | null = null;
 
-  if (state === 'submitting') {
+  if (submitting) {
     body = (
       <TableGrid
         loading

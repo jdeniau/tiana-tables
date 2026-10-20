@@ -6,6 +6,7 @@ import { DEFAULT_LOCALE } from '../../configuration/locale';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { Configuration, TableSorting } from '../../configuration/type';
 import { DatabaseEngine } from '../../sql/engine';
+import { createQueryClient } from '../queryClient';
 import { loader } from './connections.$connectionSlug.$databaseName.$tableName';
 
 const params = {
@@ -53,15 +54,16 @@ function setStoredFilter(
   };
 }
 
-function loadWith(url: string) {
-  return loader({ params, request: new Request(url) });
+function loadWith(url: string, queryClient = createQueryClient()) {
+  return loader(queryClient)({ params, request: new Request(url) });
 }
 
 describe('loader', () => {
   beforeEach(() => {
-    // the one call this loader makes
     window.sql = {
+      connectionNameChanged: vi.fn(),
       getPrimaryKeyColumns: vi.fn(() => Promise.resolve(['id'])),
+      executeQuery: vi.fn(() => Promise.resolve([[], []])),
     } as unknown as typeof window.sql;
   });
 
@@ -140,6 +142,27 @@ describe('loader', () => {
     const { sorting } = await loadWith('http://localhost?where=id+%3D+1');
 
     expect(sorting).toEqual([{ id: 'name', desc: true }]);
+  });
+
+  test('starts the first page of the rows, without waiting for it', async () => {
+    setStoredFilter('id > 1');
+    vi.mocked(window.sql.executeQuery).mockReturnValue(new Promise(() => {}));
+
+    await loadWith('http://localhost');
+
+    expect(window.sql.executeQuery).toHaveBeenCalledExactlyOnceWith(
+      'SELECT * FROM `databaseName`.`tableName` WHERE id > 1 ORDER BY `id` LIMIT 100 OFFSET 0;'
+    );
+  });
+
+  test('asks nothing for rows already in the cache: the page fetches them again behind', async () => {
+    setStoredFilter('');
+    const queryClient = createQueryClient();
+
+    await loadWith('http://localhost', queryClient);
+    await loadWith('http://localhost', queryClient);
+
+    expect(window.sql.executeQuery).toHaveBeenCalledTimes(1);
   });
 
   test('an empty `order` param is a sort removed, and is stored as one', async () => {

@@ -93,7 +93,7 @@ export function TableLayout({
 
   const allColumns = useAllColumnsContext();
   const { result, fields, error, loading, loadingMore, loadMore, updateValue } =
-    useTableRows({
+    useTableRows(connectionSlug, {
       database,
       tableName,
       primaryKeys,
