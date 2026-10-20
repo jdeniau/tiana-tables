@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { nextRowSelection } from './rowSelectionGesture';
+import {
+  RowStep,
+  nextRowSelection,
+  nextRowSelectionByArrow,
+} from './rowSelectionGesture';
 
 const ROW_IDS = ['a', 'b', 'c', 'd', 'e'];
 
@@ -71,5 +75,76 @@ describe('nextRowSelection', () => {
       selection: { c: true },
       anchorId: 'c',
     });
+  });
+});
+
+describe('nextRowSelectionByArrow', () => {
+  const DOWN = { step: RowStep.Down, extend: false };
+  const UP = { step: RowStep.Up, extend: false };
+  const SHIFT_DOWN = { step: RowStep.Down, extend: true };
+  const SHIFT_UP = { step: RowStep.Up, extend: true };
+
+  test('moves to the next row, which it selects alone, anchors and leads on', () => {
+    expect(nextRowSelectionByArrow('a', 'b', ROW_IDS, DOWN)).toEqual({
+      selection: { c: true },
+      anchorId: 'c',
+      leadId: 'c',
+    });
+
+    expect(nextRowSelectionByArrow('b', 'b', ROW_IDS, UP)).toEqual({
+      selection: { a: true },
+      anchorId: 'a',
+      leadId: 'a',
+    });
+  });
+
+  test('from no row, or a row no longer shown, ↓ starts at the first row and ↑ at the last', () => {
+    expect(nextRowSelectionByArrow(null, null, ROW_IDS, DOWN)?.leadId).toBe(
+      'a'
+    );
+    expect(nextRowSelectionByArrow(null, 'z', ROW_IDS, UP)?.leadId).toBe('e');
+  });
+
+  test('stays on the first and the last rows', () => {
+    expect(nextRowSelectionByArrow('a', 'a', ROW_IDS, UP)).toEqual({
+      selection: { a: true },
+      anchorId: 'a',
+      leadId: 'a',
+    });
+    expect(nextRowSelectionByArrow('e', 'e', ROW_IDS, DOWN)?.selection).toEqual(
+      { e: true }
+    );
+  });
+
+  test('Shift selects the range from the anchor, which shrinks back towards it', () => {
+    expect(nextRowSelectionByArrow('b', 'c', ROW_IDS, SHIFT_DOWN)).toEqual({
+      selection: { b: true, c: true, d: true },
+      anchorId: 'b',
+      leadId: 'd',
+    });
+
+    expect(nextRowSelectionByArrow('b', 'd', ROW_IDS, SHIFT_UP)).toEqual({
+      selection: { b: true, c: true },
+      anchorId: 'b',
+      leadId: 'c',
+    });
+
+    expect(nextRowSelectionByArrow('b', 'b', ROW_IDS, SHIFT_UP)).toEqual({
+      selection: { a: true, b: true },
+      anchorId: 'b',
+      leadId: 'a',
+    });
+  });
+
+  test('Shift with no anchor moves as a plain arrow', () => {
+    expect(nextRowSelectionByArrow(null, 'b', ROW_IDS, SHIFT_DOWN)).toEqual({
+      selection: { c: true },
+      anchorId: 'c',
+      leadId: 'c',
+    });
+  });
+
+  test('moves nowhere in a grid with no row', () => {
+    expect(nextRowSelectionByArrow(null, null, [], DOWN)).toBeNull();
   });
 });

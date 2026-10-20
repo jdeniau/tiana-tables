@@ -14,6 +14,36 @@ interface SelectionGesture {
   anchorId: string | null;
 }
 
+/** The direction of an arrow key, in display order. */
+export enum RowStep {
+  Up = -1,
+  Down = 1,
+}
+
+interface ArrowGesture extends SelectionGesture {
+  /** the row the next arrow moves from */
+  leadId: string;
+}
+
+/** The rows from one index to the other, both included, in either order. */
+function rangeOf(
+  rowIds: ReadonlyArray<string>,
+  fromIndex: number,
+  toIndex: number
+): RowSelectionState {
+  const range: RowSelectionState = {};
+
+  for (
+    let index = Math.min(fromIndex, toIndex);
+    index <= Math.max(fromIndex, toIndex);
+    index++
+  ) {
+    range[rowIds[index]] = true;
+  }
+
+  return range;
+}
+
 /** What a click on `rowId` selects, `rowIds` being the rows in display order. */
 export function nextRowSelection(
   selection: RowSelectionState,
@@ -26,15 +56,7 @@ export function nextRowSelection(
   const rowIndex = rowIds.indexOf(rowId);
 
   if (extend && anchorIndex >= 0 && rowIndex >= 0) {
-    const range: RowSelectionState = {};
-
-    for (
-      let index = Math.min(anchorIndex, rowIndex);
-      index <= Math.max(anchorIndex, rowIndex);
-      index++
-    ) {
-      range[rowIds[index]] = true;
-    }
+    const range = rangeOf(rowIds, anchorIndex, rowIndex);
 
     return {
       selection: toggle ? { ...selection, ...range } : range,
@@ -57,4 +79,44 @@ export function nextRowSelection(
   return isOnlySelected
     ? { selection: {}, anchorId: null }
     : { selection: { [rowId]: true }, anchorId: rowId };
+}
+
+/**
+ * What ↑ or ↓ selects, from `leadId`, the row the last gesture ended on;
+ * `null` when there is no row to move to.
+ */
+export function nextRowSelectionByArrow(
+  anchorId: string | null,
+  leadId: string | null,
+  rowIds: ReadonlyArray<string>,
+  { step, extend }: { step: RowStep; extend: boolean }
+): ArrowGesture | null {
+  if (rowIds.length === 0) {
+    return null;
+  }
+
+  const leadIndex = leadId === null ? -1 : rowIds.indexOf(leadId);
+  // from no row, ↓ starts at the first one and ↑ at the last
+  const targetIndex =
+    leadIndex < 0
+      ? step === RowStep.Down
+        ? 0
+        : rowIds.length - 1
+      : Math.min(Math.max(leadIndex + step, 0), rowIds.length - 1);
+  const targetId = rowIds[targetIndex];
+  const anchorIndex = anchorId === null ? -1 : rowIds.indexOf(anchorId);
+
+  if (extend && anchorIndex >= 0) {
+    return {
+      selection: rangeOf(rowIds, anchorIndex, targetIndex),
+      anchorId,
+      leadId: targetId,
+    };
+  }
+
+  return {
+    selection: { [targetId]: true },
+    anchorId: targetId,
+    leadId: targetId,
+  };
 }
