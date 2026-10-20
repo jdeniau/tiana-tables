@@ -114,6 +114,7 @@ export const Edit: Story = {
       port: 3307,
       user: 'test-user',
       password: '',
+      group: 'Client A',
     },
   },
 };
