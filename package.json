@@ -125,7 +125,7 @@
     "playwright": "^1.63.0",
     "prettier": "^3.9.9",
     "react-router-dom": "^6.30.6",
-    "storybook": "^10.6.1",
+    "storybook": "^10.6.2",
     "temporal-polyfill": "^1.0.5",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.71.1",
