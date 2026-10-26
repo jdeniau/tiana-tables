@@ -47,6 +47,9 @@ export interface Dialect {
   /** Bytes as a literal of this server, every one of them kept. */
   bytesLiteral(bytes: Uint8Array): string;
 
+  /** A database the server keeps for itself, which the user did not create. */
+  isSystemDatabase(databaseName: string): boolean;
+
   /** What the app asks this server about itself. */
   metadata: DialectMetadata;
 
