@@ -20,6 +20,7 @@ tmux send-keys -t tiana "yarn electron-forge start -- \
 
 - electron-forge 8 keeps the app up with stdin closed (`… < /dev/null &` is enough); in tmux it shows its interactive screen, where `r` relaunches the app.
 - **`--user-data-dir` isolates the configuration**; without it the run writes into the user's real connections. The profile keeps its connections between runs, so create one once (`#/connect/create`, ids `name`/`host`/`port`/`user`/`password`, button "SAVE AND CONNECT" — a new profile is in English), named with `(dev)`.
+- **A connection is created through the form, never `window.config.addConnectionToConfig`**: that call skips `ConfigurationContext`, so `useDialect()` throws "A dialect needs a connection" on it. For PostgreSQL, click the `label` reading `PostgreSQL` first (the engine `Segmented`), then fill `port` (15432) and `database`.
 - The page target is the one whose url starts with `http://localhost:517x`.
 - `docs/screenshots/shots.mjs` (the README screenshots) is a working harness: throwaway profile, connection form, `window.config` staging, a native menu click, `clip`ped captures.
 - The main process is not hot-reloaded: any change to `menu.ts`, the preload or an IPC handler needs a full relaunch.
