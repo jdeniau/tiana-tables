@@ -19,4 +19,13 @@ describe('mysqlDialect', () => {
     expect(mysqlDialect.booleanLiteral(true)).toBe('1');
     expect(mysqlDialect.booleanLiteral(false)).toBe('0');
   });
+
+  it('tells the databases the server keeps for itself', () => {
+    expect(mysqlDialect.isSystemDatabase('information_schema')).toBe(true);
+    expect(mysqlDialect.isSystemDatabase('mysql')).toBe(true);
+    expect(mysqlDialect.isSystemDatabase('performance_schema')).toBe(true);
+    expect(mysqlDialect.isSystemDatabase('sys')).toBe(true);
+    expect(mysqlDialect.isSystemDatabase('tiana_dev')).toBe(false);
+    expect(mysqlDialect.isSystemDatabase('mysql_app')).toBe(false);
+  });
 });

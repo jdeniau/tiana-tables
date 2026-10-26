@@ -16,4 +16,12 @@ describe('postgresDialect', () => {
     expect(postgresDialect.booleanLiteral(true)).toBe('TRUE');
     expect(postgresDialect.booleanLiteral(false)).toBe('FALSE');
   });
+
+  it('tells the schemas the server keeps for itself', () => {
+    expect(postgresDialect.isSystemDatabase('pg_catalog')).toBe(true);
+    expect(postgresDialect.isSystemDatabase('information_schema')).toBe(true);
+    expect(postgresDialect.isSystemDatabase('public')).toBe(false);
+    // only the lowercase prefix is reserved
+    expect(postgresDialect.isSystemDatabase('PG_app')).toBe(false);
+  });
 });

@@ -6,6 +6,13 @@ import { escapeIdentifier } from './escapeIdentifier';
 import { mysqlGuardedUpdate } from './guardedUpdate';
 import { mysqlMetadata } from './metadata';
 
+const SYSTEM_DATABASES = new Set([
+  'information_schema',
+  'mysql',
+  'performance_schema',
+  'sys',
+]);
+
 export const mysqlDialect: Dialect = {
   engine: DatabaseEngine.MySQL,
 
@@ -30,6 +37,8 @@ export const mysqlDialect: Dialect = {
 
   // the standard hexadecimal literal: unlike `0x…`, it stays valid when empty
   bytesLiteral: (bytes) => `X'${toHexDigits(bytes)}'`,
+
+  isSystemDatabase: (databaseName) => SYSTEM_DATABASES.has(databaseName),
 
   metadata: mysqlMetadata,
 

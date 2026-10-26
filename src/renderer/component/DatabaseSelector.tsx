@@ -2,6 +2,7 @@ import { DownOutlined } from '@ant-design/icons';
 import { Dropdown } from 'antd';
 import { styled } from 'styled-components';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
+import { useDialect } from '../hooks/useDialect';
 import {
   commentForeground,
   display,
@@ -46,12 +47,18 @@ const Caret = styled(DownOutlined)`
   color: ${commentForeground};
 `;
 
+/** The server's own databases, listed among the user's but set apart. */
+const SystemDatabaseName = styled.span`
+  color: ${commentForeground};
+`;
+
 export default function DatabaseSelector({
   databaseList,
 }: {
   databaseList: string[];
 }) {
   const { database, setDatabase } = useDatabaseContext();
+  const { isSystemDatabase } = useDialect();
 
   const handleClick = ({ key }: { key: string }) => {
     setDatabase(key);
@@ -61,7 +68,16 @@ export default function DatabaseSelector({
     <Dropdown
       trigger={['click']}
       menu={{
-        items: databaseList.map((name) => ({ key: name, label: name })),
+        items: databaseList.map((name) => ({
+          key: name,
+          // the selected one keeps the accent of the selection
+          label:
+            isSystemDatabase(name) && name !== database ? (
+              <SystemDatabaseName>{name}</SystemDatabaseName>
+            ) : (
+              name
+            ),
+        })),
         selectable: true,
         selectedKeys: database ? [database] : [],
         onClick: handleClick,

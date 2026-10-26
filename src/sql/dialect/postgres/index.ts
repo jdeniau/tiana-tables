@@ -27,6 +27,10 @@ export const postgresDialect: Dialect = {
   // `standard_conforming_strings` is off, and hex digits need no escaping
   bytesLiteral: (bytes) => `decode('${toHexDigits(bytes)}', 'hex')`,
 
+  // the server refuses to create a schema named `pg_…`
+  isSystemDatabase: (schemaName) =>
+    schemaName.startsWith('pg_') || schemaName === 'information_schema',
+
   metadata: postgresMetadata,
 
   guardedUpdate: postgresGuardedUpdate,
