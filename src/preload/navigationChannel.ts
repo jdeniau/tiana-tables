@@ -7,4 +7,6 @@ export enum NAVIGATION_CHANNEL {
   CYCLE_CONNECTION = 'navigation:cycle-connection',
   /** main to renderer: Toggle path bar was checked or unchecked */
   PATH_BAR_VISIBILITY_CHANGE = 'navigation:path-bar-visibility-change',
+  /** main to renderer: Toggle query devtools was chosen, in development only */
+  TOGGLE_QUERY_DEVTOOLS = 'navigation:toggle-query-devtools',
 }

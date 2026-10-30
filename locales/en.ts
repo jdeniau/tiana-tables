@@ -146,6 +146,7 @@ export default {
   'menu.title': 'Menu',
   'menu.view.devTools': 'Developer tools',
   'menu.view.togglePath': 'Toggle path bar',
+  'menu.view.toggleQueryDevtools': 'Toggle query devtools',
   'navigation_modal.search.placeholder': 'Start searching…',
   'navigation_modal.title': 'Navigate',
   'rawSql.query.statementCount':

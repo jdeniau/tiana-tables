@@ -191,6 +191,18 @@ export function createMenu(mainWindow: BrowserWindow) {
                 );
               },
             },
+            ...(isDevApp()
+              ? [
+                  {
+                    label: t('menu.view.toggleQueryDevtools'),
+                    click: () => {
+                      mainWindow.webContents.send(
+                        NAVIGATION_CHANNEL.TOGGLE_QUERY_DEVTOOLS
+                      );
+                    },
+                  },
+                ]
+              : []),
           ],
         },
       ],

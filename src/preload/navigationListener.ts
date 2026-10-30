@@ -11,6 +11,7 @@ type NavigationListener = {
   onPathBarVisibilityChange: (
     callback: (showPath: boolean) => void
   ) => Unsubscribe;
+  onToggleQueryDevtools: (callback: () => void) => Unsubscribe;
 };
 
 export const navigationListener: NavigationListener = {
@@ -24,4 +25,7 @@ export const navigationListener: NavigationListener = {
 
   onPathBarVisibilityChange: (callback) =>
     subscribe(NAVIGATION_CHANNEL.PATH_BAR_VISIBILITY_CHANGE, callback),
+
+  onToggleQueryDevtools: (callback) =>
+    subscribe(NAVIGATION_CHANNEL.TOGGLE_QUERY_DEVTOOLS, callback),
 };

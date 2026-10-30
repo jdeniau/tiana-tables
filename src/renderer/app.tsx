@@ -1,6 +1,5 @@
 import React, { Suspense, useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { createRoot } from 'react-dom/client';
 import {
   Navigate,
@@ -9,6 +8,7 @@ import {
   createHashRouter,
 } from 'react-router-dom';
 import invariant from 'tiny-invariant';
+import QueryDevtools from './component/QueryDevtools';
 import { createQueryClient } from './queryClient';
 import Connect from './routes/connect';
 import Create from './routes/connect/create';
@@ -195,8 +195,7 @@ function App() {
       <Suspense fallback={null}>
         <RouterProvider router={router} />
       </Suspense>
-      {/* renders nothing outside development */}
-      <ReactQueryDevtools buttonPosition="bottom-right" />
+      <QueryDevtools />
     </QueryClientProvider>
   );
 }

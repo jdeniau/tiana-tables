@@ -146,6 +146,7 @@ const fr: Translation = {
   'menu.title': 'Menu',
   'menu.view.devTools': 'Outils de développement',
   'menu.view.togglePath': "Afficher la barre d'adresse",
+  'menu.view.toggleQueryDevtools': 'Afficher les devtools de TanStack Query',
   'navigation_modal.search.placeholder': 'Commencer à chercher…',
   'navigation_modal.title': 'Naviguer',
   'rawSql.query.statementCount':
