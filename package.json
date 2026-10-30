@@ -90,7 +90,7 @@
     "@storybook/addon-a11y": "^10.6.1",
     "@storybook/addon-docs": "^10.6.1",
     "@storybook/addon-links": "^10.6.1",
-    "@storybook/addon-vitest": "^10.6.1",
+    "@storybook/addon-vitest": "^10.6.2",
     "@storybook/builder-vite": "^10.6.1",
     "@storybook/react-vite": "^10.6.1",
     "@tanstack/eslint-plugin-query": "^5.104.4",
