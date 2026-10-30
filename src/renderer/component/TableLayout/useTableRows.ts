@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-query';
 import type { ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
+import type { PrimaryKeyPart } from '../../../sql/updateCell';
 import { useDialect } from '../../hooks/useDialect';
 import { TablePage } from './tableQuery';
 import { TableRowsPage, tableRowsQuery } from './tableRowsQuery';
@@ -25,6 +26,8 @@ interface TableRows {
   loadMore: () => void;
   /** writes the value the server answered into the row already loaded */
   updateValue: (rowIndex: number, columnName: string, value: unknown) => void;
+  /** deletes rows by their primary key, then fetches the pages loaded again, the rows below having moved up */
+  deleteRows: (rowKeys: Array<Array<PrimaryKeyPart>>) => Promise<void>;
 }
 
 /** the rows of a table, fetched one page at a time and kept in the query cache */
@@ -63,6 +66,15 @@ export function useTableRows(
     );
   };
 
+  const deleteRows = async (rowKeys: Array<Array<PrimaryKeyPart>>) => {
+    await window.sql.deleteRows({
+      database: page.database,
+      table: page.tableName,
+      rows: rowKeys,
+    });
+    await queryClient.invalidateQueries({ queryKey: rowsQuery.queryKey });
+  };
+
   return {
     // the cache keeps the pages of a failed fetch: they are not shown with its error
     result: error ? null : (data?.pages.flatMap(([rows]) => rows) ?? null),
@@ -74,6 +86,7 @@ export function useTableRows(
     loadingMore: isFetchingNextPage,
     loadMore: () => void fetchNextPage(),
     updateValue,
+    deleteRows,
   };
 }
 

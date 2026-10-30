@@ -1,3 +1,4 @@
+import type { DeleteRowsRequest } from '../deleteRows';
 import type { DatabaseEngine } from '../engine';
 import type { QueryReturnType } from '../types';
 import type { UpdateCellOutcome, UpdateCellRequest } from '../updateCell';
@@ -54,4 +55,7 @@ export interface Dialect {
   metadata: DialectMetadata;
 
   guardedUpdate(request: UpdateCellRequest): GuardedUpdate;
+
+  /** One statement deleting every row named, and nothing else. */
+  deleteRows(request: DeleteRowsRequest): BuiltQuery;
 }

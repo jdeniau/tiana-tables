@@ -7,15 +7,7 @@ import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  describe,
-  expect,
-  test,
-  vi,
-} from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { DateDisplay } from '../../configuration/dateDisplay';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
@@ -33,6 +25,7 @@ import {
 import { selectAllFromMenu } from '../selectAll';
 import { columnNamesAtom } from './CellContextMenu/rowsCopyItem';
 import TableGrid from './TableGrid';
+import { mountRows } from './mountRows.testing';
 import { NO_CURSOR, type RowCursor } from './rowSelectionGesture';
 
 vi.mock('../hooks/useDialect', () => ({ useDialect: () => mysqlDialect }));
@@ -141,32 +134,6 @@ function mark(name: string): string {
       ? button.lastChild.textContent
       : '')
   );
-}
-
-// happy-dom lays nothing out, and the virtualizer mounts the rows that fit
-// in the height of the scroller
-function mountRows(): void {
-  const offsetHeight = Object.getOwnPropertyDescriptor(
-    HTMLElement.prototype,
-    'offsetHeight'
-  );
-
-  beforeAll(() => {
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-      configurable: true,
-      get: () => 600,
-    });
-  });
-
-  afterAll(() => {
-    if (offsetHeight) {
-      Object.defineProperty(
-        HTMLElement.prototype,
-        'offsetHeight',
-        offsetHeight
-      );
-    }
-  });
 }
 
 describe('sorting', () => {
@@ -1390,5 +1357,169 @@ describe('copying the selected rows', () => {
     expect(menuItem('SQL INSERT')?.getAttribute('aria-disabled')).not.toBe(
       'true'
     );
+  });
+});
+
+describe('deleting the selected rows', () => {
+  mountRows();
+
+  const ROWS_ABC = [
+    { id: 1, name: 'a' },
+    { id: 2, name: 'b' },
+    { id: 3, name: 'c' },
+  ];
+
+  const onDeleteRows = vi.fn(async (): Promise<void> => {});
+
+  afterEach(() => {
+    onDeleteRows.mockReset();
+    onDeleteRows.mockImplementation(async () => {});
+  });
+
+  function renderDeletable({
+    primaryKeys = ['id'],
+    deletable = true,
+  }: { primaryKeys?: Array<string>; deletable?: boolean } = {}): void {
+    window.clipboard = { readText: async () => '', writeText: async () => {} };
+
+    render(
+      <TableGrid
+        fields={FIELDS}
+        result={ROWS_ABC}
+        primaryKeys={primaryKeys}
+        selectionAtom={createAtom<RowSelectionState>({})}
+        onDeleteRows={deletable ? onDeleteRows : undefined}
+      />
+    );
+  }
+
+  function cellOf(name: string): HTMLTableCellElement {
+    const found = [...container.querySelectorAll('td')].find(
+      (td) => td.textContent === name
+    );
+
+    if (!found) {
+      throw new Error(`No cell "${name}"`);
+    }
+
+    return found;
+  }
+
+  function select(...names: Array<string>): void {
+    act(() => {
+      names.forEach((name, index) =>
+        cellOf(name).dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+            detail: 1,
+            ctrlKey: index > 0,
+          })
+        )
+      );
+    });
+  }
+
+  function openMenu(name: string): void {
+    act(() => {
+      cellOf(name).dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, clientX: 10 })
+      );
+    });
+  }
+
+  function menuItem(label: string): HTMLElement | undefined {
+    return [
+      ...document.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+    ].find((item) => item.textContent?.startsWith(label));
+  }
+
+  function pressDelete({ shiftKey = false } = {}): void {
+    act(() => {
+      container.querySelector('[tabindex="0"]')?.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Delete',
+          shiftKey,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    });
+  }
+
+  function confirmation(): HTMLElement | undefined {
+    return [...document.querySelectorAll<HTMLElement>('.ant-modal')].find(
+      (modal) => /Delete th(is|ese)/.test(modal.textContent ?? '')
+    );
+  }
+
+  async function press(label: string): Promise<void> {
+    await act(async () => {
+      [...(confirmation()?.querySelectorAll('button') ?? [])]
+        .find((button) => button.textContent === label)
+        ?.click();
+    });
+  }
+
+  test('the context menu deletes the selected rows, once confirmed', async () => {
+    renderDeletable();
+    select('a', 'c');
+
+    openMenu('c');
+    await act(async () => menuItem('Delete 2 rows…')?.click());
+
+    expect(confirmation()?.textContent).toContain('Delete these 2 rows?');
+    expect(onDeleteRows).not.toHaveBeenCalled();
+
+    await press('Delete');
+
+    expect(onDeleteRows).toHaveBeenCalledExactlyOnceWith([
+      [{ column: 'id', value: 1 }],
+      [{ column: 'id', value: 3 }],
+    ]);
+  });
+
+  test('the Delete key on the focused grid asks first, and Cancel deletes nothing', async () => {
+    renderDeletable();
+    select('b');
+
+    pressDelete({ shiftKey: true });
+    expect(confirmation()).toBeUndefined();
+
+    pressDelete();
+    expect(confirmation()?.textContent).toContain('Delete this row?');
+
+    await press('Cancel');
+
+    expect(onDeleteRows).not.toHaveBeenCalled();
+  });
+
+  test('an error of the server stays in the confirmation', async () => {
+    onDeleteRows.mockRejectedValueOnce(
+      Object.assign(new Error('Cannot delete a parent row'), {
+        code: 'ER_ROW_IS_REFERENCED_2',
+      })
+    );
+    renderDeletable();
+    select('b');
+    pressDelete();
+
+    await press('Delete');
+
+    expect(confirmation()?.textContent).toContain('Cannot delete a parent row');
+  });
+
+  test.each([
+    ['a table with no primary key', { primaryKeys: [] }],
+    ['a grid that deletes nothing', { deletable: false }],
+  ])('%s offers no deletion', (_label, options) => {
+    renderDeletable(options);
+    select('b');
+
+    openMenu('b');
+    expect(menuItem('Copy value')).toBeDefined();
+    expect(menuItem('Delete')).toBeUndefined();
+
+    pressDelete();
+    expect(confirmation()).toBeUndefined();
   });
 });

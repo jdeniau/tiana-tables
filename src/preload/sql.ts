@@ -1,4 +1,5 @@
 import { ipcRenderer } from 'electron';
+import type { DeleteRowsRequest } from '../sql/deleteRows';
 import type {
   ColumnDetail,
   ForeignKey,
@@ -22,6 +23,8 @@ interface Sql {
    * text: they travel as bound parameters.
    */
   updateCell(request: UpdateCellRequest): Promise<UpdateCellOutcome>;
+  /** Delete rows by their primary key, in one statement; answers how many the server deleted. */
+  deleteRows(request: DeleteRowsRequest): Promise<number>;
   closeConnection(connectionSlug: string): Promise<void>;
   closeAllConnections(): Promise<void>;
   connectionNameChanged(
@@ -71,6 +74,9 @@ export const sql: Sql = {
 
   updateCell: async (request) =>
     doInvokeQuery(SQL_CHANNEL.UPDATE_CELL, request),
+
+  deleteRows: async (request) =>
+    doInvokeQuery(SQL_CHANNEL.DELETE_ROWS, request),
 
   listDatabases: async () => doInvokeQuery(SQL_CHANNEL.LIST_DATABASES),
 

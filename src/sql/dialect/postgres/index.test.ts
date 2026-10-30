@@ -24,4 +24,17 @@ describe('postgresDialect', () => {
     // only the lowercase prefix is reserved
     expect(postgresDialect.isSystemDatabase('PG_app')).toBe(false);
   });
+
+  it('deletes each row by its key, with no bound PostgreSQL could read', () => {
+    const { sql, values } = postgresDialect.deleteRows({
+      database: 'app',
+      table: 'orders',
+      rows: [[{ column: 'id', value: 4 }], [{ column: 'id', value: '7' }]],
+    });
+
+    expect(sql).toBe(
+      'DELETE FROM "app"."orders" WHERE ("id" = :row0Key0) OR ("id" = :row1Key0)'
+    );
+    expect(values).toEqual({ row0Key0: 4, row1Key0: '7' });
+  });
 });

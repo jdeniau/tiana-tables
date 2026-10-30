@@ -50,10 +50,19 @@ interface RowsCopyMenu {
   ) => boolean;
 }
 
+/** How the menu deletes the selected rows, which its secondary click selected. */
+interface RowsDeleteMenu {
+  count: number;
+  /** opens the confirmation, which does the deleting */
+  onDelete: () => void;
+}
+
 interface CellContextMenuProps {
   /** the cell the menu is open on, `null` when it is closed */
   target: CellMenuTarget | null;
   rowsCopy: RowsCopyMenu;
+  /** absent where the rows cannot be deleted: a raw query result, a row nothing identifies */
+  rowsDelete?: RowsDeleteMenu;
   onClose: () => void;
   /**
    * Called with the `WHERE` clause to apply, replacing the current filter.
@@ -66,7 +75,8 @@ interface CellContextMenuProps {
 
 /**
  * The menu a secondary click on a body cell opens: edit the cell or set it to
- * `NULL`, copy its value, its whole row or the selected rows, filter on its column.
+ * `NULL`, copy its value, its whole row or the selected rows, filter on its
+ * column, delete the selected rows.
  *
  * It lives outside the virtualized body: a single antd component for the whole
  * grid, never one per cell (see the performance note on `TableGrid`).
@@ -80,6 +90,7 @@ interface CellContextMenuProps {
 export default function CellContextMenu({
   target,
   rowsCopy,
+  rowsDelete,
   onClose,
   onFilterChange,
   onEdit,
@@ -174,6 +185,7 @@ export default function CellContextMenu({
             setPending({ columnName: target.column.name, operator });
           },
         },
+        rowsDelete,
       })
     : undefined;
 
@@ -273,9 +285,10 @@ interface MenuItemsParams {
   filter:
     | Omit<FilterItemParams, 'dialect' | 'target' | 'clipboardText' | 't'>
     | undefined;
+  rowsDelete: RowsDeleteMenu | undefined;
 }
 
-/** The entries in three groups: writing the cell, copying it, its row or the selected rows, filtering on it. */
+/** The entries in four groups: writing the cell, copying it, its row or the selected rows, filtering on it, deleting the rows. */
 function buildMenuItems({
   dialect,
   target,
@@ -286,6 +299,7 @@ function buildMenuItems({
   onCopy,
   copyRowsItems,
   filter,
+  rowsDelete,
 }: MenuItemsParams): MenuProps['items'] {
   const { column, rowKey, value } = target;
   const editable = getCellEditability(column.detail, rowKey !== null).editable;
@@ -328,6 +342,19 @@ function buildMenuItems({
     items.push(
       { type: 'divider' },
       buildFilterItem({ dialect, target, clipboardText, t, ...filter })
+    );
+  }
+
+  if (rowsDelete) {
+    items.push(
+      { type: 'divider' },
+      {
+        key: 'delete',
+        danger: true,
+        label: t('table.contextMenu.delete', { count: rowsDelete.count }),
+        extra: t('table.contextMenu.delete.shortcut'),
+        onClick: rowsDelete.onDelete,
+      }
     );
   }
 

@@ -9,6 +9,7 @@ import {
   PASSWORD_UNREADABLE,
   asConnectionError,
 } from './connectionError';
+import { deleteRowsRequestSchema } from './deleteRows';
 import { getDialect } from './dialect';
 import {
   type ColumnDetail,
@@ -76,6 +77,7 @@ class ConnectionStack {
     [SQL_CHANNEL.GET_TABLE_STRUCTURE]: this.getTableStructure,
     [SQL_CHANNEL.GET_SERVER_TIME_ZONE]: this.getServerTimeZone,
     [SQL_CHANNEL.UPDATE_CELL]: this.updateCell,
+    [SQL_CHANNEL.DELETE_ROWS]: this.deleteRows,
     [SQL_CHANNEL.CLOSE]: this.closeConnection,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
@@ -262,6 +264,21 @@ class ConnectionStack {
         guarded.outcomeOfWrite(written) ??
         guarded.outcomeOfReadBack(written, await this.#answer(guarded.readBack))
       );
+    });
+  }
+
+  /** Delete rows by their primary key, answering how many the server deleted. */
+  async deleteRows(request: unknown): ResultOrError<number> {
+    // a malformed request is our bug, thrown rather than encoded as the server's answer
+    const parsed = deleteRowsRequestSchema.parse(request);
+
+    return this.#ask(async () => {
+      const query = this.#dialect().deleteRows(parsed);
+      const [written] = await this.#send(query.sql, false, query.values);
+
+      invariant(isWriteResult(written), 'A DELETE answers a write summary');
+
+      return written.affectedRows;
     });
   }
 

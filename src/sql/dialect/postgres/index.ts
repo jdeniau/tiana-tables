@@ -1,9 +1,14 @@
 import { DatabaseEngine } from '../../engine';
 import { toHexDigits } from '../hex';
+import { rowsClause } from '../primaryKeyClause';
 import type { Dialect } from '../types';
 import { escapeIdentifier, escapeLiteral } from './escape';
 import { postgresGuardedUpdate } from './guardedUpdate';
 import { postgresMetadata } from './metadata';
+
+function qualify(schemaName: string, tableName: string): string {
+  return `${escapeIdentifier(schemaName)}.${escapeIdentifier(tableName)}`;
+}
 
 /** The UI's database is a schema here: a connection opens one database and browses its schemas. */
 export const postgresDialect: Dialect = {
@@ -11,8 +16,7 @@ export const postgresDialect: Dialect = {
 
   escapeIdentifier,
 
-  qualify: (schemaName, tableName) =>
-    `${escapeIdentifier(schemaName)}.${escapeIdentifier(tableName)}`,
+  qualify,
 
   // the schema alone, as `USE` does on MySQL:
   // a name found in no other schema must not resolve to `public` behind the user's back
@@ -34,4 +38,14 @@ export const postgresDialect: Dialect = {
   metadata: postgresMetadata,
 
   guardedUpdate: postgresGuardedUpdate,
+
+  // no `LIMIT` on a `DELETE` here: the primary key targets one row each
+  deleteRows: ({ database, table, rows }) => {
+    const where = rowsClause(rows, escapeIdentifier);
+
+    return {
+      sql: `DELETE FROM ${qualify(database, table)} WHERE ${where.sql}`,
+      values: where.values,
+    };
+  },
 };

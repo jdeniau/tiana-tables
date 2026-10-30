@@ -67,6 +67,23 @@ function statements(dialect: Dialect): Array<[string, BuiltQuery]> {
       guardedUpdate(request({ hasJsonType: true })).write,
     ],
     ['a read-back', guardedUpdate(request()).readBack],
+    [
+      'a delete of rows on a composite key',
+      dialect.deleteRows({
+        database: DATABASE,
+        table: TABLE,
+        rows: [
+          [
+            { column: 'order_id', value: 'first order' },
+            { column: 'line_id', value: 2 },
+          ],
+          [
+            { column: 'order_id', value: 'second order' },
+            { column: 'line_id', value: 3 },
+          ],
+        ],
+      }),
+    ],
   ];
 }
 

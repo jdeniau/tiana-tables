@@ -73,7 +73,6 @@ export function createMenu(mainWindow: BrowserWindow) {
         ...(isMac
           ? [
               { role: 'pasteAndMatchStyle' },
-              { role: 'delete' },
               selectAllItem,
               { type: 'separator' },
               {
@@ -81,7 +80,7 @@ export function createMenu(mainWindow: BrowserWindow) {
                 submenu: [{ role: 'startSpeaking' }, { role: 'stopSpeaking' }],
               },
             ]
-          : [{ role: 'delete' }, { type: 'separator' }, selectAllItem]),
+          : [{ type: 'separator' }, selectAllItem]),
       ],
     },
     //
