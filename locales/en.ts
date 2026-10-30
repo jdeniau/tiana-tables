@@ -175,6 +175,9 @@ export default {
   'table.columns.count': '{count, plural, one {# column} other {# columns}}',
   'table.contextMenu.copy': 'Copy value',
   'table.contextMenu.copyRow': 'Copy row as',
+  'table.contextMenu.delete':
+    '{count, plural, one {Delete row…} other {Delete # rows…}}',
+  'table.contextMenu.delete.shortcut': 'Del',
   'table.contextMenu.edit': '{editable, select, true {Edit…} other {View…}}',
   'table.contextMenu.edit.shortcut': 'Double-click',
   'table.contextMenu.filter': 'Filter',
@@ -188,6 +191,12 @@ export default {
   'table.copy.format':
     '{format, select, tsv {TSV} csv {CSV} markdown {Markdown} json {JSON} sqlInsert {SQL INSERT} other {{format}}}',
   'table.copy.rowsAs': 'Copy {count, plural, one {# row} other {# rows}} as',
+  'table.delete.cancel': 'Cancel',
+  'table.delete.confirm': 'Delete',
+  'table.delete.description':
+    '{count, plural, one {The row is deleted} other {The # rows are deleted}} from the database, which cannot be undone.',
+  'table.delete.title':
+    '{count, plural, one {Delete this row?} other {Delete these # rows?}}',
   'table.filters.history': 'Filters used before',
   'table.filters.title': 'Filters',
   'table.rowDetail.close': 'Close the row panel',

@@ -44,6 +44,7 @@ Adding a member to `DatabaseEngine` stops the build until every `Record<Database
   - `ColumnDetail` is facts (`nullable`, `generated`, `binary`, `hasJsonType`, `allowedValues`, `multiValued`), resolved by the dialect: a PostgreSQL enum's labels are only in `pg_enum`, so the renderer could not derive them;
   - `DescribedColumn` keeps MySQL's vocabulary (the structure page's heads: `Key` = `PRI`/`UNI`/`MUL`, `Extra`); another engine synthesises it and names the gap (PostgreSQL marks every column of a composite index `MUL`). `References` is computed in neutral code from `listForeignKeys`.
 - **The guarded write** (`GuardedUpdate`): `write` changes the cell only if it still holds what the grid showed; `outcomeOfWrite` settles it from the write alone or answers `undefined`; then `readBack` (a `readQuery`) and `outcomeOfReadBack` tell a conflict from a deleted row. `updateCell` has no engine branch. Each dialect's decision table is tested on hand-written answers.
+- **The delete of rows** (`deleteRows`): one `DELETE` naming each row by its whole primary key (`rowsClause`), bounded by `LIMIT <rows>` where the engine has one; a request naming no row or an empty key is refused, since its `WHERE` would match the whole table.
 
 ## The driver contract (`driver/index.ts`)
 

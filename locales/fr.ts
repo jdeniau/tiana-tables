@@ -176,6 +176,9 @@ const fr: Translation = {
   'table.columns.count': '{count, plural, one {# colonne} other {# colonnes}}',
   'table.contextMenu.copy': 'Copier la valeur',
   'table.contextMenu.copyRow': 'Copier la ligne en',
+  'table.contextMenu.delete':
+    '{count, plural, one {Supprimer la ligne…} other {Supprimer # lignes…}}',
+  'table.contextMenu.delete.shortcut': 'Suppr',
   'table.contextMenu.edit':
     '{editable, select, true {Modifier…} other {Afficher…}}',
   'table.contextMenu.edit.shortcut': 'Double-clic',
@@ -191,6 +194,12 @@ const fr: Translation = {
     '{format, select, tsv {TSV} csv {CSV} markdown {Markdown} json {JSON} sqlInsert {INSERT SQL} other {{format}}}',
   'table.copy.rowsAs':
     'Copier {count, plural, one {# ligne} other {# lignes}} en',
+  'table.delete.cancel': 'Annuler',
+  'table.delete.confirm': 'Supprimer',
+  'table.delete.description':
+    '{count, plural, one {La ligne est supprimée} other {Les # lignes sont supprimées}} de la base de données, sans retour possible.',
+  'table.delete.title':
+    '{count, plural, one {Supprimer cette ligne ?} other {Supprimer ces # lignes ?}}',
   'table.filters.history': 'Filtres déjà utilisés',
   'table.filters.title': 'Filtres',
   'table.rowDetail.close': 'Fermer le panneau de la ligne',

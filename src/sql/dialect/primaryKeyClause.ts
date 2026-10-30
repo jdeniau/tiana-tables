@@ -1,4 +1,5 @@
 import invariant from 'tiny-invariant';
+import type { DeleteRowsRequest } from '../deleteRows';
 import type { UpdateCellRequest } from '../updateCell';
 import type { BuiltQuery } from './readQuery';
 
@@ -10,8 +11,8 @@ import type { BuiltQuery } from './readQuery';
  * `[a-zA-Z][a-zA-Z0-9_]*` after the colon — and could collide with the
  * `newValue` and `originalValue` of the write.
  */
-function primaryKeyParameter(index: number): string {
-  return `primaryKey${index}`;
+function primaryKeyParameter(prefix: string, index: number): string {
+  return `${prefix}${index}`;
 }
 
 /**
@@ -24,7 +25,8 @@ function primaryKeyParameter(index: number): string {
  */
 export function primaryKeyClause(
   primaryKey: UpdateCellRequest['primaryKey'],
-  escapeIdentifier: (identifier: string) => string
+  escapeIdentifier: (identifier: string) => string,
+  parameterPrefix = 'primaryKey'
 ): BuiltQuery {
   invariant(
     primaryKey.length > 0,
@@ -35,11 +37,31 @@ export function primaryKeyClause(
     sql: primaryKey
       .map(
         (part, index) =>
-          `${escapeIdentifier(part.column)} = :${primaryKeyParameter(index)}`
+          `${escapeIdentifier(part.column)} = :${primaryKeyParameter(parameterPrefix, index)}`
       )
       .join(' AND '),
     values: Object.fromEntries(
-      primaryKey.map((part, index) => [primaryKeyParameter(index), part.value])
+      primaryKey.map((part, index) => [
+        primaryKeyParameter(parameterPrefix, index),
+        part.value,
+      ])
     ),
+  };
+}
+
+/** The `WHERE` that targets exactly these rows, each by its own primary key. */
+export function rowsClause(
+  rows: DeleteRowsRequest['rows'],
+  escapeIdentifier: (identifier: string) => string
+): BuiltQuery {
+  invariant(rows.length > 0, 'No row to target');
+
+  const clauses = rows.map((primaryKey, row) =>
+    primaryKeyClause(primaryKey, escapeIdentifier, `row${row}Key`)
+  );
+
+  return {
+    sql: clauses.map(({ sql }) => `(${sql})`).join(' OR '),
+    values: Object.assign({}, ...clauses.map(({ values }) => values)),
   };
 }

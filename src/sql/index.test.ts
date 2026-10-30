@@ -238,6 +238,36 @@ describe('database-scoped queries', () => {
     });
   });
 
+  describe('deleting rows', () => {
+    test('sends one DELETE and answers how many rows it deleted', async () => {
+      query.mockResolvedValueOnce([{ affectedRows: 1, insertId: 0 }, []]);
+
+      const { result } = await connectionStack.deleteRows({
+        database: 'shop',
+        table: 'orders',
+        rows: [[{ column: 'id', value: 42 }], [{ column: 'id', value: 43 }]],
+      });
+
+      expect(statementsSent()).toEqual([
+        expect.stringMatching(/^DELETE FROM `shop`.`orders` WHERE /),
+      ]);
+      expect(result).toBe(1);
+    });
+
+    // an empty key would leave a WHERE matching the whole table
+    test('a request naming no key is refused rather than sent', async () => {
+      await expect(
+        connectionStack.deleteRows({
+          database: 'shop',
+          table: 'orders',
+          rows: [[]],
+        })
+      ).rejects.toThrow();
+
+      expect(query).not.toHaveBeenCalled();
+    });
+  });
+
   // tagged by the driver, so the result tab can tell it from a crash
   test('a statement the server refused crosses IPC as one', async () => {
     query.mockRejectedValue(

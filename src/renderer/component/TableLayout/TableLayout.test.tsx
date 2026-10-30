@@ -24,6 +24,7 @@ import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
 import { FieldKind } from '../../../sql/resultField';
 import { createQueryClient } from '../../queryClient';
+import { mountRows } from '../mountRows.testing';
 import { TableLayout } from './TableLayout';
 import { readOrderParams } from './tableSearch';
 
@@ -425,5 +426,47 @@ describe('while the rows are on their way', () => {
 
     await answerDescending([{ id: 2, name: 'b' }]);
     expect(skeletonRows()).toBe(0);
+  });
+});
+
+describe('deleting rows', () => {
+  mountRows();
+
+  test('deletes the row by its key, then fetches every page loaded again', async () => {
+    const deleteRows = vi.fn().mockResolvedValue(1);
+    window.sql = { executeQuery, deleteRows } as unknown as typeof window.sql;
+    await render();
+    executeQuery.mockResolvedValueOnce([[{ id: 2, name: 'b' }], FIELDS]);
+    await clickLoadMore();
+
+    const cell = [...container.querySelectorAll('td')].find(
+      (td) => td.textContent === 'a'
+    );
+    await click(cell);
+    executeQuery.mockClear();
+
+    await act(async () => {
+      container
+        .querySelector('[tabindex="0"]')
+        ?.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Delete', bubbles: true })
+        );
+    });
+    await click(
+      [...document.querySelectorAll<HTMLElement>('.ant-modal button')].find(
+        (button) => button.textContent === 'Delete'
+      )
+    );
+
+    expect(deleteRows).toHaveBeenCalledExactlyOnceWith({
+      database: 'shop',
+      table: 'items',
+      rows: [[{ column: 'id', value: 1 }]],
+    });
+    // the rows below moved up: the second page starts where the first one now ends
+    expect(executeQuery.mock.calls.map(([query]) => query)).toEqual([
+      'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 0;',
+      'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 100;',
+    ]);
   });
 });

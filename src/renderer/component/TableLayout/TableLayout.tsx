@@ -96,14 +96,22 @@ export function TableLayout({
   }, [sortingAtom, navigate, where]);
 
   const allColumns = useAllColumnsContext();
-  const { result, fields, error, loading, loadingMore, loadMore, updateValue } =
-    useTableRows(connectionSlug, {
-      database,
-      tableName,
-      primaryKeys,
-      where,
-      sorting,
-    });
+  const {
+    result,
+    fields,
+    error,
+    loading,
+    loadingMore,
+    loadMore,
+    updateValue,
+    deleteRows,
+  } = useTableRows(connectionSlug, {
+    database,
+    tableName,
+    primaryKeys,
+    where,
+    sorting,
+  });
 
   // until the first page answers, the schema's columns: their kind comes with the rows
   const shownFields =
@@ -216,6 +224,7 @@ export function TableLayout({
                 enableSorting={sortable}
                 selectionAtom={selectionAtom}
                 onRowsCopied={onRowsCopied}
+                onDeleteRows={deleteRows}
                 cursorAtom={cursorAtom}
                 panelOpenAtom={panelOpenAtom}
               />

@@ -1,10 +1,15 @@
 import { escape } from 'mysql';
 import { DatabaseEngine } from '../../engine';
 import { toHexDigits } from '../hex';
+import { rowsClause } from '../primaryKeyClause';
 import type { Dialect } from '../types';
 import { escapeIdentifier } from './escapeIdentifier';
 import { mysqlGuardedUpdate } from './guardedUpdate';
 import { mysqlMetadata } from './metadata';
+
+function qualify(databaseName: string, tableName: string): string {
+  return `${escapeIdentifier(databaseName)}.${escapeIdentifier(tableName)}`;
+}
 
 const SYSTEM_DATABASES = new Set([
   'information_schema',
@@ -18,8 +23,7 @@ export const mysqlDialect: Dialect = {
 
   escapeIdentifier,
 
-  qualify: (databaseName, tableName) =>
-    `${escapeIdentifier(databaseName)}.${escapeIdentifier(tableName)}`,
+  qualify,
 
   useDatabase: (databaseName) => `USE ${escapeIdentifier(databaseName)};`,
 
@@ -43,4 +47,14 @@ export const mysqlDialect: Dialect = {
   metadata: mysqlMetadata,
 
   guardedUpdate: mysqlGuardedUpdate,
+
+  // the `LIMIT` bounds the blast radius of a key that matches more than its row, as on the guarded write
+  deleteRows: ({ database, table, rows }) => {
+    const where = rowsClause(rows, escapeIdentifier);
+
+    return {
+      sql: `DELETE FROM ${qualify(database, table)} WHERE ${where.sql} LIMIT ${rows.length}`,
+      values: where.values,
+    };
+  },
 };

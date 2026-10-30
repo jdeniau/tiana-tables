@@ -57,9 +57,10 @@ import CellContextMenu from './CellContextMenu';
 import CellDetailModal, { CellDetail } from './CellDetailModal';
 import { CellWriteProvider } from './CellWrite';
 import ForeignKeyLink from './ForeignKeyLink';
+import RowsDeleteModal from './RowsDeleteModal';
 import SkeletonBody, { skeletonStyle } from './SkeletonBody';
 import { fill } from './Style/fill';
-import { rowIdOf } from './rowId';
+import { buildRowKey, rowIdOf } from './rowId';
 import {
   NO_CURSOR,
   type RowCursor,
@@ -74,6 +75,7 @@ import {
   useRowSelection,
 } from './useRowSelection';
 import { type RowsCopied, columnValue, useRowsCopy } from './useRowsCopy';
+import { useRowsDelete } from './useRowsDelete';
 import { writtenCellFlashStyle } from './useWrittenCellFlash';
 
 const features = tableFeatures({
@@ -158,6 +160,12 @@ interface TableGridProps<R extends ResultRow> {
   onRowsCopied?: (copied: RowsCopied) => void;
 
   /**
+   * Deletes rows by their primary key, resolving once `result` no longer holds them.
+   * Providing it, with `selectionAtom`, is what lets the context menu and the Delete key delete the selected rows, after a confirmation.
+   */
+  onDeleteRows?: (rowKeys: Array<Array<PrimaryKeyPart>>) => Promise<void>;
+
+  /**
    * Where the next gestures start from, its lead being the row the side panel shows.
    * The grid holds its own when not given; it must be the same atom for the grid's whole life.
    */
@@ -184,41 +192,6 @@ export interface ExtraColumn<Row extends ResultRow> {
 }
 
 const NO_EXTRA_COLUMNS: Array<never> = [];
-
-/** A scalar the driver answers with, and binds back unchanged: a date is the server's text. */
-function isPrimaryKeyValue(value: unknown): value is PrimaryKeyPart['value'] {
-  return typeof value === 'string' || typeof value === 'number';
-}
-
-/**
- * What identifies the row of a cell, or `null` when nothing does.
- *
- * A key part that is not a scalar — a `BINARY` column, arriving as bytes —
- * gives up the whole key: the row reads as read-only rather than being written
- * against a value reshaped on the way out.
- */
-function buildRowKey(
-  row: ResultRow,
-  primaryKeys: Array<string> | undefined
-): Array<PrimaryKeyPart> | null {
-  if (!primaryKeys || primaryKeys.length === 0) {
-    return null;
-  }
-
-  const parts: Array<PrimaryKeyPart> = [];
-
-  for (const column of primaryKeys) {
-    const value = row[column];
-
-    if (!isPrimaryKeyValue(value)) {
-      return null;
-    }
-
-    parts.push({ column, value });
-  }
-
-  return parts;
-}
 
 /**
  * PERFORMANCE NOTE: the virtualized body is the hot path of this component —
@@ -248,6 +221,7 @@ function TableGrid<Row extends ResultRow>({
   enableSorting,
   selectionAtom,
   onRowsCopied,
+  onDeleteRows,
   cursorAtom,
   panelOpenAtom,
 }: TableGridProps<Row>): ReactElement {
@@ -382,6 +356,18 @@ function TableGrid<Row extends ResultRow>({
     onCopied: onRowsCopied,
   });
 
+  const { selectedRowKeys, pendingRowKeys, askToDelete, closeConfirmation } =
+    useRowsDelete(table, {
+      enabled:
+        onDeleteRows !== undefined &&
+        selectionAtom !== undefined &&
+        !rowsAsArray,
+      scrollElement,
+      primaryKeys,
+    });
+  // read when the menu opens, after its secondary click selected the row
+  const menuRowKeys = menuTarget ? selectedRowKeys() : null;
+
   return (
     <Wrapper>
       <ScrollContainer
@@ -511,6 +497,14 @@ function TableGrid<Row extends ResultRow>({
             copyRows,
             canCopyAs,
           }}
+          rowsDelete={
+            menuRowKeys
+              ? {
+                  count: menuRowKeys.length,
+                  onDelete: () => askToDelete(menuRowKeys),
+                }
+              : undefined
+          }
           onFilterChange={onFilterChange}
           // the cell was remembered on the secondary click, so a save still flashes it
           onEdit={setCellDetail}
@@ -519,6 +513,14 @@ function TableGrid<Row extends ResultRow>({
           }}
         />
       </CellWriteProvider>
+
+      {onDeleteRows && (
+        <RowsDeleteModal
+          rowKeys={pendingRowKeys}
+          onDelete={onDeleteRows}
+          onClose={closeConfirmation}
+        />
+      )}
     </Wrapper>
   );
 }
