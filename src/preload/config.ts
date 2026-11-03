@@ -25,6 +25,13 @@ interface Config {
     tableName: string | null
   ): Promise<void>;
 
+  /** stores the kind of page the database reopens on, a `DatabasePage` */
+  setActivePathKey(
+    connectionSlug: string,
+    database: string,
+    activePathKey: string
+  ): Promise<void>;
+
   /** stores the tables kept open as tabs, in their order */
   setOpenTables(
     connectionSlug: string,
@@ -82,6 +89,7 @@ export const config: Config = {
   changeLanguage: bindChannel(CONFIGURATION_CHANNEL.CHANGE_LANGUAGE),
   setActiveDatabase: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE),
   setActiveTable: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE),
+  setActivePathKey: bindChannel(CONFIGURATION_CHANNEL.SET_ACTIVE_PATH_KEY),
   setOpenTables: bindChannel(CONFIGURATION_CHANNEL.SET_OPEN_TABLES),
   setTableFilter: bindChannel(CONFIGURATION_CHANNEL.SET_TABLE_FILTER),
   setTableSorting: bindChannel(CONFIGURATION_CHANNEL.SET_TABLE_SORTING),

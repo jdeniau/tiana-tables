@@ -52,6 +52,9 @@ export type DatabaseConfig = {
   /** the table the database opens on, `''` once its last tab is closed */
   activeTable: string;
 
+  /** the kind of page the database reopens on, a `DatabasePage`: an unknown one counts as none */
+  activePathKey?: string;
+
   /** the tables kept open as tabs, in the order they were memorised — the temporary one is not among them */
   openTables?: Array<string>;
 

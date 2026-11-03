@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useMatch, useNavigate } from 'react-router';
+import { useMatch, useMatches, useNavigate } from 'react-router';
 import invariant from 'tiny-invariant';
 import {
   ConnectionContext,
@@ -11,7 +11,7 @@ import {
   DatabaseContextProps,
 } from '../../../contexts/DatabaseContext';
 import { queryKeys } from '../../queryKeys';
-import { databaseUrl } from '../databaseUrl';
+import { databaseUrl, toDatabasePage } from '../databaseUrl';
 import { closeConnectionTarget } from './closeConnectionTarget';
 import { cycleConnectionTarget } from './cycleConnectionTarget';
 
@@ -26,6 +26,7 @@ function ConnectionStack({ children }: Props) {
     ?.params.connectionSlug;
   const databaseName = useMatch('connections/:connectionSlug/:databaseName/*')
     ?.params.databaseName;
+  const databasePage = toDatabasePage(useMatches().at(-1)?.id);
 
   const [connectionSlugList, setConnectionNameList] = useState<Array<string>>(
     []
@@ -43,6 +44,17 @@ function ConnectionStack({ children }: Props) {
       }
     }
   }, [connectionSlugList, currentConnectionSlug, queryClient]);
+
+  // what `databaseUrl` reopens the database on
+  useEffect(() => {
+    if (currentConnectionSlug && databaseName && databasePage) {
+      window.config.setActivePathKey(
+        currentConnectionSlug,
+        databaseName,
+        databasePage
+      );
+    }
+  }, [currentConnectionSlug, databaseName, databasePage]);
 
   useEffect(() => {
     return () => {

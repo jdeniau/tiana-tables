@@ -7,6 +7,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
 import { createQueryClient } from '../../queryClient';
+import { DatabasePage } from '../databaseUrl';
 import ConnectionStack from './ConnectionStack';
 
 (
@@ -31,6 +32,7 @@ beforeEach(() => {
     closeConnection: vi.fn(),
   } as unknown as typeof window.sql;
   window.config = {
+    setActivePathKey: vi.fn(),
     getConfiguration: () =>
       Promise.resolve({
         connections: {
@@ -108,6 +110,53 @@ test('picking a database goes straight to its last table', async () => {
   expect(router.state.location.pathname).toBe(
     '/connections/connectionSlug/public/tables/article'
   );
+});
+
+test('stores the kind of page each database was left on', async () => {
+  const router = createMemoryRouter(
+    [
+      {
+        element: (
+          <ConnectionStack>
+            <Outlet />
+          </ConnectionStack>
+        ),
+        children: [
+          {
+            path: 'connections/:connectionSlug/:databaseName/sql',
+            id: DatabasePage.Sql,
+          },
+          {
+            path: 'connections/:connectionSlug/:databaseName/tables/:tableName',
+            id: DatabasePage.Table,
+          },
+          { path: '*', element: null },
+        ],
+      },
+    ],
+    { initialEntries: ['/connections/a/app/sql'] }
+  );
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  unmount = () => root.unmount();
+
+  await act(async () => {
+    root.render(
+      <QueryClientProvider client={createQueryClient()}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    );
+  });
+
+  await act(async () => router.navigate('/connections/b/public/tables/orders'));
+  // a page no `DatabasePage` names
+  await act(async () => router.navigate('/connections/b/public/other'));
+
+  expect(vi.mocked(window.config.setActivePathKey).mock.calls).toEqual([
+    ['a', 'app', 'Sql'],
+    ['b', 'public', 'Table'],
+  ]);
 });
 
 test('the menu cycles through the connection tabs, wrapping around', async () => {
