@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom';
 import invariant from 'tiny-invariant';
 import QueryDevtools from './component/QueryDevtools';
+import { DatabasePage } from './component/databaseUrl';
 import { createQueryClient } from './queryClient';
 import Connect from './routes/connect';
 import Create from './routes/connect/create';
@@ -123,6 +124,7 @@ const router = createHashRouter([
             children: [
               {
                 index: true,
+                id: DatabasePage.Database,
                 lazy: async () => {
                   const routeModule =
                     await import('./routes/connections.$connectionSlug.$databaseName._index');
@@ -136,6 +138,7 @@ const router = createHashRouter([
                 children: [
                   {
                     index: true,
+                    id: DatabasePage.Table,
                     lazy: async () => {
                       const routeModule =
                         await import('./routes/connections.$connectionSlug.$databaseName.$tableName');
@@ -148,6 +151,7 @@ const router = createHashRouter([
                   },
                   {
                     path: 'structure',
+                    id: DatabasePage.TableStructure,
                     lazy: async () => {
                       const routeModule =
                         await import('./routes/connections.$connectionSlug.$databaseName.$tableName.structure');
@@ -162,6 +166,7 @@ const router = createHashRouter([
               },
               {
                 path: 'sql',
+                id: DatabasePage.Sql,
                 errorElement: <ConnectionErrorPage />,
                 lazy: async () => {
                   const routeModule =

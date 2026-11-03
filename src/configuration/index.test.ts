@@ -14,6 +14,7 @@ import {
   editConnection,
   getConfiguration,
   setActiveDatabase,
+  setActivePathKey,
   setActiveTable,
   setColumnDisplayAfter,
   setColumnWidth,
@@ -692,6 +693,27 @@ describe('set connection appState', async () => {
       'utf-8',
       expect.any(Function)
     );
+  });
+});
+
+describe('setActivePathKey', () => {
+  test('stores the page of the database, beside its active table', () => {
+    mockExistingConfig();
+
+    setActiveTable('prod', 'db', 'users');
+    setActivePathKey('prod', 'db', 'Sql');
+
+    expect(
+      getConfiguration().connections.prod?.appState?.configByDatabase.db
+    ).toEqual({ activeTable: 'users', activePathKey: 'Sql', tables: {} });
+  });
+
+  test('ignores a connection that is not in the configuration', () => {
+    mockExistingConfig();
+
+    setActivePathKey('inexistant', 'db', 'Sql');
+
+    expect(mockWriteFile).not.toHaveBeenCalled();
   });
 });
 

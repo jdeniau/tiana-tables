@@ -47,6 +47,7 @@ export async function loader({ params }: RouteParams) {
   const dialect = await loadDialect(connectionSlug);
 
   window.sql.connectionNameChanged(connectionSlug, databaseName);
+  window.config.setActiveTable(connectionSlug, databaseName, tableName);
 
   const [data, primaryKeys, [, probedFields]] = await Promise.all([
     window.sql.getTableStructure(databaseName, tableName),

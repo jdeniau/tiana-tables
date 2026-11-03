@@ -6,6 +6,7 @@ export enum CONFIGURATION_CHANNEL {
   CHANGE_LANGUAGE = 'config:language:change',
   SET_ACTIVE_DATABASE = 'config:connection:setActiveDatabase',
   SET_ACTIVE_TABLE = 'config:connection:setActiveTable',
+  SET_ACTIVE_PATH_KEY = 'config:connection:setActivePathKey',
   SET_OPEN_TABLES = 'config:connection:setOpenTables',
   SET_TABLE_FILTER = 'config:connection:setTableFilter',
   SET_TABLE_SORTING = 'config:connection:setTableSorting',

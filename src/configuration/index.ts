@@ -240,6 +240,32 @@ export function setActiveDatabase(connectionSlug: string, database: string) {
   writeConfiguration(config);
 }
 
+/** Stores the kind of page the database reopens on, its `activeTable` filling the table it names. */
+export function setActivePathKey(
+  connectionSlug: string,
+  database: string,
+  activePathKey: string
+): void {
+  const config = getConfiguration();
+
+  if (!config.connections[connectionSlug]) {
+    return;
+  }
+
+  const connection = ensureConnectionAppStateExist(
+    config.connections[connectionSlug]
+  );
+
+  connection.appState.configByDatabase[database] = {
+    ...ensureConnectionAppStateIsCorrect(
+      connection.appState.configByDatabase[database]
+    ),
+    activePathKey,
+  };
+
+  writeConfiguration(config);
+}
+
 /** Stores the table the database opens on; `null` clears it, so the database page redirects nowhere. */
 export function setActiveTable(
   connectionSlug: string,
@@ -541,6 +567,7 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.CHANGE_LANGUAGE]: changeLanguage,
   [CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE]: setActiveDatabase,
   [CONFIGURATION_CHANNEL.SET_ACTIVE_TABLE]: setActiveTable,
+  [CONFIGURATION_CHANNEL.SET_ACTIVE_PATH_KEY]: setActivePathKey,
   [CONFIGURATION_CHANNEL.SET_OPEN_TABLES]: setOpenTables,
   [CONFIGURATION_CHANNEL.SET_TABLE_FILTER]: setTableFilter,
   [CONFIGURATION_CHANNEL.SET_TABLE_SORTING]: setTableSorting,
