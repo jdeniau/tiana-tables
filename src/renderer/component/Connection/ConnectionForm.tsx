@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   AutoComplete,
   Button,
@@ -16,6 +17,7 @@ import { useTranslation } from '../../../i18n';
 import { DatabaseEngine } from '../../../sql/engine';
 import { SslMode } from '../../../sql/sslMode';
 import type { ConnectionObjectWithoutSlug } from '../../../sql/types';
+import type { SshTunnel } from '../../../ssh/types';
 import { space } from '../../theme';
 import { ActionButton } from '../Style/ActionButton';
 import {
@@ -56,7 +58,22 @@ const DEFAULTS: Record<DatabaseEngine, { port: number; user: string }> = {
 /** the database every PostgreSQL server is created with */
 const DEFAULT_POSTGRES_DATABASE = 'postgres';
 
+/** How the server is reached: the SSH fields are only mounted, and so only submitted, through a tunnel. */
+enum Route {
+  Direct = 'direct',
+  Ssh = 'ssh',
+}
+
 type FormValues = ConnectionObjectWithoutSlug;
+
+/** An emptied port reads `null`, an emptied user `''`: neither is stored, so `~/.ssh/config` decides. */
+function withoutBlankSshFields({ host, port, user }: SshTunnel): SshTunnel {
+  return {
+    host,
+    ...(port != null && { port }),
+    ...(user?.trim() && { user: user.trim() }),
+  };
+}
 
 function ConnectionForm({ connection }: Props) {
   const engine = connection?.engine ?? DatabaseEngine.MySQL;
@@ -70,6 +87,7 @@ function ConnectionForm({ connection }: Props) {
     ssl: connection?.ssl ?? SslMode.Disable,
     color: connection?.color,
     group: connection?.group,
+    ssh: connection?.ssh,
     // the stored password is a ciphertext the renderer never sees in clear: left empty, it is kept as it is
     password: '',
   };
@@ -81,6 +99,9 @@ function ConnectionForm({ connection }: Props) {
   const [form] = Form.useForm<FormValues>();
   const chosenEngine = Form.useWatch('engine', form) ?? engine;
   const chosenSsl = Form.useWatch('ssl', form) ?? initialValues.ssl;
+  const [route, setRoute] = useState(
+    connection?.ssh ? Route.Ssh : Route.Direct
+  );
 
   // a field still holding the other engine's default follows the engine, one the user typed stays
   const followEngine = (
@@ -111,7 +132,11 @@ function ConnectionForm({ connection }: Props) {
 
   const handleSubmit = (values: FormValues): void => {
     // a blank group is no group
-    const formData = { ...values, group: values.group?.trim() || undefined };
+    const formData = {
+      ...values,
+      group: values.group?.trim() || undefined,
+      ...(values.ssh && { ssh: withoutBlankSshFields(values.ssh) }),
+    };
 
     if (connection) {
       // edit connection
@@ -223,6 +248,64 @@ function ConnectionForm({ connection }: Props) {
                   style={{ width: '100%' }}
                 />
               </Form.Item>
+            </Flex>
+
+            <Flex vertical gap={space.sm}>
+              <Form.Item
+                label={t('connection.form.route.label')}
+                extra={t('connection.form.route.help', { route })}
+                style={ITEM}
+              >
+                <Segmented
+                  block
+                  value={route}
+                  onChange={setRoute}
+                  options={Object.values(Route).map((value) => ({
+                    value,
+                    label: t('connection.form.route.option', { route: value }),
+                  }))}
+                />
+              </Form.Item>
+
+              {route === Route.Ssh && (
+                <>
+                  <Flex gap={space.sm}>
+                    <Form.Item
+                      name={['ssh', 'host']}
+                      label={t('connection.form.ssh.host.label')}
+                      rules={[{ required: true }]}
+                      style={{ ...ITEM, flex: 1 }}
+                    >
+                      <Input />
+                    </Form.Item>
+
+                    <Form.Item
+                      name={['ssh', 'port']}
+                      label={t('connection.form.port.label')}
+                      style={PORT}
+                    >
+                      <InputNumber
+                        placeholder="22"
+                        min={1}
+                        max={65535}
+                        precision={0}
+                        controls={false}
+                        style={{ width: '100%' }}
+                      />
+                    </Form.Item>
+                  </Flex>
+
+                  <Form.Item
+                    name={['ssh', 'user']}
+                    label={t('connection.form.ssh.user.label')}
+                    style={ITEM}
+                  >
+                    <Input
+                      placeholder={t('connection.form.ssh.user.placeholder')}
+                    />
+                  </Form.Item>
+                </>
+              )}
             </Flex>
 
             <Form.Item

@@ -55,7 +55,9 @@ export default function ConnectionFailedPage() {
               </div>
 
               <RegionMeta>
-                {t('connection.failed.target', { host, port })}
+                {t('connection.failed.target', {
+                  address: port === undefined ? host : `${host}:${port}`,
+                })}
               </RegionMeta>
 
               <RegionDetail>{error.message}</RegionDetail>
