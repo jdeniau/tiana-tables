@@ -1,3 +1,5 @@
+import { NetworkErrorCode } from '../networkErrorCode';
+
 /**
  * Why a connection could not be opened, in the terms the user can act on.
  *
@@ -99,15 +101,15 @@ export function classifyConnectionError(e: unknown): ConnectionFailure {
   }
 
   switch (code) {
-    case 'ETIMEDOUT':
+    case NetworkErrorCode.TimedOut:
     case 'PROTOCOL_SEQUENCE_TIMEOUT':
       return ConnectionFailure.timeout;
 
-    case 'ECONNREFUSED':
+    case NetworkErrorCode.Refused:
       return ConnectionFailure.refused;
 
-    case 'ENOTFOUND':
-    case 'EAI_AGAIN':
+    case NetworkErrorCode.NotFound:
+    case NetworkErrorCode.DnsTryAgain:
       return ConnectionFailure.unknownHost;
 
     case 'ER_ACCESS_DENIED_ERROR':
@@ -133,7 +135,7 @@ export function classifyConnectionError(e: unknown): ConnectionFailure {
       return ConnectionFailure.encryptionUnsupported;
 
     // what a server that only speaks TLS may do to a plain handshake, as Prisma Postgres does
-    case 'ECONNRESET':
+    case NetworkErrorCode.Reset:
       return ConnectionFailure.reset;
 
     case KEYRING_LOCKED:

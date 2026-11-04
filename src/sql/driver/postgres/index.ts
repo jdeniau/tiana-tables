@@ -2,6 +2,7 @@ import log from 'electron-log';
 import pg from 'pg';
 import invariant from 'tiny-invariant';
 import type { Driver } from '..';
+import { NetworkErrorCode } from '../../../networkErrorCode';
 import type { ResultField } from '../../resultField';
 import { asSqlError } from '../../sqlError';
 import { SslMode } from '../../sslMode';
@@ -61,7 +62,7 @@ function asTimeout(error: unknown): unknown {
     !('code' in error) &&
     /timeout/i.test(error.message)
   ) {
-    return Object.assign(error, { code: 'ETIMEDOUT' });
+    return Object.assign(error, { code: NetworkErrorCode.TimedOut });
   }
 
   return error;
