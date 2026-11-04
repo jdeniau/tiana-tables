@@ -58,3 +58,7 @@ One local `yarn patch`, on `electron-installer-redhat` 4.0.0, applied through `r
 - **The `resolutions` key is the range `@electron-forge/maker-rpm` declares** (`npm view @electron-forge/maker-rpm@<v> optionalDependencies`): when forge moves it, the old key matches nothing and the patch stops applying without an error. After a forge bump, `grep build_id_links node_modules/electron-installer-redhat/resources/spec.ejs`.
 - **A new `electron-installer-redhat` release is never picked up**: the resolution pins the patched 4.0.0. Check the two issues above before a release replaces the patch.
 - **Verify by building the real thing**, never on the Fedora host (rpm ≥ 4.20 breaks the installer for an unrelated reason): `node node_modules/.bin/electron-forge make --targets @electron-forge/maker-rpm` in a `node:26-bookworm` image with `rpm` installed (the CI runner's rpm 4.18), then `rpm -qlp out/make/rpm/x64/*.rpm | grep build-id`.
+
+## Packaging
+
+- **The `RunAsNode` fuse stays on**: `ssh` asks the user through `askpass.cjs`, which the app's own binary runs with `ELECTRON_RUN_AS_NODE=1` (`src/ssh/askpass/server.ts`). A `FusesPlugin` turning it off breaks every SSH prompt, passphrase and unknown host key alike.

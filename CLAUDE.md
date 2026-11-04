@@ -88,7 +88,7 @@ yarn make             # Build distributable packages
 
 Tiana Tables is an **Electron desktop app** for browsing and querying MySQL/MariaDB and PostgreSQL databases, in the standard three-process model:
 
-- **Main process** (`src/main.ts`) — app lifecycle, window management, config, IPC handlers. Imports from `src/configuration/`, `src/sql/`, and `src/main-process/`.
+- **Main process** (`src/main.ts`) — app lifecycle, window management, config, IPC handlers. Imports from `src/configuration/`, `src/sql/`, `src/ssh/` and `src/main-process/`.
 - **Preload script** (`src/preload.ts`, `src/preload/`) — the secure bridge, exposing typed APIs to the renderer via `contextBridge`.
 - **Renderer process** (`src/renderer/`) — React 19 + React Router 6 SPA.
 
