@@ -1,0 +1,2 @@
+# the public keys the dev bastion accepts, one per line: yours, never committed
+authorized_keys
