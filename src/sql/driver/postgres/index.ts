@@ -1,3 +1,4 @@
+import type { Duplex } from 'node:stream';
 import log from 'electron-log';
 import pg from 'pg';
 import invariant from 'tiny-invariant';
@@ -108,10 +109,25 @@ const SSL_OPTIONS: Readonly<Record<SslMode, pg.ClientConfig['ssl']>> = {
   [SslMode.VerifyFull]: true,
 };
 
+/** `pg` drives its stream as a `net.Socket`, which a tunnel is not: already open, connecting it is announcing it. */
+function asSocket(stream: Duplex): Duplex {
+  return Object.assign(stream, {
+    setNoDelay: () => stream,
+    setKeepAlive: () => stream,
+    connect: () => {
+      process.nextTick(() => stream.emit('connect'));
+
+      return stream;
+    },
+  });
+}
+
 export const postgresDriver: Driver = {
   async connect(params, options) {
     // a PostgreSQL connection opens one database, and browses its schemas
     invariant(params.database, 'A PostgreSQL connection names a database');
+
+    const { stream } = params;
 
     const client = new pg.Client({
       host: params.host,
@@ -119,6 +135,7 @@ export const postgresDriver: Driver = {
       user: params.user,
       password: params.password,
       database: params.database,
+      stream: stream && (() => asSocket(stream)),
       ssl: SSL_OPTIONS[params.ssl],
       connectionTimeoutMillis: options.connectTimeoutMs,
       types,

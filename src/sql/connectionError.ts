@@ -1,4 +1,5 @@
 import { NetworkErrorCode } from '../networkErrorCode';
+import { SshErrorCode } from '../ssh/sshErrorCode';
 
 /**
  * Why a connection could not be opened, in the terms the user can act on.
@@ -23,6 +24,11 @@ export enum ConnectionFailure {
   reset = 'reset',
   keyringLocked = 'keyringLocked',
   passwordUnreadable = 'passwordUnreadable',
+  sshMissing = 'sshMissing',
+  sshAuthFailed = 'sshAuthFailed',
+  sshHostKeyChanged = 'sshHostKeyChanged',
+  sshHostKeyRejected = 'sshHostKeyRejected',
+  sshForwardFailed = 'sshForwardFailed',
   other = 'other',
 }
 
@@ -34,7 +40,8 @@ export const PASSWORD_UNREADABLE = 'PASSWORD_UNREADABLE';
 export interface ConnectionErrorData {
   reason: ConnectionFailure;
   host: string;
-  port: number;
+  /** absent for an SSH server whose port `~/.ssh/config` decides */
+  port?: number;
   /** the deadline we gave up after, so the message can name it */
   timeoutMs: number;
 }
@@ -143,6 +150,21 @@ export function classifyConnectionError(e: unknown): ConnectionFailure {
 
     case PASSWORD_UNREADABLE:
       return ConnectionFailure.passwordUnreadable;
+
+    case SshErrorCode.Missing:
+      return ConnectionFailure.sshMissing;
+
+    case SshErrorCode.AuthFailed:
+      return ConnectionFailure.sshAuthFailed;
+
+    case SshErrorCode.HostKeyChanged:
+      return ConnectionFailure.sshHostKeyChanged;
+
+    case SshErrorCode.HostKeyRejected:
+      return ConnectionFailure.sshHostKeyRejected;
+
+    case SshErrorCode.ForwardFailed:
+      return ConnectionFailure.sshForwardFailed;
 
     default:
       return ConnectionFailure.other;

@@ -8,6 +8,9 @@ const mocks = vi.hoisted(() => ({
   connections: {} as Record<string, unknown>,
   createConnection: vi.fn(),
   pgClient: vi.fn(),
+  openTunnel: vi.fn(),
+  forTunnel: vi.fn(),
+  releaseAskpass: vi.fn(),
 }));
 
 vi.mock('electron-log', () => ({
@@ -16,6 +19,12 @@ vi.mock('electron-log', () => ({
 
 vi.mock('../configuration', () => ({
   getConfiguration: () => ({ connections: mocks.connections }),
+}));
+
+vi.mock('../ssh/tunnel', () => ({ openTunnel: mocks.openTunnel }));
+
+vi.mock('../ssh/askpass/ipc', () => ({
+  askpassServer: { forTunnel: mocks.forTunnel },
 }));
 
 // the configuration holds the ciphertext: `safeStorage` is the real thing here, and there is no keyring behind it
@@ -522,6 +531,115 @@ describe('opening a connection', () => {
       expect(mocks.createConnection).not.toHaveBeenCalled();
     }
   );
+
+  describe('through an SSH server', () => {
+    const stream = { destroy: vi.fn() };
+    let sshEnded: (error?: Error) => void;
+
+    beforeEach(() => {
+      const ended = new Promise((resolve) => {
+        sshEnded = resolve;
+      });
+      stream.destroy.mockReset().mockImplementation(() => {
+        sshEnded();
+      });
+      mocks.openTunnel.mockReset().mockResolvedValue({ stream, ended });
+      mocks.releaseAskpass.mockReset();
+      mocks.forTunnel.mockReset().mockResolvedValue({
+        env: { SSH_ASKPASS: '/tmp/askpass.sh' },
+        release: mocks.releaseAskpass,
+      });
+      mocks.connections['my-connection'] = {
+        ...(mocks.connections['my-connection'] as object),
+        ssh: { host: 'bastion.example.org', port: 22, user: 'me' },
+      };
+    });
+
+    test('the driver is handed the tunnel to the database', async () => {
+      mocks.createConnection.mockResolvedValue(fakeConnection());
+
+      await connectionStack.listDatabases();
+
+      expect(mocks.openTunnel).toHaveBeenCalledWith(
+        { host: 'bastion.example.org', port: 22, user: 'me' },
+        { host: 'db.example.org', port: 3306 },
+        { timeoutMs: 10_000, env: { SSH_ASKPASS: '/tmp/askpass.sh' } }
+      );
+      expect(mocks.createConnection).toHaveBeenCalledWith(
+        expect.objectContaining({ stream })
+      );
+    });
+
+    test("ssh's questions name the connection, and stop once it is in", async () => {
+      mocks.createConnection.mockResolvedValue(fakeConnection());
+
+      await connectionStack.listDatabases();
+
+      expect(mocks.forTunnel).toHaveBeenCalledWith('My connection');
+      expect(mocks.releaseAskpass).toHaveBeenCalled();
+    });
+
+    test('a failure of the SSH server is told at its address', async () => {
+      mocks.openTunnel.mockRejectedValue(
+        Object.assign(new Error('nope'), { code: 'SSH_AUTH_FAILED' })
+      );
+
+      const { error } = await connectionStack.listDatabases();
+
+      expect(error).toMatchObject({
+        detail: {
+          reason: ConnectionFailure.sshAuthFailed,
+          host: 'bastion.example.org',
+          port: 22,
+        },
+      });
+      expect(mocks.createConnection).not.toHaveBeenCalled();
+      expect(mocks.releaseAskpass).toHaveBeenCalled();
+    });
+
+    test('a database the SSH server cannot reach is told at its own address, with what ssh said', async () => {
+      // what both drivers measured answer when the forward fails: the stream closed, nothing more
+      mocks.createConnection.mockImplementation(() => {
+        sshEnded(
+          Object.assign(new Error('channel 0: open failed'), {
+            code: 'SSH_FORWARD_FAILED',
+          })
+        );
+
+        return Promise.reject(
+          Object.assign(new Error('Premature close'), {
+            code: 'ERR_STREAM_PREMATURE_CLOSE',
+          })
+        );
+      });
+
+      const { error } = await connectionStack.listDatabases();
+
+      expect(error).toMatchObject({
+        detail: {
+          reason: ConnectionFailure.sshForwardFailed,
+          host: 'db.example.org',
+          port: 3306,
+        },
+      });
+    });
+
+    test('a database that refuses the connection closes the tunnel', async () => {
+      mocks.createConnection.mockRejectedValue(
+        Object.assign(new Error('nope'), { code: 'ER_ACCESS_DENIED_ERROR' })
+      );
+
+      const { error } = await connectionStack.listDatabases();
+
+      expect(error).toMatchObject({
+        detail: {
+          reason: ConnectionFailure.accessDenied,
+          host: 'db.example.org',
+        },
+      });
+      expect(stream.destroy).toHaveBeenCalled();
+    });
+  });
 
   test('queries racing for the same connection share one handshake', async () => {
     mocks.createConnection.mockResolvedValue(fakeConnection());

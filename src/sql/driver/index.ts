@@ -1,3 +1,4 @@
+import type { Duplex } from 'node:stream';
 import invariant from 'tiny-invariant';
 import { DatabaseEngine } from '../engine';
 import type { SslMode } from '../sslMode';
@@ -17,6 +18,8 @@ interface ConnectionParams {
   /** the database a PostgreSQL connection opens; MySQL switches with `USE` instead */
   database?: string;
   ssl: SslMode;
+  /** a tunnel already open to the server: `host` and `port` are then only the names TLS checks */
+  stream?: Duplex;
 }
 
 interface ConnectOptions {

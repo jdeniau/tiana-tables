@@ -1,4 +1,5 @@
 import { ConnectionColor } from '../configuration/connectionColor';
+import type { SshTunnel } from '../ssh/types';
 import { DatabaseEngine } from './engine';
 import { ResultField } from './resultField';
 import { SslMode } from './sslMode';
@@ -49,6 +50,8 @@ export type ConnectionObject = {
   color?: ConnectionColor;
   /** absent: the connection is listed before every group */
   group?: string;
+  /** the bastion `host` and `port` are reached from, absent for a server reached directly */
+  ssh?: SshTunnel;
 };
 
 export type ConnectionObjectWithoutSlug = Omit<ConnectionObject, 'slug'>;

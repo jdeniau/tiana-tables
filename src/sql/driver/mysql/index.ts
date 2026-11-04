@@ -98,6 +98,7 @@ export const mysqlDriver: Driver = {
       port: params.port,
       user: params.user,
       password: params.password,
+      stream: params.stream,
       ssl: SSL_OPTIONS[params.ssl],
       connectTimeout: options.connectTimeoutMs,
       // the server's own text: a `Date` drops microseconds, and shifts a wall clock the machine's zone skips
