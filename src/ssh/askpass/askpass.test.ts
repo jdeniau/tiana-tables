@@ -33,13 +33,18 @@ async function askAnswered(
   await new Promise<void>((resolve) => listening.listen(handle, resolve));
 
   return new Promise((resolve) => {
-    const child = spawn(process.execPath, [PROGRAM, 'Password:'], {
-      env: {
-        ...process.env,
-        TIANA_ASKPASS_HANDLE: handle,
-        TIANA_ASKPASS_ID: 'id',
-      },
-    });
+    const child = spawn(
+      process.execPath,
+      // the source has no module type, unlike the `askpass.cjs` the app runs: Node warns on stderr
+      ['--disable-warning=MODULE_TYPELESS_PACKAGE_JSON', PROGRAM, 'Password:'],
+      {
+        env: {
+          ...process.env,
+          TIANA_ASKPASS_HANDLE: handle,
+          TIANA_ASKPASS_ID: 'id',
+        },
+      }
+    );
     let stdout = '';
     let stderr = '';
 
