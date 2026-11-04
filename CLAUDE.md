@@ -162,7 +162,7 @@ Monaco, with `monaco-sql-languages` for the `mysql` / `pgsql` languages and thei
 | `.claude/rules/table-grid.md`   | reading the grid, cells, cell editor                 | TanStack v9, per-cell performance, copy formats                                                               |
 | `.claude/rules/routing.md`      | reading routes, `app.tsx`                            | loaders, derived state, React Router v6                                                                       |
 | `.claude/rules/sql.md`          | reading `src/sql/`                                   | binding, escaping, enums, casts, parsing answers                                                              |
-| `.claude/rules/main-process.md` | reading main, preload, configuration                 | IPC, encryption, dev tooling                                                                                  |
+| `.claude/rules/main-process.md` | reading main, preload, configuration, `src/ssh/`     | IPC, encryption, SSH askpass, dev tooling                                                                     |
 | `.claude/rules/tests.md`        | reading tests and stories                            | what a test must prove                                                                                        |
 | `.claude/rules/build.md`        | reading `package.json`, patches, build config        | dependencies, knip, the RPM patches                                                                           |
 | `.claude/skills/*`              | on demand                                            | `sql-engines`, `sql-editor`, `base16-themes`, `verify-live`, `antd`, `github-pr-review`, `interactive-review` |

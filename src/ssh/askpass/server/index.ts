@@ -1,12 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { rmSync } from 'node:fs';
-import { mkdtemp, writeFile } from 'node:fs/promises';
 import { type Server, type Socket, createServer } from 'node:net';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
 import log from 'electron-log';
 import { z } from 'zod';
-import { type SshAnswer, type SshQuestion, sshQuestionKind } from './question';
+import { type SshAnswer, type SshQuestion, sshQuestionKind } from '../question';
+import { UnixAskpass } from './unix';
+import { WindowsAskpass } from './windows';
 
 /** Asks the user, until answered or until `signal` aborts because `ssh` gave up on the question. */
 export type AskUser = (
@@ -27,28 +25,32 @@ const requestSchema = z.object({
   askpassPrompt: z.string().optional(),
 });
 
-const isWindows = process.platform === 'win32';
-
-/** Electron in Node mode on the askpass program, `ssh` passing the question as `$1`; `SSH_ASKPASS` takes no argument. */
-const LAUNCHER = isWindows
-  ? '@echo off\r\nset ELECTRON_RUN_AS_NODE=1\r\n"%TIANA_ASKPASS_NODE%" "%TIANA_ASKPASS_MAIN%" %*\r\n'
-  : '#!/bin/sh\nELECTRON_RUN_AS_NODE=1 exec "$TIANA_ASKPASS_NODE" "$TIANA_ASKPASS_MAIN" "$@"\n';
-
-interface Listening {
-  server: Server;
-  folder: string;
+/** What `ssh` needs to reach the app. */
+export interface PreparedAskpass {
+  /** the socket's path, or pipe name */
   handle: string;
-  launcher: string;
+  /** `SSH_ASKPASS` and what the program it names reads */
+  env: Record<string, string>;
+}
+
+/** What differs between Windows and Unix: where the socket lives, and how `ssh` starts the askpass program. */
+export interface AskpassPlatform {
+  prepare(): Promise<PreparedAskpass>;
+  /** Removes what `prepare` laid down: synchronous, so it completes while the app quits. */
+  remove(): void;
+}
+
+interface Listening extends PreparedAskpass {
+  server: Server;
 }
 
 /**
  * The local socket the askpass program reaches the app through, one per app.
- * It lives in a folder only the user can open, and answers only the tunnels it gave an id to.
+ * It answers only the tunnels it gave an id to.
  */
 export class AskpassServer {
   readonly #ask: AskUser;
-  readonly #program: string;
-  readonly #nodePath: string;
+  readonly #platform: AskpassPlatform;
   /** the connection each living tunnel opens, by the id its `ssh` was given */
   readonly #tunnels = new Map<string, string>();
   #listening: Promise<Listening> | undefined;
@@ -57,8 +59,10 @@ export class AskpassServer {
   /** `program`: the askpass program, run by `nodePath` in Node mode */
   constructor(ask: AskUser, program: string, nodePath = process.execPath) {
     this.#ask = ask;
-    this.#program = program;
-    this.#nodePath = nodePath;
+    this.#platform =
+      process.platform === 'win32'
+        ? new WindowsAskpass(nodePath, program)
+        : new UnixAskpass(nodePath, program);
   }
 
   async forTunnel(connection: string): Promise<TunnelAskpass> {
@@ -67,20 +71,18 @@ export class AskpassServer {
       this.#listening = undefined;
       throw error;
     });
-    const { handle, launcher } = await this.#listening;
+    const { handle, env } = await this.#listening;
     const id = randomUUID();
 
     this.#tunnels.set(id, connection);
 
     return {
       env: {
-        SSH_ASKPASS: launcher,
+        ...env,
         // `ssh` asks through SSH_ASKPASS even with a terminal, and on Windows, which has no DISPLAY
         SSH_ASKPASS_REQUIRE: 'force',
         TIANA_ASKPASS_HANDLE: handle,
         TIANA_ASKPASS_ID: id,
-        TIANA_ASKPASS_MAIN: this.#program,
-        TIANA_ASKPASS_NODE: this.#nodePath,
       },
       release: () => {
         this.#tunnels.delete(id);
@@ -94,25 +96,15 @@ export class AskpassServer {
       return;
     }
 
-    const { server, folder } = this.#listened;
+    const { server } = this.#listened;
 
     this.#listening = undefined;
     this.#listened = undefined;
     server.close();
-    rmSync(folder, { recursive: true, force: true });
+    this.#platform.remove();
   }
 
   async #listen(): Promise<Listening> {
-    // created 0700: no other user of the machine reaches the socket
-    const folder = await mkdtemp(path.join(tmpdir(), 'tiana-askpass-'));
-    const launcher = path.join(
-      folder,
-      isWindows ? 'askpass.cmd' : 'askpass.sh'
-    );
-    const handle = isWindows
-      ? `\\\\.\\pipe\\tiana-askpass-${randomUUID()}`
-      : path.join(folder, 'askpass.sock');
-
     const server = createServer((socket) => {
       // a program killed by `ssh` mid-answer is no failure of ours
       socket.on('error', () => {});
@@ -123,19 +115,19 @@ export class AskpassServer {
     });
 
     try {
-      await writeFile(launcher, LAUNCHER, { mode: 0o700 });
+      const prepared = await this.#platform.prepare();
+
       await new Promise<void>((resolve, reject) => {
         server.once('error', reject);
-        server.listen(handle, resolve);
+        server.listen(prepared.handle, resolve);
       });
+      this.#listened = { server, ...prepared };
+
+      return this.#listened;
     } catch (error) {
-      rmSync(folder, { recursive: true, force: true });
+      this.#platform.remove();
       throw error;
     }
-
-    this.#listened = { server, folder, handle, launcher };
-
-    return this.#listened;
   }
 
   async #serve(socket: Socket): Promise<void> {

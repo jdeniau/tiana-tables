@@ -6,6 +6,7 @@ paths:
   - 'src/preload/**'
   - 'src/configuration/**'
   - 'src/sql/index.ts'
+  - 'src/ssh/**'
 ---
 
 # Main process, preload and IPC
@@ -33,6 +34,10 @@ Credentials are encrypted with Electron's `safeStorage`, config in `src/configur
 - **A locked keyring is not a lost key** (`decryptStringAsync` rejecting as "temporarily unavailable" vs anything else): two `ConnectionFailure` reasons, the first worth a Retry, the second asking for the password again.
 - `getSelectedStorageBackend()` describes the legacy detection, not the provider the async API picked, so the "only obfuscated" warning can be pessimistic. Left as is: Electron exposes nothing more precise.
 - **The configuration file is not validated** (parsed with a cast). A missing or old field is decided in `loadConfiguration` (default engine, a port read with `Number()`), with no migration and no `version` bump.
+
+## SSH (`src/ssh/`)
+
+- **On Windows, `SSH_ASKPASS` names the app's binary then the askpass program, both quoted, never a batch file** (`askpass/server/windows.ts`): Windows hands a `.cmd` to cmd.exe, which reads the question as commands, and a keyboard-interactive question is written by the SSH server. Win32-OpenSSH copies a value opening with a quote as is, arguments included (`build_commandline_string`, since 8.1); another `ssh` looks for a file of that name and asks nothing. `ELECTRON_RUN_AS_NODE=1` then sits in the environment of `ssh`, and every program it starts (a ProxyCommand) inherits it.
 
 ## Dev tooling (`installReactDevToolsExtension.ts`)
 

@@ -4,13 +4,13 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, onTestFinished, test, vi } from 'vitest';
-import { SshQuestionKind } from './question';
-import { type AskUser, AskpassServer } from './server';
+import { SshQuestionKind } from '../question';
+import { type AskUser, AskpassServer } from './index';
 
 vi.mock('electron-log', () => ({ default: { error: vi.fn() } }));
 
 /** the very program `ssh` runs, here by Node itself */
-const PROGRAM = fileURLToPath(new URL('./askpass.ts', import.meta.url));
+const PROGRAM = fileURLToPath(new URL('../askpass.ts', import.meta.url));
 
 const HOST_KEY_PROMPT = `The authenticity of host '[127.0.0.1]:12222 ([127.0.0.1]:12222)' can't be established.
 ED25519 key fingerprint is: SHA256:ueXRH9X6tUARSk/X3pC5fp2OWGuFK1+5xGUK4mEtqyQ
