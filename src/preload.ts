@@ -13,6 +13,7 @@ import { editMenu } from './preload/editMenu';
 import { navigationListener } from './preload/navigationListener';
 import { sql } from './preload/sql';
 import { sqlFileStorage } from './preload/sqlFileStorage';
+import { sshQuestion } from './preload/sshQuestion';
 import { titleBar } from './preload/titleBar';
 import { update } from './preload/update';
 
@@ -28,6 +29,7 @@ contextBridge.exposeInMainWorld('navigationListener', navigationListener);
 contextBridge.exposeInMainWorld('update', update);
 contextBridge.exposeInMainWorld('titleBar', titleBar);
 contextBridge.exposeInMainWorld('editMenu', editMenu);
+contextBridge.exposeInMainWorld('sshQuestion', sshQuestion);
 
 ipcRenderer.invoke(APP_CHANNEL.GET_IS_DEV).then((isDev) => {
   contextBridge.exposeInMainWorld('isDev', isDev);
@@ -50,5 +52,6 @@ declare global {
     update: typeof update;
     titleBar: typeof titleBar;
     editMenu: typeof editMenu;
+    sshQuestion: typeof sshQuestion;
   }
 }

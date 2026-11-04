@@ -28,6 +28,7 @@ import { bindIpcMainUpdate, startAutoUpdate } from './main-process/updateCheck';
 import WindowStateKeeper from './main-process/windowState';
 import { APP_CHANNEL } from './preload/appChannel';
 import connectionStackInstance from './sql';
+import { askpassServer, bindIpcMainSshQuestion } from './ssh/askpass/ipc';
 
 const isMac = isMacPlatform();
 const isDev = isDevApp();
@@ -165,6 +166,7 @@ app.whenReady().then(async () => {
   bindIpcMainTitleBar(ipcMain);
   bindIpcMainUpdate(ipcMain);
   connectionStackInstance.bindIpcMain(ipcMain);
+  bindIpcMainSshQuestion(ipcMain);
   logStartupMilestone('ipc-bound');
 
   ipcMain.handle(APP_CHANNEL.GET_IS_DEV, () => {
@@ -190,6 +192,11 @@ app.on('window-all-closed', () => {
   if (!isMac) {
     app.quit();
   }
+});
+
+// the askpass socket and launcher live in the temporary folder
+app.on('will-quit', () => {
+  askpassServer.close();
 });
 
 app.on('activate', () => {

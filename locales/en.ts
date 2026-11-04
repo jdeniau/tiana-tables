@@ -81,9 +81,14 @@ export default {
     ' reset {The server closed the connection while it was being opened. A server that only accepts encrypted connections does that: try setting SSL to Required in the connection form.}' +
     ' keyringLocked {Your keyring is locked, so the saved password could not be read. Unlock it, then retry.}' +
     ' passwordUnreadable {The saved password was encrypted with a key this machine no longer has. Type it again in the connection form.}' +
+    ' sshMissing {No ssh command was found on this machine: the SSH tunnel runs the OpenSSH client of the system. Install it, then retry.}' +
+    ' sshAuthFailed {The SSH server refused to log you in. Check that ssh logs in to it from a terminal, with the same user.}' +
+    ' sshHostKeyChanged {The SSH server does not show the host key your known_hosts holds for it: it may have been reinstalled, or someone may stand in between. If it was reinstalled, remove its old key with ssh-keygen -R, then retry.}' +
+    ' sshHostKeyRejected {The host key of the SSH server was not accepted.}' +
+    ' sshForwardFailed {The SSH server could not reach the database. The host and port are the ones the SSH server sees.}' +
     ' other {The connection could not be opened.}}',
   'connection.failed.retry': 'Retry',
-  'connection.failed.target': 'Connecting to {host}:{port} failed',
+  'connection.failed.target': 'Connecting to {address} failed',
   'connection.failed.title': 'Connection failed',
   'connection.form.action.connect': 'Connect',
   'connection.form.action.saveAndConnect': 'Save and connect',
@@ -100,6 +105,19 @@ export default {
   'connection.form.password.placeholder':
     'Leave empty to keep the saved password',
   'connection.form.port.label': 'Port',
+  // ICU select on the form's `Route` enum: where the host and port above are reached from
+  'connection.form.route.help':
+    '{route, select,' +
+    ' direct {From this machine.}' +
+    ' ssh {From an SSH server, reached by the ssh command of this machine, as in a terminal: your ~/.ssh/config, known_hosts and SSH agent apply.}' +
+    ' other {}}',
+  'connection.form.route.label': 'Route',
+  // ICU select on the form's `Route` enum
+  'connection.form.route.option':
+    '{route, select, direct {Direct} ssh {SSH tunnel} other {{route}}}',
+  'connection.form.ssh.host.label': 'SSH host',
+  'connection.form.ssh.user.label': 'SSH user',
+  'connection.form.ssh.user.placeholder': 'From ~/.ssh/config',
   // ICU select on the `SslMode` enum: what the chosen mode does
   'connection.form.ssl.help':
     '{mode, select,' +
@@ -116,6 +134,17 @@ export default {
   'connection.form.user.label': 'User',
   'connection.list.count': '{count, plural, one {# saved} other {# saved}}',
   'connection.list.title': 'Connections',
+  // ICU select on the `SshQuestionKind` enum
+  'connection.ssh.question.answer':
+    '{kind, select, hostKey {Trust} secret {Send} confirm {Allow} other {OK}}',
+  // ICU select on the `SshQuestionKind` enum
+  'connection.ssh.question.cancel':
+    '{kind, select, hostKey {Refuse} confirm {Deny} notice {Close} other {Cancel}}',
+  'connection.ssh.question.hostKeyHelp':
+    'ssh does not know this server by this name. Trust it only if this fingerprint is the server’s: ssh then adds it to your known_hosts.',
+  // ICU select on the `SshQuestionKind` enum
+  'connection.ssh.question.title':
+    '{kind, select, hostKey {{connection}: unknown SSH server} other {{connection}: ssh asks}}',
   'dateDisplay.assumed':
     'Dates with no time zone (DATETIME, timestamp) are read as the server’s time ({zone}), then converted.',
   'dateDisplay.label': 'Dates',

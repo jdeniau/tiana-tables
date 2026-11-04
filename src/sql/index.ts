@@ -4,6 +4,8 @@ import { getConfiguration } from '../configuration';
 import { decryptPassword } from '../configuration/encryption';
 import { EncryptedConnectionObject } from '../configuration/type';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
+import { askpassServer } from '../ssh/askpass/ipc';
+import { type OpenedTunnel, openTunnel } from '../ssh/tunnel';
 import {
   KEYRING_LOCKED,
   PASSWORD_UNREADABLE,
@@ -417,6 +419,7 @@ class ConnectionStack {
   ): Promise<DriverConnection> {
     const {
       slug,
+      name,
       engine,
       host,
       port,
@@ -424,11 +427,15 @@ class ConnectionStack {
       password,
       database,
       ssl = SslMode.Disable,
+      ssh,
     } = params;
 
     log.debug(`Open connection to "${slug}"`);
 
     const driver = await loadDriver(engine);
+    let tunnel: OpenedTunnel | undefined;
+    // until the SSH server lets us through, a failure is the SSH server's, and told at its address
+    let reaching: { host: string; port?: number } = { host, port };
 
     try {
       // the only place the stored password is read back: the configuration holds the ciphertext from end to end, so a keyring that cannot open it costs this connection and never the file
@@ -447,8 +454,34 @@ class ConnectionStack {
         );
       }
 
+      if (ssh) {
+        reaching = { host: ssh.host, port: ssh.port };
+        const askpass = await askpassServer.forTunnel(name);
+
+        try {
+          tunnel = await openTunnel(
+            ssh,
+            { host, port },
+            { timeoutMs: CONNECT_TIMEOUT_MS, env: askpass.env }
+          );
+        } finally {
+          // `ssh` asks its questions before it is authenticated
+          askpass.release();
+        }
+
+        reaching = { host, port };
+      }
+
       return await driver.connect(
-        { host, port, user, password: decrypted.password, database, ssl },
+        {
+          host,
+          port,
+          user,
+          password: decrypted.password,
+          database,
+          ssl,
+          stream: tunnel?.stream,
+        },
         {
           connectTimeoutMs: CONNECT_TIMEOUT_MS,
           onClosed: () => {
@@ -460,9 +493,14 @@ class ConnectionStack {
     } catch (error) {
       log.error(`Could not connect to "${slug}"`, error);
 
-      throw asConnectionError(error, {
-        host,
-        port,
+      // the database is not reached: closing the tunnel ends `ssh`
+      tunnel?.stream.destroy();
+
+      // the driver only sees its stream close: what failed beyond the SSH server, `ssh` said
+      const cause = (await tunnel?.ended) ?? error;
+
+      throw asConnectionError(cause, {
+        ...reaching,
         timeoutMs: CONNECT_TIMEOUT_MS,
       });
     }

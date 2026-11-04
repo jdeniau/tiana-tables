@@ -101,6 +101,11 @@ const config: ForgeConfig = {
           entry: 'src/preload.ts',
           config: 'vite.preload.config.ts',
         },
+        {
+          // the program `ssh` runs to ask the user (SSH_ASKPASS), built beside `main.cjs` as `askpass.cjs`
+          entry: 'src/ssh/askpass/askpass.ts',
+          config: 'vite.main.config.ts',
+        },
       ],
       renderer: [
         {

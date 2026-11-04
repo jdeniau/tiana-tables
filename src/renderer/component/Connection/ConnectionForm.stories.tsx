@@ -118,3 +118,18 @@ export const Edit: Story = {
     },
   },
 };
+
+export const EditThroughSsh: Story = {
+  args: {
+    connection: {
+      name: 'mysql via SSH (dev)',
+      engine: DatabaseEngine.MySQL,
+      slug: 'mysql-via-ssh-dev',
+      host: 'mysql',
+      port: 3306,
+      user: 'root',
+      password: '',
+      ssh: { host: '127.0.0.1', port: 12222, user: 'dev' },
+    },
+  },
+};

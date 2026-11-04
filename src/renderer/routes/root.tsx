@@ -10,6 +10,7 @@ import { useTranslation } from '../../i18n';
 import AppMenuButton from '../component/AppMenuButton';
 import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
+import SshQuestions from '../component/Connection/SshQuestions';
 import { KeyboardShortcutTooltip } from '../component/KeyboardShortcut';
 import PathBar from '../component/PathBar';
 import { TabStrip, TabStripLink } from '../component/Style/TabStrip';
@@ -124,6 +125,8 @@ export default function Root() {
               <Outlet />
             </Content>
           </Layout>
+
+          <SshQuestions />
         </ConnectionStack>
       </ThemeContextProvider>
     </ConfigurationContextProvider>

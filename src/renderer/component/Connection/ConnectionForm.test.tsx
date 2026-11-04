@@ -5,7 +5,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_THEME } from '../../../configuration/themes';
+import type { EncryptedConnectionObject } from '../../../configuration/type';
 import { testables } from '../../../contexts/ConfigurationContext';
+import { DatabaseEngine } from '../../../sql/engine';
 import ConnectionForm from './ConnectionForm';
 
 const { ConfigurationContext } = testables;
@@ -17,9 +19,11 @@ const { ConfigurationContext } = testables;
 
 let unmount: () => void = () => {};
 
-afterEach(() => {
+afterEach(async () => {
   act(() => unmount());
   document.body.innerHTML = '';
+  // antd updates a field's error list 10 ms after a submit: past the environment's teardown, it throws on `window`
+  await new Promise((resolve) => setTimeout(resolve, 20));
 });
 
 /** a field typed into the way a user does, through React's own value setter */
@@ -33,9 +37,16 @@ function type(input: HTMLInputElement, text: string): void {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-/** the form mounted as the new-connection page does, with the add spied on */
-async function renderForm(connections: Record<string, object> = {}) {
+/** the form mounted as the new-connection page does, or the edit page with a `connection`, the save spied on */
+async function renderForm({
+  connection,
+  connections = {},
+}: {
+  connection?: EncryptedConnectionObject;
+  connections?: Record<string, object>;
+} = {}) {
   const addConnectionToConfig = vi.fn();
+  const editConnection = vi.fn();
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -50,10 +61,11 @@ async function renderForm(connections: Record<string, object> = {}) {
               {
                 configuration: { connections },
                 addConnectionToConfig,
+                editConnection,
               } as never
             }
           >
-            <ConnectionForm />
+            <ConnectionForm connection={connection} />
           </ConfigurationContext>
         </ThemeProvider>
       </MemoryRouter>
@@ -78,12 +90,14 @@ async function renderForm(connections: Record<string, object> = {}) {
       container.querySelector('form')!.requestSubmit();
     });
 
-    await vi.waitFor(() => expect(addConnectionToConfig).toHaveBeenCalled());
+    const save = connection ? editConnection : addConnectionToConfig;
 
-    return addConnectionToConfig.mock.lastCall?.[0];
+    await vi.waitFor(() => expect(save).toHaveBeenCalled());
+
+    return save.mock.lastCall?.at(-1);
   };
 
-  return { container, field, choose, submit };
+  return { container, field, choose, submit, addConnectionToConfig };
 }
 
 describe('ConnectionForm', () => {
@@ -222,8 +236,10 @@ describe('ConnectionForm', () => {
 
   test('suggests the groups already in use', async () => {
     const { field } = await renderForm({
-      prod: { name: 'prod', slug: 'prod', group: 'Client A' },
-      other: { name: 'other', slug: 'other', group: 'Client B' },
+      connections: {
+        prod: { name: 'prod', slug: 'prod', group: 'Client A' },
+        other: { name: 'other', slug: 'other', group: 'Client B' },
+      },
     });
 
     await act(async () => {
@@ -233,5 +249,99 @@ describe('ConnectionForm', () => {
     const options = [...document.querySelectorAll('[role="option"]')];
 
     expect(options.map((option) => option.textContent)).toEqual(['Client A']);
+  });
+
+  test('connects directly unless told otherwise', async () => {
+    const { field, submit } = await renderForm();
+
+    expect(field('ssh_host')).toBeNull();
+
+    await act(async () => {
+      type(field('name')!, 'docker (dev)');
+    });
+
+    expect(await submit()).not.toHaveProperty('ssh');
+  });
+
+  test('a tunnel submits its SSH server alone, leaving the port and user to ~/.ssh/config', async () => {
+    const { container, field, choose, submit } = await renderForm();
+
+    await choose('SSH tunnel');
+
+    expect(container.textContent).toContain(
+      'reached by the ssh command of this machine'
+    );
+
+    await act(async () => {
+      type(field('name')!, 'through the bastion (dev)');
+      type(field('ssh_host')!, 'bastion');
+    });
+
+    expect((await submit()).ssh).toEqual({ host: 'bastion' });
+  });
+
+  test('a tunnel needs its SSH host', async () => {
+    const { container, field, choose, addConnectionToConfig } =
+      await renderForm();
+
+    await choose('SSH tunnel');
+
+    expect(field('ssh_host')?.value).toBe('');
+
+    await act(async () => {
+      type(field('name')!, 'through the bastion (dev)');
+      container.querySelector('form')!.requestSubmit();
+    });
+
+    await vi.waitFor(() =>
+      expect(field('ssh_host')?.getAttribute('aria-invalid')).toBe('true')
+    );
+    expect(addConnectionToConfig).not.toHaveBeenCalled();
+  });
+
+  test('a port and user typed then emptied are not submitted', async () => {
+    const { field, choose, submit } = await renderForm();
+
+    await choose('SSH tunnel');
+    await act(async () => {
+      type(field('name')!, 'through the bastion (dev)');
+      type(field('ssh_host')!, 'bastion.example.org');
+      type(field('ssh_port')!, '2222');
+      type(field('ssh_user')!, 'me');
+    });
+
+    expect((await submit()).ssh).toEqual({
+      host: 'bastion.example.org',
+      port: 2222,
+      user: 'me',
+    });
+
+    await act(async () => {
+      type(field('ssh_port')!, '');
+      type(field('ssh_user')!, '  ');
+    });
+
+    expect((await submit()).ssh).toEqual({ host: 'bastion.example.org' });
+  });
+
+  test('a connection saved with a tunnel opens on it', async () => {
+    const { field, submit } = await renderForm({
+      connection: {
+        name: 'through the bastion (dev)',
+        slug: 'through-the-bastion-dev',
+        engine: DatabaseEngine.MySQL,
+        host: 'mysql',
+        port: 3306,
+        user: 'root',
+        password: 'ciphertext',
+        ssh: { host: '127.0.0.1', port: 12222, user: 'dev' },
+      },
+    });
+
+    expect(field('ssh_host')?.value).toBe('127.0.0.1');
+
+    expect(await submit()).toMatchObject({
+      ssh: { host: '127.0.0.1', port: 12222, user: 'dev' },
+    });
   });
 });

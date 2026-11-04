@@ -62,6 +62,20 @@ services:
       interval: 2s
       retries: 60
 
+  # A bastion to reach both servers through a tunnel: `ssh -p 12222 dev@127.0.0.1`, with a key listed in dev/ssh/authorized_keys.
+  ssh:
+    build: ./dev/ssh
+    container_name: tiana-dev-ssh
+    restart: unless-stopped
+    ports:
+      - 12222:22
+    volumes:
+      - ./dev/ssh:/keys:ro,z
+    healthcheck:
+      test: [CMD, nc, -z, 127.0.0.1, '22']
+      interval: 2s
+      retries: 30
+
 volumes:
   mysql-data:
     name: tiana-dev-mysql

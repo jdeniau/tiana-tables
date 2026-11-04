@@ -3,6 +3,7 @@
   "entry": [
     "src/main.ts",
     "src/preload.ts",
+    "src/ssh/askpass/askpass.ts",
     "forge.config.ts",
     ".storybook/vite.config.ts",
     "vite.main.config.ts",

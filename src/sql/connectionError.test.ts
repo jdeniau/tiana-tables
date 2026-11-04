@@ -39,6 +39,11 @@ describe('classifyConnectionError', () => {
     ['DEPTH_ZERO_SELF_SIGNED_CERT', ConnectionFailure.certificateRejected],
     ['ERR_TLS_CERT_ALTNAME_INVALID', ConnectionFailure.certificateRejected],
     ['ECONNRESET', ConnectionFailure.reset],
+    ['SSH_MISSING', ConnectionFailure.sshMissing],
+    ['SSH_AUTH_FAILED', ConnectionFailure.sshAuthFailed],
+    ['SSH_HOST_KEY_CHANGED', ConnectionFailure.sshHostKeyChanged],
+    ['SSH_HOST_KEY_REJECTED', ConnectionFailure.sshHostKeyRejected],
+    ['SSH_FORWARD_FAILED', ConnectionFailure.sshForwardFailed],
     ['EHOSTUNREACH', ConnectionFailure.other],
   ])('%s is a %s', (code, reason) => {
     expect(

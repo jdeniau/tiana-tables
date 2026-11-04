@@ -83,9 +83,14 @@ const fr: Translation = {
     ' reset {Le serveur a fermé la connexion pendant son ouverture. C’est ce que fait un serveur qui n’accepte que les connexions chiffrées : essayez de passer SSL à Requis dans le formulaire de connexion.}' +
     ' keyringLocked {Votre trousseau est verrouillé, le mot de passe enregistré n’a donc pas pu être lu. Déverrouillez-le, puis réessayez.}' +
     ' passwordUnreadable {Le mot de passe enregistré a été chiffré avec une clé que cette machine n’a plus. Saisissez-le à nouveau dans le formulaire de connexion.}' +
+    ' sshMissing {Aucune commande ssh n’a été trouvée sur cette machine : le tunnel SSH utilise le client OpenSSH du système. Installez-le, puis réessayez.}' +
+    ' sshAuthFailed {Le serveur SSH a refusé de vous connecter. Vérifiez que ssh s’y connecte depuis un terminal, avec le même utilisateur.}' +
+    ' sshHostKeyChanged {Le serveur SSH ne présente pas la clé d’hôte que votre known_hosts a pour lui : il a peut-être été réinstallé, ou quelqu’un s’est peut-être placé entre vous deux. S’il a été réinstallé, supprimez son ancienne clé avec ssh-keygen -R, puis réessayez.}' +
+    ' sshHostKeyRejected {La clé d’hôte du serveur SSH n’a pas été acceptée.}' +
+    ' sshForwardFailed {Le serveur SSH n’a pas pu joindre la base de données. L’hôte et le port sont ceux que voit le serveur SSH.}' +
     " other {La connexion n'a pas pu être ouverte.}}",
   'connection.failed.retry': 'Réessayer',
-  'connection.failed.target': 'La connexion à {host}:{port} a échoué',
+  'connection.failed.target': 'La connexion à {address} a échoué',
   'connection.failed.title': 'Connexion impossible',
   'connection.form.action.connect': 'Connecter',
   'connection.form.action.saveAndConnect': 'Enregistrer et connecter',
@@ -102,6 +107,19 @@ const fr: Translation = {
   'connection.form.password.placeholder':
     'Laissez vide pour conserver le mot de passe enregistré',
   'connection.form.port.label': 'Port',
+  // ICU select on the form's `Route` enum: where the host and port above are reached from
+  'connection.form.route.help':
+    '{route, select,' +
+    ' direct {Depuis cette machine.}' +
+    ' ssh {Depuis un serveur SSH, joint par la commande ssh de cette machine, comme dans un terminal : votre ~/.ssh/config, votre known_hosts et votre agent SSH s’appliquent.}' +
+    ' other {}}',
+  'connection.form.route.label': 'Accès',
+  // ICU select on the form's `Route` enum
+  'connection.form.route.option':
+    '{route, select, direct {Direct} ssh {Tunnel SSH} other {{route}}}',
+  'connection.form.ssh.host.label': 'Hôte SSH',
+  'connection.form.ssh.user.label': 'Utilisateur SSH',
+  'connection.form.ssh.user.placeholder': 'Selon ~/.ssh/config',
   'connection.form.ssl.help':
     '{mode, select,' +
     ' disable {En clair.}' +
@@ -117,6 +135,14 @@ const fr: Translation = {
   'connection.list.count':
     '{count, plural, one {# enregistrée} other {# enregistrées}}',
   'connection.list.title': 'Connexions',
+  'connection.ssh.question.answer':
+    '{kind, select, hostKey {Faire confiance} secret {Envoyer} confirm {Autoriser} other {OK}}',
+  'connection.ssh.question.cancel':
+    '{kind, select, hostKey {Refuser} confirm {Refuser} notice {Fermer} other {Annuler}}',
+  'connection.ssh.question.hostKeyHelp':
+    'ssh ne connaît pas ce serveur sous ce nom. Ne lui faites confiance que si cette empreinte est bien la sienne : ssh l’ajoute alors à votre known_hosts.',
+  'connection.ssh.question.title':
+    '{kind, select, hostKey {{connection} : serveur SSH inconnu} other {{connection} : ssh demande}}',
   'dateDisplay.assumed':
     'Les dates sans fuseau (DATETIME, timestamp) sont lues comme l’heure du serveur ({zone}), puis converties.',
   'dateDisplay.label': 'Dates',

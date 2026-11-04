@@ -58,6 +58,7 @@ For each step:
 - Say in one or two sentences what it does and why it comes now, then show the meaningful hunks **as they are**, in a `diff` block: never a paraphrase in place of a change. Past about 150 lines, split the step.
 - **The diff goes in your own message, before the question**: the user does not see a tool's output, so a diff read with `git diff` or `review.mjs diff` is shown to you alone.
 - Ask with `AskUserQuestion`: **Valider** (approve), **Passer** (leave it for now); the free-text answer is how the user discusses or asks a question. Answer, show more context when asked, and ask again.
+- **Every step ends with what to look at before approving, never a bare "nothing to fix"**: the non-obvious choices and their alternatives, the edge cases and how the code behaves on them, and what no test nor live run proved.
 - **A gap you found and would fix gets its own option**, "Corriger <the gap> et valider", beside "Valider" as it is: approving the step must never read as approving the fix, nor the other way round.
 - **A fix is offered for staging only once the repository's whole checks pass** (its lint and type check, not the one test it touches): a test runner that does not type-check passes a test that does not compile.
 - On approval: `stage` its hunks (case 1), or `view` its files (case 2) — a file split across steps is viewed at the last of them.
