@@ -24,6 +24,7 @@ tmux send-keys -t tiana "yarn electron-forge start -- \
 - The page target is the one whose url starts with `http://localhost:517x`.
 - `docs/screenshots/shots.mjs` (the README screenshots) is a working harness: throwaway profile, connection form, `window.config` staging, a native menu click, `clip`ped captures.
 - **A screenshot hides the TanStack Query devtools badge first**: append a `<style>` holding `.tsqd-parent-container { display: none !important; }` to `document.head` before `Page.captureScreenshot`; a reload drops it, so inject it again before each capture.
+- **A video is a `Page.startScreencast` of the page**: each frame comes with its timestamp, so write them to an `ffconcat` list with their real durations and encode with `libx264`. Draw a pointer and a caption into the page (a screencast shows neither), park the pointer off the grid between gestures (the row under it hides the selection), and copy through the main process's `webContents.copy()`, which no synthetic key reaches.
 - The main process is not hot-reloaded: any change to `menu.ts`, the preload or an IPC handler needs a full relaunch.
 - Clean up with `pkill -f "remote-debugging-port=922[2]"` — the brackets matter: the bare pattern matches the shell's own command line and kills it (exit 144), and so does any other spelling of the flag in the same command. Then check `pgrep -f "electron/dist/electro[n]"` is empty: a second instance keeps port 9222 and every CDP call hangs on it.
 
