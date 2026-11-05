@@ -10,7 +10,12 @@ import { ThemesSection } from './ThemesSection';
 import { type Release, repositoryUrl } from './release';
 import { SiteLocale, localePath } from './siteLocale';
 import { type SiteKey, TextProvider, createText, useText } from './text';
-import { PALETTES, ThemeChoiceProvider, useThemeChoice } from './themeChoice';
+import {
+  PALETTES,
+  SystemPalettes,
+  ThemeChoiceProvider,
+  useThemeChoice,
+} from './themeChoice';
 
 /** The sections the title bar links to, in page order. */
 const NAV: [id: string, label: SiteKey][] = [
@@ -122,7 +127,7 @@ function TitleBar(): ReactElement {
           >
             {site('language.other')}
           </a>
-          <a className="tb-gh" href={repositoryUrl}>
+          <a className="tb-github" href={repositoryUrl}>
             GitHub ↗
           </a>
         </div>
@@ -131,7 +136,7 @@ function TitleBar(): ReactElement {
   );
 }
 
-/** The whole page, rendered at build and hydrated in the browser. */
+/** The whole page, prerendered at build and hydrated in the browser. */
 export function Site({
   locale,
   release,
@@ -144,6 +149,7 @@ export function Site({
   return (
     <TextProvider value={text}>
       <ThemeChoiceProvider>
+        <SystemPalettes />
         <TitleBar />
         <div className="page">
           <main className="frame">
@@ -158,7 +164,7 @@ export function Site({
             <footer className="foot">
               <img src="/favicon.png" alt="" width="28" height="28" />
               <span>{text.site('foot.credits')}</span>
-              <span className="sp" />
+              <span className="spacer" />
               <a href={repositoryUrl}>GitHub</a>
               <a href={`${repositoryUrl}/issues`}>{text.site('foot.issues')}</a>
               <a href={`${repositoryUrl}/releases`}>

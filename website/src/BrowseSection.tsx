@@ -28,23 +28,23 @@ export function BrowseSection(): ReactElement {
             <List items={richList('browse.items')} />
           </Prose>
           <Stage>
-            <div className="win ctx">
-              <table className="tg">
+            <div className="window menu-anchor">
+              <table className="grid">
                 <thead>
                   <tr>
-                    <th className="r">id</th>
+                    <th className="numeric">id</th>
                     <th>statut</th>
-                    <th className="r">auteur_id</th>
-                    <th className="r">vues</th>
+                    <th className="numeric">auteur_id</th>
+                    <th className="numeric">vues</th>
                   </tr>
                 </thead>
                 <tbody>
                   {ROWS.map(([id, status, authorId, views]) => (
-                    <tr key={id} className={id === 12 ? 'sel' : undefined}>
-                      <td className="r n">{id}</td>
-                      <td className="st">{status}</td>
-                      <td className="r n fk">{authorId}</td>
-                      <td className="r n">{views}</td>
+                    <tr key={id} className={id === 12 ? 'selected' : undefined}>
+                      <td className="numeric number">{id}</td>
+                      <td className="string">{status}</td>
+                      <td className="numeric number foreign-key">{authorId}</td>
+                      <td className="numeric number">{views}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -62,7 +62,7 @@ export function BrowseSection(): ReactElement {
                   <kbd>▸</kbd>
                 </div>
                 <hr />
-                <div className="hl">
+                <div className="highlighted">
                   {app('table.contextMenu.filter')}
                   <kbd>▸</kbd>
                   <div className="submenu">
@@ -92,18 +92,20 @@ export function BrowseSection(): ReactElement {
             <p className="quiet">{site('edit.text')}</p>
           </Prose>
           <Stage>
-            <div className="win dialog">
+            <div className="window dialog">
               <h4>{app('cell.write.changed.title')}</h4>
               <p>{app('cell.write.changed.description')}</p>
-              <div className="vals">
+              <div className="values">
                 <span>{app('cell.write.serverValue')}</span>
-                <span className="tg st">&apos;relecture&apos;</span>
+                <span>&apos;relecture&apos;</span>
                 <span>{app('cell.write.yourValue')}</span>
-                <span className="tg st">&apos;publie&apos;</span>
+                <span>&apos;publie&apos;</span>
               </div>
               <div className="btns">
                 <span className="btn">{app('cell.write.cancel')}</span>
-                <span className="action sm">{app('cell.write.overwrite')}</span>
+                <span className="action small">
+                  {app('cell.write.overwrite')}
+                </span>
               </div>
             </div>
           </Stage>

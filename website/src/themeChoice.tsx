@@ -6,6 +6,7 @@ import {
   useEffect,
   useSyncExternalStore,
 } from 'react';
+import { unikittyLight } from '../../src/configuration/palettes/unikittyLight';
 import {
   type AppTheme,
   DEFAULT_THEME,
@@ -90,6 +91,18 @@ function subscribe(listener: () => void): () => void {
     listeners.delete(listener);
     window.removeEventListener('storage', listener);
   };
+}
+
+const declarations = (theme: AppTheme): string =>
+  Object.entries(theme.palette)
+    .map(([slot, colour]) => `--${slot}:${colour};`)
+    .join('') + `color-scheme:${theme.variant};`;
+
+/** The palettes followed until the visitor picks one: the app's default, and the light one of DESIGN.md. */
+export function SystemPalettes(): ReactElement {
+  return (
+    <style>{`:root{${declarations(DEFAULT_THEME)}}@media (prefers-color-scheme: light){:root{${declarations(unikittyLight)}}}`}</style>
+  );
 }
 
 /** Paints the page with the picked palette, remembers it, and cycles through them on T. */

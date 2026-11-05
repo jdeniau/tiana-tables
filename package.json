@@ -133,6 +133,7 @@
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.3",
+    "vite-prerender-plugin": "0.5.14",
     "vitest": "^5.0.3"
   },
   "packageManager": "yarn@4.18.1",

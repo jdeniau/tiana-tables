@@ -1,5 +1,8 @@
 // Rich text: <code>…</code> and <link>…</link> are rendered by the components.
 export default {
+  'meta.title': 'Tiana Tables: a SQL client for developers',
+  'meta.description':
+    'A MySQL, MariaDB and PostgreSQL client for developers, on Linux, macOS and Windows. Browse, query and edit your data efficiently. Easy-to-use and pretty.',
   'nav.label': 'Sections',
   'nav.editor': 'Editor',
   'nav.browse': 'Browse',

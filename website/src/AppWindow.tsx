@@ -174,13 +174,13 @@ export function AppWindow(): ReactElement {
   const local = app('dateDisplay.option', { display: 'local' });
 
   return (
-    <div className="win app" role="img" aria-label={site('app.label')}>
+    <div className="window app" role="img" aria-label={site('app.label')}>
       <div className="app-bar">
-        <span className="b">
+        <span className="app-name">
           Tiana Tables <i>☰</i>
         </span>
-        <span className="t on pipd">Le Fil (dev)</span>
-        <span className="t plus">+</span>
+        <span className="tab active live-dot">Le Fil (dev)</span>
+        <span className="tab plus">+</span>
         <span className="sql">SQL</span>
       </div>
       <div className="app-body">
@@ -196,7 +196,7 @@ export function AppWindow(): ReactElement {
             {TABLES.map((table) => (
               <li
                 key={table}
-                className={table === 'article' ? 'on' : undefined}
+                className={table === 'article' ? 'active' : undefined}
               >
                 {table}
               </li>
@@ -206,60 +206,61 @@ export function AppWindow(): ReactElement {
             {app('tableList.count', { count: 25 })}
           </div>
         </aside>
-        <div className="ws">
-          <div className="ttabs">
-            <span className="pipd">
+        <div className="workspace">
+          <div className="table-tabs">
+            <span className="live-dot">
               article<b>×</b>
             </span>
           </div>
           <div className="filters">
-            <div className="rgh">
-              <span className="n">{app('table.filters.title')}</span>
-              <span className="r">
-                <span className="action sm">{app('filter')}</span>
+            <div className="panel-head">
+              <span className="panel-name">{app('table.filters.title')}</span>
+              <span className="panel-tools">
+                <span className="action small">{app('filter')}</span>
               </span>
             </div>
             <div className="filter-line">
-              statut &lt;&gt; <span className="s">&apos;archive&apos;</span>
+              statut &lt;&gt;{' '}
+              <span className="string">&apos;archive&apos;</span>
             </div>
             <div className="dots" />
           </div>
           <div className="result">
-            <div className="rgh">
-              <span className="n">article</span>
-              <span className="m">
+            <div className="panel-head">
+              <span className="panel-name">article</span>
+              <span className="panel-meta">
                 {app('table.rows.count', { count: 100 })}
               </span>
-              <span className="r">
-                <span className="seg-l hide-sm">
+              <span className="panel-tools">
+                <span className="segmented-label hide-sm">
                   {app('dateDisplay.label')}
                 </span>
-                <span className="seg hide-sm">
+                <span className="segmented hide-sm">
                   <span>
                     {app('dateDisplay.option', { display: 'server' })} · UTC
                   </span>
-                  <span className="on">{local} · Europe/Paris</span>
+                  <span className="active">{local} · Europe/Paris</span>
                 </span>
-                <span className="seg">
-                  <span className="on">{app('table.tab.data')}</span>
+                <span className="segmented">
+                  <span className="active">{app('table.tab.data')}</span>
                   <span>{app('table.tab.structure')}</span>
                 </span>
               </span>
             </div>
             <div className="gridwrap">
-              <table className="tg">
+              <table className="grid">
                 <thead>
                   <tr>
-                    <th className="r">id</th>
+                    <th className="numeric">id</th>
                     <th>titre</th>
                     <th>statut</th>
-                    <th className="r">auteur_id</th>
+                    <th className="numeric">auteur_id</th>
                     <th>
                       publie_le <em>{local}</em>
                     </th>
-                    <th className="r">vues</th>
-                    <th className="r">note_moyenne</th>
-                    <th className="r">en_une</th>
+                    <th className="numeric">vues</th>
+                    <th className="numeric">note_moyenne</th>
+                    <th className="numeric">en_une</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -276,25 +277,29 @@ export function AppWindow(): ReactElement {
                     ]) => (
                       <tr
                         key={id}
-                        className={id === SELECTED_ID ? 'sel' : undefined}
+                        className={id === SELECTED_ID ? 'selected' : undefined}
                       >
-                        <td className="r n">{id}</td>
-                        <td className="ti">{title}</td>
-                        <td className="st">{status}</td>
-                        <td className="r n fk">{authorId}</td>
+                        <td className="numeric number">{id}</td>
+                        <td className="truncated">{title}</td>
+                        <td className="string">{status}</td>
+                        <td className="numeric number foreign-key">
+                          {authorId}
+                        </td>
                         {publishedAt ? (
                           <td>
                             {publishedAt[0]}
-                            <span className="z">{publishedAt[1]}</span>
+                            <span className="time-zone">{publishedAt[1]}</span>
                           </td>
                         ) : (
-                          <td className="nul">{nullText}</td>
+                          <td className="null">{nullText}</td>
                         )}
-                        <td className="r n">{views}</td>
-                        <td className={rating ? 'r n' : 'r nul'}>
+                        <td className="numeric number">{views}</td>
+                        <td
+                          className={rating ? 'numeric number' : 'numeric null'}
+                        >
                           {rating ?? nullText}
                         </td>
-                        <td className="r n">{frontPage}</td>
+                        <td className="numeric number">{frontPage}</td>
                       </tr>
                     )
                   )}
@@ -302,7 +307,7 @@ export function AppWindow(): ReactElement {
               </table>
             </div>
           </div>
-          <div className="ws-foot">{app('table.rows.loadMore')}</div>
+          <div className="workspace-foot">{app('table.rows.loadMore')}</div>
         </div>
       </div>
     </div>

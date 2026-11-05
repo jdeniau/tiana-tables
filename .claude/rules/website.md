@@ -17,10 +17,12 @@ paths:
 
 # The website
 
-The site, tiana-tables.deniau.me, is a plain Vite multi-page build in `website/`, rendered in the browser: `index.html` and `fr/index.html`, each with its language and its head written by hand.
+The site, tiana-tables.deniau.me, is a Vite build in `website/`, prerendered at build and hydrated in the browser: `index.html` is the one template, and `prerender()` of `main.tsx` renders each locale's page, its language and its head.
 
-- **The site stays a default Vite build**: no plugin, no server rendering. What the build must know goes through `define` (`__RELEASE__`); a new locale is an HTML page, a `SiteLocale` value and its `locales/*.ts`.
-- **What Node loads with `website/vite.config.ts` (`latestRelease.ts`, `release.ts`) imports with the `.ts` extension and holds no enum**: `website/package.json` makes it ESM, and Node only strips types, so `PackageKind` is a typed `as const` object. Check with `yarn vite build website --configLoader native`.
+- **The site stays a Vite build with one plugin, `vite-prerender-plugin`**: no server, no second build. What the build must know goes through `define` (`__RELEASE__`); a new locale is a `SiteLocale` value and its `locales/*.ts`, the plugin reaching its page through the links `prerender()` returns.
+- **What renders at build renders the same at hydration**: a state read from the browser (the picked theme, the visitor's platform) starts from its server value, the third argument of `useSyncExternalStore`. Check the console of `vite preview`: a mismatch is logged there only.
+- **`prerender()` imports `react-dom/server.edge`**: the browser build of `react-dom/server` opens a `MessageChannel` that keeps Node, hence the build, running forever.
+- **What Node loads with `website/vite.config.ts` (`latestRelease.ts`, `release.ts`) imports with the `.ts` extension and holds no enum**: `website/package.json` makes it ESM, and Node only strips types, so `PackageKind` is a typed `as const` object. Check with `yarn vite build website --configLoader native`, after deleting `website/node_modules`: the plugin leaves its temporary files in `website/node_modules/vite-prerender-plugin/`, which hides the package from Node's resolution.
 - **The site draws the app by hand: a change to how a drawn screen looks updates its window in `website/src/`.** The palettes (`THEME_LIST`), the app's labels (`app()` of `text.tsx` reads `locales/*.ts`) and the release files follow by themselves; the layout, the sample data and the SQL colouring do not. The windows: `AppWindow` (table page), `EditorSection` (query, completion), `BrowseSection` (context menu, write conflict), `ChartsSection` (result chart), `SshSection` (connection form, host key question).
 - **A drawn menu copies the app's items in its order, dividers and danger colour (base08) included**: the context menu follows `buildMenuItems` of `CellContextMenu.tsx`, and a drawn label is measured in French, the longest locale.
 - **A feature the README announces gets its line on the site too**: `website/locales/en.ts` first, then `fr.ts`.

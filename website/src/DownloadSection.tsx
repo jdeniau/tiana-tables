@@ -30,8 +30,8 @@ export function DownloadSection({
       />
       <div className="split wide-left">
         <div className="prose">
-          <div className="tblscroll">
-            <table className="dl">
+          <div className="table-scroll">
+            <table className="downloads">
               <thead>
                 <tr>
                   <th>{site('download.platform')}</th>
@@ -44,7 +44,7 @@ export function DownloadSection({
                     key={kind}
                     className={mine.includes(kind) ? 'mine' : undefined}
                   >
-                    <td className="o">{site(ROW_LABELS[kind])}</td>
+                    <td className="system">{site(ROW_LABELS[kind])}</td>
                     <td>
                       <a href={release.files[kind].url}>
                         {release.files[kind].name}
@@ -69,7 +69,7 @@ export function DownloadSection({
               'yarn start',
             ].map((command) => (
               <span key={command} className="line">
-                <span className="p">$ </span>
+                <span className="prompt">$ </span>
                 {command}
               </span>
             ))}

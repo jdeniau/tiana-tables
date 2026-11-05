@@ -37,7 +37,7 @@ export function ThemesSection(): ReactElement {
                     }
                   >
                     {theme.name}
-                    <span className="sw" aria-hidden="true">
+                    <span className="swatch" aria-hidden="true">
                       {ACCENT_SLOTS.map((slot) => (
                         <i
                           key={slot}

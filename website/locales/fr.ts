@@ -1,6 +1,9 @@
 import { SiteMessages } from './type';
 
 const fr: SiteMessages = {
+  'meta.title': 'Tiana Tables : un client SQL pour les développeur·euse·s',
+  'meta.description':
+    'Un client MySQL, MariaDB et PostgreSQL pour les développeur·euse·s, sous Linux, macOS et Windows. Naviguez, requêtez et modifiez vos données efficacement. Facile à utiliser et joli.',
   'nav.label': 'Sections',
   'nav.editor': 'Éditeur',
   'nav.browse': 'Parcourir',

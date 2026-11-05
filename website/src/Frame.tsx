@@ -9,9 +9,9 @@ export function RegionHead({
   meta: string;
 }): ReactElement {
   return (
-    <header className="rh">
-      <h2 className="rn">{name}</h2>
-      <span className="rm">{meta}</span>
+    <header className="region-head">
+      <h2 className="region-name">{name}</h2>
+      <span className="region-meta">{meta}</span>
     </header>
   );
 }

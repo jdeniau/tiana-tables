@@ -16,7 +16,7 @@ function Field({
   return (
     <div className="field">
       <span>{label}</span>
-      <span className={value ? 'input' : 'input ph'}>
+      <span className={value ? 'input' : 'input placeholder'}>
         {value ?? placeholder}
       </span>
     </div>
@@ -35,9 +35,11 @@ export function SshSection(): ReactElement {
           <List items={richList('ssh.items')} />
         </Prose>
         <Stage>
-          <div className="win">
-            <div className="rgh">
-              <span className="n">{app('connection.form.title.create')}</span>
+          <div className="window">
+            <div className="panel-head">
+              <span className="panel-name">
+                {app('connection.form.title.create')}
+              </span>
             </div>
             <div className="form">
               <Field
@@ -46,11 +48,11 @@ export function SshSection(): ReactElement {
               />
               <div className="field">
                 <span>{app('connection.form.route.label')}</span>
-                <span className="seg fit">
+                <span className="segmented fit">
                   <span>
                     {app('connection.form.route.option', { route: 'direct' })}
                   </span>
-                  <span className="on">
+                  <span className="active">
                     {app('connection.form.route.option', { route: 'ssh' })}
                   </span>
                 </span>
@@ -58,7 +60,7 @@ export function SshSection(): ReactElement {
               <p className="help">
                 {app('connection.form.route.help', { route: 'ssh' })}
               </p>
-              <div className="row2">
+              <div className="field-pair">
                 <Field
                   label={app('connection.form.ssh.host.label')}
                   value="bastion.lefil.example"
@@ -68,7 +70,7 @@ export function SshSection(): ReactElement {
                   placeholder={app('connection.form.ssh.user.placeholder')}
                 />
               </div>
-              <div className="row2 port">
+              <div className="field-pair port">
                 <Field
                   label={app('connection.form.host.label')}
                   value="db.internal"
@@ -77,7 +79,7 @@ export function SshSection(): ReactElement {
               </div>
             </div>
           </div>
-          <div className="win dialog">
+          <div className="window dialog">
             <h4>
               {app('connection.ssh.question.title', {
                 kind: 'hostKey',
@@ -85,19 +87,19 @@ export function SshSection(): ReactElement {
               })}
             </h4>
             <p>{app('connection.ssh.question.hostKeyHelp')}</p>
-            <div className="fp">
+            <div className="fingerprint">
               ED25519 · SHA256:q8Ts0b3cR2vXyLmN7eJ4uWzA1HkPdF6gYi5oQtE9sU
             </div>
             <div className="btns">
               <span className="btn">
                 {app('connection.ssh.question.cancel', { kind: 'hostKey' })}
               </span>
-              <span className="action sm">
+              <span className="action small">
                 {app('connection.ssh.question.answer', { kind: 'hostKey' })}
               </span>
             </div>
           </div>
-          <p className="cap">{site('ssh.caption')}</p>
+          <p className="caption">{site('ssh.caption')}</p>
         </Stage>
       </div>
     </section>

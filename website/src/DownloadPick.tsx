@@ -69,7 +69,7 @@ export function DownloadPick({ release }: { release: Release }): ReactElement {
   }
 
   return (
-    <div className="dlpick">
+    <div className="download-pick">
       <div className="joined">
         {detected.packages.map((kind) => (
           <a key={kind} className="action" href={release.files[kind].url}>
@@ -77,7 +77,7 @@ export function DownloadPick({ release }: { release: Release }): ReactElement {
           </a>
         ))}
       </div>
-      <p className="cap">
+      <p className="caption">
         {site(NOTES[detected.platform])} ·{' '}
         <a href="#download">{site('hero.other')}</a>
       </p>

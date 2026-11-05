@@ -3,30 +3,67 @@ import '@fontsource/noto-sans-mono/500.css';
 import '@fontsource/oswald/600.css';
 import '@fontsource/syne-mono/400.css';
 import './style.css';
-import { createRoot } from 'react-dom/client';
-import { unikittyLight } from '../../src/configuration/palettes/unikittyLight';
-import { type AppTheme, DEFAULT_THEME } from '../../src/configuration/themes';
+import { createRoot, hydrateRoot } from 'react-dom/client';
+import type {
+  PrerenderArguments,
+  PrerenderResult,
+} from 'vite-prerender-plugin';
 import { Site } from './Site';
 import type { Release } from './release';
-import { SiteLocale } from './siteLocale';
+import { SiteLocale, localeOfPath, localePath } from './siteLocale';
+import { createText } from './text';
 
 declare const __RELEASE__: Release;
 
-const declarations = (theme: AppTheme): string =>
-  Object.entries(theme.palette)
-    .map(([slot, colour]) => `--${slot}:${colour};`)
-    .join('') + `color-scheme:${theme.variant};`;
+const ORIGIN = 'https://tiana-tables.deniau.me';
 
-// the palettes followed until the visitor picks one: the app's default, and the light one of DESIGN.md
-const systemPalettes = document.createElement('style');
-systemPalettes.textContent = `:root{${declarations(DEFAULT_THEME)}}@media (prefers-color-scheme: light){:root{${declarations(unikittyLight)}}}`;
-document.head.append(systemPalettes);
+/** Called at build by vite-prerender-plugin for `/`, then for each link it returns. */
+export async function prerender({
+  url,
+}: PrerenderArguments): Promise<PrerenderResult> {
+  const { renderToString } = await import('react-dom/server.edge');
+  const locale = localeOfPath(url);
+  const { site } = createText(locale);
 
-const locale =
-  Object.values(SiteLocale).find(
-    (value) => value === document.documentElement.lang
-  ) ?? SiteLocale.En;
+  return {
+    html: renderToString(<Site locale={locale} release={__RELEASE__} />),
+    links: new Set(Object.values(SiteLocale).map(localePath)),
+    head: {
+      lang: locale,
+      title: site('meta.title'),
+      elements: new Set([
+        meta('name', 'description', site('meta.description')),
+        meta('property', 'og:title', site('meta.title')),
+        meta('property', 'og:description', site('meta.description')),
+        link({ rel: 'canonical', href: `${ORIGIN}${localePath(locale)}` }),
+        ...Object.values(SiteLocale).map((other) =>
+          link({
+            rel: 'alternate',
+            hreflang: other,
+            href: `${ORIGIN}${localePath(other)}`,
+          })
+        ),
+      ]),
+    },
+  };
+}
 
-createRoot(document.getElementById('root')!).render(
-  <Site locale={locale} release={__RELEASE__} />
-);
+const meta = (key: string, name: string, content: string) => ({
+  type: 'meta',
+  props: { [key]: name, content },
+});
+const link = (props: Record<string, string>) => ({ type: 'link', props });
+
+// absent while prerendering in Node
+if (typeof document !== 'undefined') {
+  const root = document.getElementById('root');
+  const locale = localeOfPath(location.pathname);
+  const page = <Site locale={locale} release={__RELEASE__} />;
+  if (root?.hasChildNodes()) {
+    hydrateRoot(root, page);
+  } else if (root) {
+    // the dev server serves the bare template: no content, nor language
+    document.documentElement.lang = locale;
+    createRoot(root).render(page);
+  }
+}

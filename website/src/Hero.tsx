@@ -30,7 +30,7 @@ export function Hero({ release }: { release: Release }): ReactElement {
             <h1>
               <span className="title-long">{site('hero.title')}</span>
               <span className="title-short">{site('hero.title.short')}</span>
-              <span className="pip" aria-hidden="true" />
+              <span className="title-dot" aria-hidden="true" />
             </h1>
           </div>
           <p className="lead">{site('hero.lead')}</p>
@@ -53,7 +53,7 @@ export function Hero({ release }: { release: Release }): ReactElement {
       <div className="hero-app">
         <div className="stage">
           <AppWindow />
-          <p className="cap">{site('app.caption')}</p>
+          <p className="caption">{site('app.caption')}</p>
         </div>
       </div>
     </section>

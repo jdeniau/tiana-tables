@@ -28,7 +28,7 @@ export function PrivacySection(): ReactElement {
             meta={site('privacy.meta')}
           />
           <Prose>
-            <p className="big">
+            <p className="claim">
               {richList('privacy.statement').map((line, index) => (
                 <span key={index}>{line}</span>
               ))}
@@ -43,21 +43,22 @@ export function PrivacySection(): ReactElement {
             meta={site('databases.meta')}
           />
           <Prose>
-            <div className="win">
-              <div className="rgh">
-                <span className="m">
-                  <span className="k">SELECT</span>{' '}
-                  <span className="cm">*</span> <span className="k">FROM</span>{' '}
-                  <span className="tbl">support</span>
+            <div className="window">
+              <div className="panel-head">
+                <span className="panel-meta">
+                  <span className="keyword">SELECT</span>{' '}
+                  <span className="operator">*</span>{' '}
+                  <span className="keyword">FROM</span>{' '}
+                  <span className="table-name">support</span>
                 </span>
-                <span className="r">
-                  <span className="m">
+                <span className="panel-tools">
+                  <span className="panel-meta">
                     {app('table.rows.count', { count: SCOPE.length })}
                   </span>
                 </span>
               </div>
-              <div className="tblscroll">
-                <table className="tg">
+              <div className="table-scroll">
+                <table className="grid">
                   <thead>
                     <tr>
                       <th>engine</th>
@@ -69,9 +70,9 @@ export function PrivacySection(): ReactElement {
                       <tr key={label(name)}>
                         <td>{label(name)}</td>
                         {status ? (
-                          <td className="st">{site(status)}</td>
+                          <td className="string">{site(status)}</td>
                         ) : (
-                          <td className="nul">
+                          <td className="null">
                             {app('cell.detail.nullPlaceholder')}
                           </td>
                         )}

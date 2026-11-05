@@ -107,16 +107,16 @@ export function ChartsSection(): ReactElement {
       <RegionHead name={site('charts.title')} meta={site('charts.meta')} />
       <div className="split wide-left">
         <Stage>
-          <div className="win">
-            <div className="rgh">
-              <span className="n">{app('rawSql.result.title')}</span>
-              <span className="m">
+          <div className="window">
+            <div className="panel-head">
+              <span className="panel-name">{app('rawSql.result.title')}</span>
+              <span className="panel-meta">
                 {app('rawSql.result.meta.rows', { count: 33, ms: 13 })}
               </span>
-              <span className="r">
-                <span className="seg">
+              <span className="panel-tools">
+                <span className="segmented">
                   <span>{app('chart.tab.data')}</span>
-                  <span className="on">{app('chart.tab.chart')}</span>
+                  <span className="active">{app('chart.tab.chart')}</span>
                 </span>
               </span>
             </div>
@@ -129,8 +129,8 @@ export function ChartsSection(): ReactElement {
               </span>
             </div>
             <div className="legend">
-              <span className="a">lectures</span>
-              <span className="b">lecteurs_identifies</span>
+              <span className="series-a">lectures</span>
+              <span className="series-b">lecteurs_identifies</span>
             </div>
             <Chart label={site('charts.label')} />
           </div>

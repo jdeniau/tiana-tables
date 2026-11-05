@@ -25,40 +25,42 @@ export function EditorSection(): ReactElement {
           <List items={richList('editor.items')} />
         </Prose>
         <Stage>
-          <div className="win">
-            <div className="rgh">
-              <span className="n">{app('rawSql.query.title')}</span>
-              <span className="m">
+          <div className="window">
+            <div className="panel-head">
+              <span className="panel-name">{app('rawSql.query.title')}</span>
+              <span className="panel-meta">
                 {app('rawSql.query.statementCount', { count: 1 })}
               </span>
-              <span className="r">
-                <span className="action sm">
+              <span className="panel-tools">
+                <span className="action small">
                   {app('rawSql.submit')} <kbd>ctrl+↵</kbd>
                 </span>
               </span>
             </div>
             <div className="ed-body">
               <pre className="code" aria-label={site('editor.label')}>
-                <span className="cur">
-                  <span className="k">SELECT</span>{' '}
-                  <span className="al">a</span>.titre,{' '}
-                  <span className="al">au</span>.nom,{' '}
-                  <span className="al">au</span>.prenom
+                <span className="current-statement">
+                  <span className="keyword">SELECT</span>{' '}
+                  <span className="alias">a</span>.titre,{' '}
+                  <span className="alias">au</span>.nom,{' '}
+                  <span className="alias">au</span>.prenom
                 </span>
-                <span className="cur">
-                  <span className="k">FROM</span>{' '}
-                  <span className="tbl">article</span>{' '}
-                  <span className="al">a</span>
+                <span className="current-statement">
+                  <span className="keyword">FROM</span>{' '}
+                  <span className="table-name">article</span>{' '}
+                  <span className="alias">a</span>
                 </span>
-                <span className="cur">
-                  <span className="k">JOIN</span>{' '}
-                  <span className="tbl">auteur</span>{' '}
-                  <span className="al">au</span> <span className="k">ON</span>{' '}
-                  <span className="al">a</span>.auteur_id ={' '}
-                  <span className="al">au</span>.id
+                <span className="current-statement">
+                  <span className="keyword">JOIN</span>{' '}
+                  <span className="table-name">auteur</span>{' '}
+                  <span className="alias">au</span>{' '}
+                  <span className="keyword">ON</span>{' '}
+                  <span className="alias">a</span>.auteur_id ={' '}
+                  <span className="alias">au</span>.id
                 </span>
-                <span className="cur">
-                  <span className="k">WHERE</span> <span className="al">a</span>
+                <span className="current-statement">
+                  <span className="keyword">WHERE</span>{' '}
+                  <span className="alias">a</span>
                   .<span className="caret" />
                 </span>
               </pre>
