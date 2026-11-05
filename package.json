@@ -2,7 +2,7 @@
   "name": "tiana-tables",
   "productName": "Tiana Tables",
   "description": "A SQL query tool for developers.",
-  "homepage": "https://github.com/jdeniau/tiana-tables#readme",
+  "homepage": "https://tiana-tables.deniau.me",
   "license": "MIT",
   "version": "1.24.0",
   "main": ".vite/build/main.cjs",
