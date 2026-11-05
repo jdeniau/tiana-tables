@@ -17,6 +17,7 @@ export default defineConfig(
       'vitest.config.*',
       'out/',
       '.vite/',
+      'website/dist/',
     ],
   },
   js.configs.recommended,

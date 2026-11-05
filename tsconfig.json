@@ -9,11 +9,14 @@
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    // what Node loads itself (website/vite.config.ts) imports TypeScript with its extension
+    "allowImportingTsExtensions": true
   },
   "include": [
     "src",
-    "locales"
+    "locales",
+    "website"
     // "stories" /ignore stories for now
   ]
 }
