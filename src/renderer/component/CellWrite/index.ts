@@ -1,2 +1,2 @@
 export { CellWriteProvider, useCellWrite } from './CellWriteContext';
-export type { SaveCell, SaveCellParams } from './types';
+export type { CellWrite, SaveCell, SaveCellParams } from './types';

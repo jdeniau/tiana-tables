@@ -21,6 +21,8 @@ interface CellWriteContextValue {
    * A conflict is handed over to the conflict modal; a SQL error is thrown back to the caller.
    */
   writeCell(write: CellWrite): Promise<void>;
+  /** Writes the values one after the other, stopping at the first that does not land, which the conflict modal shows. */
+  writeCells(writes: ReadonlyArray<CellWrite>): Promise<void>;
   /** Shows a write that failed where the caller has nowhere to show it. */
   reportFailure(write: CellWrite, error: unknown): void;
 }
@@ -58,6 +60,24 @@ export function CellWriteProvider({
     setPending({ write, issue: failureOf(error) });
   };
 
+  const writeCells = async (writes: ReadonlyArray<CellWrite>) => {
+    for (const write of writes) {
+      try {
+        const issue = issueOf(await save({ ...write, force: false }));
+
+        if (issue) {
+          setPending({ write, issue });
+
+          return;
+        }
+      } catch (error) {
+        reportFailure(write, error);
+
+        return;
+      }
+    }
+  };
+
   // the modal closes at once: the cell flashes once written, and the modal
   // reopens on what the forced write still meets (a row deleted in between, a SQL error)
   const overwrite = async (write: CellWrite) => {
@@ -87,7 +107,7 @@ export function CellWriteProvider({
     setPending(null);
   };
 
-  const value = { writeCell, reportFailure };
+  const value = { writeCell, writeCells, reportFailure };
 
   return (
     <CellWriteContext value={value}>

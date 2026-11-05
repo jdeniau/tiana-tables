@@ -17,7 +17,7 @@ import {
   RegionName,
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
-import { NO_CURSOR, type RowCursor } from '../rowSelectionGesture';
+import { NO_CURSOR, type RowCursor } from '../gridSelectionGesture';
 import { WithRowDetailPanel } from './RowDetailPanel';
 
 const field = (name: string, kind: FieldKind): ResultField => ({

@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { css, keyframes } from 'styled-components';
 import { background, stringForeground } from '../theme';
 
@@ -9,8 +8,7 @@ import { background, stringForeground } from '../theme';
  *
  * The mark is an attribute set on the `<td>` itself, not a prop threaded
  * through the memoized rows: one cell's ornament then costs no other row a
- * comparison, and `TableGrid` only has to remember which cell an edit was
- * opened from (see the performance note there).
+ * comparison (see the performance note on `TableGrid`).
  */
 
 /** the attribute the grid's stylesheet keys the animation on */
@@ -39,35 +37,12 @@ export const writtenCellFlashStyle = css`
   }
 `;
 
-/**
- * `rememberCell` takes the `<td>` an edit is opened from; `flashCell` marks it
- * once the value is written. The mark is dropped when the animation ends, so
- * that writing the same cell again replays it.
- */
-export function useWrittenCellFlash(): {
-  rememberCell: (cell: HTMLTableCellElement) => void;
-  flashCell: () => void;
-} {
-  const cellRef = useRef<HTMLTableCellElement | null>(null);
-
-  const rememberCell = (cell: HTMLTableCellElement) => {
-    cellRef.current = cell;
-  };
-
-  const flashCell = () => {
-    const cell = cellRef.current;
-
-    if (!cell) {
-      return;
-    }
-
-    cell.setAttribute(WRITTEN_ATTRIBUTE, '');
-    cell.addEventListener(
-      'animationend',
-      () => cell.removeAttribute(WRITTEN_ATTRIBUTE),
-      { once: true }
-    );
-  };
-
-  return { rememberCell, flashCell };
+/** Marks a written cell; the mark is dropped when the animation ends, so that writing the same cell again replays it. */
+export function flashCell(cell: HTMLElement): void {
+  cell.setAttribute(WRITTEN_ATTRIBUTE, '');
+  cell.addEventListener(
+    'animationend',
+    () => cell.removeAttribute(WRITTEN_ATTRIBUTE),
+    { once: true }
+  );
 }

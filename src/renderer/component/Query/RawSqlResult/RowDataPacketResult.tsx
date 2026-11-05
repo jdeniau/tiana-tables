@@ -27,9 +27,9 @@ import { RegionSegmented } from '../../Style/RegionSegmented';
 import { TabStrip, TabStripItem } from '../../Style/TabStrip';
 import { fill } from '../../Style/fill';
 import TableGrid from '../../TableGrid';
-import { NO_CURSOR, type RowCursor } from '../../rowSelectionGesture';
+import { NO_CURSOR, type RowCursor } from '../../gridSelectionGesture';
+import { type GridCopied, copiedText } from '../../useGridCopy';
 import { useLastCopy } from '../../useLastCopy';
-import type { RowsCopied } from '../../useRowsCopy';
 import SqlErrorComponent from '../SqlErrorComponent';
 
 /** What one statement of the editor answered with. */
@@ -161,7 +161,7 @@ function OutcomePane({
   selectionAtom,
   cursorAtom,
   panelOpenAtom,
-  onRowsCopied,
+  onCopied,
 }: {
   outcome: StatementOutcome;
   view: View;
@@ -170,7 +170,7 @@ function OutcomePane({
   selectionAtom: Atom<RowSelectionState>;
   cursorAtom: Atom<RowCursor>;
   panelOpenAtom: Atom<boolean>;
-  onRowsCopied: (copied: RowsCopied) => void;
+  onCopied: (copied: GridCopied) => void;
 }): ReactElement {
   const { t } = useTranslation();
   const { result, error } = outcome;
@@ -192,7 +192,7 @@ function OutcomePane({
             fields={fields}
             rowsAsArray={rowsAsArray}
             selectionAtom={selectionAtom}
-            onRowsCopied={onRowsCopied}
+            onCopied={onCopied}
             cursorAtom={cursorAtom}
             panelOpenAtom={panelOpenAtom}
           />
@@ -270,7 +270,7 @@ export default function RawSqlResult({
     : null;
   const shownView = unavailable === null ? view : View.Data;
 
-  const [lastCopy, onRowsCopied] = useLastCopy();
+  const [lastCopy, onCopied] = useLastCopy();
 
   const selectedCount = useSelector(
     selections.atoms[active] ?? NO_SELECTION,
@@ -278,10 +278,7 @@ export default function RawSqlResult({
   );
 
   const meta = lastCopy
-    ? t('table.rows.copied', {
-        count: lastCopy.rowCount,
-        format: lastCopy.format,
-      })
+    ? copiedText(lastCopy, t)
     : outcome && outcome.durationMs !== undefined
       ? rows
         ? selectedCount > 0
@@ -327,7 +324,7 @@ export default function RawSqlResult({
               selectionAtom={selections.atoms[index]}
               cursorAtom={selections.cursors[index]}
               panelOpenAtom={selections.panelsOpen[index]}
-              onRowsCopied={onRowsCopied}
+              onCopied={onCopied}
             />
           </Pane>
         ))}

@@ -201,7 +201,8 @@ const fr: Translation = {
   'settings.title': 'Réglages',
   'sqlPanel.callerButton': 'SQL',
   'table.columns.count': '{count, plural, one {# colonne} other {# colonnes}}',
-  'table.contextMenu.copy': 'Copier la valeur',
+  'table.contextMenu.copy':
+    '{count, plural, one {Copier la valeur} other {Copier les # valeurs}}',
   'table.contextMenu.copyRow': 'Copier la ligne en',
   'table.contextMenu.delete':
     '{count, plural, one {Supprimer la ligne…} other {Supprimer # lignes…}}',
@@ -214,7 +215,8 @@ const fr: Translation = {
   'table.contextMenu.filter.clipboard': 'Presse-papier',
   'table.contextMenu.filter.freeText': '…',
   'table.contextMenu.filter.freeText.title': 'Filtrer sur une valeur',
-  'table.contextMenu.setNull': 'Mettre à NULL',
+  'table.contextMenu.setNull':
+    '{count, plural, one {Mettre à NULL} other {Mettre # valeurs à NULL…}}',
   'table.copy.columnNames': 'Noms de colonnes',
   'table.copy.columnNames.formats': 'TSV, CSV',
   'table.copy.format':
@@ -253,6 +255,12 @@ const fr: Translation = {
   'table.rows.selected':
     '{selected, plural, one {# ligne} other {# lignes}} / {count, plural, one {# ligne} other {# lignes}}',
   'table.rows.loadMore': 'Charger plus…',
+  'table.setNull.cancel': 'Annuler',
+  'table.setNull.confirm': 'Mettre à NULL',
+  'table.setNull.description':
+    '{count, plural, one {La valeur est mise à NULL} other {Les # valeurs sont mises à NULL}} dans la base de données.',
+  'table.setNull.title':
+    '{count, plural, one {Mettre cette valeur à NULL ?} other {Mettre ces # valeurs à NULL ?}}',
   'table.sort.hint': 'Clic pour trier, Maj+clic pour ajouter au tri',
   'table.structure.extendedType': 'Type étendu',
   'table.structure.displayAfter': "S'affiche après",
@@ -261,6 +269,8 @@ const fr: Translation = {
     "Les colonnes de la clé primaire s'affichent en premier : cette colonne ne suit pas directement celle choisie",
   'table.tab.data': 'Données',
   'table.tab.structure': 'Structure',
+  'table.values.copied':
+    '{count, plural, one {# valeur copiée} other {# valeurs copiées}}',
   'table.view.label': 'Vue de la table',
   'tableList.count': '{count, plural, one {# table} other {# tables}}',
   'tableList.navigate': 'Aller à une table…',

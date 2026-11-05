@@ -426,13 +426,14 @@ function SelectableGrid(args: ComponentProps<typeof TableGrid<ResultRow>>) {
 }
 
 /**
- * Click a row, then ↑ and ↓ move the selection, Shift+↑ and Shift+↓ extend
- * it: the grid scrolls the least that shows the whole row, below the heads.
+ * Click a cell, then the arrows move it, Shift+↑ and Shift+↓ select the rows
+ * from there: the grid scrolls the least that shows the whole cell, below the
+ * heads and past the pinned key.
  */
 export const Selectable: Story = {
   args: {
-    fields: makeFields(8),
-    result: makeRows(100, 8),
+    fields: makeFields(20),
+    result: makeRows(100, 20),
     primaryKeys: ['id'],
   },
   render: (args) => <SelectableGrid {...args} />,
@@ -467,11 +468,39 @@ export const Selectable: Story = {
     // the row just came into view: whole, against the bottom edge
     await waitFor(() => expect(placeOf('lorem-40').bottom).toBeCloseTo(0, 0));
     expect(placeOf('lorem-40').top).toBeGreaterThan(0);
-    expect(grid.querySelectorAll('tr[data-selected]')).toHaveLength(1);
+    expect(grid.querySelectorAll('td[data-selected]')).toHaveLength(1);
 
     await userEvent.keyboard('{ArrowUp>40/}');
 
     // whole again, against the heads
     await waitFor(() => expect(placeOf('lorem-0').top).toBeCloseTo(0, 0));
+
+    const selectedCell = (): DOMRect => {
+      const cell = grid.querySelector('td[data-selected]');
+
+      if (!cell) {
+        throw new Error('No selected cell');
+      }
+
+      return cell.getBoundingClientRect();
+    };
+
+    await userEvent.keyboard('{ArrowRight>19/}');
+
+    // the last column, whole, against the right edge
+    expect(grid.scrollLeft).toBeGreaterThan(0);
+    expect(selectedCell().right).toBeCloseTo(
+      grid.getBoundingClientRect().left + grid.clientWidth,
+      0
+    );
+
+    await userEvent.keyboard('{ArrowLeft>18/}');
+
+    // the second column, whole, against the pinned key
+    const pinnedKey = grid.querySelector('td.tg-pinned');
+    expect(selectedCell().left).toBeCloseTo(
+      pinnedKey?.getBoundingClientRect().right ?? Number.NaN,
+      0
+    );
   },
 };

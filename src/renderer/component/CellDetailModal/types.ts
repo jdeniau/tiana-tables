@@ -12,4 +12,6 @@ export interface CellDetail {
   rowKey: Array<PrimaryKeyPart> | null;
   /** where the row sits in the loaded result, to refresh it after a write */
   rowIndex: number;
+  /** the id the grid knows the row by, to flash the cell once written */
+  rowId: string;
 }

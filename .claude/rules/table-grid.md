@@ -6,12 +6,15 @@ paths:
   - 'src/renderer/component/cellValueToText*'
   - 'src/renderer/component/ForeignKeyLink*'
   - 'src/renderer/component/columnWidth*'
-  - 'src/renderer/component/useWrittenCellFlash.ts'
-  - 'src/renderer/component/useRowSelection.ts'
+  - 'src/renderer/component/writtenCellFlash.ts'
+  - 'src/renderer/component/useGridSelection.ts'
+  - 'src/renderer/component/useGridCopy.ts'
+  - 'src/renderer/component/gridCellElement.ts'
+  - 'src/renderer/component/CellsNull.tsx'
   - 'src/renderer/component/useGridColumns.tsx'
   - 'src/renderer/component/useColumnWidthVars.ts'
   - 'src/renderer/component/useCellDialogs.ts'
-  - 'src/renderer/component/rowSelectionGesture*'
+  - 'src/renderer/component/gridSelectionGesture*'
   - 'src/renderer/component/TableLayout/**'
 ---
 
@@ -23,8 +26,10 @@ paths:
 - **State the owner reads lives in an external atom**: `useCreateAtom` (`@tanstack/react-store`), read with `useSelector`, handed over in `atoms: { sorting }` — no `state` + `onXChange` bridge. An external atom is wrapped once at construction, so it must be stable for the grid's whole life: gate a feature with `enableX`, never by passing the atom on some renders only.
 - **The grid subscribes to no table state** (`useTable(options, () => ({}))`), so a part that shows a state subscribes itself: `<table.Subscribe selector={(state) => state.sorting}>`.
 - **The `table` object `useTable` returns is a new object on every state change** (a wrapper rebuilt around the stable core), so it never sits in a `useMemo` / `memo` dependency list. A hand-written dependency list with an `eslint-disable` is an identity claim: verify it with a probe on the comparator. Its members (`atoms`, `setRowSelection`, `getRowModel`) are the core's and keep their identity, so a callback closing over them stays stable — but React Compiler then caches a call made at render (`getCoreRowModel()`) once and for all: such a call goes through `table`.
-- **Row selection is TanStack's state driven by our gestures**: `getToggleSelectedHandler` reads `event.target.checked` and only ever adds a range (a checkbox's semantics), so the file-manager clicks go through `nextRowSelection` (`rowSelectionGesture.ts`) and `setRowSelection`. An absent atom is no key of `atoms` at all: `constructTable` calls `.get()` on every value it is given.
-- **The row the side panel shows is derived, never stored**: the lead of the cursor (`RowCursor`) while the panel is open. Every gesture writes the cursor and the selection together through `apply` (`useRowSelection`), which closes the panel once the lead is no longer selected: no subscription keeps them in step.
+- **A click selects a cell, Shift+click whole rows, never both at once**: the rows are TanStack's state, the cells an atom of the grid (`CellSelection`, by row id), and `nextSelection` (`gridSelectionGesture.ts`) writes the two together. `getToggleSelectedHandler` reads `event.target.checked` and only ever adds a range (a checkbox's semantics), so the clicks go through `setRowSelection`. An absent atom is no key of `atoms` at all: `constructTable` calls `.get()` on every value it is given.
+- **A gesture keeps the column list of every row it does not touch**: `BodyRow` compares `selectedColumns` by identity, so a rebuilt list re-renders every row holding a selected cell.
+- **The row the side panel shows is derived, never stored**: the lead of the cursor (`RowCursor`) while the panel is open. Every gesture writes the cursor and the selection together through `apply` (`useGridSelection`), which closes the panel once the lead holds nothing selected: no subscription keeps them in step.
+- **Ctrl+C and Delete follow the selection**: on cells, the values as "Copy value" writes each and NULL written into them (`CellsNull`, confirmed past one cell); on rows, TSV and the deletion. A cell is found again by `findCellElement` (`tr[data-row-id]`, the column's position), to flash it once written or to scroll it into view.
 - **The scroll element is held in a state, not a ref**: the virtualizer reads it in a layout effect that runs before the parent ref attaches.
 - **The primary key columns lead the grid, in the order of `fields`, whatever the user's column order**: TanStack heads the pinned columns first, so `columnSources` sorts them first (`keyColumnsFirst`) for the body and the `--tg-*-N` indexes to match. "Displays after" still orders the key columns among themselves; where the key moves a column away from its anchor, the structure page warns (`listDisplayAfterOverriddenByPrimaryKey`).
 
@@ -41,15 +46,15 @@ Scrolling _mounts_ hundreds of cells per tick, so `memo` does nothing there: the
 ## Cells
 
 - **The `<td>` of `BodyRowInner` owns the pointer gestures** (double-click, context menu); what the cell renders owns only the rendering. The `<div>` covers neither the padding nor the foreign-key `<a>`.
-- **A transient mark on one element is set imperatively on that element**, its CSS and timing in one module (`useWrittenCellFlash`, `setTitleIfTruncated`). Every prop added to `BodyRow` is a comparison paid by every row.
+- **A transient mark on one element is set imperatively on that element**, its CSS and timing in one module (`writtenCellFlash`, `setTitleIfTruncated`). Every prop added to `BodyRow` is a comparison paid by every row.
 - **A cell renders in three tiers**: the shape of the value (`null`, bytes, any other object), then its `FieldKind` — which alone tells a date, the server's text, from any other string —, then `String(value)` — so no value can blank the grid.
 - **JSON is what the server declares, never guessed from the value or a convention**: only `FieldKind.Json` (MySQL's `JSON`, MariaDB's `CHECK (json_valid(col))` from 10.5.2, PostgreSQL's `json` / `jsonb`) gets the JSON cell, editor, indentation and copy. JSON stored in a `TEXT` column stays text; on MariaDB, adding the `CHECK` is the fix. The editor and the check before Save follow the kind alone, so typing never swaps the editor; `ColumnDetail.hasJsonType` drives only the write's `CAST`, and is false on MariaDB.
 
 ## Copy formats (`CellContextMenu/rowFormats.ts`)
 
-- **`cellValueToText` feeds four places at once**: the read-only modal, the editor's opening text, the conflict modal and "Copy value". A change to what it returns changes all four: name each in the PR (`grep -rn "cellValueToText(" src`).
+- **`cellValueToText` feeds four places at once**: the read-only modal, the editor's opening text, the conflict modal and "Copy value" (Ctrl+C on cells too). A change to what it returns changes all four: name each in the PR (`grep -rn "cellValueToText(" src`).
 - **"Copy value" copies what the detail modal shows** — for a date, the server's text, fraction and offset included; a row copied as JSON / CSV is data read by programs, so a point in time goes out as an ISO 8601 instant in UTC (`dateTextToIso`): a wall clock (a `DATETIME`, a `timestamp`) taken in the server's zone — left a wall clock when that zone is unknown —, a `timestamptz` resolved at its own offset. A `DATE` stays `YYYY-MM-DD`. The INSERT and "Copy as SQL" write the server's text: it round-trips into the same column, to the microsecond.
-- **Rows reach the clipboard from the renderer, never through IPC**: Ctrl+C and the Edit menu's Copy on the focused grid fill the page's `copy` event (`useRowsCopy`), a menu entry writes one `ClipboardItem` holding the TSV and the HTML table (`navigator.clipboard.write`, which Electron grants with no permission handler). Electron 44's own `clipboard.write` takes `ClipboardItem`s too, not `{ text, html }`.
+- **Rows reach the clipboard from the renderer, never through IPC**: Ctrl+C and the Edit menu's Copy on the focused grid fill the page's `copy` event (`useGridCopy`), a menu entry writes one `ClipboardItem` holding the TSV and the HTML table (`navigator.clipboard.write`, which Electron grants with no permission handler). Electron 44's own `clipboard.write` takes `ClipboardItem`s too, not `{ text, html }`.
 - **What people read (TSV, Markdown, the HTML table) writes a date as the grid shows it, in ISO with the offset of its zone** (`dateTextToShownIso`: `2025-04-30 06:56:08+02:00`); CSV and JSON the UTC instant, the INSERT the server's text.
 - **A date is parsed as Temporal only where it is computed on** (`utils/dateFormatter.ts`: the grid's format, the instant of JSON / CSV); the guard, the key and the literal send the server's text back as is, since a `DATETIME(6)` compares equal only to its full fraction. A test that depends on the machine's zone mocks `Temporal.Now.timeZoneId`, never the process `TZ`.
 - **The date switch converts the display only** (`DateDisplayContext`, `utils/dateZones.ts`): the grid, its column heads and the chart's axis follow it; the editor, the modal, "Copy value" and every literal keep the server's wall clock. The server's zone is read once, in the connection loader: a `SET time_zone` run in the editor afterwards is not followed. A `DATETIME` or a `timestamp` holds no zone, and only a `TIMESTAMP` / `timestamptz` moves with the session's: the switch takes the others in the server's zone too, and its UTC and local segments say so (`dateDisplay.assumed`).

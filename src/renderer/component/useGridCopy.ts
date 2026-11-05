@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
+import type { Atom } from '@tanstack/react-store';
 import type { Table } from '@tanstack/react-table';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
 import { useDateDisplay } from '../../contexts/DateDisplayContext';
+import type { useTranslation } from '../../i18n';
 import type { ResultRow } from '../../sql/types';
 import { useDialect } from '../hooks/useDialect';
 import {
@@ -18,19 +20,41 @@ import {
   rowsToJson,
   rowsToMarkdown,
   rowsToTsv,
+  valuesToText,
 } from './CellContextMenu/rowFormats';
 import { columnNamesAtom } from './CellContextMenu/rowsCopyItem';
 import type { ColumnMeta, GridFeatures } from './TableGrid';
+import type { CellSelection } from './gridSelectionGesture';
+import { cellsOfSelection, rowsOfSelection } from './useGridSelection';
 
-/** What a copy of rows wrote, for the region header to say so. */
-export interface RowsCopied {
-  rowCount: number;
-  format: RowFormat;
+/** What a copy wrote: whole rows in a format, or the values of cells. */
+export enum CopyKind {
+  Rows = 'rows',
+  Values = 'values',
 }
 
-interface RowsCopy {
-  /** the selected rows, in the order of the grid, without the caller's own columns */
+/** What a copy wrote, for the region header to say so. */
+export type GridCopied =
+  | { kind: CopyKind.Rows; rowCount: number; format: RowFormat }
+  | { kind: CopyKind.Values; valueCount: number };
+
+/** What the region header says of a copy. */
+export function copiedText(
+  copied: GridCopied,
+  t: ReturnType<typeof useTranslation>['t']
+): string {
+  return copied.kind === CopyKind.Rows
+    ? t('table.rows.copied', { count: copied.rowCount, format: copied.format })
+    : t('table.values.copied', { count: copied.valueCount });
+}
+
+interface GridCopy {
+  /** the rows of the selection, in the order of the grid, without the caller's own columns */
   selectedRows: () => Array<Array<RowCell>>;
+  /** the selected cells, a list per row, in the order of the grid; empty while rows are selected */
+  selectedValues: () => Array<Array<RowCell>>;
+  /** writes values as "Copy value" does, then tells `onCopied` */
+  copyValues: (lines: ReadonlyArray<ReadonlyArray<RowCell>>) => void;
   /** writes rows in a format, then tells `onCopied` */
   copyRows: (
     format: RowFormat,
@@ -52,41 +76,63 @@ export function columnValue(
   return rowsAsArray ? row[column.fieldIndex] : row[column.name];
 }
 
-/** Copies rows of a grid: the selected ones as TSV on Ctrl+C in the focused grid, any rows in any format from the context menu. */
-export function useRowsCopy<Row extends ResultRow>(
+/**
+ * Copies from a grid: on Ctrl+C in the focused grid, the values of the selected cells or the selected rows as TSV;
+ * from the context menu, values, or any rows in any format.
+ */
+export function useGridCopy<Row extends ResultRow>(
   table: Table<GridFeatures, Row>,
   {
     enabled,
     scrollElement,
     columnsMeta,
     rowsAsArray,
+    cellsAtom,
     onCopied,
   }: {
-    /** whether rows can be selected, and Ctrl+C copy them */
+    /** whether cells and rows can be selected, and Ctrl+C copy them */
     enabled: boolean;
     scrollElement: HTMLElement | null;
     columnsMeta: ReadonlyArray<ColumnMeta>;
     rowsAsArray: boolean;
-    onCopied: ((copied: RowsCopied) => void) | undefined;
+    cellsAtom: Atom<CellSelection>;
+    onCopied: ((copied: GridCopied) => void) | undefined;
   }
-): RowsCopy {
+): GridCopy {
   const dialect = useDialect();
   const { database } = useDatabaseContext();
   const { shift, serverZone } = useDateDisplay();
   const zone = serverZone?.zone ?? null;
 
-  const selectedRows = (): Array<Array<RowCell>> => {
-    const columns = columnsMeta.filter((column) => !column.render);
+  // the caller's own columns hold no value to copy
+  const columns = columnsMeta.filter((column) => !column.render);
 
-    return table
-      .getRowModel()
-      .rows.filter((row) => row.getIsSelected())
-      .map((row) =>
-        columns.map((column) => ({
+  const selectedRows = (): Array<Array<RowCell>> =>
+    rowsOfSelection(table, cellsAtom.get()).map((row) =>
+      columns.map((column) => ({
+        column,
+        value: columnValue(row.original, column, rowsAsArray),
+      }))
+    );
+
+  const selectedValues = (): Array<Array<RowCell>> =>
+    cellsOfSelection(table, cellsAtom.get(), columns).map(
+      ({ row, columns: selected }) =>
+        selected.map((column) => ({
           column,
           value: columnValue(row.original, column, rowsAsArray),
         }))
-      );
+    );
+
+  const copyValues = (lines: ReadonlyArray<ReadonlyArray<RowCell>>): void => {
+    writeClipboard({ text: valuesToText(lines) }).then(
+      () =>
+        onCopied?.({
+          kind: CopyKind.Values,
+          valueCount: lines.flat().length,
+        }),
+      (error: unknown) => console.error('The values were not copied', error)
+    );
   };
 
   const contentOf = (
@@ -124,7 +170,8 @@ export function useRowsCopy<Row extends ResultRow>(
 
     if (content) {
       writeClipboard(content).then(
-        () => onCopied?.({ rowCount: rows.length, format }),
+        () =>
+          onCopied?.({ kind: CopyKind.Rows, rowCount: rows.length, format }),
         // nothing to say in the header for a write that did not happen
         (error: unknown) => console.error('The rows were not copied', error)
       );
@@ -144,24 +191,47 @@ export function useRowsCopy<Row extends ResultRow>(
     }
 
     const onCopy = (event: ClipboardEvent): void => {
-      const rows = selectedRows();
-
-      if (window.getSelection()?.toString() || rows.length === 0) {
+      if (window.getSelection()?.toString()) {
         return;
       }
 
-      const content = contentOf(RowFormat.Tsv, rows);
+      const lines = selectedValues();
+
+      if (lines.length > 0) {
+        fillCopyEvent(event, { text: valuesToText(lines) });
+        onCopied?.({
+          kind: CopyKind.Values,
+          valueCount: lines.flat().length,
+        });
+
+        return;
+      }
+
+      const rows = selectedRows();
+      const content =
+        rows.length > 0 ? contentOf(RowFormat.Tsv, rows) : undefined;
 
       if (content) {
         fillCopyEvent(event, content);
-        onCopied?.({ rowCount: rows.length, format: RowFormat.Tsv });
+        onCopied?.({
+          kind: CopyKind.Rows,
+          rowCount: rows.length,
+          format: RowFormat.Tsv,
+        });
       }
     };
 
     scrollElement.addEventListener('copy', onCopy);
 
     return () => scrollElement.removeEventListener('copy', onCopy);
-  }, [scrollElement, enabled, selectedRows, contentOf, onCopied]);
+  }, [
+    scrollElement,
+    enabled,
+    selectedValues,
+    selectedRows,
+    contentOf,
+    onCopied,
+  ]);
 
-  return { selectedRows, copyRows, canCopyAs };
+  return { selectedRows, selectedValues, copyValues, copyRows, canCopyAs };
 }

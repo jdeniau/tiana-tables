@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import type { RowsCopied } from './useRowsCopy';
+import type { GridCopied } from './useGridCopy';
 
 /** how long the region header says what was copied */
 const SHOWN_MS = 2600;
 
 /** The last copy of a grid's selection, or of anything else, for a region to say for a moment, and what to call once it copied. */
-export function useLastCopy<Copied = RowsCopied>(): [
+export function useLastCopy<Copied = GridCopied>(): [
   Copied | null,
   (copied: Copied) => void,
 ] {

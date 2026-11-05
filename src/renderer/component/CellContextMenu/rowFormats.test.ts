@@ -12,6 +12,7 @@ import {
   rowsToJson,
   rowsToMarkdown,
   rowsToTsv,
+  valuesToText,
 } from './rowFormats';
 
 function detail(name: string, overrides: Partial<ColumnDetail> = {}) {
@@ -303,5 +304,23 @@ describe('the selected rows', () => {
         "  (1, 'a'),\n" +
         '  (2, NULL);'
     );
+  });
+});
+
+describe('valuesToText', () => {
+  it('writes each value as "Copy value" does, a tab within a row, a line break between rows, NULL empty', () => {
+    expect(
+      valuesToText([[ROW[0], ROW[2], ROW[3]], [ROW[4]], [ROW[5], ROW[1]]])
+    ).toBe(
+      '42\t\t2026-09-25 12:03:07\n{\n  "tags": [\n    "a",\n    "b"\n  ]\n}\n0xCAFE\tLe "bon", coin'
+    );
+  });
+
+  it('writes the whole of the bytes, which the detail modal cuts off', () => {
+    const text = valuesToText([
+      [cell('blob', FieldKind.Binary, new Uint8Array(5000))],
+    ]);
+
+    expect(text).toHaveLength(2 + 2 * 5000);
   });
 });

@@ -6,19 +6,15 @@ import type { CellMenuTarget } from './CellContextMenu';
 import type { CellDetail } from './CellDetailModal';
 import { toBoundValue } from './CellEditor/editableValue';
 import type { SaveCell, SaveCellParams } from './CellWrite';
-import { useWrittenCellFlash } from './useWrittenCellFlash';
+import type { ColumnMeta } from './TableGrid';
+import { findCellElement } from './gridCellElement';
+import { flashCell } from './writtenCellFlash';
 
-/** opens the detail modal on a cell, from the `<td>` that was double-clicked */
-export type ShowCellDetail = (
-  detail: CellDetail,
-  cell: HTMLTableCellElement
-) => void;
+/** opens the detail modal on a cell */
+export type ShowCellDetail = (detail: CellDetail) => void;
 
-/** opens the context menu on a cell, from the `<td>` that was secondary-clicked */
-export type OpenCellMenu = (
-  target: CellMenuTarget,
-  cell: HTMLTableCellElement
-) => void;
+/** opens the context menu on a cell */
+export type OpenCellMenu = (target: CellMenuTarget) => void;
 
 interface CellDialogs {
   cellDetail: CellDetail | null;
@@ -33,25 +29,28 @@ interface CellDialogs {
 }
 
 /** the cell the detail modal and the context menu are open on, and the write either of them sends */
-export function useCellDialogs(
+export function useCellDialogs({
+  onValueUpdated,
+  scrollElement,
+  columnsMeta,
+}: {
   onValueUpdated:
-    ((rowIndex: number, columnName: string, value: unknown) => void) | undefined
-): CellDialogs {
+    | ((rowIndex: number, columnName: string, value: unknown) => void)
+    | undefined;
+  scrollElement: HTMLElement | null;
+  columnsMeta: ReadonlyArray<ColumnMeta>;
+}): CellDialogs {
   // the value shown by the detail modal, `null` when it is closed
   const [cellDetail, setCellDetail] = useState<CellDetail | null>(null);
-  const { rememberCell, flashCell } = useWrittenCellFlash();
 
-  const showCellDetail: ShowCellDetail = (detail, cell) => {
-    rememberCell(cell);
+  const showCellDetail: ShowCellDetail = (detail) => {
     setCellDetail(detail);
   };
 
   // the cell the context menu is open on, `null` when it is closed
   const [menuTarget, setMenuTarget] = useState<CellMenuTarget | null>(null);
 
-  const openCellMenu: OpenCellMenu = (target, cell) => {
-    // the menu can write the cell too, which then flashes like any write
-    rememberCell(cell);
+  const openCellMenu: OpenCellMenu = (target) => {
     setMenuTarget(target);
   };
 
@@ -81,7 +80,18 @@ export function useCellDialogs(
     });
 
     if (outcome.status === UpdateCellStatus.Updated) {
-      flashCell();
+      const cell =
+        scrollElement &&
+        findCellElement(
+          scrollElement,
+          detail.rowId,
+          columnsMeta.findIndex(({ id }) => id === column.id)
+        );
+
+      if (cell) {
+        flashCell(cell);
+      }
+
       onValueUpdated?.(detail.rowIndex, column.name, outcome.value);
     }
 

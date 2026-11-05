@@ -65,7 +65,7 @@ export default {
     'Filter with a <code>WHERE</code> clause, remembered per table.',
     'Right-click a cell to filter on its value, on your clipboard, or on whatever you want.',
     'Foreign keys are links: click through to the referenced row.',
-    'Copy rows as TSV, CSV, Markdown, JSON or SQL <code>INSERT</code>.',
+    'Copy the values of the cells you click, or whole rows as TSV, CSV, Markdown, JSON or SQL <code>INSERT</code>.',
   ],
 
   'edit.title': 'Edit',

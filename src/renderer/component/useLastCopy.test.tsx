@@ -5,8 +5,8 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { expect, test, vi } from 'vitest';
 import { RowFormat } from './CellContextMenu/rowFormats';
+import { CopyKind, type GridCopied } from './useGridCopy';
 import { useLastCopy } from './useLastCopy';
-import type { RowsCopied } from './useRowsCopy';
 
 // tells React this environment wraps its updates in `act`
 (
@@ -15,7 +15,7 @@ import type { RowsCopied } from './useRowsCopy';
 
 test('holds the last copy for 2.6 seconds, counted from the latest', () => {
   vi.useFakeTimers();
-  let state: [RowsCopied | null, (copied: RowsCopied) => void] = [
+  let state: [GridCopied | null, (copied: GridCopied) => void] = [
     null,
     () => {},
   ];
@@ -29,12 +29,20 @@ test('holds the last copy for 2.6 seconds, counted from the latest', () => {
   const root = createRoot(document.createElement('div'));
   act(() => root.render(<Probe />));
 
-  act(() => state[1]({ rowCount: 3, format: RowFormat.Tsv }));
+  act(() =>
+    state[1]({ kind: CopyKind.Rows, rowCount: 3, format: RowFormat.Tsv })
+  );
   act(() => vi.advanceTimersByTime(2000));
-  act(() => state[1]({ rowCount: 1, format: RowFormat.Csv }));
+  act(() =>
+    state[1]({ kind: CopyKind.Rows, rowCount: 1, format: RowFormat.Csv })
+  );
   act(() => vi.advanceTimersByTime(2000));
 
-  expect(state[0]).toEqual({ rowCount: 1, format: RowFormat.Csv });
+  expect(state[0]).toEqual({
+    kind: CopyKind.Rows,
+    rowCount: 1,
+    format: RowFormat.Csv,
+  });
 
   act(() => vi.advanceTimersByTime(600));
 

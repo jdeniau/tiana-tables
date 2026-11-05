@@ -25,8 +25,8 @@ import {
 import { selectAllFromMenu } from '../selectAll';
 import { columnNamesAtom } from './CellContextMenu/rowsCopyItem';
 import TableGrid from './TableGrid';
+import { NO_CURSOR, type RowCursor } from './gridSelectionGesture';
 import { mountRows } from './mountRows.testing';
-import { NO_CURSOR, type RowCursor } from './rowSelectionGesture';
 
 vi.mock('../hooks/useDialect', () => ({ useDialect: () => mysqlDialect }));
 
@@ -306,7 +306,7 @@ describe('context menu', () => {
     openMenu('b');
     await choose('Copy value');
 
-    expect(writeText).toHaveBeenCalledWith('b');
+    expect(await clipboardOf('text/plain')).toBe('b');
   });
 
   test('copies the whole row', async () => {
@@ -693,7 +693,7 @@ describe('while the rows are on their way', () => {
   });
 });
 
-describe('row selection', () => {
+describe('selection', () => {
   mountRows();
 
   const THREE_ROWS = [
@@ -816,33 +816,58 @@ describe('row selection', () => {
     );
   }
 
+  /** the values of the cells drawn as selected, in reading order */
+  function shownCells(): Array<string | null> {
+    return [...container.querySelectorAll('td[data-selected]')].map(
+      (td) => td.textContent
+    );
+  }
+
   afterEach(() => {
     window.getSelection()?.removeAllRanges();
   });
 
-  test('a click selects the row alone, a second one deselects it', () => {
+  test('a click selects the cell alone, a second one deselects it', () => {
     const selectionAtom = renderSelectable();
 
     clickCell('a');
     clickCell('b');
-    expect(selectionAtom.get()).toEqual({ 2: true });
-    expect(shownSelected()).toEqual(['b']);
+    expect(shownCells()).toEqual(['b']);
+    expect(shownSelected()).toEqual([]);
+    expect(selectionAtom.get()).toEqual({});
+
+    clickCell('b');
+    expect(shownCells()).toEqual([]);
+  });
+
+  test('Ctrl or Cmd adds a cell of any row, or removes it', () => {
+    const selectionAtom = renderSelectable();
+
+    clickCell('a');
+    clickCell('3', { metaKey: true });
+    clickCell('1', { ctrlKey: true });
+    expect(shownCells()).toEqual(['1', 'a', '3']);
+    expect(selectionAtom.get()).toEqual({});
+
+    clickCell('a', { ctrlKey: true });
+    expect(shownCells()).toEqual(['1', '3']);
+  });
+
+  test('Shift selects the rows from the last click, Ctrl then adds or removes a row, a click goes back to a cell', () => {
+    const selectionAtom = renderSelectable();
+
+    clickCell('a');
+    clickCell('c', { shiftKey: true });
+    expect(selectionAtom.get()).toEqual({ 1: true, 2: true, 3: true });
+    expect(shownSelected()).toEqual(['a', 'b', 'c']);
+    expect(shownCells()).toEqual([]);
+
+    clickCell('b', { ctrlKey: true });
+    expect(selectionAtom.get()).toEqual({ 1: true, 3: true });
 
     clickCell('b');
     expect(selectionAtom.get()).toEqual({});
-    expect(shownSelected()).toEqual([]);
-  });
-
-  test('Ctrl or Cmd adds a row, Shift selects the range from the last click', () => {
-    const selectionAtom = renderSelectable();
-
-    clickCell('a');
-    clickCell('c', { metaKey: true });
-    expect(shownSelected()).toEqual(['a', 'c']);
-
-    clickCell('a', { ctrlKey: true });
-    clickCell('b', { shiftKey: true });
-    expect(selectionAtom.get()).toEqual({ 1: true, 2: true });
+    expect(shownCells()).toEqual(['b']);
   });
 
   test('a modified click prevents the text selection of its mousedown', () => {
@@ -861,7 +886,7 @@ describe('row selection', () => {
   });
 
   test('a text highlighted in the cell, or the second click of a double click, selects nothing', () => {
-    const selectionAtom = renderSelectable();
+    renderSelectable();
     const range = document.createRange();
     range.selectNodeContents(cellOf('a'));
     window.getSelection()?.addRange(range);
@@ -869,16 +894,16 @@ describe('row selection', () => {
     act(() => {
       cellOf('a').dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    expect(selectionAtom.get()).toEqual({});
+    expect(shownCells()).toEqual([]);
 
     window.getSelection()?.removeAllRanges();
     clickCell('b');
     clickCell('b', { detail: 2 });
-    expect(selectionAtom.get()).toEqual({ 2: true });
+    expect(shownCells()).toEqual(['b']);
   });
 
-  test('a double click on the only selected row leaves it selected', () => {
-    const selectionAtom = renderSelectable();
+  test('a double click on the only selected cell leaves it selected', () => {
+    renderSelectable();
 
     clickCell('b');
     clickCell('b');
@@ -887,15 +912,17 @@ describe('row selection', () => {
       cellOf('b').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     });
 
-    expect(selectionAtom.get()).toEqual({ 2: true });
+    expect(shownCells()).toEqual(['b']);
   });
 
   test('Select All selects every row, unfocused, and focuses the grid; Escape, in the grid, none', () => {
     HTMLElement.prototype.checkVisibility = () => true;
     const selectionAtom = renderSelectable();
 
+    clickCell('a');
     act(() => selectAllFromMenu());
     expect(selectionAtom.get()).toEqual({ 1: true, 2: true, 3: true });
+    expect(shownCells()).toEqual([]);
     // for Ctrl+C to copy them next
     expect(document.activeElement).toBe(
       container.querySelector('[tabindex="0"]')
@@ -905,18 +932,60 @@ describe('row selection', () => {
     expect(selectionAtom.get()).toEqual({});
   });
 
-  test('↓ and ↑ move the selection from the last click, Shift extends it from there', () => {
+  test('the arrows move the cell from the last click, Shift+↓ selects the rows from there', () => {
     const selectionAtom = renderSelectable();
 
     clickCell('a');
     const down = pressKey('ArrowDown');
-    expect(selectionAtom.get()).toEqual({ 2: true });
+    expect(shownCells()).toEqual(['b']);
     // or the grid would scroll as well
     expect(down.defaultPrevented).toBe(true);
 
-    pressKey('ArrowDown', { shiftKey: true });
-    expect(shownSelected()).toEqual(['b', 'c']);
+    pressKey('ArrowLeft');
+    expect(shownCells()).toEqual(['2']);
+    pressKey('ArrowLeft');
+    expect(shownCells()).toEqual(['2']);
+    pressKey('ArrowRight');
+    expect(shownCells()).toEqual(['b']);
 
+    pressKey('ArrowDown', { shiftKey: true });
+    expect(selectionAtom.get()).toEqual({ 2: true, 3: true });
+    expect(shownCells()).toEqual([]);
+  });
+
+  test('an arrow from several cells moves the last one added, alone', () => {
+    renderSelectable();
+
+    clickCell('a');
+    clickCell('3', { ctrlKey: true });
+    pressKey('ArrowUp');
+    expect(shownCells()).toEqual(['2']);
+  });
+
+  test('the arrows reach a row whose key is empty', () => {
+    renderSelectable({ primaryKeys: ['name'] });
+    act(() => {
+      showRows([{ id: 1, name: '' }, THREE_ROWS[1], THREE_ROWS[2]]);
+    });
+
+    clickCell('2');
+    pressKey('ArrowUp');
+    expect(shownCells()).toEqual(['1']);
+  });
+
+  test('↓ and ↑ move a row selection, ← and → are left to the scroll', () => {
+    const selectionAtom = renderSelectable();
+
+    clickCell('a');
+    clickCell('a', { shiftKey: true });
+    pressKey('ArrowDown');
+    expect(selectionAtom.get()).toEqual({ 2: true });
+
+    const right = pressKey('ArrowRight');
+    expect(selectionAtom.get()).toEqual({ 2: true });
+    expect(right.defaultPrevented).toBe(false);
+
+    pressKey('ArrowDown', { shiftKey: true });
     clickCell('a', { ctrlKey: true });
     pressKey('ArrowUp');
     expect(selectionAtom.get()).toEqual({ 1: true });
@@ -927,6 +996,7 @@ describe('row selection', () => {
 
     clickCell('b');
     pressKey('Escape');
+    expect(shownCells()).toEqual([]);
     pressKey('ArrowDown');
     expect(selectionAtom.get()).toEqual({ 1: true });
 
@@ -935,7 +1005,7 @@ describe('row selection', () => {
     expect(ctrlDown.defaultPrevented).toBe(false);
   });
 
-  test('a secondary click selects its row, unless it is already selected', () => {
+  test('a secondary click selects its cell, unless it is selected or in a selected row', () => {
     window.clipboard = { readText: async () => '', writeText: async () => {} };
     const selectionAtom = renderSelectable();
     const openMenuOn = (name: string): void => {
@@ -947,23 +1017,38 @@ describe('row selection', () => {
     };
 
     openMenuOn('a');
-    expect(selectionAtom.get()).toEqual({ 1: true });
+    expect(shownCells()).toEqual(['a']);
 
     clickCell('b', { ctrlKey: true });
     openMenuOn('a');
-    expect(selectionAtom.get()).toEqual({ 1: true, 2: true });
+    expect(shownCells()).toEqual(['a', 'b']);
+
+    clickCell('c', { shiftKey: true });
+    openMenuOn('3');
+    expect(selectionAtom.get()).toEqual({ 2: true, 3: true });
+    expect(shownCells()).toEqual([]);
   });
 
-  test('a row whose key changed is selected no more', () => {
+  test('a row whose key changed is selected no more, nor are its cells', () => {
     const selectionAtom = renderSelectable();
+
+    clickCell('a');
+    clickCell('b', { shiftKey: true });
+    act(() => {
+      showRows([{ id: 1, name: 'a' }, { id: 20, name: 'b' }, THREE_ROWS[2]]);
+    });
+    expect(selectionAtom.get()).toEqual({ 1: true });
 
     clickCell('a');
     clickCell('b', { ctrlKey: true });
     act(() => {
+      showRows([{ id: 1, name: 'a' }, { id: 21, name: 'b' }, THREE_ROWS[2]]);
+    });
+    // its key written back, the row is no longer the one selected
+    act(() => {
       showRows([{ id: 1, name: 'a' }, { id: 20, name: 'b' }, THREE_ROWS[2]]);
     });
-
-    expect(selectionAtom.get()).toEqual({ 1: true });
+    expect(shownCells()).toEqual(['a']);
   });
 
   test('a new order selects nothing, and extends from no row', () => {
@@ -972,10 +1057,11 @@ describe('row selection', () => {
 
     clickCell('a');
     act(() => sortingAtom.set([{ id: 'name', desc: true }]));
-    expect(selectionAtom.get()).toEqual({});
+    expect(shownCells()).toEqual([]);
 
     clickCell('c', { shiftKey: true });
-    expect(selectionAtom.get()).toEqual({ 3: true });
+    expect(selectionAtom.get()).toEqual({});
+    expect(shownCells()).toEqual(['c']);
   });
 
   test('a grid given no atom selects nothing', () => {
@@ -986,6 +1072,7 @@ describe('row selection', () => {
     clickCell('a');
 
     expect(shownSelected()).toEqual([]);
+    expect(shownCells()).toEqual([]);
     expect(container.querySelector('[tabindex]')).toBeNull();
   });
 
@@ -1113,6 +1200,22 @@ describe('row selection', () => {
       expect(pressedEyes()).toEqual([]);
     });
 
+    test('the open panel follows a cell, moved by a click or the arrows', () => {
+      renderWithPanel();
+
+      clickEye('a');
+      clickCell('b');
+      expect(pressedEyes()).toEqual(['b']);
+
+      pressKey('ArrowDown');
+      pressKey('ArrowLeft');
+      expect(pressedEyes()).toEqual(['c']);
+
+      clickCell('a', { ctrlKey: true });
+      clickCell('3', { ctrlKey: true });
+      expect(pressedEyes()).toEqual(['a']);
+    });
+
     test('a click opens no panel', () => {
       renderWithPanel();
 
@@ -1151,7 +1254,7 @@ describe('row selection', () => {
   });
 });
 
-describe('copying the selected rows', () => {
+describe('copying the selection', () => {
   mountRows();
 
   const ROWS_ABC = [
@@ -1160,10 +1263,10 @@ describe('copying the selected rows', () => {
     { id: 3, name: 'c' },
   ];
 
-  const onRowsCopied = vi.fn();
+  const onCopied = vi.fn();
 
   afterEach(() => {
-    onRowsCopied.mockClear();
+    onCopied.mockClear();
     columnNamesAtom.set(true);
     window.getSelection()?.removeAllRanges();
   });
@@ -1177,7 +1280,7 @@ describe('copying the selected rows', () => {
         result={ROWS_ABC}
         primaryKeys={['id']}
         selectionAtom={createAtom<RowSelectionState>({})}
-        onRowsCopied={onRowsCopied}
+        onCopied={onCopied}
       />,
       allColumns
     );
@@ -1209,6 +1312,23 @@ describe('copying the selected rows', () => {
     });
   }
 
+  /** selects the rows of these cells: a click, a Shift+click on the first, then a Ctrl+click on each other */
+  function selectRows(first: string, ...others: Array<string>): void {
+    act(() => {
+      cellOf(first).dispatchEvent(
+        new MouseEvent('click', { bubbles: true, detail: 1 })
+      );
+      cellOf(first).dispatchEvent(
+        new MouseEvent('click', { bubbles: true, detail: 1, shiftKey: true })
+      );
+      others.forEach((name) =>
+        cellOf(name).dispatchEvent(
+          new MouseEvent('click', { bubbles: true, detail: 1, ctrlKey: true })
+        )
+      );
+    });
+  }
+
   /** a Ctrl+C on the focused grid: Chromium's copy event, on the grid */
   function pressCopy(): ClipboardEvent {
     const event = new ClipboardEvent('copy', {
@@ -1230,9 +1350,21 @@ describe('copying the selected rows', () => {
     ].find((item) => item.textContent?.startsWith(label));
   }
 
-  test('Ctrl+C copies them as TSV, and as an HTML table beside', () => {
+  test('Ctrl+C copies the values of the selected cells, a line per row, with no column names', () => {
     renderCopyable();
-    select('a', 'c');
+    select('a', '3', '1');
+
+    const event = pressCopy();
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(event.clipboardData?.getData('text/plain')).toBe('1\ta\n3');
+    expect(event.clipboardData?.getData('text/html')).toBe('');
+    expect(onCopied).toHaveBeenCalledWith({ kind: 'values', valueCount: 3 });
+  });
+
+  test('Ctrl+C copies the selected rows as TSV, and as an HTML table beside', () => {
+    renderCopyable();
+    selectRows('a', 'c');
 
     const event = pressCopy();
 
@@ -1243,7 +1375,8 @@ describe('copying the selected rows', () => {
     expect(event.clipboardData?.getData('text/html')).toBe(
       '<table><thead><tr><th>id</th><th>name</th></tr></thead><tbody><tr><td>1</td><td>a</td></tr><tr><td>3</td><td>c</td></tr></tbody></table>'
     );
-    expect(onRowsCopied).toHaveBeenCalledWith({
+    expect(onCopied).toHaveBeenCalledWith({
+      kind: 'rows',
       rowCount: 2,
       format: 'tsv',
     });
@@ -1260,7 +1393,7 @@ describe('copying the selected rows', () => {
     window.getSelection()?.addRange(range);
 
     expect(pressCopy().defaultPrevented).toBe(false);
-    expect(onRowsCopied).not.toHaveBeenCalled();
+    expect(onCopied).not.toHaveBeenCalled();
   });
 
   /** opens the context menu on a cell, then one of its copy submenus, after antd's hover delay */
@@ -1286,9 +1419,36 @@ describe('copying the selected rows', () => {
     }
   }
 
+  test('the context menu copies the selected values, as Ctrl+C does', async () => {
+    renderCopyable();
+    select('a', 'c');
+
+    act(() => {
+      cellOf('c').dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, clientX: 10 })
+      );
+    });
+    expect(menuItem('Copy 2 values')?.textContent).toBe('Copy 2 values ctrl+C');
+    await act(async () => menuItem('Copy 2 values')?.click());
+
+    expect(await clipboardOf('text/plain')).toBe('a\nc');
+    expect(onCopied).toHaveBeenCalledWith({ kind: 'values', valueCount: 2 });
+  });
+
+  test('the rows of the selected cells are copied from the context menu, Ctrl+C left to the values', async () => {
+    renderCopyable();
+    select('a', 'c');
+
+    await openCopyMenu('c', 10);
+    expect(menuItem('TSV')?.textContent).toBe('TSV');
+    await act(async () => menuItem('CSV')?.click());
+
+    expect(await clipboardOf('text/plain')).toBe('id,name\n1,a\n3,c');
+  });
+
   test('the context menu copies them in the format chosen, the column names left out on demand', async () => {
     renderCopyable();
-    select('a', 'b');
+    selectRows('a', 'b');
 
     await openCopyMenu('b', 10);
     expect(menuItem('Copy 2 rows as')).toBeDefined();
@@ -1298,7 +1458,8 @@ describe('copying the selected rows', () => {
       { id: 1, name: 'a' },
       { id: 2, name: 'b' },
     ]);
-    expect(onRowsCopied).toHaveBeenCalledWith({
+    expect(onCopied).toHaveBeenCalledWith({
+      kind: 'rows',
       rowCount: 2,
       format: 'json',
     });
@@ -1318,17 +1479,22 @@ describe('copying the selected rows', () => {
 
   test('a single selected row is the row of the menu, offered once', async () => {
     renderCopyable();
-    select('b');
+    selectRows('b');
 
     await openCopyMenu('b', 10, /^Copy row as/);
 
     expect(menuItem('Copy 1 row as')).toBeUndefined();
+    expect(menuItem('TSV')?.textContent).toBe('TSV ctrl+C');
 
     await act(async () => menuItem('TSV')?.click());
 
     expect(await clipboardOf('text/plain')).toBe('id\tname\n2\tb');
     expect(await clipboardOf('text/html')).toContain('<td>b</td>');
-    expect(onRowsCopied).toHaveBeenCalledWith({ rowCount: 1, format: 'tsv' });
+    expect(onCopied).toHaveBeenCalledWith({
+      kind: 'rows',
+      rowCount: 1,
+      format: 'tsv',
+    });
   });
 
   test('an INSERT is offered only for the columns of a table the schema knows', async () => {
@@ -1419,6 +1585,23 @@ describe('deleting the selected rows', () => {
     });
   }
 
+  /** selects the rows of these cells: a click, a Shift+click on the first, then a Ctrl+click on each other */
+  function selectRows(first: string, ...others: Array<string>): void {
+    act(() => {
+      cellOf(first).dispatchEvent(
+        new MouseEvent('click', { bubbles: true, detail: 1 })
+      );
+      cellOf(first).dispatchEvent(
+        new MouseEvent('click', { bubbles: true, detail: 1, shiftKey: true })
+      );
+      others.forEach((name) =>
+        cellOf(name).dispatchEvent(
+          new MouseEvent('click', { bubbles: true, detail: 1, ctrlKey: true })
+        )
+      );
+    });
+  }
+
   function openMenu(name: string): void {
     act(() => {
       cellOf(name).dispatchEvent(
@@ -1462,9 +1645,10 @@ describe('deleting the selected rows', () => {
 
   test('the context menu deletes the selected rows, once confirmed', async () => {
     renderDeletable();
-    select('a', 'c');
+    selectRows('a', 'c');
 
     openMenu('c');
+    expect(menuItem('Delete 2 rows…')?.textContent).toBe('Delete 2 rows…Del');
     await act(async () => menuItem('Delete 2 rows…')?.click());
 
     expect(confirmation()?.textContent).toContain('Delete these 2 rows?');
@@ -1478,9 +1662,20 @@ describe('deleting the selected rows', () => {
     ]);
   });
 
+  test('the context menu deletes the rows of the selected cells; the Delete key does not', () => {
+    renderDeletable();
+    select('a', 'c');
+
+    openMenu('c');
+    expect(menuItem('Delete 2 rows…')?.textContent).toBe('Delete 2 rows…');
+
+    pressDelete();
+    expect(confirmation()).toBeUndefined();
+  });
+
   test('the Delete key on the focused grid asks first, and Cancel deletes nothing', async () => {
     renderDeletable();
-    select('b');
+    selectRows('b');
 
     pressDelete({ shiftKey: true });
     expect(confirmation()).toBeUndefined();
@@ -1500,7 +1695,7 @@ describe('deleting the selected rows', () => {
       })
     );
     renderDeletable();
-    select('b');
+    selectRows('b');
     pressDelete();
 
     await press('Delete');
@@ -1513,7 +1708,7 @@ describe('deleting the selected rows', () => {
     ['a grid that deletes nothing', { deletable: false }],
   ])('%s offers no deletion', (_label, options) => {
     renderDeletable(options);
-    select('b');
+    selectRows('b');
 
     openMenu('b');
     expect(menuItem('Copy value')).toBeDefined();
@@ -1521,5 +1716,236 @@ describe('deleting the selected rows', () => {
 
     pressDelete();
     expect(confirmation()).toBeUndefined();
+  });
+});
+
+describe('setting the selected cells to NULL', () => {
+  mountRows();
+
+  const ROWS_ABC = [
+    { id: 1, name: 'a' },
+    { id: 2, name: 'b' },
+    { id: 3, name: 'c' },
+  ];
+
+  // `name` may hold NULL, `id` may not
+  const SCHEMA: Array<ColumnDetail> = ['id', 'name'].map((name) => ({
+    table: 'items',
+    name,
+    nullable: name === 'name',
+    generated: false,
+    binary: false,
+    hasJsonType: false,
+    allowedValues: [],
+    multiValued: false,
+  }));
+
+  const updateCell = vi.fn(async (): Promise<UpdateCellOutcome> => ({
+    status: UpdateCellStatus.Updated,
+    value: null,
+  }));
+
+  afterEach(() => {
+    updateCell.mockClear();
+  });
+
+  function renderNullable(
+    rows: Array<{ id: number; name: string | null }> = ROWS_ABC
+  ): void {
+    window.clipboard = { readText: async () => '', writeText: async () => {} };
+    window.sql = { ...window.sql, updateCell };
+
+    render(
+      <TableGrid
+        fields={FIELDS}
+        result={rows}
+        primaryKeys={['id']}
+        selectionAtom={createAtom<RowSelectionState>({})}
+        onValueUpdated={() => {}}
+      />,
+      SCHEMA
+    );
+  }
+
+  function cellOf(name: string): HTMLTableCellElement {
+    const found = [...container.querySelectorAll('td')].find(
+      (td) => td.textContent === name
+    );
+
+    if (!found) {
+      throw new Error(`No cell "${name}"`);
+    }
+
+    return found;
+  }
+
+  function select(...names: Array<string>): void {
+    act(() => {
+      names.forEach((name, index) =>
+        cellOf(name).dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+            detail: 1,
+            ctrlKey: index > 0,
+          })
+        )
+      );
+    });
+  }
+
+  async function pressDelete(): Promise<void> {
+    await act(async () => {
+      container.querySelector('[tabindex="0"]')?.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Delete',
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    });
+  }
+
+  function confirmation(): HTMLElement | undefined {
+    return [...document.querySelectorAll<HTMLElement>('.ant-modal')].find(
+      (modal) =>
+        /to NULL\?/.test(modal.textContent ?? '') &&
+        !modal.classList.contains('ant-zoom-leave')
+    );
+  }
+
+  function menuItem(label: string): HTMLElement | undefined {
+    return [
+      ...document.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+    ].find((item) => item.textContent?.startsWith(label));
+  }
+
+  test('the Delete key sets a single cell to NULL at once', async () => {
+    renderNullable();
+    select('b');
+
+    await pressDelete();
+
+    expect(confirmation()).toBeUndefined();
+    expect(updateCell.mock.calls).toEqual([
+      [
+        expect.objectContaining({
+          column: 'name',
+          primaryKey: [{ column: 'id', value: 2 }],
+          originalValue: 'b',
+          newValue: null,
+          force: false,
+        }),
+      ],
+    ]);
+  });
+
+  test('the Delete key asks first for several cells, and writes those that can be NULL, in order', async () => {
+    renderNullable();
+    select('c', '2', 'a');
+
+    await pressDelete();
+    expect(confirmation()?.textContent).toContain(
+      'Set these 2 values to NULL?'
+    );
+    expect(updateCell).not.toHaveBeenCalled();
+
+    await act(async () => {
+      [...(confirmation()?.querySelectorAll('button') ?? [])]
+        .find((button) => button.textContent === 'Set to NULL')
+        ?.click();
+    });
+
+    expect(updateCell.mock.calls).toEqual([
+      [expect.objectContaining({ originalValue: 'a', newValue: null })],
+      [expect.objectContaining({ originalValue: 'c', newValue: null })],
+    ]);
+  });
+
+  test('a cell already NULL is left out of the count and of the writes', async () => {
+    renderNullable([
+      { id: 1, name: 'a' },
+      { id: 2, name: null },
+      { id: 3, name: 'c' },
+    ]);
+    select('a', '(NULL)', 'c');
+
+    await pressDelete();
+    expect(confirmation()?.textContent).toContain(
+      'Set these 2 values to NULL?'
+    );
+
+    await act(async () => {
+      [...(confirmation()?.querySelectorAll('button') ?? [])]
+        .find((button) => button.textContent === 'Set to NULL')
+        ?.click();
+    });
+
+    expect(updateCell.mock.calls).toEqual([
+      [expect.objectContaining({ originalValue: 'a' })],
+      [expect.objectContaining({ originalValue: 'c' })],
+    ]);
+  });
+
+  test('a write that does not land stops the next ones, and opens the conflict modal', async () => {
+    updateCell.mockResolvedValueOnce({
+      status: UpdateCellStatus.Conflict,
+      reason: ConflictReason.Deleted,
+    });
+    renderNullable();
+    select('a', 'c');
+
+    await pressDelete();
+    await act(async () => {
+      [...(confirmation()?.querySelectorAll('button') ?? [])]
+        .find((button) => button.textContent === 'Set to NULL')
+        ?.click();
+    });
+
+    expect(updateCell).toHaveBeenCalledTimes(1);
+    expect(
+      [...document.querySelectorAll('.ant-modal')].some((modal) =>
+        modal.textContent?.includes('The row no longer exists')
+      )
+    ).toBe(true);
+  });
+
+  test('the context menu sets the selected cells to NULL, as the Delete key does', async () => {
+    renderNullable();
+    select('a', 'c');
+
+    act(() => {
+      cellOf('c').dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, clientX: 10 })
+      );
+    });
+
+    expect(menuItem('Set 2 values to NULL…')?.textContent).toBe(
+      'Set 2 values to NULL…Del'
+    );
+
+    await act(async () => menuItem('Set 2 values to NULL…')?.click());
+    expect(confirmation()?.textContent).toContain(
+      'Set these 2 values to NULL?'
+    );
+  });
+
+  test('on selected rows, the context menu sets its own cell to NULL, and Delete no cell', async () => {
+    renderNullable();
+    select('a');
+    act(() => {
+      cellOf('a').dispatchEvent(
+        new MouseEvent('click', { bubbles: true, detail: 1, shiftKey: true })
+      );
+    });
+
+    act(() => {
+      cellOf('a').dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, clientX: 10 })
+      );
+    });
+    expect(menuItem('Set to NULL')?.textContent).toBe('Set to NULL');
+
+    await pressDelete();
+    expect(updateCell).not.toHaveBeenCalled();
   });
 });

@@ -38,6 +38,8 @@ interface RowsCopyItemParams {
   t: ReturnType<typeof useTranslation>['t'];
   canCopyAs: (format: RowFormat) => boolean;
   onCopy: (format: RowFormat) => void;
+  /** whether Ctrl+C copies these rows as TSV */
+  copyShortcut: boolean;
   columnNames: boolean;
   onToggleColumnNames: () => void;
 }
@@ -49,6 +51,7 @@ export function rowsCopyItem({
   t,
   canCopyAs,
   onCopy,
+  copyShortcut,
   columnNames,
   onToggleColumnNames,
 }: RowsCopyItemParams): MenuItem {
@@ -59,8 +62,7 @@ export function rowsCopyItem({
       ...COPY_FORMATS.map((format) => ({
         key: `${key}:${format}`,
         label: t('table.copy.format', { format }),
-        // what Ctrl+C writes
-        extra: format === RowFormat.Tsv && (
+        extra: copyShortcut && format === RowFormat.Tsv && (
           <KeyboardShortcut cmdOrCtrl pressedKey="c" />
         ),
         disabled: !canCopyAs(format),

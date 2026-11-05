@@ -55,28 +55,31 @@ import {
 import Cell from './Cell';
 import CellContextMenu from './CellContextMenu';
 import CellDetailModal, { CellDetail } from './CellDetailModal';
-import { CellWriteProvider } from './CellWrite';
+import { type CellWrite, CellWriteProvider } from './CellWrite';
+import CellsNull from './CellsNull';
 import ForeignKeyLink from './ForeignKeyLink';
 import RowsDeleteModal from './RowsDeleteModal';
 import SkeletonBody, { skeletonStyle } from './SkeletonBody';
 import { fill } from './Style/fill';
-import { buildRowKey, rowIdOf } from './rowId';
 import {
+  type CellSelection,
   NO_CURSOR,
   type RowCursor,
   type SelectionModifiers,
-} from './rowSelectionGesture';
+} from './gridSelectionGesture';
+import { buildRowKey, rowIdOf } from './rowId';
 import { OpenCellMenu, ShowCellDetail, useCellDialogs } from './useCellDialogs';
 import { leftVar, useColumnWidthVars, widthVar } from './useColumnWidthVars';
 import { columnId, useGridColumns } from './useGridColumns';
+import { type GridCopied, columnValue, useGridCopy } from './useGridCopy';
 import {
-  type SelectRow,
+  type SelectCell,
   type ShowRow,
-  useRowSelection,
-} from './useRowSelection';
-import { type RowsCopied, columnValue, useRowsCopy } from './useRowsCopy';
+  cellsOfSelection,
+  useGridSelection,
+} from './useGridSelection';
 import { useRowsDelete } from './useRowsDelete';
-import { writtenCellFlashStyle } from './useWrittenCellFlash';
+import { writtenCellFlashStyle } from './writtenCellFlash';
 
 const features = tableFeatures({
   // columnOrderingFeature provides `getIsLastColumn`, used to draw the shadow
@@ -151,13 +154,13 @@ interface TableGridProps<R extends ResultRow> {
   enableSorting?: boolean;
 
   /**
-   * The rows a click selects, by row id: the primary key, or the position without one.
-   * Rows are selectable only when given; it must be the same atom for the grid's whole life.
+   * The rows a Shift+click selects, by row id: the primary key, or the position without one.
+   * Cells and rows are selectable only when given; it must be the same atom for the grid's whole life.
    */
   selectionAtom?: Atom<RowSelectionState>;
 
-  /** Called once rows have been copied, by Ctrl+C or from the context menu. */
-  onRowsCopied?: (copied: RowsCopied) => void;
+  /** Called once values or rows have been copied, by Ctrl+C or from the context menu. */
+  onCopied?: (copied: GridCopied) => void;
 
   /**
    * Deletes rows by their primary key, resolving once `result` no longer holds them.
@@ -220,7 +223,7 @@ function TableGrid<Row extends ResultRow>({
   sortingAtom,
   enableSorting,
   selectionAtom,
-  onRowsCopied,
+  onCopied,
   onDeleteRows,
   cursorAtom,
   panelOpenAtom,
@@ -236,16 +239,6 @@ function TableGrid<Row extends ResultRow>({
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(
     null
   );
-
-  const {
-    cellDetail,
-    setCellDetail,
-    menuTarget,
-    setMenuTarget,
-    showCellDetail,
-    openCellMenu,
-    saveCell,
-  } = useCellDialogs(onValueUpdated);
 
   const foreignKeys = useForeignKeysContext();
   const allColumns = useAllColumnsContext();
@@ -322,6 +315,16 @@ function TableGrid<Row extends ResultRow>({
     }
   );
 
+  const {
+    cellDetail,
+    setCellDetail,
+    menuTarget,
+    setMenuTarget,
+    showCellDetail,
+    openCellMenu,
+    saveCell,
+  } = useCellDialogs({ onValueUpdated, scrollElement, columnsMeta });
+
   useColumnWidthVars({
     table,
     tableRef,
@@ -340,21 +343,27 @@ function TableGrid<Row extends ResultRow>({
   }, [table, scrollElement]);
 
   const ownCursorAtom = useCreateAtom<RowCursor>(NO_CURSOR);
-  const { selectRow, handleKeyDown, showRow } = useRowSelection(table, {
+  // the cells a click selects; the rows are the caller's `selectionAtom`
+  const cellsAtom = useCreateAtom<CellSelection>({});
+  const { selectCell, handleKeyDown, showRow } = useGridSelection(table, {
     enabled: selectionAtom !== undefined,
     scrollElement,
     rowHeight: ROW_HEIGHT,
+    columnsMeta,
+    cellsAtom,
     cursorAtom: cursorAtom ?? ownCursorAtom,
     panelOpenAtom,
   });
 
-  const { selectedRows, copyRows, canCopyAs } = useRowsCopy(table, {
-    enabled: selectionAtom !== undefined,
-    scrollElement,
-    columnsMeta,
-    rowsAsArray,
-    onCopied: onRowsCopied,
-  });
+  const { selectedRows, selectedValues, copyValues, copyRows, canCopyAs } =
+    useGridCopy(table, {
+      enabled: selectionAtom !== undefined,
+      scrollElement,
+      columnsMeta,
+      rowsAsArray,
+      cellsAtom,
+      onCopied,
+    });
 
   const { selectedRowKeys, pendingRowKeys, askToDelete, closeConfirmation } =
     useRowsDelete(table, {
@@ -364,9 +373,30 @@ function TableGrid<Row extends ResultRow>({
         !rowsAsArray,
       scrollElement,
       primaryKeys,
+      cellsAtom,
     });
-  // read when the menu opens, after its secondary click selected the row
+
+  const [pendingNullWrites, setPendingNullWrites] =
+    useState<ReadonlyArray<CellWrite> | null>(null);
+
+  const selectedCells = (): Array<CellDetail> =>
+    cellsOfSelection(table, cellsAtom.get(), columnsMeta).flatMap(
+      ({ row, columns }) =>
+        columns.map((column) =>
+          cellDetailOf(row, column, rowsAsArray, primaryKeys)
+        )
+    );
+
+  // read when the menu opens, after its secondary click selected the cell
   const menuRowKeys = menuTarget ? selectedRowKeys() : null;
+  // the menu acts on the selected cells when it was opened on one of them, on its own cell otherwise
+  const menuOnCells =
+    menuTarget !== null &&
+    (cellsAtom.get()[menuTarget.rowId]?.includes(menuTarget.column.id) ??
+      false);
+  const rowsSelected =
+    menuTarget !== null &&
+    Object.keys(table.atoms.rowSelection.get()).length > 0;
 
   return (
     <Wrapper>
@@ -465,7 +495,8 @@ function TableGrid<Row extends ResultRow>({
               scrollElement={scrollElement}
               onShowCellDetail={showCellDetail}
               onCellContextMenu={openCellMenu}
-              onSelectRow={selectRow}
+              onSelectCell={selectCell}
+              cellsAtom={cellsAtom}
               cursorAtom={cursorAtom ?? ownCursorAtom}
               panelOpenAtom={panelOpenAtom ?? PANEL_CLOSED}
               onShowRow={showRow}
@@ -491,16 +522,36 @@ function TableGrid<Row extends ResultRow>({
 
         <CellContextMenu
           target={menuTarget}
+          valuesCopy={{
+            lines: menuOnCells
+              ? selectedValues()
+              : menuTarget
+                ? [[{ column: menuTarget.column, value: menuTarget.value }]]
+                : [],
+            shortcut: menuOnCells,
+            onCopy: copyValues,
+          }}
           rowsCopy={{
-            // read when the menu opens, after its secondary click selected the row
+            // read when the menu opens, after its secondary click selected the cell
             selectedRows: menuTarget ? selectedRows() : [],
+            shortcut: rowsSelected,
             copyRows,
             canCopyAs,
+          }}
+          cellsNull={{
+            details: menuOnCells
+              ? selectedCells()
+              : menuTarget
+                ? [menuTarget]
+                : [],
+            shortcut: menuOnCells,
+            onAsk: setPendingNullWrites,
           }}
           rowsDelete={
             menuRowKeys
               ? {
                   count: menuRowKeys.length,
+                  shortcut: rowsSelected,
                   onDelete: () => askToDelete(menuRowKeys),
                 }
               : undefined
@@ -512,6 +563,15 @@ function TableGrid<Row extends ResultRow>({
             setMenuTarget(null);
           }}
         />
+
+        {selectionAtom && (
+          <CellsNull
+            scrollElement={scrollElement}
+            selectedCells={selectedCells}
+            pending={pendingNullWrites}
+            onPendingChange={setPendingNullWrites}
+          />
+        )}
       </CellWriteProvider>
 
       {onDeleteRows && (
@@ -556,6 +616,24 @@ export interface ColumnMeta {
 
 const PLAIN_CLICK: SelectionModifiers = { toggle: false, extend: false };
 
+/** What the detail modal and the context menu open on. */
+function cellDetailOf<Row extends ResultRow>(
+  row: TanstackRow<typeof features, Row>,
+  column: ColumnMeta,
+  rowsAsArray: boolean,
+  primaryKeys: Array<string> | undefined
+): CellDetail {
+  return {
+    column,
+    value: columnValue(row.original, column, rowsAsArray),
+    // a raw query result is a list of values, with no column to read a key from
+    // TODO later: handle raw query with possible primary key columns (e.g. `SELECT id, name FROM table`) and use them to identify the row
+    rowKey: rowsAsArray ? null : buildRowKey(row.original, primaryKeys),
+    rowIndex: row.index,
+    rowId: row.id,
+  };
+}
+
 interface TableBodyProps<Row extends ResultRow> {
   table: ReactTable<typeof features, Row, ReturnType<typeof NO_TABLE_STATE>>;
   columnsMeta: Array<ColumnMeta>;
@@ -564,8 +642,9 @@ interface TableBodyProps<Row extends ResultRow> {
   scrollElement: HTMLDivElement | null;
   onShowCellDetail: ShowCellDetail;
   onCellContextMenu: OpenCellMenu;
-  /** absent on a grid whose rows cannot be selected */
-  onSelectRow: SelectRow<Row> | undefined;
+  /** absent on a grid whose cells cannot be selected */
+  onSelectCell: SelectCell<Row> | undefined;
+  cellsAtom: Atom<CellSelection>;
   cursorAtom: Atom<RowCursor>;
   panelOpenAtom: Atom<boolean>;
   /** absent on a grid with no side panel, whose rows have no eye */
@@ -582,13 +661,15 @@ function TableBody<Row extends ResultRow>({
   scrollElement,
   onShowCellDetail,
   onCellContextMenu,
-  onSelectRow,
+  onSelectCell,
+  cellsAtom,
   cursorAtom,
   panelOpenAtom,
   onShowRow,
 }: TableBodyProps<Row>): ReactElement {
   const { rows } = table.getRowModel();
   const selection = useSelector(table.atoms.rowSelection);
+  const cells = useSelector(cellsAtom);
   const panelOpen = useSelector(panelOpenAtom);
   const leadId = useSelector(cursorAtom, (cursor) => cursor.leadId);
   const shownId = panelOpen ? leadId : null;
@@ -616,7 +697,8 @@ function TableBody<Row extends ResultRow>({
             onShowCellDetail={onShowCellDetail}
             onCellContextMenu={onCellContextMenu}
             selected={selection[row.id] === true}
-            onSelectRow={onSelectRow}
+            selectedColumns={cells[row.id]}
+            onSelectCell={onSelectCell}
             shown={shownId === row.id}
             onShowRow={onShowRow}
           />
@@ -635,7 +717,9 @@ interface BodyRowProps<Row extends ResultRow> {
   onShowCellDetail: ShowCellDetail;
   onCellContextMenu: OpenCellMenu;
   selected: boolean;
-  onSelectRow: SelectRow<Row> | undefined;
+  /** the ids of the columns whose cell is selected, `undefined` for a row with none */
+  selectedColumns: ReadonlyArray<string> | undefined;
+  onSelectCell: SelectCell<Row> | undefined;
   /** the row the side panel shows */
   shown: boolean;
   onShowRow: ShowRow<Row> | undefined;
@@ -650,7 +734,8 @@ function BodyRowInner<Row extends ResultRow>({
   onShowCellDetail,
   onCellContextMenu,
   selected,
-  onSelectRow,
+  selectedColumns,
+  onSelectCell,
   shown,
   onShowRow,
 }: BodyRowProps<Row>): ReactElement {
@@ -661,6 +746,8 @@ function BodyRowInner<Row extends ResultRow>({
   return (
     <tr
       className="tg-row"
+      // what `findCellElement` finds the row by
+      data-row-id={row.id}
       data-selected={selected || undefined}
       style={{ transform: `translateY(${start}px)` }}
     >
@@ -688,29 +775,28 @@ function BodyRowInner<Row extends ResultRow>({
           );
         }
 
-        // what both gestures open on, built only when one happens
-        const detailOf = (): CellDetail => ({
-          column,
-          value,
-          // a raw query result is a list of values, with no column to read a key from
-          // TODO later: handle raw query with possible primary key columns (e.g. `SELECT id, name FROM table`) and use them to identify the row
-          rowKey: rowsAsArray ? null : buildRowKey(original, primaryKeys),
-          rowIndex: row.index,
-        });
+        const cellSelected = selectedColumns?.includes(column.id) ?? false;
+        // a gesture on a cell out of the selection selects it alone first
+        const selectAloneUnlessSelected = (): void => {
+          if (onSelectCell && !selected && !cellSelected) {
+            onSelectCell(row, column.id, PLAIN_CLICK);
+          }
+        };
 
         return (
           <td
             key={column.id}
             className={className}
+            data-selected={cellSelected || undefined}
             data-last-pinned={column.isLastPinned || undefined}
             style={{
               width: column.width,
               left: column.pinnedLeft ?? undefined,
             }}
             onMouseDown={(event) => {
-              // a modified click selects rows, never text up to the last click
+              // a modified click selects, never text up to the last click
               if (
-                onSelectRow &&
+                onSelectCell &&
                 event.button === 0 &&
                 (event.shiftKey || event.ctrlKey || event.metaKey)
               ) {
@@ -721,7 +807,7 @@ function BodyRowInner<Row extends ResultRow>({
             onClick={(event) => {
               // the second click of a double click, a text highlighted in the cell, a link followed: no selection
               if (
-                !onSelectRow ||
+                !onSelectCell ||
                 event.detail > 1 ||
                 window.getSelection()?.toString() ||
                 (event.target as Element).closest('a')
@@ -729,39 +815,31 @@ function BodyRowInner<Row extends ResultRow>({
                 return;
               }
 
-              onSelectRow(row, {
+              onSelectCell(row, column.id, {
                 toggle: event.ctrlKey || event.metaKey,
                 extend: event.shiftKey,
               });
             }}
-            onDoubleClick={(event) => {
-              // the first click of the pair deselected the only selected row: the detail opens on a selected one
-              if (onSelectRow && !selected) {
-                onSelectRow(row, PLAIN_CLICK);
-              }
-
-              onShowCellDetail(detailOf(), event.currentTarget);
+            onDoubleClick={() => {
+              // the first click of the pair deselected the only selected cell: the detail opens on a selected one
+              selectAloneUnlessSelected();
+              onShowCellDetail(
+                cellDetailOf(row, column, rowsAsArray, primaryKeys)
+              );
             }}
             onContextMenu={(event) => {
               event.preventDefault();
-
-              // as in a file manager, the menu acts on the selection, which then holds the row
-              if (onSelectRow && !selected) {
-                onSelectRow(row, PLAIN_CLICK);
-              }
-
-              onCellContextMenu(
-                {
-                  ...detailOf(),
-                  // the columns of the result, without the caller's own
-                  row: columnsMeta
-                    .filter((other) => !other.render)
-                    .map((other) => ({ column: other, value: valueOf(other) })),
-                  x: event.clientX,
-                  y: event.clientY,
-                },
-                event.currentTarget
-              );
+              // as in a file manager, the menu acts on the selection, which then holds the cell
+              selectAloneUnlessSelected();
+              onCellContextMenu({
+                ...cellDetailOf(row, column, rowsAsArray, primaryKeys),
+                // the columns of the result, without the caller's own
+                row: columnsMeta
+                  .filter((other) => !other.render)
+                  .map((other) => ({ column: other, value: valueOf(other) })),
+                x: event.clientX,
+                y: event.clientY,
+              });
             }}
           >
             <GridCell column={column} value={value} />
@@ -799,7 +877,8 @@ const BodyRow = memo(
     prevProps.onShowCellDetail === nextProps.onShowCellDetail &&
     prevProps.onCellContextMenu === nextProps.onCellContextMenu &&
     prevProps.selected === nextProps.selected &&
-    prevProps.onSelectRow === nextProps.onSelectRow &&
+    prevProps.selectedColumns === nextProps.selectedColumns &&
+    prevProps.onSelectCell === nextProps.onSelectCell &&
     prevProps.shown === nextProps.shown &&
     prevProps.onShowRow === nextProps.onShowRow
 ) as typeof BodyRowInner;
@@ -834,10 +913,11 @@ const GridCell = memo(function GridCell({
 });
 
 // DESIGN.md: the grid sits flush at the region edge, with no frame of its own.
-// Column heads are 11px caps over a base03 rule, rows are 26px, cells and rows
-// are divided by base02 hairlines. A selected row takes 70% of the selection
-// fill over the background, the row under the cursor the fill itself: the
-// stronger mark follows the pointer, and both keep the colours of their text.
+// Column heads are 11px caps over a base03 rule, rows are 26px,
+// cells and rows are divided by base02 hairlines.
+// A selected row or cell takes 70% of the selection fill over the background,
+// the row under the cursor the fill itself:
+// the stronger mark follows the pointer, and both keep the colours of their text.
 type StyledProps = Parameters<typeof selection>[0];
 
 // opaque: a pinned cell must hide the cells scrolling under it
@@ -879,7 +959,8 @@ const ScrollContainer = styled.div`
   }
 
   /* before the hover, which wins over it */
-  .tg-row[data-selected] .tg-cell {
+  .tg-row[data-selected] .tg-cell,
+  .tg-cell[data-selected] {
     background: ${selectedBackground};
   }
 
