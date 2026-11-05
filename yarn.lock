@@ -1142,6 +1142,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/noto-sans-mono@npm:5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/noto-sans-mono@npm:5.3.0"
+  checksum: 10c0/1c7b99b471512f6d7dec49253c6d73069c88c774970bdfe2733975fe81da5a5454ebe010ebf1595ddaf4ec7d84b47f2c017ae42deaf022879e53545465b01faf
+  languageName: node
+  linkType: hard
+
 "@fontsource/oswald@npm:5.3.0":
   version: 5.3.0
   resolution: "@fontsource/oswald@npm:5.3.0"
@@ -11204,6 +11211,7 @@ __metadata:
     "@electron-forge/publisher-github": "npm:^8.0.1"
     "@electron-forge/shared-types": "npm:^8.0.1"
     "@eslint/js": "npm:^10.0.1"
+    "@fontsource/noto-sans-mono": "npm:5.3.0"
     "@fontsource/oswald": "npm:5.3.0"
     "@fontsource/syne-mono": "npm:5.3.0"
     "@icons-pack/react-simple-icons": "npm:^13.15.1"

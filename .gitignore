@@ -104,3 +104,6 @@ out/
 !.yarn/versions
 
 Refonte du design Tiana Tables/
+# website build
+website/dist
+var/plans

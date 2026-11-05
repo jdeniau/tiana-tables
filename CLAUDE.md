@@ -75,6 +75,8 @@ yarn lint:types       # TypeScript type check only
 yarn lint:eslint      # ESLint only
 yarn storybook        # Start Storybook dev server on port 6006
 yarn make             # Build distributable packages
+yarn website          # Website dev server (tiana-tables.deniau.me, `website/`)
+yarn website:build    # Build the website into website/dist
 ```
 
 ## Environment
@@ -165,4 +167,5 @@ Monaco, with `monaco-sql-languages` for the `mysql` / `pgsql` languages and thei
 | `.claude/rules/main-process.md` | reading main, preload, configuration                 | IPC, encryption, dev tooling                                                                                  |
 | `.claude/rules/tests.md`        | reading tests and stories                            | what a test must prove                                                                                        |
 | `.claude/rules/build.md`        | reading `package.json`, patches, build config        | dependencies, knip, the RPM patches                                                                           |
+| `.claude/rules/website.md`      | reading `website/`, the screens the site draws       | the site, what follows the app by itself and what does not, its deploy                                        |
 | `.claude/skills/*`              | on demand                                            | `sql-engines`, `sql-editor`, `base16-themes`, `verify-live`, `antd`, `github-pr-review`, `interactive-review` |
