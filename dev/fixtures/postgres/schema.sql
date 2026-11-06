@@ -396,14 +396,17 @@ CREATE TABLE envoi_newsletter (
   newsletter_id smallint NOT NULL,
   objet varchar(160) NOT NULL,
   article_une_id integer,
+  media_une_id integer,
   envoye_le timestamp NOT NULL,
   destinataires integer NOT NULL DEFAULT 0,
   ouvertures integer NOT NULL DEFAULT 0,
   clics integer NOT NULL DEFAULT 0,
   desinscriptions integer NOT NULL DEFAULT 0,
   CONSTRAINT fk_envoi_newsletter FOREIGN KEY (newsletter_id) REFERENCES newsletter (id) ON DELETE CASCADE,
-  CONSTRAINT fk_envoi_article FOREIGN KEY (article_une_id) REFERENCES article (id) ON DELETE SET NULL
+  CONSTRAINT fk_envoi_article FOREIGN KEY (article_une_id) REFERENCES article (id) ON DELETE SET NULL,
+  CONSTRAINT fk_envoi_media_une FOREIGN KEY (article_une_id, media_une_id) REFERENCES article_media (article_id, media_id)
 );
+COMMENT ON COLUMN envoi_newsletter.media_une_id IS 'Une image de l''article à la une';
 CREATE INDEX idx_envoi_newsletter ON envoi_newsletter (newsletter_id);
 
 CREATE VIEW vue_article_publie AS

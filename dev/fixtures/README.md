@@ -28,9 +28,9 @@ What a small news site would store: articles and their authors, readers, subscri
 
 Table and column names are French, like the rows: it is the newsroom's own vocabulary, and a schema in a language other than the interface's is worth having under the eyes while working on the grid.
 
-What it exercises: composite primary keys (`article_tag`, `favori`, `inscription_newsletter`), self-referencing foreign keys (`categorie.parent_id`, `commentaire.parent_id`), a stored generated column (`auteur.initiale`), `JSON`, `ENUM`, `DECIMAL`, `TIME`, `BOOLEAN`, `TIMESTAMP … ON UPDATE`, column comments, unique indexes, nullable columns everywhere, long `TEXT`, emoji, and views next to base tables in the table list.
+What it exercises: composite primary keys (`article_tag`, `favori`, `inscription_newsletter`), self-referencing foreign keys (`categorie.parent_id`, `commentaire.parent_id`), a composite foreign key (`envoi_newsletter (article_une_id, media_une_id)` → `article_media`) whose first column has a foreign key of its own, a stored generated column (`auteur.initiale`), `JSON`, `ENUM`, `DECIMAL`, `TIME`, `BOOLEAN`, `TIMESTAMP … ON UPDATE`, column comments, unique indexes, nullable columns everywhere, long `TEXT`, emoji, and views next to base tables in the table list.
 
-The rows hold together in time: a comment or a read never precedes its article's publication, a payment falls inside its subscription's period and carries the promo code's discount, a refund only exists on a refunded payment, the paywall is only recorded on a subscriber-only article read by someone who is not a subscriber, and the only rows dated in the future are the scheduled articles.
+The rows hold together in time: a comment or a read never precedes its article's publication, a payment falls inside its subscription's period and carries the promo code's discount, a refund only exists on a refunded payment, the picture of a newsletter send is one of its cover article's, the paywall is only recorded on a subscriber-only article read by someone who is not a subscriber, and the only rows dated in the future are the scheduled articles.
 
 ### One dataset, two dialects
 
@@ -61,6 +61,6 @@ dev/fixtures/mysql/load.sh
 dev/fixtures/postgres/load.sh
 ```
 
-Each drops and recreates its own objects and leaves anything else in the database alone. `TIANA_DEV_CONTAINER`, `TIANA_DEV_DATABASE` and `TIANA_DEV_USER` (plus `TIANA_DEV_PASSWORD` for MariaDB) override the defaults above.
+Each drops and recreates its own objects and leaves anything else in the database alone. `TIANA_DEV_CONTAINER`, `TIANA_DEV_DATABASE` and `TIANA_DEV_USER` (plus `TIANA_DEV_PASSWORD` for MariaDB) override the defaults above; the MySQL script also loads a MySQL server, `TIANA_DEV_CONTAINER=<a mysql:8.4 container> dev/fixtures/mysql/load.sh`.
 
 On a first `up`, the rows come from a one-shot `fixtures` service (`node:26-alpine`): neither database image has node to run the generator, so the service writes each server's SQL into a volume that server reads at initialisation.

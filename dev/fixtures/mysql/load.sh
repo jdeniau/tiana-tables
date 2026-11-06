@@ -9,6 +9,9 @@ user=${TIANA_DEV_USER:-root}
 password=${TIANA_DEV_PASSWORD:-devpassword}
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
+# the MySQL image ships `mysql` alone, the MariaDB one `mariadb`
+client=$(docker exec "$container" sh -c 'command -v mariadb || command -v mysql')
+
 { cat "$here/schema.sql"; node "$here/../generate.mjs" mysql; } |
-  docker exec -i "$container" mariadb -u"$user" -p"$password" "$database"
+  docker exec -i "$container" "$client" -u"$user" -p"$password" "$database"
 echo "✓ $database rebuilt"
