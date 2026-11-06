@@ -336,7 +336,7 @@ describe('context menu', () => {
     renderGrid();
 
     openMenu('b');
-    await choose('Edit…Double-click');
+    await choose('Edit…Enter / Double-click');
 
     expect(document.querySelector('.ant-modal-title')?.textContent).toBe(
       'name'
@@ -347,8 +347,8 @@ describe('context menu', () => {
     renderGrid({ primaryKeys: [] });
 
     openMenu('b');
-    expect(menuItem('Edit…Double-click')).toBeUndefined();
-    expect(menuItem('View…Double-click')).toBeDefined();
+    expect(menuItem('Edit…Enter / Double-click')).toBeUndefined();
+    expect(menuItem('View…Enter / Double-click')).toBeDefined();
   });
 
   test('sets a nullable cell to NULL, guarded on what was loaded', async () => {
@@ -497,7 +497,7 @@ describe('context menu', () => {
     renderGrid();
 
     openMenu('b');
-    await choose('Edit…Double-click');
+    await choose('Edit…Enter / Double-click');
     await act(async () => {
       document
         .querySelector<HTMLInputElement>('.ant-modal input[type="checkbox"]')
@@ -955,6 +955,47 @@ describe('selection', () => {
     pressKey('ArrowDown', { shiftKey: true });
     expect(selectionAtom.get()).toEqual({ 2: true, 3: true });
     expect(shownCells()).toEqual([]);
+  });
+
+  test('Enter opens the detail modal on the last cell reached, never on selected rows', () => {
+    renderSelectable();
+    const modalTitle = (): string | null | undefined =>
+      document.querySelector('.ant-modal-title')?.textContent;
+
+    clickCell('a');
+    clickCell('a', { shiftKey: true });
+    const onRows = pressKey('Enter');
+    expect(modalTitle()).toBeUndefined();
+    expect(onRows.defaultPrevented).toBe(false);
+
+    // Ctrl+click deselects the cell, the next arrow still moves from it
+    clickCell('a');
+    clickCell('a', { ctrlKey: true });
+    pressKey('Enter');
+    expect(modalTitle()).toBeUndefined();
+
+    clickCell('a');
+    pressKey('ArrowLeft');
+    const enter = pressKey('Enter');
+    expect(modalTitle()).toBe('id');
+    expect(enter.defaultPrevented).toBe(true);
+  });
+
+  test('Enter on the eye of a row leaves the detail modal closed', () => {
+    renderSelectable({ panelOpenAtom: createAtom(false) });
+
+    clickCell('a');
+    act(() => {
+      container.querySelector('.tg-eye-button')?.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Enter',
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    });
+
+    expect(document.querySelector('.ant-modal-title')).toBeNull();
   });
 
   test('an arrow from several cells moves the last one added, alone', () => {

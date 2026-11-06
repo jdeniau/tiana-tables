@@ -214,7 +214,7 @@ const fr: Translation = {
   'table.contextMenu.delete.shortcut': 'Suppr',
   'table.contextMenu.edit':
     '{editable, select, true {Modifier…} other {Afficher…}}',
-  'table.contextMenu.edit.shortcut': 'Double-clic',
+  'table.contextMenu.edit.shortcut': 'Entrée / Double-clic',
   'table.contextMenu.filter': 'Filtre',
   'table.contextMenu.filter.cellValue': 'Valeur de la cellule',
   'table.contextMenu.filter.clipboard': 'Presse-papier',
