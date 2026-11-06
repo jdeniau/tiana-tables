@@ -625,6 +625,7 @@ function cellDetailOf<Row extends ResultRow>(
 ): CellDetail {
   return {
     column,
+    rowByColumn: row.original,
     value: columnValue(row.original, column, rowsAsArray),
     // a raw query result is a list of values, with no column to read a key from
     // TODO later: handle raw query with possible primary key columns (e.g. `SELECT id, name FROM table`) and use them to identify the row

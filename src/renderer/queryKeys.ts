@@ -1,3 +1,5 @@
+import type { SelectRowRequest } from '../sql/selectRow';
+
 /** The keys of the query cache, the connection first so that closing it removes all of its entries. */
 export const queryKeys = {
   connection: (connectionSlug: string) => [connectionSlug] as const,
@@ -10,6 +12,10 @@ export const queryKeys = {
     firstPageSql: string
   ) =>
     [connectionSlug, database, 'tableRows', tableName, firstPageSql] as const,
+
+  /** the row a foreign key points at, previewed while its value is edited */
+  linkedRow: (connectionSlug: string, request: SelectRowRequest | null) =>
+    [connectionSlug, request?.database ?? '', 'linkedRow', request] as const,
 
   /** the last run of the SQL page: written by its action, never fetched */
   sqlResult: (connectionSlug: string, database: string) =>
