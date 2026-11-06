@@ -3,7 +3,7 @@ import { Checkbox } from 'antd';
 import type { MenuProps } from 'antd';
 import { styled } from 'styled-components';
 import type { useTranslation } from '../../../i18n';
-import { KeyboardShortcut } from '../KeyboardShortcut';
+import { KeyboardShortcut, ShortcutModifier } from '../KeyboardShortcut';
 import { RowFormat } from './rowFormats';
 
 type MenuItem = NonNullable<MenuProps['items']>[number];
@@ -63,7 +63,10 @@ export function rowsCopyItem({
         key: `${key}:${format}`,
         label: t('table.copy.format', { format }),
         extra: copyShortcut && format === RowFormat.Tsv && (
-          <KeyboardShortcut cmdOrCtrl pressedKey="c" />
+          <KeyboardShortcut
+            modifier={ShortcutModifier.CmdOrCtrl}
+            pressedKey="c"
+          />
         ),
         disabled: !canCopyAs(format),
         onClick: () => onCopy(format),

@@ -17,7 +17,10 @@ import { TableListContextProvider } from '../../contexts/TableListContext';
 import { useTranslation } from '../../i18n';
 import type { ColumnDetail, ForeignKey } from '../../sql/dialect/metadata';
 import DatabaseSelector from '../component/DatabaseSelector';
-import { KeyboardShortcut } from '../component/KeyboardShortcut';
+import {
+  KeyboardShortcut,
+  ShortcutModifier,
+} from '../component/KeyboardShortcut';
 import { RegionBody, RegionFoot } from '../component/Style/Region';
 import { fill } from '../component/Style/fill';
 import TableList from '../component/TableList';
@@ -195,7 +198,7 @@ function OpenNavigateModalButton() {
       onClick={openNavigateModal}
     >
       <span>{t('tableList.navigate')}</span>
-      <KeyboardShortcut cmdOrCtrl pressedKey="k" />
+      <KeyboardShortcut modifier={ShortcutModifier.CmdOrCtrl} pressedKey="k" />
     </GoToTable>
   );
 }

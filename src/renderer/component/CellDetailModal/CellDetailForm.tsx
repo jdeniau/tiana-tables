@@ -15,7 +15,7 @@ import {
   toSqlValue,
 } from '../CellEditor/editableValue';
 import { useCellWrite } from '../CellWrite';
-import { KeyboardShortcut } from '../KeyboardShortcut';
+import { KeyboardShortcut, ShortcutModifier } from '../KeyboardShortcut';
 import SqlErrorComponent from '../Query/SqlErrorComponent';
 import LinkedRowCard from './LinkedRowCard';
 import ReadOnlyCellValue from './ReadOnlyCellValue';
@@ -179,7 +179,10 @@ export default function CellDetailForm({
           onClick={() => void save()}
         >
           {t('save')}
-          <KeyboardShortcut cmdOrCtrl pressedKey={SAVE_KEY} />
+          <KeyboardShortcut
+            modifier={ShortcutModifier.CmdOrCtrl}
+            pressedKey={SAVE_KEY}
+          />
         </Button>
       </Flex>
     </Flex>

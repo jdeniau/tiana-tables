@@ -18,7 +18,7 @@ import { isNullish } from '../../utils/isNullish';
 import type { CellDetail } from '../CellDetailModal';
 import type { CellWrite } from '../CellWrite';
 import { canBeSetNull, setNullWrites, useSetNull } from '../CellsNull';
-import { KeyboardShortcut } from '../KeyboardShortcut';
+import { KeyboardShortcut, ShortcutModifier } from '../KeyboardShortcut';
 import FreeTextFilterModal, {
   PendingFreeTextFilter,
 } from './FreeTextFilterModal';
@@ -354,7 +354,10 @@ function buildMenuItems({
       key: 'copy',
       label: t('table.contextMenu.copy', { count: values.length }),
       extra: valuesCopy.shortcut && (
-        <KeyboardShortcut cmdOrCtrl pressedKey="c" />
+        <KeyboardShortcut
+          modifier={ShortcutModifier.CmdOrCtrl}
+          pressedKey="c"
+        />
       ),
       // there is no text to a NULL, and copying an empty one would silently
       // wipe what the clipboard held

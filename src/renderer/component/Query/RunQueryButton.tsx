@@ -5,7 +5,7 @@ import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import { RunMode, toRunMode } from '../../../sql/runMode';
 import { commentForeground, fontSize } from '../../theme';
-import { KeyboardShortcut } from '../KeyboardShortcut';
+import { KeyboardShortcut, ShortcutModifier } from '../KeyboardShortcut';
 import { ActionButton } from '../Style/ActionButton';
 
 const RUN_MODES = [RunMode.Current, RunMode.All];
@@ -48,7 +48,10 @@ export function RunQueryButton({
   const runButton = (
     <ActionButton disabled={disabled} onClick={() => onRun(RunMode.Current)}>
       {t('rawSql.submit')}
-      <KeyboardShortcut cmdOrCtrl pressedKey={SUBMIT_KEY} />
+      <KeyboardShortcut
+        modifier={ShortcutModifier.CmdOrCtrl}
+        pressedKey={SUBMIT_KEY}
+      />
     </ActionButton>
   );
 
@@ -74,7 +77,10 @@ export function RunQueryButton({
                 <OptionTitle>
                   {t('rawSql.run.label', { mode })}
                   {mode === RunMode.Current && (
-                    <KeyboardShortcut cmdOrCtrl pressedKey={SUBMIT_KEY} />
+                    <KeyboardShortcut
+                      modifier={ShortcutModifier.CmdOrCtrl}
+                      pressedKey={SUBMIT_KEY}
+                    />
                   )}
                 </OptionTitle>
                 <OptionDescription>

@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { type JSX, useEffect } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { KeyboardShortcut } from './KeyboardShortcut';
+import { KeyboardShortcut, ShortcutModifier } from './KeyboardShortcut';
 
 const meta: Meta<typeof KeyboardShortcut> = {
   component: KeyboardShortcut,
@@ -23,27 +23,42 @@ export const SingleKey: Story = {
 export const WithCmdOrCtrl: Story = {
   args: {
     pressedKey: 'k',
-    cmdOrCtrl: true,
+    modifier: ShortcutModifier.CmdOrCtrl,
+  },
+};
+
+function OnMac(Story: () => JSX.Element): JSX.Element {
+  window.isMac = true;
+
+  useEffect(() => {
+    // cleanup as `window` values are kept between stories
+    return () => {
+      window.isMac = false;
+    };
+  }, []);
+
+  return <Story />;
+}
+
+export const WithCtrl: Story = {
+  args: {
+    pressedKey: 'g',
+    modifier: ShortcutModifier.Ctrl,
   },
 };
 
 export const MacVersion: Story = {
   args: {
     pressedKey: 'k',
-    cmdOrCtrl: true,
+    modifier: ShortcutModifier.CmdOrCtrl,
   },
-  decorators: [
-    (Story) => {
-      window.isMac = true;
+  decorators: [OnMac],
+};
 
-      useEffect(() => {
-        // cleanup as `window` values are kept between stories
-        return () => {
-          window.isMac = false;
-        };
-      }, []);
-
-      return <Story />;
-    },
-  ],
+export const MacVersionWithCtrl: Story = {
+  args: {
+    pressedKey: 'g',
+    modifier: ShortcutModifier.Ctrl,
+  },
+  decorators: [OnMac],
 };
