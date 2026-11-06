@@ -442,7 +442,9 @@ describe('deleting rows', () => {
     const cell = [...container.querySelectorAll('td')].find(
       (td) => td.textContent === 'a'
     );
+    // a click selects the cell, a Shift+click its row
     await click(cell);
+    await click(cell, { shiftKey: true });
     executeQuery.mockClear();
 
     await act(async () => {

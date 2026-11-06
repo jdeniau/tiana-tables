@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { List, Prose, RegionHead, Stage } from './Frame';
+import { useCmdOrCtrl } from './cmdOrCtrl';
 import { useText } from './text';
 
 const ROWS: [id: number, status: string, authorId: number, views: number][] = [
@@ -17,6 +18,7 @@ const ROWS: [id: number, status: string, authorId: number, views: number][] = [
 /** Browsing and editing, side by side as the two halves of the table page. */
 export function BrowseSection(): ReactElement {
   const { site, richList, app } = useText();
+  const cmdOrCtrl = useCmdOrCtrl();
 
   return (
     <section className="region" id="browse">
@@ -40,9 +42,11 @@ export function BrowseSection(): ReactElement {
                 </thead>
                 <tbody>
                   {ROWS.map(([id, status, authorId, views]) => (
-                    <tr key={id} className={id === 12 ? 'selected' : undefined}>
+                    <tr key={id}>
                       <td className="numeric number">{id}</td>
-                      <td className="string">{status}</td>
+                      <td className={id === 12 ? 'string selected' : 'string'}>
+                        {status}
+                      </td>
                       <td className="numeric number foreign-key">{authorId}</td>
                       <td className="numeric number">{views}</td>
                     </tr>
@@ -54,9 +58,15 @@ export function BrowseSection(): ReactElement {
                   {app('table.contextMenu.edit', { editable: 'true' })}
                   <kbd>{app('table.contextMenu.edit.shortcut')}</kbd>
                 </div>
-                <div>{app('table.contextMenu.setNull')}</div>
+                <div>
+                  {app('table.contextMenu.setNull', { count: 1 })}
+                  <kbd>{app('table.contextMenu.delete.shortcut')}</kbd>
+                </div>
                 <hr />
-                <div>{app('table.contextMenu.copy')}</div>
+                <div>
+                  {app('table.contextMenu.copy', { count: 1 })}
+                  <kbd>{cmdOrCtrl}C</kbd>
+                </div>
                 <div>
                   {app('table.contextMenu.copyRow')}
                   <kbd>▸</kbd>
@@ -74,7 +84,6 @@ export function BrowseSection(): ReactElement {
                 <hr />
                 <div className="danger">
                   {app('table.contextMenu.delete', { count: 1 })}
-                  <kbd>{app('table.contextMenu.delete.shortcut')}</kbd>
                 </div>
               </div>
             </div>

@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
+import type { Atom } from '@tanstack/react-store';
 import type { Table } from '@tanstack/react-table';
 import type { ResultRow } from '../../sql/types';
 import type { PrimaryKeyPart } from '../../sql/updateCell';
 import type { GridFeatures } from './TableGrid';
+import type { CellSelection } from './gridSelectionGesture';
 import { buildRowKey } from './rowId';
+import { rowsOfSelection } from './useGridSelection';
 
 interface RowsDelete {
-  /** the keys of the selected rows, `null` when there is none or one of them has no key */
+  /** the keys of the rows of the selection, `null` when there is none or one of them has no key */
   selectedRowKeys: () => Array<Array<PrimaryKeyPart>> | null;
   /** the rows the confirmation asks about, `null` while it is closed */
   pendingRowKeys: Array<Array<PrimaryKeyPart>> | null;
@@ -15,18 +18,23 @@ interface RowsDelete {
   closeConfirmation: () => void;
 }
 
-/** Deletes the selected rows of a grid: the context menu or the Delete key on the focused grid open the confirmation. */
+/**
+ * Deletes the rows of a grid's selection: the context menu opens the confirmation,
+ * and so does the Delete key on the focused grid while rows are selected.
+ */
 export function useRowsDelete<Row extends ResultRow>(
   table: Table<GridFeatures, Row>,
   {
     enabled,
     scrollElement,
     primaryKeys,
+    cellsAtom,
   }: {
     /** whether rows can be selected and deleted */
     enabled: boolean;
     scrollElement: HTMLElement | null;
     primaryKeys: Array<string> | undefined;
+    cellsAtom: Atom<CellSelection>;
   }
 ): RowsDelete {
   const [pendingRowKeys, setPendingRowKeys] = useState<Array<
@@ -38,10 +46,9 @@ export function useRowsDelete<Row extends ResultRow>(
       return null;
     }
 
-    const rowKeys = table
-      .getRowModel()
-      .rows.filter((row) => row.getIsSelected())
-      .map((row) => buildRowKey(row.original, primaryKeys));
+    const rowKeys = rowsOfSelection(table, cellsAtom.get()).map((row) =>
+      buildRowKey(row.original, primaryKeys)
+    );
 
     const identified = rowKeys.filter((rowKey) => rowKey !== null);
 
@@ -61,7 +68,9 @@ export function useRowsDelete<Row extends ResultRow>(
         event.ctrlKey ||
         event.metaKey ||
         event.altKey ||
-        event.shiftKey
+        event.shiftKey ||
+        // on selected cells, the key sets them to NULL
+        Object.keys(cellsAtom.get()).length > 0
       ) {
         return;
       }
@@ -77,7 +86,7 @@ export function useRowsDelete<Row extends ResultRow>(
     scrollElement.addEventListener('keydown', onKeyDown);
 
     return () => scrollElement.removeEventListener('keydown', onKeyDown);
-  }, [scrollElement, enabled, selectedRowKeys]);
+  }, [scrollElement, enabled, selectedRowKeys, cellsAtom]);
 
   return {
     selectedRowKeys,

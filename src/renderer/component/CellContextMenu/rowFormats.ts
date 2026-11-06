@@ -8,6 +8,7 @@ import {
 } from '../../utils/dateFormatter';
 import { isNullish } from '../../utils/isNullish';
 import type { ColumnMeta } from '../TableGrid';
+import cellValueToText from '../cellValueToText';
 import toHexLiteral from '../hexLiteral';
 import { cellValueToSqlLiteral } from './cellValueToSqlLiteral';
 
@@ -133,6 +134,31 @@ export function rowsToCsv(
     ...(withColumnNames ? [columnNames(rows).map(csvField).join(',')] : []),
     ...lines,
   ].join('\n');
+}
+
+/**
+ * The whole value, as the detail modal shows it — except bytes, which the
+ * modal cuts off after a few kilobytes: a copy must never be truncated.
+ */
+function toCopiedText(value: unknown, kind: FieldKind): string {
+  return value instanceof Uint8Array
+    ? toHexLiteral(value)
+    : cellValueToText(value, kind);
+}
+
+/** Values as "Copy value" writes each, a tab between two of a row, a line break between rows, NULL left empty. */
+export function valuesToText(
+  lines: ReadonlyArray<ReadonlyArray<RowCell>>
+): string {
+  return lines
+    .map((cells) =>
+      cells
+        .map(({ column, value }) =>
+          isNullish(value) ? '' : toCopiedText(value, column.kind)
+        )
+        .join('\t')
+    )
+    .join('\n');
 }
 
 /**

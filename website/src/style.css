@@ -794,7 +794,8 @@ h1 .title-dot {
   content: ' ↗';
   color: var(--text);
 }
-.grid tr.selected td {
+.grid tr.selected td,
+.grid td.selected {
   background: color-mix(in srgb, var(--sel) 70%, var(--bg));
 }
 .workspace-foot {
@@ -936,7 +937,8 @@ h1 .title-dot {
   position: absolute;
   left: 44%;
   top: 58px;
-  width: 230px;
+  width: max-content;
+  min-width: 230px;
   border: 1px solid var(--rule);
   background: var(--bg);
   font-size: 13px;

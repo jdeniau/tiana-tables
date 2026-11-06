@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { useCmdOrCtrl } from './cmdOrCtrl';
 import { useText } from './text';
 
 const TABLES = [
@@ -170,6 +171,7 @@ const SELECTED_ID = 4;
 /** The table page of the app, drawn: sidebar, filters and the grid of `article`. */
 export function AppWindow(): ReactElement {
   const { site, app } = useText();
+  const cmdOrCtrl = useCmdOrCtrl();
   const nullText = app('cell.detail.nullPlaceholder');
   const local = app('dateDisplay.option', { display: 'local' });
 
@@ -190,7 +192,7 @@ export function AppWindow(): ReactElement {
           </h3>
           <div className="goto">
             <span>{app('tableList.navigate')}</span>
-            <span>ctrl+K</span>
+            <span>{cmdOrCtrl}K</span>
           </div>
           <ul className="tables">
             {TABLES.map((table) => (

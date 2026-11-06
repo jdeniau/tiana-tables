@@ -29,6 +29,7 @@ The mistake made most often here. Before code is built on a claim, or a sentence
 - **A change is built on `main`, even when its issue describes the code of an open PR**: the PR rebases onto it afterwards, not the other way round.
 - **Markdown is never hard-wrapped** — `.md` files, PR descriptions, issues, review comments: one paragraph, or one list item, per line. Every renderer reflows it, and a wrapped sentence escapes `grep` and turns a one-word edit into a reflowed paragraph. Only commit messages wrap, at 72 columns: `git log` is a terminal.
 - **A PR description is two or three short paragraphs, no headings**: what changes for the user, the one non-obvious choice, what was proven and the restart it needs. The plan, the test list and the caveats stay in the conversation.
+- **A screenshot or a video reaches a PR through `gh pr edit <pr> --attach <file>`**, no browser needed: gh uploads it and appends it to the description, a video as a player (`gh pr comment --attach` for a comment). The app is recorded through CDP's `Page.startScreencast` (the `verify-live` skill).
 - **A finding of a local review is fixed in the tree it was read in**, even when the pushed branch already holds the fix: the working tree is what the user runs and reviews next. Compare it with the branch (`cmp` file by file) before calling a finding stale.
 - `eslint --fix` only on files named explicitly, checking it moved imports and nothing else. Never `prettier --write` a whole directory.
 
@@ -36,6 +37,7 @@ The mistake made most often here. Before code is built on a claim, or a sentence
 
 - `yarn lint && yarn knip && yarn test` are clean, and `yarn test:stories` when a component changed. After every edit, a PostToolUse hook runs lint, knip and only the Node tests of the edited file (`vitest related`); the Storybook tests run in `yarn test:stories`, which CI runs after `yarn test`.
 - **Never start a test run while another one runs**: `yarn test` peaks at ~4 GiB and `yarn test:stories` at ~2.3 GiB, and two at once have OOM-killed the desktop.
+- **The changed files pass `yarn prettier --check <files>`**: `yarn lint` runs no Prettier, only the commit's `lint-staged` does, and it would reformat what was reviewed.
 - Every new test has been checked by breaking what it covers.
 - List the comment blocks the diff adds that run over two lines, and every `//` pair: each justifies itself or becomes one line. Re-read the comments above what a refactor touched — a stale comment is worse than a long one.
 - After a change to the main process or an IPC contract, say the app needs a full restart.

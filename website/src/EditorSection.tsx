@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { List, Prose, RegionHead, Stage } from './Frame';
+import { useCmdOrCtrl } from './cmdOrCtrl';
 import { useText } from './text';
 
 const COMPLETIONS = [
@@ -15,6 +16,7 @@ const COMPLETIONS = [
 
 export function EditorSection(): ReactElement {
   const { site, rich, richList, app } = useText();
+  const cmdOrCtrl = useCmdOrCtrl();
 
   return (
     <section className="region" id="editor">
@@ -33,7 +35,7 @@ export function EditorSection(): ReactElement {
               </span>
               <span className="panel-tools">
                 <span className="action small">
-                  {app('rawSql.submit')} <kbd>ctrl+↵</kbd>
+                  {app('rawSql.submit')} <kbd>{cmdOrCtrl}↵</kbd>
                 </span>
               </span>
             </div>

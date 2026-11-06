@@ -34,7 +34,8 @@ import {
 } from '../Style/Region';
 import TableGrid from '../TableGrid';
 import TableViewSwitch from '../TableViewSwitch';
-import { NO_CURSOR, type RowCursor } from '../rowSelectionGesture';
+import { NO_CURSOR, type RowCursor } from '../gridSelectionGesture';
+import { copiedText } from '../useGridCopy';
 import { useLastCopy } from '../useLastCopy';
 import { hasOrderByToken } from './tableQuery';
 import { tableSearch } from './tableSearch';
@@ -81,7 +82,7 @@ export function TableLayout({
   const selectionAtom = useCreateAtom<RowSelectionState>({});
   const cursorAtom = useCreateAtom<RowCursor>(NO_CURSOR);
   const panelOpenAtom = useCreateAtom(false);
-  const [lastCopy, onRowsCopied] = useLastCopy();
+  const [lastCopy, onCopied] = useLastCopy();
   const selectedCount = useSelector(
     selectionAtom,
     (selection) => Object.keys(selection).length
@@ -179,10 +180,7 @@ export function TableLayout({
                 <RegionName>{tableName}</RegionName>
                 {lastCopy ? (
                   <SelectionRegionMeta>
-                    {t('table.rows.copied', {
-                      count: lastCopy.rowCount,
-                      format: lastCopy.format,
-                    })}
+                    {copiedText(lastCopy, t)}
                   </SelectionRegionMeta>
                 ) : (
                   result &&
@@ -223,7 +221,7 @@ export function TableLayout({
                 sortingAtom={sortingAtom}
                 enableSorting={sortable}
                 selectionAtom={selectionAtom}
-                onRowsCopied={onRowsCopied}
+                onCopied={onCopied}
                 onDeleteRows={deleteRows}
                 cursorAtom={cursorAtom}
                 panelOpenAtom={panelOpenAtom}

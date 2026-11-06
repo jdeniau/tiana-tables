@@ -65,7 +65,7 @@ const fr: SiteMessages = {
     'Filtrez avec une clause <code>WHERE</code>, retenue pour chaque table.',
     'Un clic droit sur une cellule filtre sur sa valeur, sur votre presse-papiers ou sur ce que vous voulez.',
     'Les clés étrangères sont des liens : un clic mène à la ligne référencée.',
-    'Copiez des lignes en TSV, CSV, Markdown, JSON ou <code>INSERT</code> SQL.',
+    'Copiez les valeurs des cellules cliquées, ou des lignes entières en TSV, CSV, Markdown, JSON ou <code>INSERT</code> SQL.',
   ],
 
   'edit.title': 'Modifier',

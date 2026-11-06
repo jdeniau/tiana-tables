@@ -35,8 +35,8 @@ import {
   RegionMeta,
   RegionName,
 } from '../Style/Region';
+import type { RowCursor } from '../gridSelectionGesture';
 import { rowIdOf } from '../rowId';
-import type { RowCursor } from '../rowSelectionGesture';
 import { useLastCopy } from '../useLastCopy';
 import {
   type RowDetailField,

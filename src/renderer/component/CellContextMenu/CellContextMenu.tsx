@@ -12,13 +12,13 @@ import {
   buildFilterClause,
   operatorTakesValue,
 } from '../../../sql/filterClause';
-import type { FieldKind } from '../../../sql/resultField';
 import { useDialect } from '../../hooks/useDialect';
 import { commentForeground } from '../../theme';
 import { isNullish } from '../../utils/isNullish';
-import { useCellWrite } from '../CellWrite';
-import cellValueToText from '../cellValueToText';
-import toHexLiteral from '../hexLiteral';
+import type { CellDetail } from '../CellDetailModal';
+import type { CellWrite } from '../CellWrite';
+import { canBeSetNull, setNullWrites, useSetNull } from '../CellsNull';
+import { KeyboardShortcut } from '../KeyboardShortcut';
 import FreeTextFilterModal, {
   PendingFreeTextFilter,
 } from './FreeTextFilterModal';
@@ -36,10 +36,21 @@ type MenuItem = NonNullable<MenuProps['items']>[number];
 /** how much of a literal the menu shows as a preview of a value source */
 const MAX_PREVIEW_LENGTH = 24;
 
+/** How the menu copies values: those of the selected cells it was opened on, or its own cell's. */
+interface ValuesCopyMenu {
+  /** a list of values per row */
+  lines: ReadonlyArray<ReadonlyArray<RowCell>>;
+  /** whether Ctrl+C copies them too */
+  shortcut: boolean;
+  onCopy: (lines: ReadonlyArray<ReadonlyArray<RowCell>>) => void;
+}
+
 /** How the menu copies rows: the one it was opened on, or the selected ones. */
 interface RowsCopyMenu {
-  /** empty on a grid whose rows cannot be selected */
+  /** the selected rows, or those holding a selected cell; empty on a grid whose rows cannot be selected */
   selectedRows: ReadonlyArray<ReadonlyArray<RowCell>>;
+  /** whether Ctrl+C copies the selected rows as TSV */
+  shortcut: boolean;
   copyRows: (
     format: RowFormat,
     rows: ReadonlyArray<ReadonlyArray<RowCell>>
@@ -50,9 +61,20 @@ interface RowsCopyMenu {
   ) => boolean;
 }
 
-/** How the menu deletes the selected rows, which its secondary click selected. */
+/** How the menu sets cells to NULL: the selected cells it was opened on, or its own cell. */
+interface CellsNullMenu {
+  details: ReadonlyArray<CellDetail>;
+  /** whether the Delete key sets them to NULL too */
+  shortcut: boolean;
+  /** opens the confirmation on several cells, which does the writing */
+  onAsk: (writes: ReadonlyArray<CellWrite>) => void;
+}
+
+/** How the menu deletes the selected rows, or those holding the selected cells. */
 interface RowsDeleteMenu {
   count: number;
+  /** whether the Delete key deletes them too */
+  shortcut: boolean;
   /** opens the confirmation, which does the deleting */
   onDelete: () => void;
 }
@@ -60,7 +82,9 @@ interface RowsDeleteMenu {
 interface CellContextMenuProps {
   /** the cell the menu is open on, `null` when it is closed */
   target: CellMenuTarget | null;
+  valuesCopy: ValuesCopyMenu;
   rowsCopy: RowsCopyMenu;
+  cellsNull: CellsNullMenu;
   /** absent where the rows cannot be deleted: a raw query result, a row nothing identifies */
   rowsDelete?: RowsDeleteMenu;
   onClose: () => void;
@@ -74,9 +98,9 @@ interface CellContextMenuProps {
 }
 
 /**
- * The menu a secondary click on a body cell opens: edit the cell or set it to
- * `NULL`, copy its value, its whole row or the selected rows, filter on its
- * column, delete the selected rows.
+ * The menu a secondary click on a body cell opens: edit the cell, set the
+ * cells to `NULL`, copy their values, the row or the selected rows, filter on
+ * the cell's column, delete the selected rows.
  *
  * It lives outside the virtualized body: a single antd component for the whole
  * grid, never one per cell (see the performance note on `TableGrid`).
@@ -89,14 +113,16 @@ interface CellContextMenuProps {
  */
 export default function CellContextMenu({
   target,
+  valuesCopy,
   rowsCopy,
+  cellsNull,
   rowsDelete,
   onClose,
   onFilterChange,
   onEdit,
 }: CellContextMenuProps): ReactElement {
   const { t } = useTranslation();
-  const { writeCell, reportFailure } = useCellWrite();
+  const setNull = useSetNull(cellsNull.onAsk);
   const dialect = useDialect();
   const [clipboardText, setClipboardText] = useState<string>('');
   const [pending, setPending] = useState<PendingFreeTextFilter | null>(null);
@@ -140,6 +166,7 @@ export default function CellContextMenu({
       t,
       canCopyAs: (format) => rowsCopy.canCopyAs(format, rows),
       onCopy: (format) => rowsCopy.copyRows(format, rows),
+      copyShortcut: rowsCopy.shortcut,
       columnNames,
       onToggleColumnNames: () => columnNamesAtom.set((shown) => !shown),
     });
@@ -151,19 +178,8 @@ export default function CellContextMenu({
         clipboardText,
         t,
         onEdit: () => onEdit(target),
-        onSetNull: () => {
-          const write = {
-            detail: target,
-            newValue: null,
-            originalValue: target.value,
-          };
-
-          // no form to show a SQL error in: the conflict modal shows it
-          writeCell(write).catch((error) => reportFailure(write, error));
-        },
-        onCopy: (text) => {
-          void window.clipboard.writeText(text);
-        },
+        valuesCopy,
+        cellsNull: { ...cellsNull, onSetNull: setNull },
         copyRowsItems: [
           copyRowsItem('copyRow', t('table.contextMenu.copyRow'), [target.row]),
           // a selection of one row is the row of the menu, already offered
@@ -277,8 +293,10 @@ interface MenuItemsParams {
   clipboardText: string;
   t: ReturnType<typeof useTranslation>['t'];
   onEdit: () => void;
-  onSetNull: () => void;
-  onCopy: (text: string) => void;
+  valuesCopy: ValuesCopyMenu;
+  cellsNull: Pick<CellsNullMenu, 'details' | 'shortcut'> & {
+    onSetNull: (writes: ReadonlyArray<CellWrite>) => void;
+  };
   /** the submenus that copy the row of the menu, then the selected rows */
   copyRowsItems: Array<MenuItem>;
   /** absent where the grid feeds no filter */
@@ -288,21 +306,23 @@ interface MenuItemsParams {
   rowsDelete: RowsDeleteMenu | undefined;
 }
 
-/** The entries in four groups: writing the cell, copying it, its row or the selected rows, filtering on it, deleting the rows. */
+/** The entries in four groups: writing the cells, copying them, the row or the selected rows, filtering on the cell, deleting the rows. */
 function buildMenuItems({
   dialect,
   target,
   clipboardText,
   t,
   onEdit,
-  onSetNull,
-  onCopy,
+  valuesCopy,
+  cellsNull,
   copyRowsItems,
   filter,
   rowsDelete,
 }: MenuItemsParams): MenuProps['items'] {
-  const { column, rowKey, value } = target;
+  const { column, rowKey } = target;
   const editable = getCellEditability(column.detail, rowKey !== null).editable;
+  const nullWrites = setNullWrites(cellsNull.details);
+  const values = valuesCopy.lines.flat();
 
   const items: MenuProps['items'] = [
     {
@@ -316,12 +336,15 @@ function buildMenuItems({
   ];
 
   // offered exactly where the detail modal would save a NULL
-  if (editable && column.detail?.nullable) {
+  if (cellsNull.details.some(canBeSetNull)) {
     items.push({
       key: 'setNull',
-      label: t('table.contextMenu.setNull'),
-      disabled: isNullish(value),
-      onClick: onSetNull,
+      label: t('table.contextMenu.setNull', {
+        count: Math.max(nullWrites.length, 1),
+      }),
+      extra: cellsNull.shortcut && t('table.contextMenu.delete.shortcut'),
+      disabled: nullWrites.length === 0,
+      onClick: () => cellsNull.onSetNull(nullWrites),
     });
   }
 
@@ -329,11 +352,14 @@ function buildMenuItems({
     { type: 'divider' },
     {
       key: 'copy',
-      label: t('table.contextMenu.copy'),
+      label: t('table.contextMenu.copy', { count: values.length }),
+      extra: valuesCopy.shortcut && (
+        <KeyboardShortcut cmdOrCtrl pressedKey="c" />
+      ),
       // there is no text to a NULL, and copying an empty one would silently
       // wipe what the clipboard held
-      disabled: isNullish(value),
-      onClick: () => onCopy(toCopiedText(value, column.kind)),
+      disabled: values.every(({ value }) => isNullish(value)),
+      onClick: () => valuesCopy.onCopy(valuesCopy.lines),
     },
     ...copyRowsItems
   );
@@ -352,23 +378,13 @@ function buildMenuItems({
         key: 'delete',
         danger: true,
         label: t('table.contextMenu.delete', { count: rowsDelete.count }),
-        extra: t('table.contextMenu.delete.shortcut'),
+        extra: rowsDelete.shortcut && t('table.contextMenu.delete.shortcut'),
         onClick: rowsDelete.onDelete,
       }
     );
   }
 
   return items;
-}
-
-/**
- * The whole value, as the detail modal shows it — except bytes, which the
- * modal cuts off after a few kilobytes: a copy must never be truncated.
- */
-function toCopiedText(value: unknown, kind: FieldKind): string {
-  return value instanceof Uint8Array
-    ? toHexLiteral(value)
-    : cellValueToText(value, kind);
 }
 
 interface FilterItemParams {

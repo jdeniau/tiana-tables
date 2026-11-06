@@ -44,7 +44,7 @@ The text on the accent fill is `base00`, which holds at least 3.4:1 on every pal
 
 An active item is marked by a **6px `base0D` square** before its label: the active connection in the title bar, the current statement in the result tab strip, the active table tab. Not an underline — it crowded the descenders.
 
-The selected **table** in the sidebar also gets a `base02` row fill and a 3px `base0D` left border (antd's Menu can only draw its bar on the right, so the rule is ours, on `TableLink`). A grid row under the cursor gets the `base02` fill; a selected **row** gets `base02` mixed at 70% into `base00`, weaker so that the pointer stays the stronger mark. Both keep the colours of their text. The grid keeps a `base02` separator between rows.
+The selected **table** in the sidebar also gets a `base02` row fill and a 3px `base0D` left border (antd's Menu can only draw its bar on the right, so the rule is ours, on `TableLink`). A grid row under the cursor gets the `base02` fill; a selected **row** or **cell** gets `base02` mixed at 70% into `base00`, weaker so that the pointer stays the stronger mark. Both keep the colours of their text. The grid keeps a `base02` separator between rows.
 
 ## Separators
 

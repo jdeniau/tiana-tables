@@ -62,7 +62,7 @@ function makeDetail(
   value: unknown,
   rowKey: Array<PrimaryKeyPart> | null = PRIMARY_KEY
 ): CellDetail {
-  return { column, value, rowKey, rowIndex: 0 };
+  return { column, value, rowKey, rowIndex: 0, rowId: '0' };
 }
 
 /** A save that succeeds, echoing back what a server would have stored. */

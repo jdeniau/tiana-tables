@@ -203,7 +203,8 @@ export default {
   'settings.title': 'Settings',
   'sqlPanel.callerButton': 'SQL',
   'table.columns.count': '{count, plural, one {# column} other {# columns}}',
-  'table.contextMenu.copy': 'Copy value',
+  'table.contextMenu.copy':
+    '{count, plural, one {Copy value} other {Copy # values}}',
   'table.contextMenu.copyRow': 'Copy row as',
   'table.contextMenu.delete':
     '{count, plural, one {Delete row…} other {Delete # rows…}}',
@@ -215,7 +216,8 @@ export default {
   'table.contextMenu.filter.clipboard': 'Clipboard',
   'table.contextMenu.filter.freeText': '…',
   'table.contextMenu.filter.freeText.title': 'Filter on a value',
-  'table.contextMenu.setNull': 'Set to NULL',
+  'table.contextMenu.setNull':
+    '{count, plural, one {Set to NULL} other {Set # values to NULL…}}',
   'table.copy.columnNames': 'Column names',
   'table.copy.columnNames.formats': 'TSV, CSV',
   'table.copy.format':
@@ -253,6 +255,12 @@ export default {
   'table.rows.selected':
     '{selected, plural, one {# row} other {# rows}} / {count, plural, one {# row} other {# rows}}',
   'table.rows.loadMore': 'Load more…',
+  'table.setNull.cancel': 'Cancel',
+  'table.setNull.confirm': 'Set to NULL',
+  'table.setNull.description':
+    '{count, plural, one {The value is set to NULL in the database.} other {The # values are set to NULL in the database.}}',
+  'table.setNull.title':
+    '{count, plural, one {Set this value to NULL?} other {Set these # values to NULL?}}',
   'table.sort.hint': 'Click to sort, Shift+click to add to the sort',
   'table.structure.extendedType': 'Extended type',
   'table.structure.displayAfter': 'Displays after',
@@ -261,6 +269,8 @@ export default {
     'The primary key columns are shown first: this column does not come right after the one chosen',
   'table.tab.data': 'Data',
   'table.tab.structure': 'Structure',
+  'table.values.copied':
+    '{count, plural, one {# value copied} other {# values copied}}',
   'table.view.label': 'Table view',
   'tableList.count': '{count, plural, one {# table} other {# tables}}',
   'tableList.navigate': 'Go to table…',
