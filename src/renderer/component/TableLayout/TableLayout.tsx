@@ -1,4 +1,4 @@
-import { ReactElement, useEffect } from 'react';
+import { ReactElement, useEffect, useState } from 'react';
 import { useCreateAtom, useSelector } from '@tanstack/react-store';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { Button, Splitter } from 'antd';
@@ -17,6 +17,7 @@ import { useTranslation } from '../../../i18n';
 import { FieldKind } from '../../../sql/resultField';
 import { useDialect } from '../../hooks/useDialect';
 import { usePanelSize } from '../../hooks/usePanelSize';
+import GoToIdModal from '../CellContextMenu/GoToIdModal';
 import DateDisplaySwitch from '../DateDisplaySwitch';
 import SqlErrorComponent from '../Query/SqlErrorComponent';
 import WhereFilter from '../Query/WhereFilter';
@@ -39,6 +40,7 @@ import { copiedText } from '../useGridCopy';
 import { useLastCopy } from '../useLastCopy';
 import { hasOrderByToken } from './tableQuery';
 import { tableSearch } from './tableSearch';
+import { useGoToIdKey } from './useGoToIdKey';
 import { useTableRows } from './useTableRows';
 
 interface TableNameProps {
@@ -83,6 +85,11 @@ export function TableLayout({
   const cursorAtom = useCreateAtom<RowCursor>(NO_CURSOR);
   const panelOpenAtom = useCreateAtom(false);
   const [lastCopy, onCopied] = useLastCopy();
+  const [goToIdOpen, setGoToIdOpen] = useState(false);
+  // a row without a primary key has no id to go to
+  const canGoToId = primaryKeys.length > 0;
+  const openGoToId = () => setGoToIdOpen(true);
+  useGoToIdKey(canGoToId, openGoToId);
   const selectedCount = useSelector(
     selectionAtom,
     (selection) => Object.keys(selection).length
@@ -129,6 +136,12 @@ export function TableLayout({
     shownFields.map((field) => field.name),
     displayAfterByColumn
   ).flatMap((name) => fieldsByName.get(name) ?? []);
+
+  // a column's kind comes with the rows: until they answer, the key is typed as text
+  const primaryKeyColumns = primaryKeys.map((column) => ({
+    column,
+    kind: fieldsByName.get(column)?.kind ?? FieldKind.Unknown,
+  }));
 
   // written, then read back by the loader on the next visit, rather than
   // mirrored in a state that the next table would leave stale
@@ -216,6 +229,7 @@ export function TableLayout({
                 primaryKeys={primaryKeys}
                 onValueUpdated={updateValue}
                 onFilterChange={handleFilterChange}
+                onGoToId={canGoToId ? openGoToId : undefined}
                 columnWidths={columnWidths}
                 onColumnResized={handleColumnResized}
                 sortingAtom={sortingAtom}
@@ -242,6 +256,17 @@ export function TableLayout({
             )}
           </Region>
         </WithRowDetailPanel>
+
+        <GoToIdModal
+          open={goToIdOpen}
+          primaryKey={primaryKeyColumns}
+          onCancel={() => setGoToIdOpen(false)}
+          // a clause equal to the current filter remounts nothing, so the modal closes itself
+          onSubmit={(where) => {
+            setGoToIdOpen(false);
+            handleFilterChange(where);
+          }}
+        />
       </Splitter.Panel>
     </Splitter>
   );

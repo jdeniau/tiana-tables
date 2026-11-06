@@ -133,6 +133,8 @@ interface TableGridProps<R extends ResultRow> {
    * entry: a raw query result has no filter to feed.
    */
   onFilterChange?: (where: string) => void;
+  /** opens "Go to id…"; the context menu offers it only when given */
+  onGoToId?: () => void;
   /** columns of the caller's own, holding no value of the row */
   extraColumns?: Array<ExtraColumn<R>>;
 
@@ -218,6 +220,7 @@ function TableGrid<Row extends ResultRow>({
   rowsAsArray = false,
   onValueUpdated,
   onFilterChange,
+  onGoToId,
   extraColumns = NO_EXTRA_COLUMNS,
   columnWidths,
   onColumnResized,
@@ -578,6 +581,7 @@ function TableGrid<Row extends ResultRow>({
               : undefined
           }
           onFilterChange={onFilterChange}
+          onGoToId={onGoToId}
           // the cell was remembered on the secondary click, so a save still flashes it
           onEdit={setCellDetail}
           onClose={() => {

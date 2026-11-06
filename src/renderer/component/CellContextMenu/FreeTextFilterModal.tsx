@@ -1,10 +1,9 @@
 import { ReactElement, useState } from 'react';
 import { Button, Flex, Input, Modal } from 'antd';
-import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
 import type { FilterOperator } from '../../../sql/filterClause';
 import { useDialect } from '../../hooks/useDialect';
-import { commentForeground } from '../../theme';
+import { ClausePrefix } from './ClausePrefix';
 
 /** The comparison waiting for the value the user is about to type. */
 export interface PendingFreeTextFilter {
@@ -93,9 +92,3 @@ function FreeTextFilterForm({
     </Flex>
   );
 }
-
-// muted, so that the fixed part of the clause reads apart from what is typed
-const ClausePrefix = styled.span`
-  color: ${commentForeground};
-  white-space: nowrap;
-`;

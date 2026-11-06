@@ -3,6 +3,7 @@ import {
   applyColumnOrder,
 } from '../../../configuration/columnOrder';
 import type { WholeForeignKey } from '../../../sql/ForeignKeysHelper';
+import { isPlainNumber } from '../../../sql/filterClause';
 import { FieldKind, type ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import type { PrimaryKeyPart } from '../../../sql/updateCell';
@@ -11,9 +12,6 @@ import {
   type RowDetailField,
   rowDetailFields,
 } from '../RowDetailPanel/rowDetailFields';
-
-/** a number as a key column holds it: no exponent, no hexadecimal, no `Infinity` */
-const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
 
 /** what the server can be asked to compare a key column with */
 function keyValue(value: unknown): string | number | null {
@@ -38,7 +36,7 @@ export function linkedRowKey(
   if (
     edited.isNull ||
     draft.trim() === '' ||
-    (isNumber && !PLAIN_NUMBER.test(draft))
+    (isNumber && !isPlainNumber(draft))
   ) {
     return null;
   }
