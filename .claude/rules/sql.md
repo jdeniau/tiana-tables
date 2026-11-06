@@ -10,7 +10,7 @@ Adding or changing an engine: load the `sql-engines` skill.
 ## Binding and escaping
 
 - **Values are bound by name (`:databaseName`), never by position.** A conditional clause becomes a conditional _key_, not a conditional position.
-  - MySQL: `namedPlaceholders` is set **per query** (`statement.values !== undefined`), never on the connection — the `named-placeholders` rewriter does not know backticks (`` `we:ird` `` is read as a parameter). It does skip string literals and comments. PostgreSQL: `driver/postgres/namedPlaceholders.ts` rewrites only the dialect's own statements to `$n`.
+  - MySQL: `namedPlaceholders` is set **per query** (`statement.values !== undefined`), never on the connection — the `named-placeholders` rewriter does not know backticks (`` `we:ird` `` is read as a parameter). It does skip string literals, not comments (the dialect writes none). A `?` inside backticks takes a slot and every value after it slides one place, so a write aims at another row: accepted as too rare, fixed upstream in mysqljs/named-placeholders#118. PostgreSQL: `driver/postgres/namedPlaceholders.ts` rewrites only the dialect's own statements to `$n`.
   - **A name that does not match is silent**: a missing parameter binds `null`, an extra key is dropped. Builders are tested on the exact `sql` / `values` pair, and `dialect.contract.test.ts` asserts the `:names` and the keys are the same set.
   - Write `CAST(x AS jsonb)`, never `x::jsonb`: the rewriter would read `:jsonb` as a parameter.
 - **Every interpolated identifier goes through the dialect** (`escapeIdentifier`, `qualify`), in both processes. Values are bound, identifiers are quoted; only SQL the user typed (the `where` filter, the editor) travels as written.
