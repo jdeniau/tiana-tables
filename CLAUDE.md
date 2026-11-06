@@ -34,8 +34,8 @@ The mistake made most often here. Before code is built on a claim, or a sentence
 
 ### Before handing a change over
 
-- `yarn lint && yarn knip && yarn test` are clean. After every edit, a PostToolUse hook runs lint, knip and only the Node tests of the edited file (`vitest related`); the Storybook tests run in the full `yarn test`, after the Node ones.
-- **Never start a `yarn test` while another one runs**: a full run peaks at ~8 GiB, two at once have OOM-killed the desktop.
+- `yarn lint && yarn knip && yarn test` are clean, and `yarn test:stories` when a component changed. After every edit, a PostToolUse hook runs lint, knip and only the Node tests of the edited file (`vitest related`); the Storybook tests run in `yarn test:stories`, which CI runs after `yarn test`.
+- **Never start a test run while another one runs**: `yarn test` peaks at ~4 GiB and `yarn test:stories` at ~2.3 GiB, and two at once have OOM-killed the desktop.
 - Every new test has been checked by breaking what it covers.
 - List the comment blocks the diff adds that run over two lines, and every `//` pair: each justifies itself or becomes one line. Re-read the comments above what a refactor touched — a stale comment is worse than a long one.
 - After a change to the main process or an IPC contract, say the app needs a full restart.
@@ -69,6 +69,7 @@ yarn install          # Install dependencies (requires Node.js 26 + corepack, se
 yarn start            # Run the Electron app in development mode
 yarn test             # Run Vitest test suite
 yarn test <file>      # Run a single test file
+yarn test:stories     # Render every story in headless Chromium and run its play
 yarn knip             # Run knip to find unused dependencies, exports and files
 yarn lint             # Type-check + ESLint
 yarn lint:types       # TypeScript type check only

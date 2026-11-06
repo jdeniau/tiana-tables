@@ -135,6 +135,7 @@ corepack enable yarn
 yarn install
 yarn start        # run the app in development
 yarn test         # Vitest
+yarn test:stories # every story, in headless Chromium
 yarn lint         # TypeScript + ESLint
 yarn storybook    # component workshop, port 6006
 ```
