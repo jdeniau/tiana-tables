@@ -7,14 +7,13 @@ import { styled } from 'styled-components';
 import { PANEL } from '../../../configuration/panels';
 import { useTranslation } from '../../../i18n';
 import type { Dialect } from '../../../sql/dialect/types';
-import { FieldKind, type ResultField } from '../../../sql/resultField';
+import type { ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import { useDialect } from '../../hooks/useDialect';
 import { PanelPosition, usePanelSize } from '../../hooks/usePanelSize';
 import {
   background,
   commentForeground,
-  constantForeground,
   emphasisForeground,
   fontSize,
   foreground,
@@ -22,7 +21,6 @@ import {
   selection,
   size,
   space,
-  stringForeground,
 } from '../../theme';
 import { isNullish } from '../../utils/isNullish';
 import ForeignKeyLink from '../ForeignKeyLink';
@@ -38,16 +36,13 @@ import {
 import type { RowCursor } from '../gridSelectionGesture';
 import { rowIdOf } from '../rowId';
 import { useLastCopy } from '../useLastCopy';
+import { Field, FieldRow } from './FieldRow';
 import {
   type RowDetailField,
   filterRowDetailFields,
   rowDetailFields,
   rowKeyText,
 } from './rowDetailFields';
-
-/** past this many characters, or lines, a value opens folded */
-const LONG_TEXT_LENGTH = 140;
-const CLAMPED_LINES = 4;
 
 /** a selection of every row would otherwise mount a button per row */
 const MAX_CHIPS = 50;
@@ -247,8 +242,13 @@ function RowDetailPanel<Row extends ResultRow>({
             <FieldRow
               key={`${shownId}:${entry.fieldIndex}`}
               entry={entry}
-              dialect={dialect}
-              onCopy={copy}
+              tools={
+                <PanelFieldTools
+                  entry={entry}
+                  dialect={dialect}
+                  onCopy={copy}
+                />
+              }
             />
           ))
         )}
@@ -263,7 +263,8 @@ function RowDetailPanel<Row extends ResultRow>({
   );
 }
 
-function FieldRow({
+/** What the panel offers on a field: following its foreign key, copying its value. */
+function PanelFieldTools({
   entry,
   dialect,
   onCopy,
@@ -273,81 +274,30 @@ function FieldRow({
   onCopy: (entry: RowDetailField) => void;
 }): ReactElement {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
-  const { field, value, text } = entry;
-  const isNull = isNullish(value);
-  const isLong =
-    text.length > LONG_TEXT_LENGTH || text.split('\n').length > CLAMPED_LINES;
+  const { field, value } = entry;
 
   return (
-    <Field>
-      <FieldName>{field.name}</FieldName>
-
-      <FieldValue>
-        <Value
-          data-tone={toneOf(field.kind, value)}
-          data-clamped={(isLong && !expanded) || undefined}
+    <>
+      {field.table && (
+        <ForeignKeyLink
+          dialect={dialect}
+          tableName={field.table}
+          columnName={field.name}
+          value={value}
+        />
+      )}
+      {!isNullish(value) && (
+        <CopyButton
+          type="button"
+          aria-label={t('table.contextMenu.copy')}
+          title={t('table.contextMenu.copy')}
+          onClick={() => onCopy(entry)}
         >
-          {isNull ? t('cell.detail.nullPlaceholder') : text}
-        </Value>
-        {isLong && (
-          <TextButton type="button" onClick={() => setExpanded(!expanded)}>
-            {expanded
-              ? t('table.rowDetail.collapse')
-              : t('table.rowDetail.expand', { length: text.length })}
-          </TextButton>
-        )}
-      </FieldValue>
-
-      <FieldTools>
-        {field.table && (
-          <ForeignKeyLink
-            dialect={dialect}
-            tableName={field.table}
-            columnName={field.name}
-            value={value}
-          />
-        )}
-        {!isNull && (
-          <CopyButton
-            type="button"
-            aria-label={t('table.contextMenu.copy')}
-            title={t('table.contextMenu.copy')}
-            onClick={() => onCopy(entry)}
-          >
-            <CopyOutlined />
-          </CopyButton>
-        )}
-      </FieldTools>
-    </Field>
+          <CopyOutlined />
+        </CopyButton>
+      )}
+    </>
   );
-}
-
-/** The colour the grid gives a value. */
-enum ValueTone {
-  Plain = 'plain',
-  Constant = 'constant',
-  String = 'string',
-}
-
-/** read from the shape of the value first, as `Cell` does */
-function toneOf(kind: FieldKind, value: unknown): ValueTone {
-  if (isNullish(value) || value instanceof Uint8Array) {
-    return ValueTone.Constant;
-  }
-
-  if (typeof value === 'object') {
-    return ValueTone.Plain;
-  }
-
-  switch (kind) {
-    case FieldKind.Number:
-      return ValueTone.Constant;
-    case FieldKind.String:
-      return ValueTone.String;
-    default:
-      return ValueTone.Plain;
-  }
 }
 
 const RowMeta = styled(RegionMeta)`
@@ -401,81 +351,6 @@ const Tools = styled.div`
   flex: none;
   padding: 0 ${space.md} ${space.sm};
   border-bottom: 1px solid ${commentForeground};
-`;
-
-const Field = styled.div`
-  display: grid;
-  flex: none;
-  grid-template-columns: 36% minmax(0, 1fr) auto;
-  column-gap: ${space.md};
-  align-items: baseline;
-  padding: ${space.xs} ${space.xs} ${space.xs} ${space.md};
-  border-bottom: 1px solid ${selection};
-
-  &:hover {
-    background: color-mix(in srgb, ${selection} 40%, ${background});
-  }
-`;
-
-const FieldName = styled.span`
-  font-size: ${fontSize.sm};
-  color: ${commentForeground};
-  overflow-wrap: anywhere;
-`;
-
-const FieldValue = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: ${space.xs};
-  min-width: 0;
-`;
-
-const Value = styled.span`
-  max-width: 100%;
-  font-size: ${fontSize.base};
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  color: ${foreground};
-
-  &[data-tone='${ValueTone.Constant}'] {
-    color: ${constantForeground};
-  }
-
-  &[data-tone='${ValueTone.String}'] {
-    color: ${stringForeground};
-  }
-
-  &[data-clamped] {
-    display: -webkit-box;
-    -webkit-line-clamp: ${CLAMPED_LINES};
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-`;
-
-const TextButton = styled.button`
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: ${fontSize.sm};
-  color: ${commentForeground};
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-
-  &:hover {
-    color: ${foreground};
-  }
-`;
-
-const FieldTools = styled.div`
-  display: flex;
-  align-items: center;
-  align-self: start;
-  gap: ${space.xs};
-  height: ${size.segment};
 `;
 
 // shown on the field under the pointer, or reached by the keyboard
