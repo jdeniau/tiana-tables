@@ -158,6 +158,7 @@ describe('database-scoped queries', () => {
         sql.includes('KEY_COLUMN_USAGE')
           ? [
               {
+                CONSTRAINT_NAME: 'fk_some-table_auteur',
                 TABLE_NAME: 'some-table',
                 COLUMN_NAME: 'auteur_id',
                 REFERENCED_TABLE_SCHEMA: 'some-database',

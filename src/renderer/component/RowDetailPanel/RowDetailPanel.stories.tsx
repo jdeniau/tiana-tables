@@ -114,6 +114,7 @@ const meta: Meta<typeof RowDetailPanelDemo> = {
         <ForeignKeysContextProvider
           foreignKeys={[
             {
+              constraintName: 'fk_comment_article',
               table: 'comment',
               column: 'article_id',
               referencedDatabase: 'shop',

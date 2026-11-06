@@ -35,6 +35,7 @@ describe('toTableStructure', () => {
         [column('id'), column('auteur_id')],
         [
           {
+            constraintName: 'fk_article_auteur',
             table: 'article',
             column: 'auteur_id',
             referencedDatabase: 'db',
@@ -54,6 +55,7 @@ describe('toTableStructure', () => {
         [column('auteur_id')],
         [
           {
+            constraintName: 'fk_commentaire_auteur',
             table: 'commentaire',
             column: 'auteur_id',
             referencedDatabase: 'db',
@@ -71,6 +73,7 @@ describe('toTableStructure', () => {
         [column('auteur_id')],
         [
           {
+            constraintName: 'fk_article_auteur',
             table: 'article',
             column: 'auteur_id',
             referencedDatabase: 'accounts',
@@ -84,7 +87,11 @@ describe('toTableStructure', () => {
 
   // what `GROUP_CONCAT(DISTINCT …)` used to answer
   test('every target is listed, each once', () => {
-    const key = (referencedTable: string): ForeignKey => ({
+    const key = (
+      constraintName: string,
+      referencedTable: string
+    ): ForeignKey => ({
+      constraintName,
       table: 'article',
       column: 'auteur_id',
       referencedDatabase: 'db',
@@ -95,7 +102,11 @@ describe('toTableStructure', () => {
     expect(
       references(
         [column('auteur_id')],
-        [key('auteur'), key('personne'), key('auteur')]
+        [
+          key('fk_article_auteur', 'auteur'),
+          key('fk_article_personne', 'personne'),
+          key('fk_article_auteur_bis', 'auteur'),
+        ]
       )
     ).toEqual(['auteur.id, personne.id']);
   });

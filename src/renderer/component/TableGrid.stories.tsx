@@ -190,6 +190,7 @@ const meta: Meta<typeof TableGrid> = {
           <ForeignKeysContextProvider
             foreignKeys={[
               {
+                constraintName: 'fk_items_linkedTable',
                 table: 'items',
                 column: 'linkedId',
                 referencedDatabase: 'mocked-db',

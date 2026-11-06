@@ -17,6 +17,7 @@ const TABLE_LIST = ['employee', 'title', 'planning'];
 const FOREIGN_KEYS = new ForeignKeysHelper(
   [
     {
+      constraintName: 'fk_employee_title',
       table: 'employee',
       column: 'title_id',
       referencedDatabase: 'db',
@@ -24,6 +25,7 @@ const FOREIGN_KEYS = new ForeignKeysHelper(
       referencedColumn: 'id',
     },
     {
+      constraintName: 'fk_planning_employee',
       table: 'planning',
       column: 'employee_id',
       referencedDatabase: 'db',

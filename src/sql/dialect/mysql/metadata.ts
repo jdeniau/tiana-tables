@@ -17,6 +17,7 @@ const tableNameRow = z.object({ TABLE_NAME: z.string() });
 const columnNameRow = z.object({ COLUMN_NAME: z.string() });
 
 const foreignKeyRow = z.object({
+  CONSTRAINT_NAME: z.string(),
   TABLE_NAME: z.string(),
   COLUMN_NAME: z.string(),
   REFERENCED_TABLE_SCHEMA: z.string(),
@@ -82,6 +83,7 @@ export const mysqlMetadata: DialectMetadata = {
     readQuery('listForeignKeys', {
       sql: `
         SELECT
+          CONSTRAINT_NAME,
           TABLE_NAME,
           COLUMN_NAME,
           REFERENCED_TABLE_SCHEMA,
@@ -96,6 +98,7 @@ export const mysqlMetadata: DialectMetadata = {
       row: foreignKeyRow,
       read: (rows) =>
         rows.map((row) => ({
+          constraintName: row.CONSTRAINT_NAME,
           table: row.TABLE_NAME,
           column: row.COLUMN_NAME,
           referencedDatabase: row.REFERENCED_TABLE_SCHEMA,

@@ -4,6 +4,7 @@ import type { ForeignKey } from './dialect/metadata';
 
 const FOREIGN_KEYS: Array<ForeignKey> = [
   {
+    constraintName: 'fk_employee_title',
     table: 'employee',
     column: 'title_id',
     referencedDatabase: 'db',
@@ -11,6 +12,7 @@ const FOREIGN_KEYS: Array<ForeignKey> = [
     referencedColumn: 'id',
   },
   {
+    constraintName: 'fk_planning_employee',
     table: 'planning',
     column: 'employee_id',
     referencedDatabase: 'db',
@@ -75,6 +77,7 @@ describe('ForeignKeysHelper', () => {
     const helper = new ForeignKeysHelper(
       [
         {
+          constraintName: 'fk_orders_users',
           table: 'orders',
           column: 'user_id',
           referencedDatabase: 'accounts',
