@@ -33,6 +33,10 @@ describe('toPositional', () => {
     expect(() => toPositional('SELECT :missing', {})).toThrow(':missing');
   });
 
+  test('refuses a double-quoted run holding a ?, which mysql2 would fill', () => {
+    expect(() => toPositional('SELECT "a?", :yes', { yes: 1 })).toThrow('"a?"');
+  });
+
   // what the dialect writes around a placeholder: its literals, and the names it escapes
   describe('copies a quoted run as it is', () => {
     test.each([

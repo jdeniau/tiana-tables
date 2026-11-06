@@ -31,6 +31,12 @@ export function toPositional(
     QUOTED_OR_PLACEHOLDER,
     (match, quoted: string | undefined, name: string | undefined) => {
       if (quoted !== undefined || name === undefined) {
+        // mysql2 skips a `?` between backticks or single quotes, never between double quotes
+        invariant(
+          !/^".*\?/s.test(match),
+          `A "?" in ${match} would take a value`
+        );
+
         return match;
       }
 
