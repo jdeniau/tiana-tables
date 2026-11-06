@@ -1,4 +1,5 @@
 import {
+  KeyboardEvent,
   ReactElement,
   ReactNode,
   memo,
@@ -355,6 +356,19 @@ function TableGrid<Row extends ResultRow>({
     panelOpenAtom,
   });
 
+  // Enter opens the detail modal on the lead cell, as a double click does
+  const openLeadCell = (event: KeyboardEvent<HTMLDivElement>): void => {
+    const { leadId, leadColumnId } = (cursorAtom ?? ownCursorAtom).get();
+    const row =
+      leadId === null ? undefined : table.getRowModel().rowsById[leadId];
+    const column = columnsMeta.find(({ id }) => id === leadColumnId);
+
+    if (row && column && cellsAtom.get()[row.id]?.includes(column.id)) {
+      event.preventDefault();
+      showCellDetail(cellDetailOf(row, column, rowsAsArray, primaryKeys));
+    }
+  };
+
   const { selectedRows, selectedValues, copyValues, copyRows, canCopyAs } =
     useGridCopy(table, {
       enabled: selectionAtom !== undefined,
@@ -404,7 +418,14 @@ function TableGrid<Row extends ResultRow>({
         ref={setScrollElement}
         // focusable for the keys of the selection
         tabIndex={selectionAtom ? 0 : undefined}
-        onKeyDown={handleKeyDown}
+        onKeyDown={(event) => {
+          // a link or a button focused in the grid keeps its own Enter
+          if (event.key === 'Enter' && event.target === event.currentTarget) {
+            openLeadCell(event);
+          } else {
+            handleKeyDown?.(event);
+          }
+        }}
       >
         <StyledTable ref={tableRef}>
           <StyledThead>

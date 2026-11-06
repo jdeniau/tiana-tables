@@ -215,7 +215,7 @@ export default {
     '{count, plural, one {Delete row…} other {Delete # rows…}}',
   'table.contextMenu.delete.shortcut': 'Del',
   'table.contextMenu.edit': '{editable, select, true {Edit…} other {View…}}',
-  'table.contextMenu.edit.shortcut': 'Double-click',
+  'table.contextMenu.edit.shortcut': 'Enter / Double-click',
   'table.contextMenu.filter': 'Filter',
   'table.contextMenu.filter.cellValue': 'Cell value',
   'table.contextMenu.filter.clipboard': 'Clipboard',
