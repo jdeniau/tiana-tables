@@ -333,6 +333,37 @@ export const Number: Story = {
   },
 };
 
+const saveEmptiedNumber = fn(saveSucceeds);
+
+// emptied with Ctrl+Backspace on the way to another value, a nullable field stays a field
+export const EmptyNullableNumber: Story = {
+  args: {
+    detail: makeDetail(
+      makeColumn('stock', FieldKind.Number, makeColumnDetail('stock')),
+      '42'
+    ),
+  },
+  parameters: { save: saveEmptiedNumber },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const input = body.getByRole('spinbutton');
+
+    await userEvent.clear(input);
+
+    await expect(
+      body.getByRole('checkbox', { name: 'Set to NULL' })
+    ).not.toBeChecked();
+    await expect(input).toBeEnabled();
+
+    await userEvent.type(input, '7');
+    await userEvent.click(body.getByRole('button', { name: /^Save/ }));
+
+    await expect(saveEmptiedNumber).toHaveBeenCalledWith(
+      expect.objectContaining({ newValue: '7' })
+    );
+  },
+};
+
 export const NullValue: Story = {
   args: {
     detail: makeDetail(
@@ -672,7 +703,6 @@ export const ForeignKeyPreview: Story = {
     expect(card.queryByText('email')).toBeNull();
 
     // one lookup per pause in the typing, not per key
-    // typed over the selected value: emptied, the field would be set to NULL
     const input = body.getByRole('spinbutton');
     await userEvent.type(input, '99', {
       initialSelectionStart: 0,

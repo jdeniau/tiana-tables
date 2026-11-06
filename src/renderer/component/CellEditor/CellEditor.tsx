@@ -37,16 +37,13 @@ export default function CellEditor({
   const { t } = useTranslation();
   const { serverZone } = useDateDisplay();
   const kind = resolveEditorKind(column, fieldKind);
-  const nullable = column.nullable;
 
   const enumValues = column.allowedValues.map((allowed) => ({
     value: allowed,
     label: allowed === '' ? '(empty)' : allowed,
   }));
 
-  // clearing an editor means NULL on a nullable column, and an empty value
-  // otherwise — which MySQL is then free to reject
-  const clear = (): void => onChange({ isNull: nullable, text: '' });
+  // an emptied editor holds an empty text: only the "Set to NULL" checkbox writes NULL
   const setText = (text: string): void => onChange({ isNull: false, text });
 
   switch (kind) {
@@ -55,13 +52,10 @@ export default function CellEditor({
         <Select
           style={{ width: '100%' }}
           disabled={disabled}
-          allowClear={nullable}
           showSearch
           options={enumValues}
           value={value.isNull ? undefined : value.text}
-          onChange={(selected: string | undefined) =>
-            selected === undefined ? clear() : setText(selected)
-          }
+          onChange={setText}
         />
       );
 
@@ -71,14 +65,12 @@ export default function CellEditor({
           style={{ width: '100%' }}
           mode="multiple"
           disabled={disabled}
-          allowClear={nullable}
+          allowClear
           options={enumValues}
           // a SET is stored as its members joined by commas, and a member
           // cannot hold one — so splitting is lossless
           value={value.isNull || value.text === '' ? [] : value.text.split(',')}
-          onChange={(selected: Array<string>) =>
-            selected.length === 0 ? clear() : setText(selected.join(','))
-          }
+          onChange={(selected: Array<string>) => setText(selected.join(','))}
         />
       );
 
@@ -98,9 +90,11 @@ export default function CellEditor({
           disabled={disabled}
           value={value.isNull ? '' : toDateInputValue(value.text, withTime)}
           onChange={(event) =>
-            event.target.value === ''
-              ? clear()
-              : setText(fromDateInputValue(event.target.value, withTime))
+            setText(
+              event.target.value === ''
+                ? ''
+                : fromDateInputValue(event.target.value, withTime)
+            )
           }
         />
       );
@@ -131,9 +125,7 @@ export default function CellEditor({
           // digits that were typed instead of a rounded JavaScript number
           stringMode
           value={value.isNull ? null : value.text}
-          onChange={(selected) =>
-            selected === null ? clear() : setText(String(selected))
-          }
+          onChange={(selected) => setText(String(selected ?? ''))}
         />
       );
 
