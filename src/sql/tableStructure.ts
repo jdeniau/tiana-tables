@@ -31,19 +31,26 @@ export function toTableStructure(
   columns: DescribedColumn[],
   foreignKeys: ForeignKey[]
 ): [TableStructureRow[], ResultField[]] {
+  const ownKeys = foreignKeys.filter((key) => key.table === tableName);
+
+  // a composite key is written whole on each of its columns: `order_lines (order_id, line_no)`
+  const target = (key: ForeignKey): string => {
+    const referencedColumns = ownKeys
+      .filter((other) => other.constraintName === key.constraintName)
+      .map((other) => other.referencedColumn);
+    const table =
+      key.referencedDatabase === databaseName
+        ? key.referencedTable
+        : `${key.referencedDatabase}.${key.referencedTable}`;
+
+    return referencedColumns.length > 1
+      ? `${table} (${referencedColumns.join(', ')})`
+      : `${table}.${key.referencedColumn}`;
+  };
+
   const rows = columns.map((column) => {
     const references = new Set(
-      foreignKeys
-        .filter(
-          (key) => key.table === tableName && key.column === column.Column
-        )
-        .map((key) => {
-          const target = `${key.referencedTable}.${key.referencedColumn}`;
-
-          return key.referencedDatabase === databaseName
-            ? target
-            : `${key.referencedDatabase}.${target}`;
-        })
+      ownKeys.filter((key) => key.column === column.Column).map(target)
     );
 
     return {
