@@ -1,19 +1,30 @@
 // first: Chromatic extracts the stories in a Chrome without Temporal
 import 'temporal-polyfill/global';
-import { useEffect } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import '@fontsource/oswald/600.css';
 import '@fontsource/syne-mono/400.css';
 import type { Preview } from '@storybook/react-vite';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { action } from 'storybook/actions';
 import { DEFAULT_LOCALE } from '../src/configuration/locale';
 import { DEFAULT_THEME, THEME_LIST } from '../src/configuration/themes';
 import { testables } from '../src/contexts/ConfigurationContext';
 import { ThemeContextProvider } from '../src/contexts/ThemeContext';
 import { changeLanguage } from '../src/i18n';
+import { createQueryClient } from '../src/renderer/queryClient';
 import { background } from '../src/renderer/theme';
 import { STORY_CONNECTION } from './decorators/connectionDecorator';
 
 const { ConfigurationContext } = testables;
+
+/** A cache of its own for each story, as the app holds one for its whole life. */
+function StoryQueryClient({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(createQueryClient);
+
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+}
 
 const preview: Preview = {
   tags: ['autodocs'],
@@ -103,7 +114,9 @@ const preview: Preview = {
           }}
         >
           <ThemeContextProvider>
-            <Story />
+            <StoryQueryClient>
+              <Story />
+            </StoryQueryClient>
           </ThemeContextProvider>
         </ConfigurationContext>
       );

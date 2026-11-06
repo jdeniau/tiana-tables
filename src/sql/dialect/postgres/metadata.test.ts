@@ -150,6 +150,7 @@ describe('the other questions', () => {
     expect(
       postgresMetadata.listForeignKeys('app').answer([
         {
+          constraint_name: 'orders_user_id_fkey',
           table_name: 'orders',
           column_name: 'user_id',
           referenced_schema: 'public',
@@ -159,12 +160,42 @@ describe('the other questions', () => {
       ])
     ).toEqual([
       {
+        constraintName: 'orders_user_id_fkey',
         table: 'orders',
         column: 'user_id',
         referencedDatabase: 'public',
         referencedTable: 'users',
         referencedColumn: 'id',
       },
+    ]);
+  });
+
+  // rows copied from a run against `tiana-dev-postgres`
+  test('the columns of a composite foreign key share its name', () => {
+    const keys = postgresMetadata.listForeignKeys('app').answer([
+      {
+        constraint_name: 'shipments_order_id_line_no_fkey',
+        table_name: 'shipments',
+        column_name: 'order_id',
+        referenced_schema: 'app',
+        referenced_table: 'order_lines',
+        referenced_column: 'order_id',
+      },
+      {
+        constraint_name: 'shipments_order_id_line_no_fkey',
+        table_name: 'shipments',
+        column_name: 'line_no',
+        referenced_schema: 'app',
+        referenced_table: 'order_lines',
+        referenced_column: 'line_no',
+      },
+    ]);
+
+    expect(
+      keys.map(({ constraintName, column }) => [constraintName, column])
+    ).toEqual([
+      ['shipments_order_id_line_no_fkey', 'order_id'],
+      ['shipments_order_id_line_no_fkey', 'line_no'],
     ]);
   });
 

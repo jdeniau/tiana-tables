@@ -1888,6 +1888,10 @@ insert(
   inscriptions
 );
 
+// the picture of a send is its cover article's first one: drawing none keeps the random sequence
+const premierMedia = new Map(
+  amRows.filter((row) => row[2] === 1).map((row) => [row[0], row[1]])
+);
 const envois = [];
 const ENVOIS_PAR_PERIODICITE = {
   quotidienne: 45,
@@ -1906,6 +1910,7 @@ for (const [nid, nom, , periodicite] of NEWSLETTERS) {
       nid,
       `${nom} — ${articles[aid - 1][1]}`.slice(0, 160),
       aid,
+      premierMedia.get(aid) ?? null,
       envoye,
       destinataires,
       ouvertures,
@@ -1921,6 +1926,7 @@ insert(
     'newsletter_id',
     'objet',
     'article_une_id',
+    'media_une_id',
     'envoye_le',
     'destinataires',
     'ouvertures',

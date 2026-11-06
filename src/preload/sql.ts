@@ -7,6 +7,7 @@ import type {
   TableStructureRow,
 } from '../sql/dialect/metadata';
 import { decodeError } from '../sql/errorSerializer';
+import type { SelectRowRequest, SelectedRow } from '../sql/selectRow';
 import type { QueryResult, QueryReturnType } from '../sql/types';
 import type { UpdateCellOutcome, UpdateCellRequest } from '../sql/updateCell';
 import { bindChannel, bindEvent } from './bindChannel';
@@ -25,6 +26,8 @@ interface Sql {
   updateCell(request: UpdateCellRequest): Promise<UpdateCellOutcome>;
   /** Delete rows by their primary key, in one statement; answers how many the server deleted. */
   deleteRows(request: DeleteRowsRequest): Promise<number>;
+  /** The row a key points at, its value bound rather than written into the SQL text. */
+  selectRow(request: SelectRowRequest): Promise<SelectedRow>;
   closeConnection(connectionSlug: string): Promise<void>;
   closeAllConnections(): Promise<void>;
   connectionNameChanged(
@@ -77,6 +80,8 @@ export const sql: Sql = {
 
   deleteRows: async (request) =>
     doInvokeQuery(SQL_CHANNEL.DELETE_ROWS, request),
+
+  selectRow: async (request) => doInvokeQuery(SQL_CHANNEL.SELECT_ROW, request),
 
   listDatabases: async () => doInvokeQuery(SQL_CHANNEL.LIST_DATABASES),
 

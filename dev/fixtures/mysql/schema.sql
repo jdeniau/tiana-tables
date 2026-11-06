@@ -364,6 +364,7 @@ CREATE TABLE envoi_newsletter (
   newsletter_id TINYINT UNSIGNED NOT NULL,
   objet VARCHAR(160) NOT NULL,
   article_une_id INT DEFAULT NULL,
+  media_une_id INT DEFAULT NULL COMMENT 'Une image de l''article à la une',
   envoye_le DATETIME NOT NULL,
   destinataires MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
   ouvertures MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
@@ -371,7 +372,8 @@ CREATE TABLE envoi_newsletter (
   desinscriptions SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   KEY idx_envoi_newsletter (newsletter_id),
   CONSTRAINT fk_envoi_newsletter FOREIGN KEY (newsletter_id) REFERENCES newsletter (id) ON DELETE CASCADE,
-  CONSTRAINT fk_envoi_article FOREIGN KEY (article_une_id) REFERENCES article (id) ON DELETE SET NULL
+  CONSTRAINT fk_envoi_article FOREIGN KEY (article_une_id) REFERENCES article (id) ON DELETE SET NULL,
+  CONSTRAINT fk_envoi_media_une FOREIGN KEY (article_une_id, media_une_id) REFERENCES article_media (article_id, media_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE VIEW vue_article_publie AS

@@ -2,9 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import type monaco from 'monaco-editor';
 import { action } from 'storybook/actions';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
-import type { ColumnDetail } from '../../../sql/dialect/metadata';
+import connectionDecorator from '../../../../.storybook/decorators/connectionDecorator';
+import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext';
+import type { ColumnDetail, ForeignKey } from '../../../sql/dialect/metadata';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
-import { FieldKind } from '../../../sql/resultField';
+import { FieldKind, type ResultField } from '../../../sql/resultField';
+import type { SelectRowRequest, SelectedRow } from '../../../sql/selectRow';
 import type { SqlError } from '../../../sql/sqlError';
 import {
   ConflictReason,
@@ -62,7 +65,14 @@ function makeDetail(
   value: unknown,
   rowKey: Array<PrimaryKeyPart> | null = PRIMARY_KEY
 ): CellDetail {
-  return { column, value, rowKey, rowIndex: 0, rowId: '0' };
+  return {
+    column,
+    value,
+    rowByColumn: { id: 1, [column.name]: value },
+    rowKey,
+    rowIndex: 0,
+    rowId: '0',
+  };
 }
 
 /** A save that succeeds, echoing back what a server would have stored. */
@@ -121,15 +131,22 @@ const meta: Meta<typeof CellDetailModal> = {
     onClose: action('onClose'),
   },
   // what the server answers a write with: `parameters.save`, a success by default
+  // and the foreign keys of the database: `parameters.foreignKeys`, none by default
   decorators: [
     (Story, { parameters }) => (
-      <CellWriteProvider
-        save={(parameters.save as SaveCell | undefined) ?? saveSucceeds}
-        onValueUpdated={action('onValueUpdated')}
+      <ForeignKeysContextProvider
+        foreignKeys={(parameters.foreignKeys as ForeignKey[] | undefined) ?? []}
+        database="tiana_dev"
       >
-        <Story />
-      </CellWriteProvider>
+        <CellWriteProvider
+          save={(parameters.save as SaveCell | undefined) ?? saveSucceeds}
+          onValueUpdated={action('onValueUpdated')}
+        >
+          <Story />
+        </CellWriteProvider>
+      </ForeignKeysContextProvider>
     ),
+    connectionDecorator,
   ],
 };
 
@@ -488,5 +505,237 @@ export const SqlErrorOnOverwrite: Story = {
         body.getByText("Data too long for column 'name' at row 1")
       ).toBeVisible()
     );
+  },
+};
+
+/** `article.auteur_id` and `envoi_newsletter (article_une_id, media_une_id)`, as the dev servers list them */
+const LE_FIL_KEYS: Array<ForeignKey> = [
+  {
+    constraintName: 'fk_article_auteur',
+    table: 'article',
+    column: 'auteur_id',
+    referencedDatabase: 'tiana_dev',
+    referencedTable: 'auteur',
+    referencedColumn: 'id',
+  },
+  {
+    constraintName: 'fk_envoi_media_une',
+    table: 'envoi_newsletter',
+    column: 'article_une_id',
+    referencedDatabase: 'tiana_dev',
+    referencedTable: 'article_media',
+    referencedColumn: 'article_id',
+  },
+  {
+    constraintName: 'fk_envoi_media_une',
+    table: 'envoi_newsletter',
+    column: 'media_une_id',
+    referencedDatabase: 'tiana_dev',
+    referencedTable: 'article_media',
+    referencedColumn: 'media_id',
+  },
+];
+
+const field = (
+  table: string,
+  name: string,
+  kind = FieldKind.String
+): ResultField => ({ name, table, kind });
+
+/** auteur 32 and the picture of envoi 13, as `tiana-dev-mysql` answers them */
+const LE_FIL_ROWS: Record<string, SelectedRow> = {
+  'auteur:32': {
+    fields: [
+      field('auteur', 'id', FieldKind.Number),
+      ...['nom', 'prenom', 'genre', 'initiale', 'email', 'role', 'service'].map(
+        (name) => field('auteur', name)
+      ),
+      field('auteur', 'biographie', FieldKind.Text),
+      field('auteur', 'ville'),
+      field('auteur', 'arrive_le', FieldKind.Date),
+      field('auteur', 'parti_le', FieldKind.Date),
+      field('auteur', 'actif', FieldKind.Number),
+      field('auteur', 'compte_x'),
+    ],
+    row: {
+      id: 32,
+      nom: 'Bourgeois',
+      prenom: 'Valerie',
+      genre: 'female',
+      initiale: 'B',
+      email: 'valerie-bourgeois@lefil.fr',
+      role: 'redacteur_chef',
+      service: 'International',
+      biographie:
+        "Valerie Bourgeois couvre l'Europe centrale et les Balkans pour Le Fil depuis 2011.",
+      ville: 'Grenoble',
+      arrive_le: '2011-07-13',
+      parti_le: null,
+      actif: 1,
+      compte_x: null,
+    },
+  },
+  'article_media:9,237': {
+    fields: [
+      field('article_media', 'article_id', FieldKind.Number),
+      field('article_media', 'media_id', FieldKind.Number),
+      field('article_media', 'position', FieldKind.Number),
+      field('article_media', 'legende_specifique'),
+    ],
+    row: {
+      article_id: 9,
+      media_id: 237,
+      position: 1,
+      legende_specifique: null,
+    },
+  },
+};
+
+/** what `tiana-dev-postgres` answers when `3.5` is compared with an integer column */
+const INVALID_INTEGER = {
+  name: 'Error',
+  message: 'invalid input syntax for type integer: "3.5"',
+  kind: 'sql',
+  code: '22P02',
+  sqlState: '22P02',
+} satisfies SqlError;
+
+/** What `window.sql.selectRow` answers in these stories: the rows above, and no row for any other key. */
+const selectRow = fn(
+  async ({ table, key }: SelectRowRequest): Promise<SelectedRow> => {
+    if (key.some(({ value }) => value === '3.5')) {
+      throw INVALID_INTEGER;
+    }
+
+    const found =
+      LE_FIL_ROWS[`${table}:${key.map(({ value }) => value).join(',')}`];
+
+    return found ?? { fields: LE_FIL_ROWS['auteur:32'].fields, row: null };
+  }
+);
+
+/** Puts the mock in the bridge for one story, and the bridge back after it. */
+function answerSelectRow(): () => void {
+  const bridge = window.sql;
+
+  selectRow.mockClear();
+  window.sql = { ...bridge, selectRow };
+
+  return () => {
+    window.sql = bridge;
+  };
+}
+
+function foreignKeyDetail(
+  table: string,
+  name: string,
+  value: unknown,
+  rowByColumn: Record<string, unknown>
+): CellDetail {
+  const detail = makeDetail(
+    {
+      ...makeColumn(name, FieldKind.Number, makeColumnDetail(name, { table })),
+      tableName: table,
+      hasForeignKey: true,
+    },
+    value
+  );
+
+  return { ...detail, rowByColumn };
+}
+
+/** The author an article points at, previewed as the key is typed. */
+export const ForeignKeyPreview: Story = {
+  parameters: { foreignKeys: LE_FIL_KEYS },
+  beforeEach: answerSelectRow,
+  args: {
+    detail: foreignKeyDetail('article', 'auteur_id', 32, {
+      id: 4,
+      auteur_id: 32,
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const card = within(await body.findByRole('group', { name: 'Linked row' }));
+
+    // the key itself is left out: its value is in the header already
+    await card.findByText('Bourgeois');
+    expect(card.getByText('auteur')).toBeTruthy();
+    expect(card.getByText('id = 32')).toBeTruthy();
+    expect(card.queryByText('email')).toBeNull();
+
+    await userEvent.click(
+      card.getByRole('button', { name: 'Show the 9 other columns' })
+    );
+    expect(card.getByText('valerie-bourgeois@lefil.fr')).toBeTruthy();
+    await userEvent.click(card.getByRole('button', { name: 'Collapse' }));
+    expect(card.queryByText('email')).toBeNull();
+
+    // one lookup per pause in the typing, not per key
+    // typed over the selected value: emptied, the field would be set to NULL
+    const input = body.getByRole('spinbutton');
+    await userEvent.type(input, '99', {
+      initialSelectionStart: 0,
+      initialSelectionEnd: 2,
+    });
+    await card.findByText('No row of auteur has id = 99');
+    expect(selectRow.mock.calls.map(([{ key }]) => key[0].value)).toEqual([
+      '32',
+      '99',
+    ]);
+
+    await userEvent.click(body.getByRole('checkbox', { name: 'Set to NULL' }));
+    expect(body.queryByRole('group', { name: 'Linked row' })).toBeNull();
+  },
+};
+
+/** The picture of a newsletter send: the article comes from the row, the picture from the draft. */
+export const CompositeForeignKeyPreview: Story = {
+  parameters: { foreignKeys: LE_FIL_KEYS },
+  beforeEach: answerSelectRow,
+  args: {
+    detail: foreignKeyDetail('envoi_newsletter', 'media_une_id', 237, {
+      id: 13,
+      article_une_id: 9,
+      media_une_id: 237,
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const card = within(await body.findByRole('group', { name: 'Linked row' }));
+
+    expect(card.getByText('article_media')).toBeTruthy();
+    expect(card.getByText('article_id = 9, media_id = 237')).toBeTruthy();
+    await card.findByText('position');
+    expect(card.queryByText('article_id')).toBeNull();
+    expect(card.queryByRole('button', { name: /Show/ })).toBeNull();
+  },
+};
+
+/** The server refuses the draft as a key: its error takes the card's place. */
+export const ForeignKeyPreviewError: Story = {
+  parameters: { foreignKeys: LE_FIL_KEYS },
+  beforeEach: answerSelectRow,
+  args: {
+    detail: foreignKeyDetail('article', 'auteur_id', 32, {
+      id: 4,
+      auteur_id: 32,
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const card = within(await body.findByRole('group', { name: 'Linked row' }));
+
+    await card.findByText('Bourgeois');
+    await userEvent.type(body.getByRole('spinbutton'), '3.5', {
+      initialSelectionStart: 0,
+      initialSelectionEnd: 2,
+    });
+
+    await expect(
+      await card.findByText('invalid input syntax for type integer: "3.5"')
+    ).toBeVisible();
+    await expect(card.getByText('22P02')).toBeVisible();
+    expect(card.queryByText('Bourgeois')).toBeNull();
   },
 };

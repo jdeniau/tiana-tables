@@ -84,6 +84,17 @@ function statements(dialect: Dialect): Array<[string, BuiltQuery]> {
         ],
       }),
     ],
+    [
+      'selectRow',
+      dialect.selectRow({
+        database: DATABASE,
+        table: TABLE,
+        key: [
+          { column: 'order_id', value: 'first order' },
+          { column: 'line_id', value: 2 },
+        ],
+      }),
+    ],
   ];
 }
 

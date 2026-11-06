@@ -35,6 +35,7 @@ describe('toTableStructure', () => {
         [column('id'), column('auteur_id')],
         [
           {
+            constraintName: 'fk_article_auteur',
             table: 'article',
             column: 'auteur_id',
             referencedDatabase: 'db',
@@ -54,6 +55,7 @@ describe('toTableStructure', () => {
         [column('auteur_id')],
         [
           {
+            constraintName: 'fk_commentaire_auteur',
             table: 'commentaire',
             column: 'auteur_id',
             referencedDatabase: 'db',
@@ -71,6 +73,7 @@ describe('toTableStructure', () => {
         [column('auteur_id')],
         [
           {
+            constraintName: 'fk_article_auteur',
             table: 'article',
             column: 'auteur_id',
             referencedDatabase: 'accounts',
@@ -84,7 +87,11 @@ describe('toTableStructure', () => {
 
   // what `GROUP_CONCAT(DISTINCT …)` used to answer
   test('every target is listed, each once', () => {
-    const key = (referencedTable: string): ForeignKey => ({
+    const key = (
+      constraintName: string,
+      referencedTable: string
+    ): ForeignKey => ({
+      constraintName,
       table: 'article',
       column: 'auteur_id',
       referencedDatabase: 'db',
@@ -95,9 +102,84 @@ describe('toTableStructure', () => {
     expect(
       references(
         [column('auteur_id')],
-        [key('auteur'), key('personne'), key('auteur')]
+        [
+          key('fk_article_auteur', 'auteur'),
+          key('fk_article_personne', 'personne'),
+          key('fk_article_auteur_bis', 'auteur'),
+        ]
       )
     ).toEqual(['auteur.id, personne.id']);
+  });
+
+  // keys of `envoi_newsletter` as the dev servers answer them
+  describe('a composite foreign key', () => {
+    const composite = (
+      column: string,
+      referencedColumn: string
+    ): ForeignKey => ({
+      constraintName: 'fk_envoi_media_une',
+      table: 'envoi_newsletter',
+      column,
+      referencedDatabase: 'db',
+      referencedTable: 'article_media',
+      referencedColumn,
+    });
+    const keys: ForeignKey[] = [
+      {
+        constraintName: 'fk_envoi_article',
+        table: 'envoi_newsletter',
+        column: 'article_une_id',
+        referencedDatabase: 'db',
+        referencedTable: 'article',
+        referencedColumn: 'id',
+      },
+      composite('article_une_id', 'article_id'),
+      composite('media_une_id', 'media_id'),
+    ];
+
+    test('is written whole on each of its columns', () => {
+      const [rows] = toTableStructure(
+        'db',
+        'envoi_newsletter',
+        [column('article_une_id'), column('media_une_id')],
+        keys
+      );
+
+      expect(rows.map((row) => row.References)).toEqual([
+        'article.id, article_media (article_id, media_id)',
+        'article_media (article_id, media_id)',
+      ]);
+    });
+
+    // PostgreSQL lets two tables name a key alike
+    test('takes no column from a key of another table named alike', () => {
+      const [rows] = toTableStructure(
+        'db',
+        'envoi_newsletter',
+        [column('media_une_id')],
+        [
+          composite('media_une_id', 'media_id'),
+          { ...composite('media_id', 'id'), table: 'article_media' },
+        ]
+      );
+
+      expect(rows.map((row) => row.References)).toEqual([
+        'article_media.media_id',
+      ]);
+    });
+
+    test('names the database of its table when it is another one', () => {
+      const [rows] = toTableStructure(
+        'db',
+        'envoi_newsletter',
+        [column('media_une_id')],
+        keys.map((key) => ({ ...key, referencedDatabase: 'archives' }))
+      );
+
+      expect(rows.map((row) => row.References)).toEqual([
+        'archives.article_media (article_id, media_id)',
+      ]);
+    });
   });
 
   test('the columns keep the order the dialect answered them in', () => {

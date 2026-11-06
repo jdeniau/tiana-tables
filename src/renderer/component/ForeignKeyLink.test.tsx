@@ -16,6 +16,7 @@ import ForeignKeyLink from './ForeignKeyLink';
 
 const FOREIGN_KEYS: ForeignKey[] = [
   {
+    constraintName: 'fk_orders_customers',
     table: 'orders',
     column: 'customer_label',
     referencedDatabase: 'db',

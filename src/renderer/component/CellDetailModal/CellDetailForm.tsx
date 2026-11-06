@@ -17,8 +17,10 @@ import {
 import { useCellWrite } from '../CellWrite';
 import { KeyboardShortcut } from '../KeyboardShortcut';
 import SqlErrorComponent from '../Query/SqlErrorComponent';
+import LinkedRowCard from './LinkedRowCard';
 import ReadOnlyCellValue from './ReadOnlyCellValue';
 import type { CellDetail } from './types';
+import { useLinkedRow } from './useLinkedRow';
 
 /** pressed with Ctrl (⌘ on macOS), the key that saves the draft, as it runs a query in the SQL editor */
 const SAVE_KEY = 'Enter';
@@ -56,6 +58,7 @@ export default function CellDetailForm({
   const [saveError, setSaveError] = useState<ErrorLike | null>(null);
 
   const editability = getCellEditability(columnDetail, detail.rowKey !== null);
+  const linkedRow = useLinkedRow(detail, edited, editability.editable);
 
   if (!editability.editable) {
     return (
@@ -162,6 +165,8 @@ export default function CellDetailForm({
           {t('cell.detail.error', { error: validationError })}
         </Typography.Text>
       )}
+
+      {linkedRow && <LinkedRowCard linkedRow={linkedRow} />}
 
       <Flex justify="flex-end" gap="small">
         <Button onClick={onClose} disabled={isSaving}>

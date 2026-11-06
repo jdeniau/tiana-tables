@@ -3,6 +3,11 @@ import type { ReadQuery } from './readQuery';
 
 /** One column that references another, both named as the app knows them. */
 export interface ForeignKey {
+  /**
+   * the name of the key, shared by the columns of a composite one,
+   * and unique within its table only: PostgreSQL reuses it across tables
+   */
+  constraintName: string;
   table: string;
   column: string;
   /** may differ from the database the keys were listed for */

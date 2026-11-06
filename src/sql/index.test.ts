@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ConnectionFailure } from './connectionError';
 import { DatabaseEngine } from './engine';
+import { FieldKind } from './resultField';
 import { UpdateCellStatus } from './updateCell';
 import connectionStack from './index';
 
@@ -158,6 +159,7 @@ describe('database-scoped queries', () => {
         sql.includes('KEY_COLUMN_USAGE')
           ? [
               {
+                CONSTRAINT_NAME: 'fk_some-table_auteur',
                 TABLE_NAME: 'some-table',
                 COLUMN_NAME: 'auteur_id',
                 REFERENCED_TABLE_SCHEMA: 'some-database',
@@ -271,6 +273,52 @@ describe('database-scoped queries', () => {
           table: 'orders',
           rows: [[]],
         })
+      ).rejects.toThrow();
+
+      expect(query).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('selecting the row a key points at', () => {
+    const request = {
+      database: 'tiana_dev',
+      table: 'auteur',
+      key: [{ column: 'id', value: '32' }],
+    };
+    // as mysql2 describes a `VARCHAR` column
+    const fields = [
+      { name: 'nom', orgTable: 'auteur', type: 253, characterSet: 224 },
+    ];
+
+    test('sends one SELECT and answers its first row, with its fields', async () => {
+      query.mockResolvedValueOnce([[{ id: 32, nom: 'Bourgeois' }], fields]);
+
+      const { result } = await connectionStack.selectRow(request);
+
+      expect(statementsSent()).toEqual([
+        expect.stringMatching(/^SELECT \* FROM `tiana_dev`.`auteur` WHERE /),
+      ]);
+      expect(result).toEqual({
+        fields: [{ name: 'nom', table: 'auteur', kind: FieldKind.String }],
+        row: { id: 32, nom: 'Bourgeois' },
+      });
+    });
+
+    test('a key no row holds answers no row, and the fields still', async () => {
+      query.mockResolvedValueOnce([[], fields]);
+
+      const { result } = await connectionStack.selectRow(request);
+
+      expect(result).toEqual({
+        fields: [{ name: 'nom', table: 'auteur', kind: FieldKind.String }],
+        row: null,
+      });
+    });
+
+    // an empty key would leave a WHERE matching the whole table
+    test('a request naming no key is refused rather than sent', async () => {
+      await expect(
+        connectionStack.selectRow({ ...request, key: [] })
       ).rejects.toThrow();
 
       expect(query).not.toHaveBeenCalled();

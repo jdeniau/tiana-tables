@@ -1,5 +1,6 @@
 import type { DeleteRowsRequest } from '../deleteRows';
 import type { DatabaseEngine } from '../engine';
+import type { SelectRowRequest } from '../selectRow';
 import type { QueryReturnType } from '../types';
 import type { UpdateCellOutcome, UpdateCellRequest } from '../updateCell';
 import type { DialectMetadata } from './metadata';
@@ -58,4 +59,7 @@ export interface Dialect {
 
   /** One statement deleting every row named, and nothing else. */
   deleteRows(request: DeleteRowsRequest): BuiltQuery;
+
+  /** The one row the key points at, every column of it. */
+  selectRow(request: SelectRowRequest): BuiltQuery;
 }

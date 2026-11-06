@@ -19,6 +19,7 @@ const relationRow = z.object({ relname: z.string() });
 const attributeRow = z.object({ attname: z.string() });
 
 const foreignKeyRow = z.object({
+  constraint_name: z.string(),
   table_name: z.string(),
   column_name: z.string(),
   referenced_schema: z.string(),
@@ -142,6 +143,7 @@ export const postgresMetadata: DialectMetadata = {
     readQuery('listForeignKeys', {
       sql: `
         SELECT
+          con.conname AS constraint_name,
           source.relname AS table_name,
           source_column.attname AS column_name,
           target_namespace.nspname AS referenced_schema,
@@ -170,6 +172,7 @@ export const postgresMetadata: DialectMetadata = {
       row: foreignKeyRow,
       read: (rows) =>
         rows.map((row) => ({
+          constraintName: row.constraint_name,
           table: row.table_name,
           column: row.column_name,
           referencedDatabase: row.referenced_schema,

@@ -6,6 +6,11 @@ export default {
   // ICU select on the `ValidationError` enum
   'cell.detail.error':
     '{error, select, invalidJson {This is not valid JSON.} other {This value cannot be saved.}}',
+  'cell.detail.linkedRow.label': 'Linked row',
+  'cell.detail.linkedRow.noRow': 'No row of {table} has {key}',
+  'cell.detail.linkedRow.searching': 'searching…',
+  'cell.detail.linkedRow.showMore':
+    '{count, plural, one {Show the other column} other {Show the # other columns}}',
   'cell.detail.nullPlaceholder': '(NULL)',
   // ICU select on the `NotEditableReason` enum
   'cell.detail.readOnly':

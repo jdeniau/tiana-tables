@@ -55,7 +55,7 @@ After a correction, write one rule where it will be loaded when it matters: the 
 - **A closed set of values gets an enum**, never bare string literals — including a library's string union.
 - **An exported function declares its return type**, never left to inference: it is the contract its callers read. A hook returning several values returns a named interface documented field by field (`RowSelection<Row>` in `useRowSelection.ts`); local functions and inline callbacks keep inference, and so does a `queryOptions` / `infiniteQueryOptions` factory, whose inferred type tags its key with its data. `@typescript-eslint/explicit-module-boundary-types` lists the exports that lack one.
 - **A derived value is written as its formula in theme tokens** (`0.6 * fontScale.base`), not measured at runtime.
-- **Reach for a library before hand-rolling**; a circumstantial reason to hand-roll is re-checked before the code lands.
+- **Reach for a library before hand-rolling**; a circumstantial reason to hand-roll is re-checked before the code lands. **A new dependency for a helper of about ten lines is not worth it**: weigh what it adds to `yarn.lock` (`@tanstack/react-pacer` brought two packages, a devtools event client among them, for one `useDebouncedValue`).
 
 ## Talking to the user
 

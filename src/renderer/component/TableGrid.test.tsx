@@ -2,6 +2,7 @@
  * @vitest-environment happy-dom
  */
 import { type ReactElement, act, useState } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { type Atom, createAtom } from '@tanstack/react-store';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { createRoot } from 'react-dom/client';
@@ -22,6 +23,7 @@ import {
   type UpdateCellOutcome,
   UpdateCellStatus,
 } from '../../sql/updateCell';
+import { createQueryClient } from '../queryClient';
 import { selectAllFromMenu } from '../selectAll';
 import { columnNamesAtom } from './CellContextMenu/rowsCopyItem';
 import TableGrid from './TableGrid';
@@ -76,17 +78,19 @@ function render(element: ReactElement, allColumns: ColumnDetail[] = []): void {
 
   act(() => {
     root.render(
-      <ThemeProvider theme={DEFAULT_THEME}>
-        <MemoryRouter>
-          <DatabaseContext value={{ database: 'db', setDatabase: () => {} }}>
-            <ForeignKeysContextProvider foreignKeys={[]} database="db">
-              <AllColumnsContextProvider allColumns={allColumns}>
-                {element}
-              </AllColumnsContextProvider>
-            </ForeignKeysContextProvider>
-          </DatabaseContext>
-        </MemoryRouter>
-      </ThemeProvider>
+      <QueryClientProvider client={createQueryClient()}>
+        <ThemeProvider theme={DEFAULT_THEME}>
+          <MemoryRouter>
+            <DatabaseContext value={{ database: 'db', setDatabase: () => {} }}>
+              <ForeignKeysContextProvider foreignKeys={[]} database="db">
+                <AllColumnsContextProvider allColumns={allColumns}>
+                  {element}
+                </AllColumnsContextProvider>
+              </ForeignKeysContextProvider>
+            </DatabaseContext>
+          </MemoryRouter>
+        </ThemeProvider>
+      </QueryClientProvider>
     );
   });
 }

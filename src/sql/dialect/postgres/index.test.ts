@@ -37,4 +37,20 @@ describe('postgresDialect', () => {
     );
     expect(values).toEqual({ row0Key0: 4, row1Key0: '7' });
   });
+
+  it('reads one row by every column of its key', () => {
+    const { sql, values } = postgresDialect.selectRow({
+      database: 'app',
+      table: 'shipments',
+      key: [
+        { column: 'order_id', value: '1' },
+        { column: 'line_no', value: 2 },
+      ],
+    });
+
+    expect(sql).toBe(
+      'SELECT * FROM "app"."shipments" WHERE "order_id" = :key0 AND "line_no" = :key1 LIMIT 1'
+    );
+    expect(values).toEqual({ key0: '1', key1: 2 });
+  });
 });

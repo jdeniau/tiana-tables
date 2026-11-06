@@ -8,6 +8,11 @@ const fr: Translation = {
   // ICU select on the `ValidationError` enum
   'cell.detail.error':
     "{error, select, invalidJson {Ce n'est pas du JSON valide.} other {Cette valeur ne peut pas être enregistrée.}}",
+  'cell.detail.linkedRow.label': 'Ligne liée',
+  'cell.detail.linkedRow.noRow': "Aucune ligne dans {table} n'a {key}",
+  'cell.detail.linkedRow.searching': 'recherche…',
+  'cell.detail.linkedRow.showMore':
+    "{count, plural, one {Afficher l'autre colonne} other {Afficher les # autres colonnes}}",
   'cell.detail.nullPlaceholder': '(NULL)',
   // ICU select on the `NotEditableReason` enum
   'cell.detail.readOnly':

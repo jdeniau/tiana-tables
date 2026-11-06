@@ -91,6 +91,7 @@ JOIN
       <ForeignKeysContextProvider
         foreignKeys={[
           {
+            constraintName: 'fk_employe_title',
             table: 'employe',
             column: 'title_id',
             referencedDatabase: 'db',
@@ -98,6 +99,7 @@ JOIN
             referencedColumn: 'id',
           },
           {
+            constraintName: 'fk_planning_employe',
             table: 'planning',
             column: 'employe_id',
             referencedDatabase: 'db',

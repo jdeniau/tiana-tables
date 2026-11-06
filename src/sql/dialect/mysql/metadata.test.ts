@@ -14,7 +14,11 @@ describe('a server answering something else', () => {
   test('a missing column is refused, and named', () => {
     // what `AS referencedTable` would answer on PostgreSQL
     expect(() =>
-      mysqlMetadata.listForeignKeys('db').answer([{ TABLE_NAME: 'article' }])
+      mysqlMetadata
+        .listForeignKeys('db')
+        .answer([
+          { CONSTRAINT_NAME: 'fk_article_auteur', TABLE_NAME: 'article' },
+        ])
     ).toThrow(/listForeignKeys .* row 0, COLUMN_NAME/);
   });
 
@@ -155,6 +159,7 @@ describe('the statements each question sends', () => {
     expect(
       mysqlMetadata.listForeignKeys(DATABASE).answer([
         {
+          CONSTRAINT_NAME: 'fk_article_auteur',
           TABLE_NAME: 'article',
           COLUMN_NAME: 'auteur_id',
           REFERENCED_TABLE_SCHEMA: 'accounts',
@@ -164,6 +169,7 @@ describe('the statements each question sends', () => {
       ])
     ).toEqual([
       {
+        constraintName: 'fk_article_auteur',
         table: 'article',
         column: 'auteur_id',
         referencedDatabase: 'accounts',

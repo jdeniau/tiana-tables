@@ -15,6 +15,7 @@ const meta: Meta<typeof ForeignKeyLink> = {
       <ForeignKeysContextProvider
         foreignKeys={[
           {
+            constraintName: 'fk_table_linkedTable',
             table: 'table',
             column: 'linkedId',
             referencedDatabase: 'db',
