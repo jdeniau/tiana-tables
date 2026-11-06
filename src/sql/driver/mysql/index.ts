@@ -10,6 +10,7 @@ import { asSqlError } from '../../sqlError';
 import { SslMode } from '../../sslMode';
 import type { QueryReturnType, ResultRow } from '../../types';
 import { toFieldKind } from './fieldKind';
+import { toPositional } from './namedPlaceholders';
 
 /** What mysql2 answered, in the shape the app reads. */
 function toQueryReturn(result: MySqlResult): QueryReturnType {
@@ -120,14 +121,15 @@ export const mysqlDriver: Driver = {
     return {
       query: async (statement) => {
         try {
+          // the editor's SQL travels as written, the dialect's has its `:name` rewritten
+          const { sql, values } =
+            statement.values === undefined
+              ? { sql: statement.sql, values: undefined }
+              : toPositional(statement.sql, statement.values);
           const [result, fields] = await connection.query({
-            sql: statement.sql,
+            sql,
+            values,
             rowsAsArray: statement.rowsAsArray,
-            values: statement.values,
-            // Asked for per query, and never for the raw SQL of the editor: the
-            // rewriter does not know backticks, so a `:` inside a quoted
-            // identifier would be read as a parameter and corrupt the statement.
-            namedPlaceholders: statement.values !== undefined,
           });
 
           return [toQueryReturn(result), toResultFields(fields)];
