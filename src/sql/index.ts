@@ -28,6 +28,7 @@ import {
   ResultOrError,
   encodeError,
 } from './errorSerializer';
+import { type SelectedRow, selectRowRequestSchema } from './selectRow';
 import { SslMode } from './sslMode';
 import { toTableStructure } from './tableStructure';
 import {
@@ -80,6 +81,7 @@ class ConnectionStack {
     [SQL_CHANNEL.GET_SERVER_TIME_ZONE]: this.getServerTimeZone,
     [SQL_CHANNEL.UPDATE_CELL]: this.updateCell,
     [SQL_CHANNEL.DELETE_ROWS]: this.deleteRows,
+    [SQL_CHANNEL.SELECT_ROW]: this.selectRow,
     [SQL_CHANNEL.CLOSE]: this.closeConnection,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
@@ -281,6 +283,21 @@ class ConnectionStack {
       invariant(isWriteResult(written), 'A DELETE answers a write summary');
 
       return written.affectedRows;
+    });
+  }
+
+  /** The row a key points at, with its fields, or no row when none holds it. */
+  async selectRow(request: unknown): ResultOrError<SelectedRow> {
+    // a malformed request is our bug, thrown rather than encoded as the server's answer
+    const parsed = selectRowRequestSchema.parse(request);
+
+    return this.#ask(async () => {
+      const query = this.#dialect().selectRow(parsed);
+      const [rows, fields] = await this.#send(query.sql, false, query.values);
+
+      invariant(!isWriteResult(rows), 'A SELECT answers rows');
+
+      return { fields, row: rows[0] ?? null };
     });
   }
 

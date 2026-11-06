@@ -69,4 +69,30 @@ describe('mysqlDialect', () => {
       ).toThrow();
     });
   });
+
+  describe('selectRow', () => {
+    it('reads one row by every column of its key', () => {
+      const { sql, values } = mysqlDialect.selectRow({
+        database: 'tiana_dev',
+        table: 'article_media',
+        key: [
+          { column: 'article_id', value: '9' },
+          { column: 'media_id', value: 237 },
+        ],
+      });
+
+      expect(sql).toBe(
+        'SELECT * FROM `tiana_dev`.`article_media` ' +
+          'WHERE `article_id` = :key0 AND `media_id` = :key1 LIMIT 1'
+      );
+      expect(values).toEqual({ key0: '9', key1: 237 });
+    });
+
+    // a WHERE with no term would read the whole table
+    it('refuses a key of no column', () => {
+      expect(() =>
+        mysqlDialect.selectRow({ database: 'shop', table: 't', key: [] })
+      ).toThrow();
+    });
+  });
 });

@@ -1,6 +1,6 @@
 import { DatabaseEngine } from '../../engine';
 import { toHexDigits } from '../hex';
-import { rowsClause } from '../primaryKeyClause';
+import { primaryKeyClause, rowsClause } from '../primaryKeyClause';
 import type { Dialect } from '../types';
 import { escapeIdentifier, escapeLiteral } from './escape';
 import { postgresGuardedUpdate } from './guardedUpdate';
@@ -45,6 +45,15 @@ export const postgresDialect: Dialect = {
 
     return {
       sql: `DELETE FROM ${qualify(database, table)} WHERE ${where.sql}`,
+      values: where.values,
+    };
+  },
+
+  selectRow: ({ database, table, key }) => {
+    const where = primaryKeyClause(key, escapeIdentifier, 'key');
+
+    return {
+      sql: `SELECT * FROM ${qualify(database, table)} WHERE ${where.sql} LIMIT 1`,
       values: where.values,
     };
   },

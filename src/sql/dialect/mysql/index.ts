@@ -1,7 +1,7 @@
 import { escape } from 'mysql';
 import { DatabaseEngine } from '../../engine';
 import { toHexDigits } from '../hex';
-import { rowsClause } from '../primaryKeyClause';
+import { primaryKeyClause, rowsClause } from '../primaryKeyClause';
 import type { Dialect } from '../types';
 import { escapeIdentifier } from './escapeIdentifier';
 import { mysqlGuardedUpdate } from './guardedUpdate';
@@ -54,6 +54,15 @@ export const mysqlDialect: Dialect = {
 
     return {
       sql: `DELETE FROM ${qualify(database, table)} WHERE ${where.sql} LIMIT ${rows.length}`,
+      values: where.values,
+    };
+  },
+
+  selectRow: ({ database, table, key }) => {
+    const where = primaryKeyClause(key, escapeIdentifier, 'key');
+
+    return {
+      sql: `SELECT * FROM ${qualify(database, table)} WHERE ${where.sql} LIMIT 1`,
       values: where.values,
     };
   },
