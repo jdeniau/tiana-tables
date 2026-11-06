@@ -72,6 +72,7 @@ jobs:
       - run: npm install -g corepack
       - run: corepack enable yarn
       - run: yarn install --immutable
+      - run: yarn test
       # the storybook project of vitest renders every story in the headless shell
       - run: yarn playwright install --with-deps --only-shell chromium
-      - run: yarn test
+      - run: yarn test:stories
