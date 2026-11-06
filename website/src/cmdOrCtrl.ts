@@ -5,3 +5,8 @@ import { Platform } from './platform';
 export function useCmdOrCtrl(): string {
   return useDetectedPlatform()?.platform === Platform.MacOS ? '⌘' : 'ctrl+';
 }
+
+/** The modifier the app writes before a Ctrl-only shortcut's key (`ShortcutModifier.Ctrl`): `ctrl+` until the page knows it. */
+export function useCtrl(): string {
+  return useDetectedPlatform()?.platform === Platform.MacOS ? '⌃' : 'ctrl+';
+}

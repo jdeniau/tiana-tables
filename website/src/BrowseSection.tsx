@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { List, Prose, RegionHead, Stage } from './Frame';
-import { useCmdOrCtrl } from './cmdOrCtrl';
+import { useCmdOrCtrl, useCtrl } from './cmdOrCtrl';
 import { useText } from './text';
 
 const ROWS: [id: number, status: string, authorId: number, views: number][] = [
@@ -19,6 +19,7 @@ const ROWS: [id: number, status: string, authorId: number, views: number][] = [
 export function BrowseSection(): ReactElement {
   const { site, richList, app } = useText();
   const cmdOrCtrl = useCmdOrCtrl();
+  const ctrl = useCtrl();
 
   return (
     <section className="region" id="browse">
@@ -80,6 +81,10 @@ export function BrowseSection(): ReactElement {
                     <div>{app('table.contextMenu.filter.clipboard')}</div>
                     <div>{app('table.contextMenu.filter.freeText')}</div>
                   </div>
+                </div>
+                <div>
+                  {app('table.goToId')}
+                  <kbd>{ctrl}G</kbd>
                 </div>
                 <hr />
                 <div className="danger">

@@ -236,6 +236,8 @@ const fr: Translation = {
     '{count, plural, one {Supprimer cette ligne ?} other {Supprimer ces # lignes ?}}',
   'table.filters.history': 'Filtres déjà utilisés',
   'table.filters.title': 'Filtres',
+  'table.goToId': "Aller à l'id…",
+  'table.goToId.title': "Aller à l'id",
   'table.rowDetail.close': 'Fermer le panneau de la ligne',
   'table.rowDetail.collapse': 'Replier',
   'table.rowDetail.copied': '{name} copié',

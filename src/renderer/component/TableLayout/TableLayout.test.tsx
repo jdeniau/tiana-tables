@@ -111,7 +111,8 @@ function Page({ where }: { where?: string }) {
 async function render(
   where?: string,
   url = '/',
-  allColumns: Array<ColumnDetail> = []
+  allColumns: Array<ColumnDetail> = [],
+  primaryKeys: Array<string> = ['id']
 ): Promise<void> {
   container = document.createElement('div');
   document.body.append(container);
@@ -124,7 +125,7 @@ async function render(
       {
         path: '/',
         loader: ({ request }) => ({
-          primaryKeys: ['id'],
+          primaryKeys,
           sorting: readOrderParams(new URL(request.url).searchParams) ?? [],
         }),
         element: <Page where={where} />,
@@ -470,5 +471,151 @@ describe('deleting rows', () => {
       'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 0;',
       'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 100;',
     ]);
+  });
+});
+
+describe('go to id', () => {
+  mountRows();
+
+  beforeEach(() => {
+    window.clipboard = {
+      readText: async () => '',
+    } as unknown as typeof window.clipboard;
+  });
+
+  /** Ctrl+G, pressed on `target` */
+  async function pressCtrlG(target: Element = document.body): Promise<void> {
+    await act(async () => {
+      target.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'g',
+          ctrlKey: true,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    });
+  }
+
+  /** the "Go to id" modal, told by its title from any other dialog */
+  const modal = (): Element | undefined =>
+    [...document.querySelectorAll('[role="dialog"]')].find((dialog) =>
+      dialog.textContent?.includes('Go to id')
+    );
+
+  const modalOpen = (): boolean => modal() !== undefined;
+
+  const fields = (): Array<HTMLInputElement> => [
+    ...(modal()?.querySelectorAll<HTMLInputElement>('input') ?? []),
+  ];
+
+  async function typeIn(input: HTMLInputElement, text: string): Promise<void> {
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value'
+      )?.set?.call(input, text);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  }
+
+  test('filters on every column of the key typed', async () => {
+    await render(undefined, '/', [], ['article_id', 'tag_id']);
+
+    await pressCtrlG();
+    const [articleId, tagId] = fields();
+    await typeIn(articleId, '1');
+    await typeIn(tagId, "l'été");
+    await act(async () => {
+      tagId.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+      );
+    });
+
+    expect(fields()).toHaveLength(2);
+    expect(new URLSearchParams(router.state.location.search).get('where')).toBe(
+      "`article_id` = '1' AND `tag_id` = 'l\\'été'"
+    );
+  });
+
+  test('compares a number key, as the rows type it, to the bare number', async () => {
+    await render();
+
+    await pressCtrlG();
+    const [id] = fields();
+    await typeIn(id, '3');
+    await act(async () => {
+      id.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+      );
+    });
+
+    expect(new URLSearchParams(router.state.location.search).get('where')).toBe(
+      '`id` = 3'
+    );
+  });
+
+  test('takes the key before the editor it is pressed in', async () => {
+    await render();
+    const editor = document.createElement('div');
+    editor.className = 'monaco-editor';
+    container.append(editor);
+    const editorKeys = vi.fn();
+    editor.addEventListener('keydown', editorKeys);
+
+    await pressCtrlG(editor);
+
+    expect(editorKeys).not.toHaveBeenCalled();
+    expect(fields()).toHaveLength(1);
+  });
+
+  test('leaves the key to a dialog', async () => {
+    await render();
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+    container.append(dialog);
+
+    await pressCtrlG(dialog);
+
+    expect(modalOpen()).toBe(false);
+  });
+
+  test('opens from the context menu', async () => {
+    await render();
+
+    act(() => {
+      [...container.querySelectorAll('td')]
+        .find((td) => td.textContent === 'a')
+        ?.dispatchEvent(
+          new MouseEvent('contextmenu', { bubbles: true, clientX: 10 })
+        );
+    });
+    await act(async () => {
+      [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')]
+        .find((item) => item.textContent?.startsWith('Go to id…'))
+        ?.click();
+    });
+
+    expect(fields()).toHaveLength(1);
+  });
+
+  test('is offered nowhere without a primary key', async () => {
+    await render(undefined, '/', [], []);
+
+    await pressCtrlG();
+    act(() => {
+      [...container.querySelectorAll('td')]
+        .find((td) => td.textContent === 'a')
+        ?.dispatchEvent(
+          new MouseEvent('contextmenu', { bubbles: true, clientX: 10 })
+        );
+    });
+
+    const entries = [...document.querySelectorAll('[role="menuitem"]')].map(
+      (item) => item.textContent
+    );
+    expect(modalOpen()).toBe(false);
+    expect(entries).toContain('Filter');
+    expect(entries).not.toContainEqual(expect.stringMatching(/^Go to id/));
   });
 });

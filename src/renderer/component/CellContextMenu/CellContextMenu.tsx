@@ -18,7 +18,7 @@ import { isNullish } from '../../utils/isNullish';
 import type { CellDetail } from '../CellDetailModal';
 import type { CellWrite } from '../CellWrite';
 import { canBeSetNull, setNullWrites, useSetNull } from '../CellsNull';
-import { KeyboardShortcut } from '../KeyboardShortcut';
+import { KeyboardShortcut, ShortcutModifier } from '../KeyboardShortcut';
 import FreeTextFilterModal, {
   PendingFreeTextFilter,
 } from './FreeTextFilterModal';
@@ -93,6 +93,8 @@ interface CellContextMenuProps {
    * Without it the menu offers no filter: a raw query result has none to feed.
    */
   onFilterChange?: (where: string) => void;
+  /** opens "Go to id…"; absent where the rows have no primary key */
+  onGoToId?: () => void;
   /** opens the detail modal on the cell, as a double click does */
   onEdit: (target: CellMenuTarget) => void;
 }
@@ -119,6 +121,7 @@ export default function CellContextMenu({
   rowsDelete,
   onClose,
   onFilterChange,
+  onGoToId,
   onEdit,
 }: CellContextMenuProps): ReactElement {
   const { t } = useTranslation();
@@ -199,6 +202,12 @@ export default function CellContextMenu({
           onApply: applyFilter,
           onAskFreeText: (operator) => {
             setPending({ columnName: target.column.name, operator });
+          },
+        },
+        goToId: onGoToId && {
+          onClick: () => {
+            onClose();
+            onGoToId();
           },
         },
         rowsDelete,
@@ -303,10 +312,12 @@ interface MenuItemsParams {
   filter:
     | Omit<FilterItemParams, 'dialect' | 'target' | 'clipboardText' | 't'>
     | undefined;
+  /** absent where the rows have no primary key to go to */
+  goToId: { onClick: () => void } | undefined;
   rowsDelete: RowsDeleteMenu | undefined;
 }
 
-/** The entries in four groups: writing the cells, copying them, the row or the selected rows, filtering on the cell, deleting the rows. */
+/** The entries in four groups: writing the cells, copying them, the row or the selected rows, filtering on the cell or going to an id, deleting the rows. */
 function buildMenuItems({
   dialect,
   target,
@@ -317,6 +328,7 @@ function buildMenuItems({
   cellsNull,
   copyRowsItems,
   filter,
+  goToId,
   rowsDelete,
 }: MenuItemsParams): MenuProps['items'] {
   const { column, rowKey } = target;
@@ -354,7 +366,10 @@ function buildMenuItems({
       key: 'copy',
       label: t('table.contextMenu.copy', { count: values.length }),
       extra: valuesCopy.shortcut && (
-        <KeyboardShortcut cmdOrCtrl pressedKey="c" />
+        <KeyboardShortcut
+          modifier={ShortcutModifier.CmdOrCtrl}
+          pressedKey="c"
+        />
       ),
       // there is no text to a NULL, and copying an empty one would silently
       // wipe what the clipboard held
@@ -364,11 +379,25 @@ function buildMenuItems({
     ...copyRowsItems
   );
 
+  if (filter || goToId) {
+    items.push({ type: 'divider' });
+  }
+
   if (filter) {
     items.push(
-      { type: 'divider' },
       buildFilterItem({ dialect, target, clipboardText, t, ...filter })
     );
+  }
+
+  if (goToId) {
+    items.push({
+      key: 'goToId',
+      label: t('table.goToId'),
+      extra: (
+        <KeyboardShortcut modifier={ShortcutModifier.Ctrl} pressedKey="g" />
+      ),
+      onClick: goToId.onClick,
+    });
   }
 
   if (rowsDelete) {

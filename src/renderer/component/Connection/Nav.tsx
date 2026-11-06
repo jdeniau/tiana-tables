@@ -2,7 +2,7 @@ import { MouseEvent, ReactElement } from 'react';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
-import { KeyboardShortcutTooltip } from '../KeyboardShortcut';
+import { KeyboardShortcutTooltip, ShortcutModifier } from '../KeyboardShortcut';
 import { TabStrip, TabStripLink } from '../Style/TabStrip';
 
 /**
@@ -60,7 +60,10 @@ export default function Nav(): ReactElement | null {
         );
       })}
 
-      <KeyboardShortcutTooltip cmdOrCtrl pressedKey="n">
+      <KeyboardShortcutTooltip
+        modifier={ShortcutModifier.CmdOrCtrl}
+        pressedKey="n"
+      >
         <TabStripLink
           active={false}
           aria-label={t('connect.new')}

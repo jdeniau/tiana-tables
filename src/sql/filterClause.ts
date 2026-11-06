@@ -1,4 +1,5 @@
 import type { Dialect } from './dialect/types';
+import { FieldKind } from './resultField';
 
 /**
  * The comparisons the grid's context menu offers on a column.
@@ -72,4 +73,43 @@ export function buildFilterClause(
   }
 
   return `${column} ${operator} ${literal}`;
+}
+
+/** One column of a primary key, and what it holds. */
+export interface PrimaryKeyColumn {
+  column: string;
+  kind: FieldKind;
+}
+
+/** One column of a primary key, and the value typed for it. */
+export interface PrimaryKeyText extends PrimaryKeyColumn {
+  text: string;
+}
+
+/** a number as a key column holds it: no exponent, no hexadecimal, no `Infinity` */
+const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
+
+/** Whether `text` can go into SQL bare, as a number. */
+export function isPlainNumber(text: string): boolean {
+  return PLAIN_NUMBER.test(text);
+}
+
+/** The `WHERE` clause of the row whose primary key holds these typed values. */
+export function primaryKeyFilterClause(
+  dialect: Dialect,
+  primaryKey: ReadonlyArray<PrimaryKeyText>
+): string {
+  return primaryKey
+    .map(({ column, kind, text }) =>
+      buildFilterClause(
+        dialect,
+        column,
+        FilterOperator.Equals,
+        // anything else is quoted, so no typed text can reach the SQL bare
+        kind === FieldKind.Number && isPlainNumber(text)
+          ? text
+          : dialect.escapeLiteral(text)
+      )
+    )
+    .join(' AND ');
 }

@@ -236,6 +236,8 @@ export default {
     '{count, plural, one {Delete this row?} other {Delete these # rows?}}',
   'table.filters.history': 'Filters used before',
   'table.filters.title': 'Filters',
+  'table.goToId': 'Go to id…',
+  'table.goToId.title': 'Go to id',
   'table.rowDetail.close': 'Close the row panel',
   'table.rowDetail.collapse': 'Collapse',
   'table.rowDetail.copied': '{name} copied',
