@@ -32,9 +32,9 @@ export default function useCurrentStatementHighlight(
 
     // Splitting lexes the whole content,
     // and the caret moves far more often than the content changes.
-    let lastSplit: { content: string; statements: SqlStatement[] } | null =
+    let lastSplit: { content: string; statements: Array<SqlStatement> } | null =
       null;
-    const statementsOf = (content: string): SqlStatement[] => {
+    const statementsOf = (content: string): Array<SqlStatement> => {
       if (lastSplit?.content !== content) {
         lastSplit = { content, statements: splitStatements(content, engine) };
       }

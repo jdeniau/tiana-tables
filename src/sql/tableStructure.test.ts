@@ -16,8 +16,8 @@ function column(name: string): DescribedColumn {
 }
 
 function references(
-  columns: DescribedColumn[],
-  foreignKeys: ForeignKey[]
+  columns: Array<DescribedColumn>,
+  foreignKeys: Array<ForeignKey>
 ): Array<string | null> {
   const [rows] = toTableStructure('db', 'article', columns, foreignKeys);
 
@@ -124,7 +124,7 @@ describe('toTableStructure', () => {
       referencedTable: 'article_media',
       referencedColumn,
     });
-    const keys: ForeignKey[] = [
+    const keys: Array<ForeignKey> = [
       {
         constraintName: 'fk_envoi_article',
         table: 'envoi_newsletter',

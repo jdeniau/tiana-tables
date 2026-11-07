@@ -49,7 +49,7 @@ type CompletionRange = languages.CompletionItem['range'];
 
 export function buildCompletionProvider(
   engine: DatabaseEngine,
-  tableList: string[],
+  tableList: Array<string>,
   foreignKeys: ForeignKeysHelper,
   allColumns: ColumnDetailHelper
 ): languages.CompletionItemProvider {
@@ -101,7 +101,7 @@ export function buildCompletionProvider(
         };
       }
 
-      const items: languages.CompletionItem[] = [];
+      const items: Array<languages.CompletionItem> = [];
 
       for (const { syntaxContextType } of suggestions.syntax) {
         if (syntaxContextType === EntityContextType.TABLE) {
@@ -141,11 +141,11 @@ export function buildCompletionProvider(
 
 /** `FROM ` / `JOIN `: propose every table, aliased and joined when possible */
 function tableCompletions(
-  tableList: string[],
+  tableList: Array<string>,
   foreignKeys: ForeignKeysHelper,
   tableAliases: Record<string, string>,
   range: CompletionRange
-): languages.CompletionItem[] {
+): Array<languages.CompletionItem> {
   const usedAliases = Object.keys(tableAliases);
   const usedTables = Object.entries(tableAliases).map(([alias, tableName]) => ({
     tableName,
@@ -205,7 +205,7 @@ function columnCompletions(
   allColumns: ColumnDetailHelper,
   tableNames: ReadonlyArray<string>,
   range: CompletionRange
-): languages.CompletionItem[] {
+): Array<languages.CompletionItem> {
   return tableNames.flatMap((tableName) =>
     allColumns
       .getColumnsForTable(tableName)
@@ -255,7 +255,7 @@ export function validateModel(
         endColumn: error.endColumn,
       }),
     }))
-    .flatMap(({ range, ...marker }): editor.IMarkerData[] =>
+    .flatMap(({ range, ...marker }): Array<editor.IMarkerData> =>
       range ? [{ ...marker, ...range }] : []
     );
 
@@ -265,19 +265,21 @@ export function validateModel(
     sql,
     schema,
     engine
-  ).unknownColumns.flatMap(({ range, table, column }): editor.IMarkerData[] => {
-    const modelRange = fromPrefixedRange(prefix, range);
+  ).unknownColumns.flatMap(
+    ({ range, table, column }): Array<editor.IMarkerData> => {
+      const modelRange = fromPrefixedRange(prefix, range);
 
-    return modelRange
-      ? [
-          {
-            severity: MarkerSeverity.Warning,
-            message: `Unknown column \`${column}\` on table \`${table}\``,
-            ...modelRange,
-          },
-        ]
-      : [];
-  });
+      return modelRange
+        ? [
+            {
+              severity: MarkerSeverity.Warning,
+              message: `Unknown column \`${column}\` on table \`${table}\``,
+              ...modelRange,
+            },
+          ]
+        : [];
+    }
+  );
 
   editor.setModelMarkers(model, MARKER_OWNER, [
     ...syntaxErrors,

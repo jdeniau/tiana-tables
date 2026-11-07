@@ -17,7 +17,7 @@ describe('relationNames', () => {
   });
 
   test('asks the catalog once per relation, and nothing for a computed column', async () => {
-    const lookup = vi.fn(async (oids: number[]) =>
+    const lookup = vi.fn(async (oids: Array<number>) =>
       oids.map((oid) => ({ oid, relname: `t${oid}` }))
     );
     const tablesOf = relationNames(lookup);

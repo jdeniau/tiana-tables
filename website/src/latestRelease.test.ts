@@ -16,7 +16,7 @@ const NAMES = [
   'tiana_tables-1.24.0-full.nupkg',
 ];
 
-const answer = (names: string[]): unknown => ({
+const answer = (names: Array<string>): unknown => ({
   tag_name: 'v1.24.0',
   assets: names.map((name) => ({
     name,

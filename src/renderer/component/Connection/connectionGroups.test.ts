@@ -16,7 +16,7 @@ function connection(slug: string, group?: string): EncryptedConnectionObject {
   };
 }
 
-const slugs = (connections: EncryptedConnectionObject[]): string[] =>
+const slugs = (connections: Array<EncryptedConnectionObject>): Array<string> =>
   connections.map(({ slug }) => slug);
 
 describe('groupConnections', () => {

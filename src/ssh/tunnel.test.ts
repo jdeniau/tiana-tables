@@ -47,7 +47,10 @@ describe('openTunnel', () => {
   test('runs ssh forwarding its own stdio to the database, the SSH server last', () => {
     void openTunnel(SSH, TARGET, OPTIONS);
 
-    const [command, args] = mocks.spawn.mock.calls[0] as [string, string[]];
+    const [command, args] = mocks.spawn.mock.calls[0] as [
+      string,
+      Array<string>,
+    ];
 
     expect(command).toBe('ssh');
     expect(args).toEqual(
@@ -68,7 +71,7 @@ describe('openTunnel', () => {
 
     const [, , spawnOptions] = mocks.spawn.mock.calls[0] as [
       string,
-      string[],
+      Array<string>,
       { env: Record<string, string> },
     ];
 
@@ -81,7 +84,7 @@ describe('openTunnel', () => {
   test("a port and user left out are ~/.ssh/config's to decide", () => {
     void openTunnel({ host: 'bastion' }, TARGET, OPTIONS);
 
-    const [, args] = mocks.spawn.mock.calls[0] as [string, string[]];
+    const [, args] = mocks.spawn.mock.calls[0] as [string, Array<string>];
 
     expect(args).not.toContain('-p');
     expect(args).not.toContain('-l');
@@ -95,7 +98,7 @@ describe('openTunnel', () => {
       OPTIONS
     );
 
-    const [, args] = mocks.spawn.mock.calls[0] as [string, string[]];
+    const [, args] = mocks.spawn.mock.calls[0] as [string, Array<string>];
 
     expect(args.slice(-2)).toEqual(['--', '-oProxyCommand=touch /tmp/pwned']);
   });

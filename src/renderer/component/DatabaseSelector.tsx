@@ -55,7 +55,7 @@ const SystemDatabaseName = styled.span`
 export default function DatabaseSelector({
   databaseList,
 }: {
-  databaseList: string[];
+  databaseList: Array<string>;
 }) {
   const { database, setDatabase } = useDatabaseContext();
   const { isSystemDatabase } = useDialect();

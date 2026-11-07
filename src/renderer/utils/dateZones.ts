@@ -54,9 +54,9 @@ export function resolveServerZone({
 export function dateDisplaySegments(
   server: ServerZone,
   localZone: string
-): DateDisplaySegment[] {
+): Array<DateDisplaySegment> {
   const disabled = server.zone === null;
-  const segments: DateDisplaySegment[] = [
+  const segments: Array<DateDisplaySegment> = [
     { display: DateDisplay.Server, zoneLabel: server.label, disabled: false },
   ];
 

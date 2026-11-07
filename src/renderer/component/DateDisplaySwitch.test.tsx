@@ -45,8 +45,8 @@ const LOCAL: Segment = {
 const UTC_SERVER: ServerZone = { label: 'UTC', zone: 'UTC' };
 
 function switchOf(
-  segments: Segment[],
-  fields: ResultField[],
+  segments: Array<Segment>,
+  fields: Array<ResultField>,
   serverZone = UTC_SERVER
 ) {
   return (
@@ -66,7 +66,10 @@ function switchOf(
   );
 }
 
-function renderSwitch(segments: Segment[], fields: ResultField[]): string {
+function renderSwitch(
+  segments: Array<Segment>,
+  fields: Array<ResultField>
+): string {
   return renderToStaticMarkup(switchOf(segments, fields));
 }
 

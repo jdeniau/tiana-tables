@@ -25,8 +25,8 @@ import { buildChartTheme } from './chartTheme';
 import { MAX_POINTS, toBarData, toLineSeries } from './toSeries';
 
 interface ChartPanelProps {
-  result: readonly ResultRow[];
-  fields: readonly ResultField[];
+  result: ReadonlyArray<ResultRow>;
+  fields: ReadonlyArray<ResultField>;
   rowsAsArray?: boolean;
 }
 

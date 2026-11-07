@@ -230,7 +230,9 @@ export function rowsToMarkdown(
   ].join('\n');
 }
 
-function columnNames(rows: ReadonlyArray<ReadonlyArray<RowCell>>): string[] {
+function columnNames(
+  rows: ReadonlyArray<ReadonlyArray<RowCell>>
+): Array<string> {
   return (rows[0] ?? []).map(({ column }) => column.name);
 }
 

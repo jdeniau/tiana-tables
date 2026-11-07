@@ -31,7 +31,7 @@ export interface ColumnDetail {
   /** the server's own JSON type, which the write casts to: never on MariaDB, whose `information_schema` calls it `longtext` */
   hasJsonType: boolean;
   /** what a closed set accepts, empty where the column is not one */
-  allowedValues: string[];
+  allowedValues: Array<string>;
   /** several of `allowedValues` at once: a MySQL `SET` */
   multiValued: boolean;
 }
@@ -68,28 +68,28 @@ export interface ServerTimeZoneName {
 /** What the app asks a server about itself. */
 export interface DialectMetadata {
   /** The databases, which are the schemas on PostgreSQL, in no particular order. */
-  listDatabases(): ReadQuery<string[]>;
+  listDatabases(): ReadQuery<Array<string>>;
 
   /** Tables and views alike, in no particular order: the app browses both. */
-  listTables(databaseName: string): ReadQuery<string[]>;
+  listTables(databaseName: string): ReadQuery<Array<string>>;
 
   /** Only the columns that reference another, the rest being of no use here. */
-  listForeignKeys(databaseName: string): ReadQuery<ForeignKey[]>;
+  listForeignKeys(databaseName: string): ReadQuery<Array<ForeignKey>>;
 
   /** In the order the key declares them, which a row key has to agree with. */
   listPrimaryKeyColumns(
     databaseName: string,
     tableName: string
-  ): ReadQuery<string[]>;
+  ): ReadQuery<Array<string>>;
 
   /** Every column of the database, each table's in the order it declares them. */
-  listColumns(databaseName: string): ReadQuery<ColumnDetail[]>;
+  listColumns(databaseName: string): ReadQuery<Array<ColumnDetail>>;
 
   /** Every column of one table, in the order the table declares them. */
   describeTable(
     databaseName: string,
     tableName: string
-  ): ReadQuery<DescribedColumn[]>;
+  ): ReadQuery<Array<DescribedColumn>>;
 
   /** The zone of this session, in which the server writes a date-time without an offset. */
   serverTimeZone(): ReadQuery<ServerTimeZoneName>;

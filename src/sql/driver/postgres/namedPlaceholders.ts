@@ -4,7 +4,7 @@ import type { SqlBoundValue, SqlBoundValues } from '../../types';
 /** A statement in the form `pg` sends it: numbered placeholders and their values in order. */
 interface PositionalQuery {
   text: string;
-  values: SqlBoundValue[];
+  values: Array<SqlBoundValue>;
 }
 
 /**
@@ -27,7 +27,7 @@ export function toPositional(
   values: SqlBoundValues
 ): PositionalQuery {
   const numbers = new Map<string, number>();
-  const ordered: SqlBoundValue[] = [];
+  const ordered: Array<SqlBoundValue> = [];
 
   const text = sql.replace(
     QUOTED_OR_PLACEHOLDER,

@@ -26,7 +26,7 @@ const CONFIG: ChartConfig = { kind: 'line', x: 0, y: [1, 2] };
 const ROWS = [
   ['2026-01-01', 3, '10.50'],
   ['2026-01-02', 5, '20.25'],
-] as unknown as ResultRow[];
+] as unknown as Array<ResultRow>;
 
 describe('toNumber', () => {
   test.each([
@@ -112,7 +112,7 @@ describe('toLineSeries', () => {
         total: 3,
         revenue: '10.50',
       },
-    ] as unknown as ResultRow[];
+    ] as unknown as Array<ResultRow>;
 
     const { series } = toLineSeries({
       dateShift: null,
@@ -129,7 +129,7 @@ describe('toLineSeries', () => {
     const rows = [
       ['2026-01-01', 3, null],
       ['2026-01-02', null, '1'],
-    ] as unknown as ResultRow[];
+    ] as unknown as Array<ResultRow>;
 
     const { series } = toLineSeries({
       dateShift: null,
@@ -148,7 +148,7 @@ describe('toLineSeries', () => {
       '2026-01-01',
       index,
       '1',
-    ]) as unknown as ResultRow[];
+    ]) as unknown as Array<ResultRow>;
 
     const { series, isTruncated } = toLineSeries({
       dateShift: null,
@@ -185,7 +185,7 @@ describe('toBarData', () => {
   });
 
   test('a NULL leaves the key out rather than writing a zero', () => {
-    const rows = [['2026-01-01', null, '1']] as unknown as ResultRow[];
+    const rows = [['2026-01-01', null, '1']] as unknown as Array<ResultRow>;
 
     const { data } = toBarData({
       dateShift: null,

@@ -8,7 +8,7 @@ import type { SqlError } from '../../../../sql/sqlError';
 import type { ResultRow, WriteResult } from '../../../../sql/types';
 import RawSqlResult, { StatementOutcome } from './RowDataPacketResult';
 
-const FIELDS: ResultField[] = [
+const FIELDS: Array<ResultField> = [
   { name: 'id', kind: FieldKind.Number, table: 'employe' },
   { name: 'name', kind: FieldKind.String, table: 'employe' },
 ];
@@ -17,7 +17,7 @@ const ROWS = [
   { id: 1, name: 'Ada' },
   { id: 2, name: 'Grace' },
   { id: 3, name: 'Margaret' },
-] as ResultRow[];
+] as Array<ResultRow>;
 
 const WRITTEN: WriteResult = { affectedRows: 3, insertId: 42 };
 
@@ -49,7 +49,7 @@ const FAILED: StatementOutcome = {
   error: ERROR,
 };
 
-function ranWith(outcomes: StatementOutcome[]) {
+function ranWith(outcomes: Array<StatementOutcome>) {
   return { data: { outcomes }, submitting: false };
 }
 

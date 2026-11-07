@@ -11,7 +11,7 @@ import { accent, size, space } from '../theme';
 type MenuItem = Required<MenuProps>['items'][number];
 
 type Props = {
-  tableList: string[];
+  tableList: Array<string>;
 };
 
 /**
@@ -46,7 +46,7 @@ export default function TableList({ tableList }: Props): ReactElement | null {
   const { tableName } = useParams();
   const selectedBorderColor = useCurrentConnectionTint()?.background;
 
-  const items: MenuItem[] = tableList?.map((name) => ({
+  const items: Array<MenuItem> = tableList?.map((name) => ({
     key: name,
     label: (
       // the second click of a double memorises the table; the first navigated to the same place, so there is nothing to undo

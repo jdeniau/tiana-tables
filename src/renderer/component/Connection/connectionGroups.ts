@@ -3,13 +3,16 @@ import { EncryptedConnectionObject } from '../../../configuration/type';
 /** The saved connections as the home page lists them. */
 export interface ConnectionGroups {
   /** the connections with no group, in saved order */
-  ungrouped: EncryptedConnectionObject[];
+  ungrouped: Array<EncryptedConnectionObject>;
   /** one entry per group, sorted by name, its connections in saved order */
-  groups: Array<{ name: string; connections: EncryptedConnectionObject[] }>;
+  groups: Array<{
+    name: string;
+    connections: Array<EncryptedConnectionObject>;
+  }>;
 }
 
 export function groupConnections(
-  connections: EncryptedConnectionObject[]
+  connections: Array<EncryptedConnectionObject>
 ): ConnectionGroups {
   return {
     ungrouped: connections.filter(({ group }) => !group),
@@ -21,7 +24,9 @@ export function groupConnections(
 }
 
 /** The group names in use, sorted, each once. */
-export function groupNames(connections: EncryptedConnectionObject[]): string[] {
+export function groupNames(
+  connections: Array<EncryptedConnectionObject>
+): Array<string> {
   const names = connections.flatMap(({ group }) => (group ? [group] : []));
 
   return [...new Set(names)].sort((a, b) => a.localeCompare(b));

@@ -16,7 +16,7 @@ import useQuerySchema from './useQuerySchema';
  * `tokenTheme._match(type)`, exactly like the tokenizer ones. Hence the `.sql`
  * postfix of the tokenizer, to make clear these rules only style SQL.
  */
-const KINDS: SqlSemanticKind[] = ['table', 'alias'];
+const KINDS: Array<SqlSemanticKind> = ['table', 'alias'];
 
 const LEGEND: languages.SemanticTokensLegend = {
   tokenTypes: KINDS.map((kind) => `${kind}.sql`),

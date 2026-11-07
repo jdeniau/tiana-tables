@@ -12,7 +12,7 @@ const SCHEMA: QuerySchema = {
 };
 
 /** the text each range covers, to check the positions without counting columns */
-function highlighted(sql: string, schema = SCHEMA): string[] {
+function highlighted(sql: string, schema = SCHEMA): Array<string> {
   const lines = sql.split('\n');
 
   return analyzeQuery(sql, schema, DatabaseEngine.MySQL)
@@ -30,7 +30,7 @@ function highlighted(sql: string, schema = SCHEMA): string[] {
     );
 }
 
-function unknownColumns(sql: string, schema = SCHEMA): string[] {
+function unknownColumns(sql: string, schema = SCHEMA): Array<string> {
   return analyzeQuery(sql, schema, DatabaseEngine.MySQL).unknownColumns.map(
     ({ table, column }) => `${table}.${column}`
   );

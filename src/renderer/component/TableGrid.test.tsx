@@ -69,7 +69,10 @@ function renderSortable(): Atom<SortingState> {
   return sortingAtom;
 }
 
-function render(element: ReactElement, allColumns: ColumnDetail[] = []): void {
+function render(
+  element: ReactElement,
+  allColumns: Array<ColumnDetail> = []
+): void {
   container = document.createElement('div');
   document.body.append(container);
 
@@ -553,7 +556,7 @@ describe('the head of a date-time column', () => {
     disabled: false,
   };
 
-  function heads(segments: Array<typeof SERVER>): string[] {
+  function heads(segments: Array<typeof SERVER>): Array<string> {
     render(
       <DateDisplayContext
         value={{
@@ -1316,7 +1319,7 @@ describe('copying the selection', () => {
     window.getSelection()?.removeAllRanges();
   });
 
-  function renderCopyable(allColumns: ColumnDetail[] = []): void {
+  function renderCopyable(allColumns: Array<ColumnDetail> = []): void {
     window.clipboard = { readText: async () => '', writeText: async () => {} };
 
     render(

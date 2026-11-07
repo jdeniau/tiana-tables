@@ -9,7 +9,7 @@ import { FieldKind, ResultField } from './resultField';
  * The same nine columns whatever the table, with the kinds MySQL announced for them.
  * No `table`, so the grid never looks links up in a user table named like the catalogue.
  */
-const TABLE_STRUCTURE_FIELDS: ResultField[] = [
+const TABLE_STRUCTURE_FIELDS: Array<ResultField> = [
   { name: 'Column', table: null, kind: FieldKind.String },
   { name: 'Type', table: null, kind: FieldKind.Text },
   { name: 'Null', table: null, kind: FieldKind.String },
@@ -28,9 +28,9 @@ const TABLE_STRUCTURE_FIELDS: ResultField[] = [
 export function toTableStructure(
   databaseName: string,
   tableName: string,
-  columns: DescribedColumn[],
-  foreignKeys: ForeignKey[]
-): [TableStructureRow[], ResultField[]] {
+  columns: Array<DescribedColumn>,
+  foreignKeys: Array<ForeignKey>
+): [Array<TableStructureRow>, Array<ResultField>] {
   const ownKeys = foreignKeys.filter((key) => key.table === tableName);
 
   // a composite key is written whole on each of its columns: `order_lines (order_id, line_no)`

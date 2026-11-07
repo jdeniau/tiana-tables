@@ -17,7 +17,7 @@ export type SiteKey = {
   [K in keyof SiteMessages]: SiteMessages[K] extends string ? K : never;
 }[keyof SiteMessages];
 type SiteListKey = {
-  [K in keyof SiteMessages]: SiteMessages[K] extends string[] ? K : never;
+  [K in keyof SiteMessages]: SiteMessages[K] extends Array<string> ? K : never;
 }[keyof SiteMessages];
 type Values = Record<string, string | number>;
 
@@ -29,7 +29,7 @@ export interface Text {
   /** A message of the site with its `<code>` tags, and its `<link>` tag pointing to `href` */
   rich(key: SiteKey, href?: string): ReactNode;
   /** Each item of a list message of the site, as `rich` renders it */
-  richList(key: SiteListKey): ReactNode[];
+  richList(key: SiteListKey): Array<ReactNode>;
   /** A message of the app, worded as the app shows it */
   app(key: keyof Translation, values?: Values): string;
 }

@@ -3,7 +3,9 @@ import { List, Prose, RegionHead, Stage } from './Frame';
 import { useCmdOrCtrl, useCtrl } from './cmdOrCtrl';
 import { useText } from './text';
 
-const ROWS: [id: number, status: string, authorId: number, views: number][] = [
+const ROWS: Array<
+  [id: number, status: string, authorId: number, views: number]
+> = [
   [11, 'relecture', 29, 0],
   [12, 'publie', 25, 8030],
   [13, 'publie', 40, 4407],

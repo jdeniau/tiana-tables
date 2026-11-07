@@ -60,7 +60,7 @@ function runAction(
 }
 
 /** the queries sent, the leading `USE` left out */
-function sentQueries(): unknown[] {
+function sentQueries(): Array<unknown> {
   return vi
     .mocked(window.sql.executeQuery)
     .mock.calls.slice(1)

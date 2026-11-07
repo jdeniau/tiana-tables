@@ -71,9 +71,9 @@ function resolveTable(
 
 interface Analysis {
   /** table names and aliases, to color */
-  readonly semanticTokens: SqlSemanticToken[];
+  readonly semanticTokens: Array<SqlSemanticToken>;
   /** qualified references to a column the table does not have */
-  readonly unknownColumns: UnknownColumn[];
+  readonly unknownColumns: Array<UnknownColumn>;
 }
 
 /**
@@ -101,7 +101,7 @@ export function analyzeQuery(
     (entity) => entity.entityContextType === EntityContextType.TABLE
   );
 
-  const semanticTokens: SqlSemanticToken[] = [];
+  const semanticTokens: Array<SqlSemanticToken> = [];
   const scopeAt = scopeReader(sql, engine);
 
   for (const entity of entities) {
@@ -122,7 +122,7 @@ export function analyzeQuery(
   }
 
   const declarationCount = semanticTokens.length;
-  const unknownColumns: UnknownColumn[] = [];
+  const unknownColumns: Array<UnknownColumn> = [];
 
   for (const reference of qualifiedReferences(parser, sql)) {
     const { qualifier, name } = reference;
@@ -214,10 +214,10 @@ interface QualifiedReference {
 function qualifiedReferences(
   parser: SqlParser,
   sql: string
-): QualifiedReference[] {
+): Array<QualifiedReference> {
   const tokens = parser.getAllTokens(sql).filter((token) => token.text?.trim());
 
-  const references: QualifiedReference[] = [];
+  const references: Array<QualifiedReference> = [];
 
   for (let index = 0; index < tokens.length - 1; index++) {
     const qualifier = tokens[index];

@@ -61,7 +61,7 @@ const CREATED_AT = '2026-09-25 12:03:07';
 // JSON and CSV take the wall clock in the server's zone, here UTC+12:00
 const SERVER_ZONE = 'Pacific/Auckland';
 
-const ROW: RowCell[] = [
+const ROW: Array<RowCell> = [
   cell('id', FieldKind.Number, 42),
   cell('name', FieldKind.String, 'Le "bon", coin'),
   cell('note', FieldKind.String, null),
@@ -224,7 +224,7 @@ describe('the selected rows', () => {
     serverZone: SERVER_ZONE,
   };
 
-  const ROWS: RowCell[][] = [
+  const ROWS: Array<Array<RowCell>> = [
     [
       cell('id', FieldKind.Number, 1),
       cell('label', FieldKind.String, 'a\tb | c\nd <e> & f'),

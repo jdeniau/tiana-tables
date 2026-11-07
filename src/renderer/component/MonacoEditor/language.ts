@@ -18,7 +18,7 @@ export function languageOf(engine: DatabaseEngine): LanguageIdEnum {
 
 /** The engine a model is written for, `undefined` on a model that is not SQL. */
 export function engineOf(languageId: string): DatabaseEngine | undefined {
-  return (Object.keys(LANGUAGES) as DatabaseEngine[]).find(
+  return (Object.keys(LANGUAGES) as Array<DatabaseEngine>).find(
     (engine) => LANGUAGES[engine] === languageId
   );
 }

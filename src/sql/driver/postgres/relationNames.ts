@@ -13,8 +13,8 @@ interface Relation {
  * lookup costs the columns their table, never the result.
  */
 export function relationNames(
-  lookup: (oids: number[]) => Promise<Relation[]>
-): (tableIDs: number[]) => Promise<ReadonlyMap<number, string | null>> {
+  lookup: (oids: Array<number>) => Promise<Array<Relation>>
+): (tableIDs: Array<number>) => Promise<ReadonlyMap<number, string | null>> {
   const known = new Map<number, string | null>();
 
   return async (tableIDs) => {

@@ -16,7 +16,7 @@ import {
 const STORAGE_KEY = 'theme';
 
 /** Every palette of the app, by name. */
-export const PALETTES: readonly AppTheme[] = Object.values(THEME_LIST).sort(
+export const PALETTES: ReadonlyArray<AppTheme> = Object.values(THEME_LIST).sort(
   (a, b) => a.name.localeCompare(b.name)
 );
 
@@ -37,9 +37,9 @@ export function useThemeChoice(): ThemeChoice {
   return useContext(ThemeChoiceContext);
 }
 
-const SLOTS = Object.keys(
-  DEFAULT_THEME.palette
-) as (keyof AppTheme['palette'])[];
+const SLOTS = Object.keys(DEFAULT_THEME.palette) as Array<
+  keyof AppTheme['palette']
+>;
 
 function paint(theme: AppTheme | undefined): void {
   const { style } = document.documentElement;

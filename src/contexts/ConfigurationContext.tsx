@@ -54,7 +54,7 @@ export function ConfigurationContextProvider({ children }: Props) {
     };
   }, []);
 
-  function willChangeConfiguration<P extends unknown[]>(
+  function willChangeConfiguration<P extends Array<unknown>>(
     functionThatUpdateConfigurations: (...params: P) => Promise<Configuration>
   ): (...params: P) => Promise<void> {
     return async (...params: P) => {

@@ -11,7 +11,7 @@ const READERS = [
   1, 0, 5, 3, 14, 8, 8, 16, 20, 28, 33, 26, 27, 26, 37, 38, 57, 41, 52, 47, 50,
   64, 53, 72, 79, 75, 81, 100, 107, 135, 165, 150, 182,
 ];
-const SERIES: [values: number[], colour: string][] = [
+const SERIES: Array<[values: Array<number>, colour: string]> = [
   [READS, 'var(--base0C)'],
   [READERS, 'var(--base09)'],
 ];

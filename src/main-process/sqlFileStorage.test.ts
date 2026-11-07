@@ -29,10 +29,13 @@ const groups: Record<string, string | undefined> = {
 
 /** the handlers as the renderer reaches them, through the IPC channels */
 function bindHandlers() {
-  const handlers = new Map<string, (...args: unknown[]) => unknown>();
+  const handlers = new Map<string, (...args: Array<unknown>) => unknown>();
 
   bindIpcMainSqlFileStorage({
-    handle: (channel: string, handler: (...args: unknown[]) => unknown) => {
+    handle: (
+      channel: string,
+      handler: (...args: Array<unknown>) => unknown
+    ) => {
       handlers.set(channel, (...args) => handler({}, ...args));
     },
   } as unknown as Electron.IpcMain);

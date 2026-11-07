@@ -5,7 +5,7 @@ import { getParser } from '../../../sql/parser';
 export interface TablePage {
   database: string;
   tableName: string;
-  primaryKeys: string[];
+  primaryKeys: Array<string>;
   /** the body of a `WHERE`, as the user wrote it */
   where?: string;
   /** the columns the user sorted on, in order; the primary key's order when empty */
@@ -29,9 +29,9 @@ export function hasOrderByToken(
 
 function orderTerms(
   dialect: Dialect,
-  primaryKeys: string[],
+  primaryKeys: Array<string>,
   sorting: SortingState
-): string[] {
+): Array<string> {
   const sorted = sorting.map(
     ({ id, desc }) => `${dialect.escapeIdentifier(id)} ${desc ? 'DESC' : 'ASC'}`
   );

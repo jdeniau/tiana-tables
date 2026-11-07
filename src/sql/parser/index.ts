@@ -72,7 +72,7 @@ const MAX_TRIM_ATTEMPTS = 8;
 export function collectEntities(
   parser: SqlParser,
   sql: string
-): EntityContext[] {
+): Array<EntityContext> {
   let candidate = sql;
 
   for (let attempt = 0; attempt <= MAX_TRIM_ATTEMPTS; attempt++) {

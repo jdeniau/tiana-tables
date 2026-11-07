@@ -38,7 +38,7 @@ export function distributionPackage(userAgent: string): PackageKind | null {
 }
 
 /** The installers of each platform, in the order the page offers them. */
-export const PLATFORM_PACKAGES: Record<Platform, PackageKind[]> = {
+export const PLATFORM_PACKAGES: Record<Platform, Array<PackageKind>> = {
   [Platform.Linux]: [PackageKind.Deb, PackageKind.Rpm],
   [Platform.MacOS]: [PackageKind.MacArm, PackageKind.MacIntel],
   [Platform.Windows]: [PackageKind.WindowsSetup],

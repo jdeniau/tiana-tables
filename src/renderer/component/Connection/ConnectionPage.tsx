@@ -76,7 +76,7 @@ function usePendingConnectionSlug(): string | undefined {
 function ConnectionPage(): JSX.Element {
   const { t } = useTranslation();
   const pendingConnectionSlug = usePendingConnectionSlug();
-  const connections: EncryptedConnectionObject[] = Object.values(
+  const connections: Array<EncryptedConnectionObject> = Object.values(
     useConfiguration().configuration.connections
   );
 
@@ -126,7 +126,7 @@ function ConnectionPage(): JSX.Element {
   });
 
   const { ungrouped, groups } = groupConnections(connections);
-  const items: MenuItem[] = [
+  const items: Array<MenuItem> = [
     ...ungrouped.map(connectionItem),
     ...groups.map(({ name, connections: members }): MenuItem => ({
       type: 'group',

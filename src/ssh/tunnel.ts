@@ -35,7 +35,7 @@ function sshArguments(
   ssh: SshTunnel,
   target: { host: string; port: number },
   timeoutMs: number
-): string[] {
+): Array<string> {
   return [
     ...['-o', 'LogLevel=VERBOSE'],
     ...['-o', `ConnectTimeout=${Math.ceil(timeoutMs / 1000)}`],

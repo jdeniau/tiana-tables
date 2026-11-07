@@ -34,7 +34,7 @@ interface Sql {
     connectionSlug: string | undefined,
     databaseName?: string | undefined
   ): void;
-  listDatabases(): Promise<string[]>;
+  listDatabases(): Promise<Array<string>>;
   /**
    * Tables and views alike: the app browses both.
    *
@@ -43,25 +43,28 @@ interface Sql {
    * with one another, so the main process cannot be trusted to already know
    * which database the caller means.
    */
-  listTables(databaseName: string): Promise<string[]>;
+  listTables(databaseName: string): Promise<Array<string>>;
   /** Only the columns that reference another. */
-  getForeignKeys(databaseName: string): Promise<ForeignKey[]>;
+  getForeignKeys(databaseName: string): Promise<Array<ForeignKey>>;
   /** The columns of the primary key, in the order the key declares them. */
   getPrimaryKeyColumns(
     databaseName: string,
     tableName: string
-  ): Promise<string[]>;
-  getAllColumns(databaseName: string): Promise<ColumnDetail[]>;
+  ): Promise<Array<string>>;
+  getAllColumns(databaseName: string): Promise<Array<ColumnDetail>>;
   /** Every column of one table with its detail, for the structure page. */
   getTableStructure(
     databaseName: string,
     tableName: string
-  ): QueryResult<TableStructureRow[]>;
+  ): QueryResult<Array<TableStructureRow>>;
   /** The zone the server writes its date-times in, read on the current connection. */
   getServerTimeZone(): Promise<ServerTimeZoneName>;
 }
 
-async function doInvokeQuery(sqlChannel: SQL_CHANNEL, ...params: unknown[]) {
+async function doInvokeQuery(
+  sqlChannel: SQL_CHANNEL,
+  ...params: Array<unknown>
+) {
   const { result, error } = await ipcRenderer.invoke(sqlChannel, ...params);
 
   if (error) {

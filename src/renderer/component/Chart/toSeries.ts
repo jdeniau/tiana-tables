@@ -98,8 +98,8 @@ export function toAxisLabel(
 }
 
 interface Input {
-  rows: readonly ResultRow[];
-  fields: readonly ResultField[];
+  rows: ReadonlyArray<ResultRow>;
+  fields: ReadonlyArray<ResultField>;
   config: ChartConfig;
   rowsAsArray: boolean;
   /** the zone of the date switch, which the X axis follows as the grid does */

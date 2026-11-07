@@ -64,7 +64,7 @@ const WHERE_PREFIX = 'SELECT * FROM `employee` WHERE ';
 function completionsAt(
   sqlWithCaret: string,
   queryPrefix?: string
-): languages.CompletionItem[] {
+): Array<languages.CompletionItem> {
   const caret = sqlWithCaret.indexOf('|');
 
   if (caret === -1) {
@@ -108,7 +108,7 @@ function labelsOfKind(
   sqlWithCaret: string,
   kind: languages.CompletionItemKind,
   queryPrefix?: string
-): string[] {
+): Array<string> {
   return completionsAt(sqlWithCaret, queryPrefix)
     .filter((item) => item.kind === kind)
     .map((item) => String(item.label));
@@ -272,7 +272,7 @@ describe('a query prefix', () => {
     ]),
   };
 
-  function markersOf(sql: string, queryPrefix?: string): editor.IMarker[] {
+  function markersOf(sql: string, queryPrefix?: string): Array<editor.IMarker> {
     const model = editor.createModel(sql, LanguageIdEnum.MYSQL);
     setQueryPrefix(model, queryPrefix);
 
