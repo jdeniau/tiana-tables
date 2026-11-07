@@ -21,7 +21,7 @@ export function Prose({ children }: { children: ReactNode }): ReactElement {
   return <div className="prose">{children}</div>;
 }
 
-export function List({ items }: { items: ReactNode[] }): ReactElement {
+export function List({ items }: { items: Array<ReactNode> }): ReactElement {
   return (
     <ul className="list">
       {items.map((item, index) => (

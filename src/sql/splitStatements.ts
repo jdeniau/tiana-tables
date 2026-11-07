@@ -34,8 +34,8 @@ const CODE_CHANNEL = 0;
 export function splitStatements(
   content: string,
   engine: DatabaseEngine
-): SqlStatement[] {
-  const statements: SqlStatement[] = [];
+): Array<SqlStatement> {
+  const statements: Array<SqlStatement> = [];
   let segmentStart = 0;
   let hasCode = false;
 
@@ -79,7 +79,7 @@ export function splitStatements(
  * one.
  */
 export function statementAtOffset(
-  statements: SqlStatement[],
+  statements: Array<SqlStatement>,
   offset: number
 ): SqlStatement | undefined {
   return (

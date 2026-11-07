@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import type { ResultRow } from '../../types';
 import { mysqlMetadata } from './metadata';
 
-function toColumnDetails(rows: ResultRow[]) {
+function toColumnDetails(rows: Array<ResultRow>) {
   return mysqlMetadata.listColumns('db').answer(rows);
 }
 
@@ -55,7 +55,7 @@ describe('a server answering something else', () => {
  * Rows copied from a run of `listColumns` against `tiana-dev-mysql`,
  * not written from the documentation.
  */
-const ROWS: ResultRow[] = [
+const ROWS: Array<ResultRow> = [
   {
     TABLE_NAME: 'auteur',
     COLUMN_NAME: 'genre',

@@ -10,7 +10,7 @@ export function ForeignKeysContextProvider({
   database,
 }: {
   children: React.ReactNode;
-  foreignKeys: ForeignKey[];
+  foreignKeys: Array<ForeignKey>;
   /** the database whose tables hold `foreignKeys` */
   database: string;
 }) {

@@ -61,7 +61,7 @@ const PLACEHOLDER_FIELDS: Array<ResultField> = Array.from(
   () => ({ name: '', table: null, kind: FieldKind.Unknown })
 );
 
-export type SqlActionReturnTypes = { outcomes: StatementOutcome[] };
+export type SqlActionReturnTypes = { outcomes: Array<StatementOutcome> };
 
 type Props = {
   rowsAsArray: boolean;
@@ -76,7 +76,7 @@ enum View {
   Chart = 'chart',
 }
 
-const NO_OUTCOMES: StatementOutcome[] = [];
+const NO_OUTCOMES: Array<StatementOutcome> = [];
 
 const NO_SELECTION = createAtom<RowSelectionState>({});
 
@@ -89,7 +89,7 @@ const NO_ROWS: Array<never> = [];
 /** The rows selected in each result of one execution of the editor. */
 interface ExecutionSelections {
   /** the results of that execution */
-  outcomes: StatementOutcome[];
+  outcomes: Array<StatementOutcome>;
   /** a new number for each execution: as their key, it remounts the grids, which keep their atom for life */
   gridKey: number;
   /** one per result, by position */
@@ -102,7 +102,7 @@ interface ExecutionSelections {
 
 /** Nothing selected yet in the results of a new execution. */
 function emptySelections(
-  outcomes: StatementOutcome[],
+  outcomes: Array<StatementOutcome>,
   gridKey: number
 ): ExecutionSelections {
   return {

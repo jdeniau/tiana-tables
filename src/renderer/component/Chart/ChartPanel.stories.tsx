@@ -21,7 +21,7 @@ const ROWS = Array.from({ length: 30 }, (_, index) => [
   `2026-01-${String(index + 1).padStart(2, '0')}`,
   40 + Math.round(30 * Math.sin(index / 3)),
   (500 + 220 * Math.cos(index / 4)).toFixed(2),
-]) as unknown as ResultRow[];
+]) as unknown as Array<ResultRow>;
 
 const meta: Meta<typeof ChartPanel> = {
   component: ChartPanel,
@@ -49,8 +49,8 @@ export const SingleSeries: Story = {
   args: {
     fields: FIELDS.slice(0, 2),
     result: ROWS.map((row) =>
-      (row as unknown as unknown[]).slice(0, 2)
-    ) as unknown as ResultRow[],
+      (row as unknown as Array<unknown>).slice(0, 2)
+    ) as unknown as Array<ResultRow>,
   },
 };
 
@@ -63,6 +63,6 @@ export const Categorical: Story = {
       ['Belgium', 74],
       ['Canada', 96],
       ['Japan', 51],
-    ] as unknown as ResultRow[],
+    ] as unknown as Array<ResultRow>,
   },
 };

@@ -100,7 +100,7 @@ class ConnectionStack {
 
   bindIpcMain(ipcMain: Electron.IpcMain): void {
     for (const [channel, handler] of Object.entries(this.#ipcMainHandler)) {
-      ipcMain.handle(channel, (event, ...args: unknown[]) =>
+      ipcMain.handle(channel, (event, ...args: Array<unknown>) =>
         // convert the first argument to senderId and bind the rest
         // @ts-expect-error issue with strict type in tsconfig, but seems to work at runtime
         handler.bind(this)(...args)
@@ -108,7 +108,7 @@ class ConnectionStack {
     }
 
     for (const [channel, handler] of Object.entries(this.#ipcMainOn)) {
-      ipcMain.on(channel, (event, ...args: unknown[]) =>
+      ipcMain.on(channel, (event, ...args: Array<unknown>) =>
         // convert the first argument to senderId and bind the rest
         // @ts-expect-error issue with strict type in tsconfig, but seems to work at runtime
         handler.bind(this)(...args)
@@ -161,14 +161,14 @@ class ConnectionStack {
    * Sorted here, by code unit, as `SHOW DATABASES` did:
    * a server's collation would put `user_role` after `users`, and differ per engine.
    */
-  async listDatabases(): ResultOrError<string[]> {
+  async listDatabases(): ResultOrError<Array<string>> {
     return this.#ask(async () =>
       (await this.#answer(this.#dialect().metadata.listDatabases())).sort()
     );
   }
 
   /** Sorted by code unit, as `listDatabases`. */
-  async listTables(databaseName: string): ResultOrError<string[]> {
+  async listTables(databaseName: string): ResultOrError<Array<string>> {
     invariant(databaseName, 'Database name is required');
 
     return this.#ask(async () =>
@@ -182,7 +182,7 @@ class ConnectionStack {
   async getPrimaryKeyColumns(
     databaseName: string,
     tableName: string
-  ): ResultOrError<string[]> {
+  ): ResultOrError<Array<string>> {
     invariant(databaseName, 'Database name is required');
     invariant(tableName, 'Table name is required');
 
@@ -193,7 +193,7 @@ class ConnectionStack {
     );
   }
 
-  async getForeignKeys(databaseName: string): ResultOrError<ForeignKey[]> {
+  async getForeignKeys(databaseName: string): ResultOrError<Array<ForeignKey>> {
     invariant(databaseName, 'Database name is required');
 
     return this.#ask(() =>
@@ -216,7 +216,7 @@ class ConnectionStack {
   async getTableStructure(
     databaseName: string,
     tableName: string
-  ): QueryResultOrError<TableStructureRow[]> {
+  ): QueryResultOrError<Array<TableStructureRow>> {
     invariant(databaseName, 'Database name is required');
     invariant(tableName, 'Table name is required');
 

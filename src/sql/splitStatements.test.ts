@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { DatabaseEngine } from './engine';
 import { splitStatements, statementAtOffset } from './splitStatements';
 
-function sqlOf(content: string): string[] {
+function sqlOf(content: string): Array<string> {
   return splitStatements(content, DatabaseEngine.MySQL).map(
     (statement) => statement.sql
   );

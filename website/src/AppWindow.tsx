@@ -33,7 +33,7 @@ type Row = [
   frontPage: number,
 ];
 
-const ROWS: Row[] = [
+const ROWS: Array<Row> = [
   [
     1,
     'Pourquoi le plan contre la sécheresse patine',

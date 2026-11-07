@@ -9,7 +9,7 @@ export function AllColumnsContextProvider({
   allColumns: columnDetails,
 }: {
   children: React.ReactNode;
-  allColumns: ColumnDetail[];
+  allColumns: Array<ColumnDetail>;
 }) {
   const columnDetailsHelper = new ColumnDetailHelper(columnDetails);
 

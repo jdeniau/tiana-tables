@@ -27,7 +27,7 @@ import { visualStudio } from './palettes/visualStudio';
 
 export type { AppTheme } from './palettes/types';
 
-const THEME_LIST_AS_ARRAY: AppTheme[] = [
+const THEME_LIST_AS_ARRAY: Array<AppTheme> = [
   // the default theme comes first
   dracula,
   active4d,

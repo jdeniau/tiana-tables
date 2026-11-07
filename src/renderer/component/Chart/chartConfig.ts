@@ -7,7 +7,7 @@ export interface ChartConfig {
   /** index of the column carrying the X axis, in `fields` order */
   x: number;
   /** indexes of the columns plotted as series, in `fields` order */
-  y: number[];
+  y: Array<number>;
 }
 
 /**
@@ -29,7 +29,7 @@ function isNumericField(field: ResultField): boolean {
 }
 
 export function numericFieldIndexes(
-  fields: readonly ResultField[]
+  fields: ReadonlyArray<ResultField>
 ): Array<number> {
   return fields.reduce<Array<number>>(
     (indexes, field, index) =>
@@ -47,7 +47,7 @@ export function numericFieldIndexes(
  * numeric column charts against nothing.
  */
 export function defaultChartConfig(
-  fields: readonly ResultField[]
+  fields: ReadonlyArray<ResultField>
 ): ChartConfig | null {
   const numeric = numericFieldIndexes(fields);
 
@@ -71,7 +71,7 @@ export function chartUnavailableReason({
   isTabular: boolean;
   hasLimit: boolean;
   rowCount: number;
-  fields: readonly ResultField[];
+  fields: ReadonlyArray<ResultField>;
 }): ChartUnavailableReason | null {
   if (!isTabular) {
     return ChartUnavailableReason.NotTabular;

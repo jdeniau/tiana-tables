@@ -100,7 +100,7 @@ const ROW_HEIGHT = parseInt(size.row, 10);
 /** subscribes the grid to no table state: the widths reach the DOM on their own */
 const NO_TABLE_STATE = (): Record<string, never> => ({});
 
-const EMPTY_DATA: ResultRow[] = [];
+const EMPTY_DATA: Array<ResultRow> = [];
 
 const PANEL_CLOSED = createAtom(false);
 
@@ -112,8 +112,8 @@ enum SortDirection {
 
 interface TableGridProps<R extends ResultRow> {
   rowsAsArray?: boolean;
-  result: null | R[];
-  fields: null | ResultField[];
+  result: null | Array<R>;
+  fields: null | Array<ResultField>;
   /** the rows are on their way: the body is a skeleton of the columns, whatever `result` holds */
   loading?: boolean;
   primaryKeys?: Array<string>;
@@ -259,7 +259,7 @@ function TableGrid<Row extends ResultRow>({
     {
       features,
       columns,
-      data: result ?? (EMPTY_DATA as Row[]),
+      data: result ?? (EMPTY_DATA as Array<Row>),
       // the columns dragged before; the others open at the width their type gives them
       initialState: { columnSizing: columnWidths ?? {} },
       columnResizeMode: 'onChange' as const,

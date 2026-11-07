@@ -154,7 +154,7 @@ async function runEditor(
     return { outcomes: [{ sql: useDatabase, error }] };
   }
 
-  const outcomes: StatementOutcome[] = [];
+  const outcomes: Array<StatementOutcome> = [];
 
   for (const { sql } of toRun) {
     const outcome = await runStatement(sql, dialect.engine);

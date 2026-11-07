@@ -1,7 +1,7 @@
 import { createContext, use } from 'react';
 
 /** The tables and views of the current database, by name. */
-export type TableListContext = string[];
+export type TableListContext = Array<string>;
 
 const TableListContext = createContext<TableListContext | null>(null);
 

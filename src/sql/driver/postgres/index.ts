@@ -26,7 +26,7 @@ type PostgresField = Pick<pg.FieldDef, 'name' | 'tableID' | 'dataTypeID'>;
 function toQueryReturn(result: pg.QueryResult): QueryReturnType {
   // a `SELECT FROM t` finding nothing reads as a write: pg answers it as a `CREATE TABLE … AS` of no row
   if (result.fields.length > 0 || result.rows.length > 0) {
-    return result.rows as ResultRow[];
+    return result.rows as Array<ResultRow>;
   }
 
   return { affectedRows: result.rowCount ?? 0, insertId: null };
@@ -34,9 +34,9 @@ function toQueryReturn(result: pg.QueryResult): QueryReturnType {
 
 /** The columns of a result, as the renderer reads them, each table named from its OID. */
 function toResultFields(
-  fields: PostgresField[],
+  fields: Array<PostgresField>,
   tables: ReadonlyMap<number, string | null>
-): ResultField[] {
+): Array<ResultField> {
   return fields.map((field) => ({
     name: field.name,
     table: tables.get(field.tableID) ?? null,
@@ -174,7 +174,7 @@ export const postgresDriver: Driver = {
             : toPositional(statement.sql, statement.values);
 
         // `queryMode` is missing from `@types/pg`, which types `rowMode` as required when given
-        const config: pg.QueryConfig<SqlBoundValue[]> & {
+        const config: pg.QueryConfig<Array<SqlBoundValue>> & {
           rowMode?: 'array';
           queryMode: 'extended';
         } = {

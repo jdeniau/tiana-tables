@@ -20,7 +20,7 @@ export interface WriteResult {
   insertId: number | string | null;
 }
 
-export type QueryReturnType = ResultRow[] | WriteResult;
+export type QueryReturnType = Array<ResultRow> | WriteResult;
 
 /** Whether a statement changed rows rather than returned them. */
 export function isWriteResult(result: QueryReturnType): result is WriteResult {
@@ -28,7 +28,7 @@ export function isWriteResult(result: QueryReturnType): result is WriteResult {
 }
 
 export type QueryResult<T extends QueryReturnType = QueryReturnType> = Promise<
-  [T, ResultField[]]
+  [T, Array<ResultField>]
 >;
 
 /**

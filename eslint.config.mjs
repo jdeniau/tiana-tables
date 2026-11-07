@@ -45,6 +45,7 @@ export default defineConfig(
       },
     },
     rules: {
+      '@typescript-eslint/array-type': ['error', { default: 'generic' }],
       '@typescript-eslint/no-unused-vars': [
         'error',
         { varsIgnorePattern: '^_' },

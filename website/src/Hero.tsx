@@ -7,7 +7,7 @@ import { PALETTES } from './themeChoice';
 
 export function Hero({ release }: { release: Release }): ReactElement {
   const { site } = useText();
-  const spec: [term: string, value: string][] = [
+  const spec: Array<[term: string, value: string]> = [
     [site('spec.engines'), site('spec.engines.value')],
     [site('spec.runsOn'), site('spec.runsOn.value')],
     [site('spec.connects'), site('spec.connects.value')],

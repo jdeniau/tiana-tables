@@ -50,7 +50,7 @@ function makeField(name: string, kind: FieldKind): ResultField {
   return { name, kind, table: 'items' };
 }
 
-function makeFields(columnCount: number): ResultField[] {
+function makeFields(columnCount: number): Array<ResultField> {
   const fields = [
     makeField('id', FieldKind.Number),
     makeField('name', FieldKind.String),
@@ -69,7 +69,7 @@ function makeFields(columnCount: number): ResultField[] {
   return fields.slice(0, columnCount);
 }
 
-function makeRows(rowCount: number, columnCount: number): ResultRow[] {
+function makeRows(rowCount: number, columnCount: number): Array<ResultRow> {
   const random = mulberry32(42);
   const fields = makeFields(columnCount);
 
@@ -114,7 +114,7 @@ function makeRows(rowCount: number, columnCount: number): ResultRow[] {
 
 // the schema the grid reads to know what a cell may become: without it every
 // cell is read-only, which is exactly what the raw-SQL case looks like
-const ALL_COLUMNS: ColumnDetail[] = (
+const ALL_COLUMNS: Array<ColumnDetail> = (
   [
     ['id', false],
     ['name', false],
@@ -351,7 +351,7 @@ export const WithFilterContextMenu: Story = {
  * a number as a number, the rest (JSON included) as the text that was sent.
  */
 function readBack(
-  fields: ResultField[],
+  fields: Array<ResultField>,
   { column, newValue }: UpdateCellRequest
 ): unknown {
   if (newValue === null) {

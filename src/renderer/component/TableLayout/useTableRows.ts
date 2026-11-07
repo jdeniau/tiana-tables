@@ -13,9 +13,9 @@ import { TableRowsPage, tableRowsQuery } from './tableRowsQuery';
 
 interface TableRows {
   /** the pages loaded so far, `null` until the first one arrives and again after an error */
-  result: null | ResultRow[];
+  result: null | Array<ResultRow>;
   /** the columns of the last page, each tagged with this table */
-  fields: null | ResultField[];
+  fields: null | Array<ResultField>;
   /** the last fetch's error, cleared by the next one that succeeds */
   error: null | Error;
   /** the rows of this query are not there yet: the table's first page, or that of a new order */

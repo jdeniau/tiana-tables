@@ -61,7 +61,7 @@ describe('database-scoped queries', () => {
   let query: ReturnType<typeof vi.fn>;
 
   /** what the dialect's questions put on the socket */
-  function statementsSent(): string[] {
+  function statementsSent(): Array<string> {
     return query.mock.calls.map(([statement]) => statement.sql);
   }
 

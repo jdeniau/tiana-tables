@@ -17,8 +17,8 @@ export interface BuiltQuery {
 function rowsOf<T>(
   question: string,
   row: z.ZodType<T>,
-  rows: ResultRow[]
-): T[] {
+  rows: Array<ResultRow>
+): Array<T> {
   const parsed = z.array(row).safeParse(rows);
 
   if (parsed.success) {
@@ -38,7 +38,7 @@ function rowsOf<T>(
 
 /** A statement that reads, and how to read what the server answers to it. */
 export interface ReadQuery<Answer> extends BuiltQuery {
-  answer(rows: ResultRow[]): Answer;
+  answer(rows: Array<ResultRow>): Answer;
 }
 
 /**
@@ -49,7 +49,7 @@ export function readQuery<Row, Answer>(
   question: string,
   query: BuiltQuery & {
     row: z.ZodType<Row>;
-    read(rows: Row[]): Answer;
+    read(rows: Array<Row>): Answer;
   }
 ): ReadQuery<Answer> {
   return {

@@ -14,7 +14,7 @@ import type { ForeignKey } from '../../sql/dialect/metadata';
 import { mysqlDialect } from '../../sql/dialect/mysql';
 import ForeignKeyLink from './ForeignKeyLink';
 
-const FOREIGN_KEYS: ForeignKey[] = [
+const FOREIGN_KEYS: Array<ForeignKey> = [
   {
     constraintName: 'fk_orders_customers',
     table: 'orders',
@@ -36,7 +36,7 @@ afterEach(() => {
 /** where the link would navigate to */
 function renderLink(
   value: unknown,
-  foreignKeys: ForeignKey[] = FOREIGN_KEYS
+  foreignKeys: Array<ForeignKey> = FOREIGN_KEYS
 ): URL | null {
   container = document.createElement('div');
   document.body.append(container);

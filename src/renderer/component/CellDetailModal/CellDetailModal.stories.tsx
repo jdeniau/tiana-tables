@@ -135,7 +135,9 @@ const meta: Meta<typeof CellDetailModal> = {
   decorators: [
     (Story, { parameters }) => (
       <ForeignKeysContextProvider
-        foreignKeys={(parameters.foreignKeys as ForeignKey[] | undefined) ?? []}
+        foreignKeys={
+          (parameters.foreignKeys as Array<ForeignKey> | undefined) ?? []
+        }
         database="tiana_dev"
       >
         <CellWriteProvider

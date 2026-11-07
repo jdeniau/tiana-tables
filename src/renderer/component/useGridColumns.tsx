@@ -36,7 +36,7 @@ export function columnId<Row extends ResultRow>(
 }
 
 type Options<Row extends ResultRow> = {
-  fields: null | ResultField[];
+  fields: null | Array<ResultField>;
   primaryKeys: Array<string> | undefined;
   extraColumns: Array<ExtraColumn<Row>>;
   rowsAsArray: boolean;

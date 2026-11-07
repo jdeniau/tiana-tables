@@ -9,13 +9,13 @@ export interface WholeForeignKey {
 
 export class ForeignKeysHelper {
   // Can not use JS #private props because of an issue in storybook with react-docgen ¯\_(ツ)_/¯
-  private _foreignKeys: ForeignKey[];
+  private _foreignKeys: Array<ForeignKey>;
 
   /** the keys to the tables of `database`, which a join can only name bare */
-  private _localForeignKeys: ForeignKey[];
+  private _localForeignKeys: Array<ForeignKey>;
 
   /** `foreignKeys` are the keys of the tables of `database` */
-  constructor(foreignKeys: ForeignKey[], database: string) {
+  constructor(foreignKeys: Array<ForeignKey>, database: string) {
     this._foreignKeys = foreignKeys;
     this._localForeignKeys = foreignKeys.filter(
       (r) => r.referencedDatabase === database

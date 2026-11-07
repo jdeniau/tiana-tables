@@ -184,7 +184,7 @@ const router = createHashRouter([
       },
     ],
   },
-] as RouteObject[]);
+] as Array<RouteObject>);
 
 function App() {
   useEffect(() => {

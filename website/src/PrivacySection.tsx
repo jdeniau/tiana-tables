@@ -3,15 +3,16 @@ import { Prose, RegionHead } from './Frame';
 import { type SiteKey, useText } from './text';
 
 /** An engine is named as is, a feature by a message; a null status prints as NULL. */
-const SCOPE: [name: string | { key: SiteKey }, status: SiteKey | null][] = [
-  ['MySQL', 'databases.supported'],
-  ['MariaDB', 'databases.supported'],
-  ['PostgreSQL', 'databases.supported'],
-  [{ key: 'databases.ssl' }, 'databases.supported'],
-  [{ key: 'databases.ssh' }, 'databases.supported'],
-  [{ key: 'databases.others' }, null],
-  [{ key: 'databases.admin' }, 'databases.outOfScope'],
-];
+const SCOPE: Array<[name: string | { key: SiteKey }, status: SiteKey | null]> =
+  [
+    ['MySQL', 'databases.supported'],
+    ['MariaDB', 'databases.supported'],
+    ['PostgreSQL', 'databases.supported'],
+    [{ key: 'databases.ssl' }, 'databases.supported'],
+    [{ key: 'databases.ssh' }, 'databases.supported'],
+    [{ key: 'databases.others' }, null],
+    [{ key: 'databases.admin' }, 'databases.outOfScope'],
+  ];
 
 /** Where the app runs, and the databases it reaches. */
 export function PrivacySection(): ReactElement {

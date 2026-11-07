@@ -68,7 +68,7 @@ export const ACCENT_SLOTS = [
   'base0D',
   'base0E',
   'base0F',
-] as const satisfies readonly (keyof Base16Palette)[];
+] as const satisfies ReadonlyArray<keyof Base16Palette>;
 
 export type AccentSlot = (typeof ACCENT_SLOTS)[number];
 

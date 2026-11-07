@@ -14,7 +14,7 @@ const TABLE_ROWS_GC_TIME = 30 * 60 * 1000;
 const TABLE_ROWS_STALE_TIME = 5 * 1000;
 
 /** one page as the server answered it: its rows and its columns */
-export type TableRowsPage = [ResultRow[], ResultField[]];
+export type TableRowsPage = [Array<ResultRow>, Array<ResultField>];
 
 /** the rows of a table, one page per "load more": started by the route loader, read by `useTableRows` */
 export function tableRowsQuery(
@@ -33,7 +33,7 @@ export function tableRowsQuery(
       queryAt(0)
     ),
     queryFn: ({ pageParam }): Promise<TableRowsPage> =>
-      window.sql.executeQuery<ResultRow[]>(queryAt(pageParam)),
+      window.sql.executeQuery<Array<ResultRow>>(queryAt(pageParam)),
     initialPageParam: 0,
     getNextPageParam: (_lastPage, pages) => pages.length * DEFAULT_LIMIT,
     gcTime: TABLE_ROWS_GC_TIME,

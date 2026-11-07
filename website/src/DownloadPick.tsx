@@ -24,7 +24,7 @@ const NOTES: Record<Platform, SiteKey> = {
 
 interface Detected {
   readonly platform: Platform;
-  readonly packages: PackageKind[];
+  readonly packages: Array<PackageKind>;
 }
 
 let detectedOnce: Detected | null | undefined;

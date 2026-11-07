@@ -19,7 +19,7 @@ const DATABASE = 'contract_database';
 const TABLE = 'contract_table';
 
 /** `:name`, the placeholder syntax every dialect writes and its driver rewrites */
-function namedParameters(sql: string): string[] {
+function namedParameters(sql: string): Array<string> {
   return [...sql.matchAll(/:([a-zA-Z][a-zA-Z0-9_]*)/g)].map(([, name]) => name);
 }
 

@@ -1,13 +1,13 @@
 import { IpcRendererEvent, ipcRenderer } from 'electron';
 
 export function bindChannel(channel: string) {
-  return function (...args: unknown[]) {
+  return function (...args: Array<unknown>) {
     return ipcRenderer.invoke(channel, ...args);
   };
 }
 
 export function bindEvent(channel: string) {
-  return function (...args: unknown[]) {
+  return function (...args: Array<unknown>) {
     return ipcRenderer.send(channel, ...args);
   };
 }
@@ -24,10 +24,10 @@ export type Unsubscribe = () => void;
 
 export function subscribe(
   channel: string,
-  callback: (...args: never[]) => void
+  callback: (...args: Array<never>) => void
 ): Unsubscribe {
-  const listener = (_event: IpcRendererEvent, ...args: unknown[]) => {
-    (callback as (...args: unknown[]) => void)(...args);
+  const listener = (_event: IpcRendererEvent, ...args: Array<unknown>) => {
+    (callback as (...args: Array<unknown>) => void)(...args);
   };
 
   ipcRenderer.on(channel, listener);

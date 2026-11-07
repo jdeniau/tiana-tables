@@ -579,7 +579,7 @@ const IPC_EVENT_BINDING = {
 
 export function bindIpcMain(ipcMain: Electron.IpcMain): void {
   for (const [channel, handler] of Object.entries(IPC_EVENT_BINDING)) {
-    ipcMain.handle(channel, (event, ...args: unknown[]) =>
+    ipcMain.handle(channel, (event, ...args: Array<unknown>) =>
       // convert the first argument to senderId and bind the rest
       // @ts-expect-error issue with strict type in tsconfig, but seems to work at runtime
       handler(...args)

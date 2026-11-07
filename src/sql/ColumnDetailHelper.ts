@@ -5,11 +5,11 @@ type ColumnName = string;
 type ColumnByTable = Map<TableName, Map<ColumnName, ColumnDetail>>;
 export class ColumnDetailHelper {
   // Can not use JS #private props because of an issue in storybook with react-docgen ¯\_(ツ)_/¯
-  private _columnDetailResult: ColumnDetail[];
+  private _columnDetailResult: Array<ColumnDetail>;
 
   private _columnsByTable?: ColumnByTable;
 
-  constructor(columnDetailResult: ColumnDetail[]) {
+  constructor(columnDetailResult: Array<ColumnDetail>) {
     this._columnDetailResult = columnDetailResult;
   }
 
@@ -33,7 +33,7 @@ export class ColumnDetailHelper {
     return this._columnsByTable;
   }
 
-  getAllColumns(): ColumnDetail[] {
+  getAllColumns(): Array<ColumnDetail> {
     return this._columnDetailResult;
   }
 

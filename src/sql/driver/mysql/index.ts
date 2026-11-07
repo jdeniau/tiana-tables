@@ -16,7 +16,7 @@ function toQueryReturn(result: MySqlResult): QueryReturnType {
   if (Array.isArray(result)) {
     // TODO a `CALL` answers `[RowDataPacket[], ResultSetHeader]` (measured),
     // which lands here as nonsense rows
-    return result as ResultRow[];
+    return result as Array<ResultRow>;
   }
 
   return {
@@ -38,7 +38,9 @@ type MySqlField = Pick<
 >;
 
 /** The columns of a result, as the renderer reads them. */
-function toResultFields(fields: MySqlField[] | undefined): ResultField[] {
+function toResultFields(
+  fields: Array<MySqlField> | undefined
+): Array<ResultField> {
   // mysql2 types this as an array, and answers `undefined` for a statement that
   // returned no rows at all
   return (fields ?? []).map((field) => ({

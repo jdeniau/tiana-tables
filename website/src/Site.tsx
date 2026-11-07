@@ -18,7 +18,7 @@ import {
 } from './themeChoice';
 
 /** The sections the title bar links to, in page order. */
-const NAV: [id: string, label: SiteKey][] = [
+const NAV: Array<[id: string, label: SiteKey]> = [
   ['editor', 'nav.editor'],
   ['browse', 'nav.browse'],
   ['privacy', 'nav.privacy'],
