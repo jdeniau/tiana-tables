@@ -9,7 +9,6 @@ import {
   MenuItemPath,
 } from '../../preload/titleBarChannel';
 import { acceleratorLabel } from '../acceleratorLabel';
-import { fontSize, mono } from '../theme';
 
 type MenuItems = NonNullable<MenuProps['items']>;
 
@@ -130,8 +129,6 @@ export default function AppMenuButton(): ReactElement | null {
 }
 
 const Accelerator = styled.span<{ $disabled: boolean }>`
-  font-family: ${mono};
-  font-size: ${fontSize.sm};
   opacity: ${({ $disabled }) => ($disabled ? 0.5 : 1)};
 `;
 
