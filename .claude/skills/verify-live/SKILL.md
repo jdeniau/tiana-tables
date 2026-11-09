@@ -26,7 +26,7 @@ tmux send-keys -t tiana "yarn electron-forge start -- \
 - **A screenshot hides the TanStack Query devtools badge first**: append a `<style>` holding `.tsqd-parent-container { display: none !important; }` to `document.head` before `Page.captureScreenshot`; a reload drops it, so inject it again before each capture.
 - **A video is a `Page.startScreencast` of the page**: each frame comes with its timestamp, so write them to an `ffconcat` list with their real durations and encode with `libx264`. Draw a pointer and a caption into the page (a screencast shows neither), park the pointer off the grid between gestures (the row under it hides the selection), and copy through the main process's `webContents.copy()`, which no synthetic key reaches.
 - The main process is not hot-reloaded: any change to `menu.ts`, the preload or an IPC handler needs a full relaunch.
-- Clean up with `pkill -f "remote-debugging-port=922[2]"` — the brackets matter: the bare pattern matches the shell's own command line and kills it (exit 144), and so does any other spelling of the flag in the same command. Then check `pgrep -f "electron/dist/electro[n]"` is empty: a second instance keeps port 9222 and every CDP call hangs on it.
+- Clean up with `pkill -f "remote-debugging-port=922[2]"` — the brackets matter: the bare pattern matches the shell's own command line and kills it (exit 144), and so does any other spelling of the flag in the same command. Then check `pgrep -f "electron/dist/electro[n]"` is empty: an instance left on the profile holds its lock, so a new launch quits at once and every CDP call reaches the old one, running the main process from before the change.
 
 Traps that each cost half an hour:
 
