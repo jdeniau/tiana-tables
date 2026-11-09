@@ -36,6 +36,7 @@ Credentials are encrypted with Electron's `safeStorage`, config in `src/configur
 - `getSelectedStorageBackend()` describes the legacy detection, not the provider the async API picked, so the "only obfuscated" warning can be pessimistic. Left as is: Electron exposes nothing more precise.
 - **`config.json` is written only through `writeConfiguration`, atomically** (`write-file-atomic`, sync): a temporary file renamed over it, so a crash leaves the previous file whole, and at most a `config.json.<number>` orphan after a `kill -9`.
 - **Only a missing `config.json` is a first launch**: one that does not parse goes through `recoverUnreadableConfiguration`, whose dialog restores `config.previous.json` (saved at each readable startup), quits, or starts blank, the file kept as `config.json.bak-<date>` — never replaced in place.
+- **`app.exit()` only posts the shutdown**: the code after it runs on, in a packaged build up to `createWindow()`, whose window state then saves a blank configuration. Quitting from a dialog of the startup throws (`QuitToFixConfigurationError`) and `whenReady` stops on it; a dev run hides the gap, since installing React DevTools yields first.
 - **The configuration file is not validated** (parsed with a cast). A missing or old field is decided in `loadConfiguration` (default engine, a port read with `Number()`), with no migration and no `version` bump.
 
 ## Dev tooling (`installReactDevToolsExtension.ts`)

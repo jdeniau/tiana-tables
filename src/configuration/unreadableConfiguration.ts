@@ -12,6 +12,9 @@ import { Configuration } from './type';
 
 type ParsedConfiguration = { config: Configuration } | { error: string };
 
+/** The user chose to quit and fix the file: nothing may start on a blank configuration. */
+export class QuitToFixConfigurationError extends Error {}
+
 enum RecoveryChoice {
   Restore = 'restore',
   Quit = 'quit',
@@ -74,7 +77,7 @@ function readPreviousConfiguration(): {
 
 /**
  * Asks what to do with a configuration file that does not parse, which is never overwritten in place.
- * `null` starts on a blank configuration.
+ * `null` starts on a blank configuration; quitting throws `QuitToFixConfigurationError`.
  */
 export function recoverUnreadableConfiguration(
   error: string
@@ -115,9 +118,10 @@ export function recoverUnreadableConfiguration(
 
   if (choice === RecoveryChoice.Quit) {
     log.info('Quitting to let the configuration file be fixed');
+    // app.exit only posts the shutdown: the startup after this call would go on, and save a blank configuration
     app.exit(0);
 
-    return null;
+    throw new QuitToFixConfigurationError();
   }
 
   renameSync(configurationPath, backupPath);

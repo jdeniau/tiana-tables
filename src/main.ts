@@ -11,6 +11,7 @@ import {
 import { logEncryptionStatus } from './configuration/encryption';
 import { getLogPath } from './configuration/filePaths';
 import { DEFAULT_THEME, THEME_LIST } from './configuration/themes';
+import { QuitToFixConfigurationError } from './configuration/unreadableConfiguration';
 import { changeLanguage, onLanguageChanged } from './i18n';
 import { bindIpcMainClipboard } from './main-process/clipboard';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
@@ -167,6 +168,17 @@ app.whenReady().then(async () => {
   // quitting, and must neither read nor write the configuration
   if (!isFirstInstance) {
     return;
+  }
+
+  // read first: over an unreadable file the user may choose to quit, and nothing must have started by then
+  try {
+    getConfiguration();
+  } catch (error) {
+    if (error instanceof QuitToFixConfigurationError) {
+      return;
+    }
+
+    throw error;
   }
 
   logStartupMilestone('app-when-ready');

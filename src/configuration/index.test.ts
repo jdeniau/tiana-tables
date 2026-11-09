@@ -9,6 +9,7 @@ import { DEFAULT_LOCALE } from './locale';
 import { PANEL } from './panels';
 import { DEFAULT_THEME } from './themes';
 import { Configuration } from './type';
+import { QuitToFixConfigurationError } from './unreadableConfiguration';
 import {
   addConnectionToConfig,
   changeLanguage,
@@ -1489,7 +1490,8 @@ describe('unreadable configuration file', () => {
     // restore, quit, blank: closing the dialog is quitting too
     vi.mocked(dialog.showMessageBoxSync).mockReturnValue(1);
 
-    getConfiguration();
+    // app.exit only posts the shutdown: the startup stops on this error
+    expect(() => getConfiguration()).toThrow(QuitToFixConfigurationError);
 
     expect(dialogOptions().cancelId).toBe(1);
     expect(app.exit).toHaveBeenCalledWith(0);
@@ -1502,7 +1504,8 @@ describe('unreadable configuration file', () => {
       [CONFIGURATION_PATH]: '',
       [PREVIOUS_CONFIGURATION_PATH]: '{',
     });
-    vi.mocked(dialog.showMessageBoxSync).mockReturnValue(0);
+    // quit, blank: start blank
+    vi.mocked(dialog.showMessageBoxSync).mockReturnValue(1);
 
     getConfiguration();
 
