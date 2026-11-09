@@ -1,6 +1,7 @@
 import { dialog } from 'electron';
-import { existsSync, readFileSync, writeFile } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import log from 'electron-log';
+import { sync as writeFileAtomicSync } from 'write-file-atomic';
 import { changeLanguage as changeI18nLanguage, t } from '../i18n';
 import { WindowState } from '../main-process/windowState';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
@@ -22,6 +23,11 @@ import {
   EncryptedConnectionObject,
   TableSorting,
 } from './type';
+import {
+  parseConfiguration,
+  recoverUnreadableConfiguration,
+  savePreviousConfiguration,
+} from './unreadableConfiguration';
 import { uniqueSlug } from './utils';
 
 const configurationPath = getConfigurationPath();
@@ -90,19 +96,27 @@ export function getConfiguration(): Configuration {
 }
 
 function loadConfiguration(): Configuration {
+  // only a missing file is a first launch: an unreadable one holds connections the user still has to get back
   if (!existsSync(configurationPath)) {
     return getBaseConfig();
   }
 
-  const dataString = readFileSync(configurationPath, 'utf-8');
+  const text = readFileSync(configurationPath, 'utf-8');
+  const parsed = parseConfiguration(text);
 
-  if (!dataString) {
-    return getBaseConfig();
+  if ('error' in parsed) {
+    return normalizeConfiguration(
+      recoverUnreadableConfiguration(parsed.error) ?? getBaseConfig()
+    );
   }
 
-  // the passwords stay as they are stored: they are decrypted when a connection is opened, never on the way in or out of the file
-  const config = JSON.parse(dataString) as Configuration;
+  savePreviousConfiguration(text);
 
+  return normalizeConfiguration(parsed.config);
+}
+
+// the passwords stay as they are stored: they are decrypted when a connection is opened, never on the way in or out of the file
+function normalizeConfiguration(config: Configuration): Configuration {
   return {
     ...config,
     connections: Object.fromEntries(
@@ -120,20 +134,28 @@ function loadConfiguration(): Configuration {
   };
 }
 
+let isWriteFailureShown = false;
+
 function writeConfiguration(config: Configuration): void {
   // create the folder of the `dataFilePath` if it does not exist
   createConfigurationFolderIfNotExists();
 
-  writeFile(
-    configurationPath,
-    JSON.stringify(config, null, 2),
-    'utf-8',
-    (err) => {
-      if (err) {
-        dialog.showErrorBox('Error', err.message);
-      }
+  try {
+    // a temporary file renamed over the target: a reader or a crash never meets a half-written file
+    writeFileAtomicSync(configurationPath, JSON.stringify(config, null, 2));
+    isWriteFailureShown = false;
+  } catch (error) {
+    log.error('Configuration not saved:', error);
+
+    // the file on disk is still the previous complete one, and every write retries: one warning until a write succeeds
+    if (!isWriteFailureShown) {
+      isWriteFailureShown = true;
+      dialog.showErrorBox(
+        t('config.writeFailed.title'),
+        t('config.writeFailed.message', { reason: (error as Error).message })
+      );
     }
-  );
+  }
 }
 
 export async function addConnectionToConfig(
@@ -594,5 +616,6 @@ export const testables = {
   getBaseConfig,
   resetConfiguration: () => {
     configuration = null;
+    isWriteFailureShown = false;
   },
 };

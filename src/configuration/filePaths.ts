@@ -10,6 +10,11 @@ export function getConfigurationPath() {
   return configPath;
 }
 
+/** The last configuration file read whole at startup, restored when a later one is unreadable. */
+export function getPreviousConfigurationPath(): string {
+  return resolve(getConfigurationFolder(), 'config.previous.json');
+}
+
 export function getConfigurationFolder() {
   return dirname(getConfigurationPath());
 }

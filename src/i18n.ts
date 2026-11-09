@@ -1,4 +1,10 @@
-import i18next, { changeLanguage, init, use as loadPlugin, t } from 'i18next';
+import i18next, {
+  changeLanguage,
+  getFixedT,
+  init,
+  use as loadPlugin,
+  t,
+} from 'i18next';
 import ICU from 'i18next-icu';
 import { initReactI18next, useTranslation } from 'react-i18next';
 import en from '../locales/en';
@@ -47,4 +53,4 @@ export function onLanguageChanged(listener: () => void): () => void {
   return () => i18next.off('languageChanged', listener);
 }
 
-export { useTranslation, t, changeLanguage };
+export { useTranslation, t, getFixedT, changeLanguage };

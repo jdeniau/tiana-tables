@@ -47,6 +47,20 @@ export default {
   'config.encryption.unavailable.message':
     'Your system refused to encrypt the connection passwords, so the configuration was not saved. Unlock your keyring, then restart Tiana Tables.',
   'config.encryption.unavailable.title': 'Configuration not saved',
+  'config.unreadable.blank': 'Start with a blank configuration',
+  'config.unreadable.detail':
+    'Restoring or starting blank keeps the unreadable file as {backupPath}.',
+  'config.unreadable.empty': 'The file is empty.',
+  'config.unreadable.message':
+    'Your configuration file could not be read: {path}',
+  'config.unreadable.notAnObject': 'The file does not hold a configuration.',
+  'config.unreadable.quit': 'Quit to fix the file',
+  'config.unreadable.restore':
+    'Restore the version of {date, date, medium}, {date, time, short}',
+  'config.unreadable.title': 'Configuration unreadable',
+  'config.writeFailed.message':
+    'Your changes stay in the app, and each new change tries to save them again: they are lost if you quit before one succeeds. Reason: {reason}',
+  'config.writeFailed.title': 'Configuration not saved',
   'chart.axis.x': 'X axis',
   'chart.axis.y': 'Series',
   'chart.export.copied': 'Copied',

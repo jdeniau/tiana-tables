@@ -48,6 +48,21 @@ const fr: Translation = {
   'config.encryption.unavailable.message':
     'Votre système a refusé de chiffrer les mots de passe de connexion, la configuration n’a donc pas été enregistrée. Déverrouillez votre trousseau puis redémarrez Tiana Tables.',
   'config.encryption.unavailable.title': 'Configuration non enregistrée',
+  'config.unreadable.blank': 'Repartir d’une configuration vierge',
+  'config.unreadable.detail':
+    'Restaurer ou repartir d’une configuration vierge garde le fichier illisible sous {backupPath}.',
+  'config.unreadable.empty': 'Le fichier est vide.',
+  'config.unreadable.message':
+    'Votre fichier de configuration est illisible : {path}',
+  'config.unreadable.notAnObject':
+    'Le fichier ne contient pas de configuration.',
+  'config.unreadable.quit': 'Quitter pour corriger le fichier',
+  'config.unreadable.restore':
+    'Restaurer la version du {date, date, medium} à {date, time, short}',
+  'config.unreadable.title': 'Configuration illisible',
+  'config.writeFailed.message':
+    'Vos changements restent dans l’app, et chaque nouveau changement réessaie de les enregistrer : ils sont perdus si vous quittez avant qu’un enregistrement réussisse. Raison : {reason}',
+  'config.writeFailed.title': 'Configuration non enregistrée',
   'chart.axis.x': 'Axe X',
   'chart.axis.y': 'Séries',
   'chart.export.copied': 'Copié',

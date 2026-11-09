@@ -11,6 +11,7 @@ import {
 import { logEncryptionStatus } from './configuration/encryption';
 import { getLogPath } from './configuration/filePaths';
 import { DEFAULT_THEME, THEME_LIST } from './configuration/themes';
+import { QuitToFixConfigurationError } from './configuration/unreadableConfiguration';
 import { changeLanguage, onLanguageChanged } from './i18n';
 import { bindIpcMainClipboard } from './main-process/clipboard';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
@@ -54,6 +55,26 @@ if (started) {
 log.transports.file.resolvePathFn = () => getLogPath();
 log.initialize();
 logStartupMilestone('module-initialized');
+
+// two instances on one profile each write config.json from their own copy, erasing what the other saved
+const isFirstInstance = app.requestSingleInstanceLock();
+
+if (!isFirstInstance) {
+  log.warn(
+    'Another instance uses this profile: it comes forward, this one quits'
+  );
+  app.quit();
+}
+
+app.on('second-instance', () => {
+  const [mainWindow] = BrowserWindow.getAllWindows();
+
+  if (mainWindow?.isMinimized()) {
+    mainWindow.restore();
+  }
+
+  mainWindow?.focus();
+});
 
 const createWindow = () => {
   logStartupMilestone('create-window-start');
@@ -144,7 +165,24 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
+  // quitting, and must neither read nor write the configuration
+  if (!isFirstInstance) {
+    return;
+  }
+
   logStartupMilestone('app-when-ready');
+
+  // read first: over an unreadable file the user may choose to quit, and nothing must have started by then
+  try {
+    getConfiguration();
+  } catch (error) {
+    if (error instanceof QuitToFixConfigurationError) {
+      return;
+    }
+
+    throw error;
+  }
+
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
