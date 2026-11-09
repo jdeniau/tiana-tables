@@ -11,7 +11,7 @@ export function getConfigurationPath() {
 }
 
 /** The last configuration file read whole at startup, restored when a later one is unreadable. */
-export function getPreviousConfigurationPath() {
+export function getPreviousConfigurationPath(): string {
   return resolve(getConfigurationFolder(), 'config.previous.json');
 }
 
