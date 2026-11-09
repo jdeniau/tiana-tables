@@ -170,6 +170,8 @@ app.whenReady().then(async () => {
     return;
   }
 
+  logStartupMilestone('app-when-ready');
+
   // read first: over an unreadable file the user may choose to quit, and nothing must have started by then
   try {
     getConfiguration();
@@ -181,7 +183,6 @@ app.whenReady().then(async () => {
     throw error;
   }
 
-  logStartupMilestone('app-when-ready');
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
