@@ -4,7 +4,7 @@
   "description": "A SQL query tool for developers.",
   "homepage": "https://tiana-tables.deniau.me",
   "license": "MIT",
-  "version": "1.25.1",
+  "version": "1.26.0",
   "main": ".vite/build/main.cjs",
   "keywords": [],
   "author": {
