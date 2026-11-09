@@ -93,6 +93,14 @@ test('the menus are in the language of the app', async () => {
   ]);
 });
 
+test('the window zoom is in the macOS menu only', async () => {
+  const windowRoles = async (isMac: boolean) =>
+    submenu(await buildMenu(isMac, 'en'), 'Window').map(({ role }) => role);
+
+  expect(await windowRoles(false)).toEqual(['minimize', 'close']);
+  expect(await windowRoles(true)).toContain('zoom');
+});
+
 test("macOS's application menu names the app", async () => {
   const [appMenu] = await buildMenu(true, 'fr');
 

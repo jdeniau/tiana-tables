@@ -233,9 +233,10 @@ export function createMenu(mainWindow: BrowserWindow): Menu {
       label: t('menu.window'),
       submenu: [
         { role: 'minimize', label: t('menu.window.minimize') },
-        { role: 'zoom', label: t('menu.window.zoom') },
         ...(isMac
           ? [
+              // the window zoom of macOS: elsewhere the role does nothing
+              { role: 'zoom', label: t('menu.window.zoom') },
               { type: 'separator' },
               { role: 'front', label: t('menu.window.front') },
               { type: 'separator' },
