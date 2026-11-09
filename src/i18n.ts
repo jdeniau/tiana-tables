@@ -1,4 +1,4 @@
-import { changeLanguage, init, use as loadPlugin, t } from 'i18next';
+import i18next, { changeLanguage, init, use as loadPlugin, t } from 'i18next';
 import ICU from 'i18next-icu';
 import { initReactI18next, useTranslation } from 'react-i18next';
 import en from '../locales/en';
@@ -39,5 +39,12 @@ init({
     escapeValue: false, // react already safes from xss => https://www.i18next.com/translation-function/interpolation#unescape
   },
 });
+
+/** Calls `listener` after each change of language, until the returned function is called. */
+export function onLanguageChanged(listener: () => void): () => void {
+  i18next.on('languageChanged', listener);
+
+  return () => i18next.off('languageChanged', listener);
+}
 
 export { useTranslation, t, changeLanguage };

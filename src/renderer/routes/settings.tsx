@@ -13,7 +13,7 @@ import {
 import ThemeSelector from '../component/ThemeSelector';
 import { space } from '../theme';
 
-/** Language, theme and what version this is, reached from the native menu (`CmdOrCtrl+,`). */
+/** Language, theme and what version this is, reached from the application menu (`CmdOrCtrl+,`). */
 export default function Settings() {
   const { t } = useTranslation();
 

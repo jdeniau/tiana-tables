@@ -1,7 +1,7 @@
 import { dialog } from 'electron';
 import { existsSync, readFileSync, writeFile } from 'node:fs';
 import log from 'electron-log';
-import { t } from '../i18n';
+import { changeLanguage as changeI18nLanguage, t } from '../i18n';
 import { WindowState } from '../main-process/windowState';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
 import { DatabaseEngine } from '../sql/engine';
@@ -210,11 +210,14 @@ export function changeTheme(theme: string): void {
   writeConfiguration(config);
 }
 
-export function changeLanguage(language: string): Configuration {
+export async function changeLanguage(language: string): Promise<Configuration> {
   const config = getConfiguration();
   config.locale = language;
 
   writeConfiguration(config);
+
+  // the main process's own i18next instance: its menu and its dialogs
+  await changeI18nLanguage(language);
 
   return config;
 }

@@ -1,6 +1,7 @@
 import { dialog, safeStorage } from 'electron';
 import { existsSync, readFileSync, writeFile } from 'node:fs';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { changeLanguage as changeI18nLanguage } from '../i18n';
 import { DatabaseEngine } from '../sql/engine';
 import { DateDisplay } from './dateDisplay';
 import { DEFAULT_LOCALE } from './locale';
@@ -55,6 +56,7 @@ function resetAllMocks(): void {
 
 vi.mock('../i18n', () => ({
   t: (key: string) => key,
+  changeLanguage: vi.fn(),
 }));
 
 vi.mock('electron', () => ({
@@ -452,6 +454,15 @@ describe('language', () => {
       'utf-8',
       expect.any(Function)
     );
+  });
+
+  // the main process's menu and dialogs follow the app's language
+  test('translates the main process', async () => {
+    mockExistsSync.mockReturnValue(false);
+
+    await changeLanguage('fr');
+
+    expect(changeI18nLanguage).toHaveBeenCalledWith('fr');
   });
 });
 
