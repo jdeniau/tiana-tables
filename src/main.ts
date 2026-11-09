@@ -55,6 +55,26 @@ log.transports.file.resolvePathFn = () => getLogPath();
 log.initialize();
 logStartupMilestone('module-initialized');
 
+// two instances on one profile each write config.json from their own copy, erasing what the other saved
+const isFirstInstance = app.requestSingleInstanceLock();
+
+if (!isFirstInstance) {
+  log.warn(
+    'Another instance uses this profile: it comes forward, this one quits'
+  );
+  app.quit();
+}
+
+app.on('second-instance', () => {
+  const [mainWindow] = BrowserWindow.getAllWindows();
+
+  if (mainWindow?.isMinimized()) {
+    mainWindow.restore();
+  }
+
+  mainWindow?.focus();
+});
+
 const createWindow = () => {
   logStartupMilestone('create-window-start');
   const configuration = getConfiguration();
@@ -144,6 +164,11 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
+  // quitting, and must neither read nor write the configuration
+  if (!isFirstInstance) {
+    return;
+  }
+
   logStartupMilestone('app-when-ready');
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
