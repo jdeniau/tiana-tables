@@ -1,4 +1,4 @@
-import { MouseEvent, ReactElement, useState } from 'react';
+import { MouseEvent, ReactElement, useRef, useState } from 'react';
 import { CheckOutlined, MenuOutlined } from '@ant-design/icons';
 import { Button, Dropdown, MenuProps } from 'antd';
 import { styled } from 'styled-components';
@@ -51,7 +51,14 @@ function toMenuItems(items: Array<AppMenuItem>): MenuItems {
   });
 }
 
-// every Edit entry acts on the focused element, which neither the button nor the menu may take
+/** The menu takes the keys while it is open: rc-menu reads its arrows, Enter and Escape on its own list only. */
+function focusMenu(popup: HTMLDivElement | null): void {
+  popup
+    ?.querySelector<HTMLElement>('[role="menu"]')
+    ?.focus({ preventScroll: true });
+}
+
+// the element focused at opening is the one the Edit entries act on: pressing the button must not take it
 function keepFocus(event: MouseEvent): void {
   event.preventDefault();
 }
@@ -64,12 +71,28 @@ export default function AppMenuButton(): ReactElement | null {
   const { t } = useTranslation();
   // null while closed: the items are read from the main process on each opening
   const [items, setItems] = useState<Array<AppMenuItem> | null>(null);
+  // what the Edit entries act on, focused again before one runs and when the menu closes
+  const focusedBeforeOpening = useRef<HTMLElement | null>(null);
 
   if (window.isMac) {
     return null;
   }
 
+  function giveFocusBack(): void {
+    focusedBeforeOpening.current?.focus();
+  }
+
   async function onOpenChange(open: boolean): Promise<void> {
+    if (open) {
+      focusedBeforeOpening.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+    } else {
+      // Escape and Tab focus the button before closing
+      giveFocusBack();
+    }
+
     setItems(open ? await window.titleBar.getMenu() : null);
   }
 
@@ -81,10 +104,17 @@ export default function AppMenuButton(): ReactElement | null {
       menu={{
         items: toMenuItems(items ?? []),
         selectable: false,
-        onClick: ({ key }) => window.titleBar.clickMenuItem(pathOf(key)),
+        onClick: ({ key }) => {
+          giveFocusBack();
+          window.titleBar.clickMenuItem(pathOf(key));
+        },
       }}
       // React events cross portals, so this also covers the submenus' popups
-      popupRender={(menu) => <div onMouseDown={keepFocus}>{menu}</div>}
+      popupRender={(menu) => (
+        <div ref={focusMenu} onMouseDown={keepFocus}>
+          {menu}
+        </div>
+      )}
       destroyOnHidden
     >
       <Button

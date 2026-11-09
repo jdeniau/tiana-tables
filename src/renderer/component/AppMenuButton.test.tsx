@@ -128,6 +128,51 @@ test('clicking a disabled item does nothing', async () => {
   expect(titleBar.clickMenuItem).not.toHaveBeenCalled();
 });
 
+/** a field holding the focus, as the SQL editor or a filter does when the menu opens */
+function focusedField(): HTMLInputElement {
+  const field = document.createElement('input');
+  document.body.append(field);
+  field.focus();
+
+  return field;
+}
+
+test('the menu takes the keys while it is open', async () => {
+  focusedField();
+
+  await openMenu();
+
+  expect(document.activeElement?.getAttribute('role')).toBe('menu');
+});
+
+test('Escape gives the focus back to the field the menu was opened from', async () => {
+  const field = focusedField();
+  await openMenu();
+
+  await act(async () => {
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27 })
+    );
+  });
+
+  expect(document.activeElement).toBe(field);
+});
+
+test('an item runs once the focus is back on the field it acts on', async () => {
+  const field = focusedField();
+  let focusedWhenRun: Element | null = null;
+  titleBar.clickMenuItem.mockImplementationOnce(async () => {
+    focusedWhenRun = document.activeElement;
+  });
+  await openMenu();
+
+  await act(async () => {
+    menuItem('Settings')?.click();
+  });
+
+  expect(focusedWhenRun).toBe(field);
+});
+
 test('no button on macOS, where the menu stays in the system bar', () => {
   window.isMac = true;
   act(() => root.render(<AppMenuButton key="mac" />));
