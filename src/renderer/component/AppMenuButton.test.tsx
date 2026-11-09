@@ -173,6 +173,25 @@ test('an item runs once the focus is back on the field it acts on', async () => 
   expect(focusedWhenRun).toBe(field);
 });
 
+test('Enter runs an item without typing a newline in the field it acts on', async () => {
+  focusedField();
+  await openMenu();
+  const enter = new KeyboardEvent('keydown', {
+    key: 'Enter',
+    keyCode: 13,
+    which: 13,
+    bubbles: true,
+    cancelable: true,
+  });
+
+  await act(async () => {
+    menuItem('Settings')?.dispatchEvent(enter);
+  });
+
+  expect(titleBar.clickMenuItem).toHaveBeenCalledWith([0]);
+  expect(enter.defaultPrevented).toBe(true);
+});
+
 test('no button on macOS, where the menu stays in the system bar', () => {
   window.isMac = true;
   act(() => root.render(<AppMenuButton key="mac" />));

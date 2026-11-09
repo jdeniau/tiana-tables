@@ -1,4 +1,10 @@
-import { MouseEvent, ReactElement, useRef, useState } from 'react';
+import {
+  KeyboardEvent,
+  MouseEvent,
+  ReactElement,
+  useRef,
+  useState,
+} from 'react';
 import { CheckOutlined, MenuOutlined } from '@ant-design/icons';
 import { Button, Dropdown, MenuProps } from 'antd';
 import { styled } from 'styled-components';
@@ -62,6 +68,13 @@ function keepFocus(event: MouseEvent): void {
   event.preventDefault();
 }
 
+// rc-menu runs an item on Enter's keydown, once the focus is back in the field: its newline would land there
+function keepEnterInMenu(event: KeyboardEvent): void {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+  }
+}
+
 /**
  * Opens the application menu, which has no bar of its own once the title bar
  * is ours. macOS keeps it in the system bar, so it gets no button.
@@ -110,7 +123,11 @@ export default function AppMenuButton(): ReactElement | null {
       }}
       // React events cross portals, so this also covers the submenus' popups
       popupRender={(menu) => (
-        <div ref={focusMenu} onMouseDown={keepFocus}>
+        <div
+          ref={focusMenu}
+          onMouseDown={keepFocus}
+          onKeyDown={keepEnterInMenu}
+        >
           {menu}
         </div>
       )}
