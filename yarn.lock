@@ -4192,6 +4192,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/write-file-atomic@npm:^4.0.3":
+  version: 4.0.3
+  resolution: "@types/write-file-atomic@npm:4.0.3"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/deb7e861b6ef42c72cb2330cbd26ecd888b31206a8d11939ab3ecfddad901a989a74ff1f7e4a87882799bd69f736b9f6becda3d5cdb0585ebff8d88d9eef9969
+  languageName: node
+  linkType: hard
+
 "@types/ws@npm:^8.18.1":
   version: 8.18.1
   resolution: "@types/ws@npm:8.18.1"
@@ -10815,7 +10824,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"signal-exit@npm:^4.1.0":
+"signal-exit@npm:^4.0.1, signal-exit@npm:^4.1.0":
   version: 4.1.0
   resolution: "signal-exit@npm:4.1.0"
   checksum: 10c0/41602dce540e46d599edba9d9860193398d135f7ff72cab629db5171516cfae628d21e7bfccde1bbfdf11c48726bc2a6d1a8fb8701125852fbfda7cf19c6aa83
@@ -11376,6 +11385,7 @@ __metadata:
     "@types/pg": "npm:^8.23.1"
     "@types/react": "npm:^19.3.0"
     "@types/react-dom": "npm:^19.3.0"
+    "@types/write-file-atomic": "npm:^4.0.3"
     "@typescript/native": "npm:typescript@^7.0.2"
     "@vitejs/plugin-react": "npm:^6.1.2"
     "@vitest/browser-playwright": "npm:^5.0.3"
@@ -11426,6 +11436,7 @@ __metadata:
     vite: "npm:^8.3.3"
     vite-prerender-plugin: "npm:0.5.14"
     vitest: "npm:^5.0.3"
+    write-file-atomic: "npm:^8.0.0"
     zod: "npm:^4.6.5"
   dependenciesMeta:
     electron-winstaller:
@@ -12238,6 +12249,15 @@ __metadata:
   version: 1.0.2
   resolution: "wrappy@npm:1.0.2"
   checksum: 10c0/56fece1a4018c6a6c8e28fbc88c87e0fbf4ea8fd64fc6c63b18f4acc4bd13e0ad2515189786dd2c30d3eec9663d70f4ecf699330002f8ccb547e4a18231fc9f0
+  languageName: node
+  linkType: hard
+
+"write-file-atomic@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "write-file-atomic@npm:8.0.0"
+  dependencies:
+    signal-exit: "npm:^4.0.1"
+  checksum: 10c0/49567002e4747e6f738373bc3cda591948c45b39282b835bf51143b483800f6c2e6259d2c187dbe08951fe5752ddec7751e52a90033eff3e93ad04b64cc091ae
   languageName: node
   linkType: hard
 

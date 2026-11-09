@@ -21,6 +21,7 @@ paths:
 - **`AppMenuButton` gives the focus back before an entry runs**: every Edit entry acts on the focused element. The button never takes it (`preventDefault` on `mousedown`), so the element focused at opening is the one remembered; the menu takes it while open, since rc-menu reads its arrows, Enter and Escape on its own list only, and gives it back on close (Escape focuses the button first) and before `clickMenuItem`, Enter's default prevented since rc-menu runs the item on its keydown. The menu it draws is the application menu, read through `GET_MENU` at each opening, and an entry runs as that `MenuItem`'s `click()` in the main process: an item added to `menu.ts` needs nothing else.
 - **Every item of `menu.ts` has a `label` from `t()`, a `role` item too**: Electron labels its roles in English whatever the locale. A change of language rebuilds the menu (`languageChanged` in `main.ts`), so what must outlive a rebuild is bound once in `bindMenuListeners` and reads `Menu.getApplicationMenu()`, and an item's `enabled` is computed at build time.
 - **Quitting the app rewrites `config.json` from memory** (`saveWindowState`): a file edited while the app runs is lost. Test persistence through the app's own action.
+- **One instance per profile** (`requestSingleInstanceLock` in `main.ts`): each instance writes the whole file from its own copy, erasing what another saved. Dev and the installed app share `~/.config/Tiana Tables`, so a `yarn start` beside the installed app brings its window forward and quits; `--user-data-dir` is a separate profile.
 
 ## Configuration and encryption
 
@@ -33,10 +34,12 @@ Credentials are encrypted with Electron's `safeStorage`, config in `src/configur
   - an empty password on an edit means "leave it as it is", which is why the form never receives a password.
 - **A locked keyring is not a lost key** (`decryptStringAsync` rejecting as "temporarily unavailable" vs anything else): two `ConnectionFailure` reasons, the first worth a Retry, the second asking for the password again.
 - `getSelectedStorageBackend()` describes the legacy detection, not the provider the async API picked, so the "only obfuscated" warning can be pessimistic. Left as is: Electron exposes nothing more precise.
+- **`config.json` is written only through `writeConfiguration`, atomically** (`write-file-atomic`, sync): a temporary file renamed over it, so a crash leaves the previous file whole, and at most a `config.json.<number>` orphan after a `kill -9`.
+- **Only a missing `config.json` is a first launch**: one that does not parse goes through `recoverUnreadableConfiguration`, whose dialog restores `config.previous.json` (saved at each readable startup), quits, or starts blank, the file kept as `config.json.bak-<date>` — never replaced in place.
 - **The configuration file is not validated** (parsed with a cast). A missing or old field is decided in `loadConfiguration` (default engine, a port read with `Number()`), with no migration and no `version` bump.
 
 ## Dev tooling (`installReactDevToolsExtension.ts`)
 
 - **`electron-devtools-installer` never refreshes its cache**: a re-download is forced when the cached `.crx` is older than 30 days.
 - **React DevTools v7 needs its service worker started before the first navigation** (`serviceWorkers.startWorkerForScope` before `createWindow()`). A reload does not repair a hookless document, so the session that downloads the extension is always hookless.
-- **Only one app instance while measuring startup or extension behaviour**: instances share the `userData` profile. Kill them all before each run, and repeat a run before calling a race fixed.
+- **Kill every app instance before measuring startup or extension behaviour**: a leftover one holds the profile's lock, so a new launch only brings it forward and quits. Repeat a run before calling a race fixed.

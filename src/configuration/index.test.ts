@@ -1,6 +1,7 @@
-import { dialog, safeStorage } from 'electron';
-import { existsSync, readFileSync, writeFile } from 'node:fs';
+import { app, dialog, safeStorage } from 'electron';
+import { existsSync, readFileSync, renameSync, statSync } from 'node:fs';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { sync as writeFileAtomicSync } from 'write-file-atomic';
 import { changeLanguage as changeI18nLanguage } from '../i18n';
 import { DatabaseEngine } from '../sql/engine';
 import { DateDisplay } from './dateDisplay';
@@ -38,26 +39,56 @@ vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
   readFileSync: vi.fn(),
   mkdirSync: vi.fn().mockReturnValue(true),
-  writeFile: vi.fn(),
+  renameSync: vi.fn(),
+  statSync: vi.fn(),
 }));
+
+vi.mock('write-file-atomic', () => ({ sync: vi.fn() }));
 
 const mockExistsSync = vi.mocked(existsSync);
 const mockReadFileSync = vi.mocked(readFileSync);
-const mockWriteFile = vi.mocked(writeFile);
+const mockWriteFile = vi.mocked(writeFileAtomicSync);
+const mockRenameSync = vi.mocked(renameSync);
+const mockStatSync = vi.mocked(statSync);
+
+const CONFIGURATION_PATH = 'userData/config/config.json';
+const PREVIOUS_CONFIGURATION_PATH = 'userData/config/config.previous.json';
+
+/** What was written to `config.json` itself, loading saving `config.previous.json` too. */
+function configurationWrites(): Array<string> {
+  return mockWriteFile.mock.calls
+    .filter(([path]) => path === CONFIGURATION_PATH)
+    .map(([, content]) => String(content));
+}
 
 function resetAllMocks(): void {
   vi.resetModules();
   mockExistsSync.mockReset();
   mockReadFileSync.mockReset();
   mockWriteFile.mockReset();
+  mockRenameSync.mockReset();
+  mockStatSync.mockReset();
+  vi.mocked(dialog.showErrorBox).mockReset();
+  vi.mocked(dialog.showMessageBoxSync).mockReset();
+  vi.mocked(app.exit).mockReset();
 
   resetConfiguration();
 }
 
-vi.mock('../i18n', () => ({
-  t: (key: string) => key,
-  changeLanguage: vi.fn(),
-}));
+vi.mock('../i18n', () => {
+  const t = (key: string, values?: Record<string, unknown>): string =>
+    values ? `${key} ${JSON.stringify(values)}` : key;
+
+  return {
+    t,
+    // the language a dialog is shown in, then the key
+    getFixedT: vi.fn(
+      (language: string) => (key: string, values?: Record<string, unknown>) =>
+        `[${language}] ${t(key, values)}`
+    ),
+    changeLanguage: vi.fn(),
+  };
+});
 
 vi.mock('electron', () => ({
   safeStorage: {
@@ -76,9 +107,11 @@ vi.mock('electron', () => ({
   dialog: {
     showErrorBox: vi.fn(),
     showMessageBox: vi.fn(() => Promise.resolve({ response: 0 })),
+    showMessageBoxSync: vi.fn(),
   },
   app: {
     getPath: vi.fn((s: string) => s),
+    exit: vi.fn(),
   },
 }));
 
@@ -124,15 +157,21 @@ describe('read configuration from file', () => {
 
     expect(getConfiguration()).toStrictEqual(getBaseConfig());
     expect(mockReadFileSync).not.toHaveBeenCalled();
+    // a first launch: nothing to recover, nothing to keep
+    expect(dialog.showMessageBoxSync).not.toHaveBeenCalled();
+    expect(mockWriteFile).not.toHaveBeenCalled();
   });
 
-  test('existing file but empty', () => {
+  test('a readable file is kept as the version to restore', () => {
     mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockReturnValue('');
+    mockReadFileSync.mockReturnValue('{ "version": 1, "connections": {} }');
 
-    expect(getConfiguration()).toStrictEqual(getBaseConfig());
+    getConfiguration();
 
-    expect(mockReadFileSync).toHaveBeenCalledOnce();
+    expect(mockWriteFile).toHaveBeenCalledWith(
+      PREVIOUS_CONFIGURATION_PATH,
+      '{ "version": 1, "connections": {} }'
+    );
   });
 
   test('existing file without connexion key', () => {
@@ -246,9 +285,7 @@ describe('add connection to config', () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
   });
 
@@ -320,9 +357,7 @@ describe('add connection to config', () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
 
     expect(mockReadFileSync).toHaveBeenCalledOnce();
@@ -367,9 +402,7 @@ describe('set theme', () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
   });
 
@@ -422,9 +455,7 @@ describe('set theme', () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
 
     expect(mockReadFileSync).toHaveBeenCalledOnce();
@@ -450,9 +481,7 @@ describe('language', () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
   });
 
@@ -472,7 +501,7 @@ describe('set connection appState', async () => {
 
     await setActiveDatabase('test', 'db');
 
-    expect(mockWriteFile).not.toHaveBeenCalled();
+    expect(configurationWrites()).toStrictEqual([]);
   });
 
   test('existing file, non-existing connection', async () => {
@@ -480,7 +509,7 @@ describe('set connection appState', async () => {
 
     await setActiveDatabase('inexistant', 'db');
 
-    expect(mockWriteFile).not.toHaveBeenCalled();
+    expect(configurationWrites()).toStrictEqual([]);
 
     expect(mockReadFileSync).toHaveBeenCalledOnce();
   });
@@ -553,9 +582,7 @@ describe('set connection appState', async () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
 
     expect(mockReadFileSync).toHaveBeenCalledOnce();
@@ -611,9 +638,7 @@ describe('set connection appState', async () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
   });
 
@@ -700,9 +725,7 @@ describe('set connection appState', async () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
   });
 });
@@ -724,7 +747,7 @@ describe('setActivePathKey', () => {
 
     setActivePathKey('inexistant', 'db', 'Sql');
 
-    expect(mockWriteFile).not.toHaveBeenCalled();
+    expect(configurationWrites()).toStrictEqual([]);
   });
 });
 
@@ -792,9 +815,7 @@ describe('setTableFilter', () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
   });
 
@@ -1046,9 +1067,7 @@ describe('edit', () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
 
     expect(mockReadFileSync).toHaveBeenCalledOnce();
@@ -1105,9 +1124,7 @@ describe('edit', () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
 
     expect(mockReadFileSync).toHaveBeenCalledOnce();
@@ -1199,9 +1216,7 @@ describe('set panel size', () => {
         },
         null,
         2
-      ),
-      'utf-8',
-      expect.any(Function)
+      )
     );
   });
 
@@ -1230,9 +1245,7 @@ describe('setDateDisplay', () => {
     expect(configuration.dateDisplay).toBe('local');
     expect(mockWriteFile).toHaveBeenCalledWith(
       'userData/config/config.json',
-      expect.stringContaining('"dateDisplay": "local"'),
-      'utf-8',
-      expect.any(Function)
+      expect.stringContaining('"dateDisplay": "local"')
     );
   });
 });
@@ -1256,9 +1269,7 @@ describe('stored passwords', () => {
 
   /** the configuration as the first write left it on disk */
   function writtenConfig(): Configuration {
-    const [, content] = vi.mocked(mockWriteFile).mock.calls[0];
-
-    return JSON.parse(String(content)) as Configuration;
+    return JSON.parse(configurationWrites()[0]) as Configuration;
   }
 
   test('the configuration holds the ciphertext, and never decrypts it', () => {
@@ -1295,7 +1306,7 @@ describe('stored passwords', () => {
       password: 'password',
     });
 
-    expect(mockWriteFile).not.toHaveBeenCalled();
+    expect(configurationWrites()).toStrictEqual([]);
     expect(dialog.showErrorBox).toHaveBeenCalledWith(
       'config.encryption.unavailable.title',
       'config.encryption.unavailable.message'
@@ -1315,7 +1326,7 @@ describe('stored passwords', () => {
       password: 'password',
     });
 
-    expect(mockWriteFile).not.toHaveBeenCalled();
+    expect(configurationWrites()).toStrictEqual([]);
 
     // the edit was refused, so it must not ride along the next unrelated write
     expect(getConfiguration().connections.local.host).toBe('localhost');
@@ -1381,5 +1392,161 @@ describe('stored passwords', () => {
     expect(writtenConfig().connections.local.password).toBe(
       Buffer.from('encrypted-new-password').toString('base64')
     );
+  });
+});
+
+describe('unreadable configuration file', () => {
+  const PREVIOUS = JSON.stringify({
+    version: 1,
+    locale: 'fr',
+    connections: { local: { name: 'local', port: '3306', slug: 'local' } },
+  });
+
+  /** the files of the configuration folder, by path */
+  function mockFiles(files: Record<string, string>): void {
+    mockExistsSync.mockImplementation((path) => String(path) in files);
+    mockReadFileSync.mockImplementation((path) => files[String(path)]);
+    // @ts-expect-error -- only `mtime` is read
+    mockStatSync.mockReturnValue({ mtime: new Date('2026-11-08T10:00:00Z') });
+  }
+
+  function dialogOptions(): Electron.MessageBoxSyncOptions {
+    const [options] = vi.mocked(dialog.showMessageBoxSync).mock.calls[0];
+
+    return options as Electron.MessageBoxSyncOptions;
+  }
+
+  test.each([
+    ['an empty file', '', 'config.unreadable.empty'],
+    ['blank lines', '\n  \n', 'config.unreadable.empty'],
+    ['invalid JSON', '{\n  "a": 1\n  "b": 2\n}', 'line 3 column 3'],
+    ['a truncated file', '{"connections":', 'Unexpected end of JSON input'],
+    ['null', 'null', 'config.unreadable.notAnObject'],
+    ['an array', '[]', 'config.unreadable.notAnObject'],
+  ])('%s asks what to do, and says why', (_, content, cause) => {
+    mockFiles({ [CONFIGURATION_PATH]: content });
+    vi.mocked(dialog.showMessageBoxSync).mockReturnValue(1);
+
+    getConfiguration();
+
+    expect(dialogOptions().detail).toContain(cause);
+  });
+
+  test('starting blank keeps the unreadable file aside', () => {
+    mockFiles({ [CONFIGURATION_PATH]: '' });
+    // no previous version: quit, blank
+    vi.mocked(dialog.showMessageBoxSync).mockReturnValue(1);
+
+    expect(getConfiguration()).toStrictEqual(getBaseConfig());
+
+    expect(dialogOptions().buttons).toStrictEqual([
+      '[en] config.unreadable.quit',
+      '[en] config.unreadable.blank',
+    ]);
+    expect(mockRenameSync).toHaveBeenCalledWith(
+      CONFIGURATION_PATH,
+      expect.stringMatching(
+        /^userData\/config\/config\.json\.bak-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z$/
+      )
+    );
+    // the backup path is told before the choice is made
+    expect(dialogOptions().detail).toContain(
+      String(mockRenameSync.mock.calls[0][1])
+    );
+    expect(mockWriteFile).not.toHaveBeenCalled();
+  });
+
+  test('restoring brings the previous version back as the configuration file', () => {
+    mockFiles({
+      [CONFIGURATION_PATH]: '',
+      [PREVIOUS_CONFIGURATION_PATH]: PREVIOUS,
+    });
+    vi.mocked(dialog.showMessageBoxSync).mockReturnValue(0);
+
+    const configuration = getConfiguration();
+
+    expect(dialogOptions().buttons).toHaveLength(3);
+    // the dialog speaks the language the previous version names
+    expect(dialogOptions().buttons?.[0]).toBe(
+      '[fr] config.unreadable.restore {"date":"2026-11-08T10:00:00.000Z"}'
+    );
+    expect(mockRenameSync).toHaveBeenCalledWith(
+      CONFIGURATION_PATH,
+      expect.stringContaining('config.json.bak-')
+    );
+    expect(configurationWrites()).toStrictEqual([PREVIOUS]);
+    expect(configuration.locale).toBe('fr');
+    // restored, then read as any file is
+    expect(configuration.connections.local.port).toBe(3306);
+    expect(configuration.connections.local.engine).toBe(DatabaseEngine.MySQL);
+  });
+
+  test('quitting leaves every file as it is', () => {
+    mockFiles({
+      [CONFIGURATION_PATH]: '',
+      [PREVIOUS_CONFIGURATION_PATH]: PREVIOUS,
+    });
+    // restore, quit, blank: closing the dialog is quitting too
+    vi.mocked(dialog.showMessageBoxSync).mockReturnValue(1);
+
+    getConfiguration();
+
+    expect(dialogOptions().cancelId).toBe(1);
+    expect(app.exit).toHaveBeenCalledWith(0);
+    expect(mockRenameSync).not.toHaveBeenCalled();
+    expect(mockWriteFile).not.toHaveBeenCalled();
+  });
+
+  test('an unreadable previous version is not offered', () => {
+    mockFiles({
+      [CONFIGURATION_PATH]: '',
+      [PREVIOUS_CONFIGURATION_PATH]: '{',
+    });
+    vi.mocked(dialog.showMessageBoxSync).mockReturnValue(0);
+
+    getConfiguration();
+
+    expect(dialogOptions().buttons).toStrictEqual([
+      '[en] config.unreadable.quit',
+      '[en] config.unreadable.blank',
+    ]);
+  });
+});
+
+describe('failed write', () => {
+  function failWrites(): void {
+    mockWriteFile.mockImplementation(() => {
+      throw new Error('EACCES: permission denied');
+    });
+  }
+
+  test('is told once until a write succeeds again', () => {
+    mockExistsSync.mockReturnValue(false);
+    failWrites();
+
+    changeTheme('a');
+    changeTheme('b');
+
+    expect(dialog.showErrorBox).toHaveBeenCalledOnce();
+    expect(dialog.showErrorBox).toHaveBeenCalledWith(
+      'config.writeFailed.title',
+      'config.writeFailed.message {"reason":"EACCES: permission denied"}'
+    );
+
+    mockWriteFile.mockReset();
+    changeTheme('c');
+    failWrites();
+    changeTheme('d');
+
+    expect(dialog.showErrorBox).toHaveBeenCalledTimes(2);
+  });
+
+  test('keeps the change in memory, for the next write to carry', () => {
+    mockExistsSync.mockReturnValue(false);
+    failWrites();
+
+    changeTheme('a');
+
+    expect(getConfiguration().theme).toBe('a');
   });
 });
