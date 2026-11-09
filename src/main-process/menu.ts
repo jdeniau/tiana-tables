@@ -1,4 +1,4 @@
-import { BrowserWindow, Menu, ipcMain, shell } from 'electron';
+import { BrowserWindow, Menu, app, ipcMain, shell } from 'electron';
 import {
   getConfigurationFolder,
   getLogFolder,
@@ -12,7 +12,16 @@ import { isDevApp, isMacPlatform } from './helpers';
 
 const isMac = isMacPlatform();
 
-export function createMenu(mainWindow: BrowserWindow) {
+const hasConnection = (): boolean =>
+  Boolean(
+    connectionStackInstance.currentConnectionSlug &&
+    connectionStackInstance.databaseName
+  );
+
+/** The application menu, its labels in the current language: Electron's roles only know English. */
+export function createMenu(mainWindow: BrowserWindow): Menu {
+  const name = app.name;
+
   // the preferences of the platform: the app menu on macOS, File elsewhere
   const settingsItem = {
     label: t('menu.settings'),
@@ -36,48 +45,60 @@ export function createMenu(mainWindow: BrowserWindow) {
       ? [
           {
             role: 'appMenu',
-            // label: app.name,
             submenu: [
-              { role: 'about' },
+              { role: 'about', label: t('menu.app.about', { name }) },
               { type: 'separator' },
               settingsItem,
               { type: 'separator' },
-              { role: 'services' },
+              { role: 'services', label: t('menu.app.services') },
               { type: 'separator' },
-              { role: 'hide' },
-              { role: 'hideOthers' },
-              { role: 'unhide' },
+              { role: 'hide', label: t('menu.app.hide', { name }) },
+              { role: 'hideOthers', label: t('menu.app.hideOthers') },
+              { role: 'unhide', label: t('menu.app.unhide') },
               { type: 'separator' },
-              { role: 'quit' },
+              { role: 'quit', label: t('menu.app.quit', { name }) },
             ],
           },
         ]
       : []),
     {
       role: 'fileMenu',
-      // label: 'File',
+      label: t('menu.file'),
       submenu: isMac
-        ? [{ role: 'close' }]
-        : [settingsItem, { type: 'separator' }, { role: 'quit' }],
+        ? [{ role: 'close', label: t('menu.window.close') }]
+        : [
+            settingsItem,
+            { type: 'separator' },
+            { role: 'quit', label: t('menu.app.quit', { name }) },
+          ],
     },
     {
       role: 'editMenu',
-      // label: 'Edit',
+      label: t('menu.edit'),
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
+        { role: 'undo', label: t('menu.edit.undo') },
+        { role: 'redo', label: t('menu.edit.redo') },
         { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
+        { role: 'cut', label: t('menu.edit.cut') },
+        { role: 'copy', label: t('menu.edit.copy') },
+        { role: 'paste', label: t('menu.edit.paste') },
         ...(isMac
           ? [
-              { role: 'pasteAndMatchStyle' },
+              {
+                role: 'pasteAndMatchStyle',
+                label: t('menu.edit.pasteAndMatchStyle'),
+              },
               selectAllItem,
               { type: 'separator' },
               {
-                label: 'Speech',
-                submenu: [{ role: 'startSpeaking' }, { role: 'stopSpeaking' }],
+                label: t('menu.edit.speech'),
+                submenu: [
+                  {
+                    role: 'startSpeaking',
+                    label: t('menu.edit.startSpeaking'),
+                  },
+                  { role: 'stopSpeaking', label: t('menu.edit.stopSpeaking') },
+                ],
               },
             ]
           : [{ type: 'separator' }, selectAllItem]),
@@ -133,7 +154,7 @@ export function createMenu(mainWindow: BrowserWindow) {
           id: 'sqlPanelLink',
           label: t('menu.navigate.sqlPanel'),
           accelerator: 'CmdOrCtrl+T',
-          enabled: false, // wait for a connection to be selected
+          enabled: hasConnection(),
           click: () => {
             const { currentConnectionSlug, databaseName } =
               connectionStackInstance;
@@ -153,7 +174,7 @@ export function createMenu(mainWindow: BrowserWindow) {
           id: 'openNavigationPanelLink',
           label: t('menu.navigate.openNavigationPanel'),
           accelerator: 'CmdOrCtrl+K',
-          enabled: false,
+          enabled: hasConnection(),
           click: () => {
             mainWindow.webContents.send(
               NAVIGATION_CHANNEL.OPEN_NAVIGATION_PANEL
@@ -164,22 +185,22 @@ export function createMenu(mainWindow: BrowserWindow) {
     },
     {
       role: 'viewMenu',
-      // label: 'View',
+      label: t('menu.view'),
       submenu: [
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        { role: 'resetZoom', label: t('menu.view.resetZoom') },
+        { role: 'zoomIn', label: t('menu.view.zoomIn') },
+        { role: 'zoomOut', label: t('menu.view.zoomOut') },
         { type: 'separator' },
-        { role: 'togglefullscreen' },
+        { role: 'togglefullscreen', label: t('menu.view.toggleFullScreen') },
         {
           type: 'separator',
         },
         {
           label: t('menu.view.devTools'),
           submenu: [
-            { role: 'reload' },
-            { role: 'forceReload' },
-            { role: 'toggleDevTools' },
+            { role: 'reload', label: t('menu.view.reload') },
+            { role: 'forceReload', label: t('menu.view.forceReload') },
+            { role: 'toggleDevTools', label: t('menu.view.toggleDevTools') },
             {
               label: t('menu.view.togglePath'),
               type: 'checkbox',
@@ -209,22 +230,23 @@ export function createMenu(mainWindow: BrowserWindow) {
     },
     {
       role: 'windowMenu',
-      // label: 'Window',
+      label: t('menu.window'),
       submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
+        { role: 'minimize', label: t('menu.window.minimize') },
+        { role: 'zoom', label: t('menu.window.zoom') },
         ...(isMac
           ? [
               { type: 'separator' },
-              { role: 'front' },
+              { role: 'front', label: t('menu.window.front') },
               { type: 'separator' },
-              { role: 'window' },
+              { role: 'window', label: t('menu.window') },
             ]
-          : [{ role: 'close' }]),
+          : [{ role: 'close', label: t('menu.window.close') }]),
       ],
     },
     {
       role: 'help',
+      label: t('menu.help'),
       submenu: [
         {
           // display two menu: one for the logs, the other for the configuration folder
@@ -255,14 +277,34 @@ export function createMenu(mainWindow: BrowserWindow) {
     },
   ];
 
-  const MENU_ITEMS_THAT_NEEDS_CONNECTION = [
-    'sqlPanelLink',
-    'openNavigationPanelLink',
-  ];
-
   // @ts-expect-error template is a Menu, issue with the `ìsMac`and the array unpacking
   const menu = Menu.buildFromTemplate(template);
 
+  // menu.append(
+  //   new MenuItem({
+  //     label: 'Electron',
+  //     submenu: [
+  //       {
+  //         role: 'help',
+  //         accelerator:
+  //           process.platform === 'darwin' ? 'Alt+Cmd+I' : 'Alt+Shift+I',
+  //         click: () => {
+  //           console.log('Electron rocks!');
+  //         },
+  //       },
+  //     ],
+  //   })
+  // );
+  return menu;
+}
+
+const MENU_ITEMS_THAT_NEEDS_CONNECTION = [
+  'sqlPanelLink',
+  'openNavigationPanelLink',
+];
+
+/** Bound once per window, on whichever menu is the application's: a change of language rebuilds it. */
+export function bindMenuListeners(mainWindow: BrowserWindow): void {
   /**
    * The items whose accelerator the page takes first. On Linux and Windows a
    * menu accelerator is only handled once the page has declined the key, and
@@ -294,7 +336,7 @@ export function createMenu(mainWindow: BrowserWindow) {
     }
 
     for (const id of MENU_ITEMS_TRIGGERED_BEFORE_THE_PAGE) {
-      const item = menu.getMenuItemById(id);
+      const item = Menu.getApplicationMenu()?.getMenuItemById(id);
 
       // a disabled item keeps its key for the page: with no connection to
       // open a SQL panel on, Monaco may as well have `Ctrl+T`
@@ -325,33 +367,12 @@ export function createMenu(mainWindow: BrowserWindow) {
     // do wait because the event is also handled by the sql connectionStack
     setTimeout(() => {
       MENU_ITEMS_THAT_NEEDS_CONNECTION.forEach((id) => {
-        const sqlPanelLink = menu.getMenuItemById(id);
+        const item = Menu.getApplicationMenu()?.getMenuItemById(id);
 
-        if (!sqlPanelLink) {
-          return;
+        if (item) {
+          item.enabled = hasConnection();
         }
-
-        sqlPanelLink.enabled = Boolean(
-          connectionStackInstance.currentConnectionSlug &&
-          connectionStackInstance.databaseName
-        );
       });
     }, 1);
   });
-  // menu.append(
-  //   new MenuItem({
-  //     label: 'Electron',
-  //     submenu: [
-  //       {
-  //         role: 'help',
-  //         accelerator:
-  //           process.platform === 'darwin' ? 'Alt+Cmd+I' : 'Alt+Shift+I',
-  //         click: () => {
-  //           console.log('Electron rocks!');
-  //         },
-  //       },
-  //     ],
-  //   })
-  // );
-  return menu;
 }

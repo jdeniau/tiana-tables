@@ -11,14 +11,14 @@ import {
 import { logEncryptionStatus } from './configuration/encryption';
 import { getLogPath } from './configuration/filePaths';
 import { DEFAULT_THEME, THEME_LIST } from './configuration/themes';
-import { changeLanguage } from './i18n';
+import { changeLanguage, onLanguageChanged } from './i18n';
 import { bindIpcMainClipboard } from './main-process/clipboard';
 import { isDevApp, isMacPlatform } from './main-process/helpers';
 import {
   installReactDevToolsExtension,
   warnIfDevToolsHookIsMissing,
 } from './main-process/installReactDevToolsExtension';
-import { createMenu } from './main-process/menu';
+import { bindMenuListeners, createMenu } from './main-process/menu';
 import { bindIpcMainSqlFileStorage } from './main-process/sqlFileStorage';
 import {
   bindIpcMainTitleBar,
@@ -74,7 +74,12 @@ const createWindow = () => {
   });
   logStartupMilestone('main-window-created');
 
-  Menu.setApplicationMenu(createMenu(mainWindow));
+  // its labels are translated once, when it is built
+  const setMenu = () => Menu.setApplicationMenu(createMenu(mainWindow));
+  setMenu();
+  const stopRebuilding = onLanguageChanged(setMenu);
+  mainWindow.on('closed', stopRebuilding);
+  bindMenuListeners(mainWindow);
 
   // A middle click on a link would otherwise pop a second window, empty for want of our preload.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -157,7 +162,7 @@ app.whenReady().then(async () => {
   // After `ready`: safeStorage only initializes its encryptor once the app is.
   await logEncryptionStatus();
 
-  // the main process has its own i18next instance, and only the renderer ever switched it: its dialogs would all be in the fallback language
+  // the main process has its own i18next instance, which its menu and dialogs read: the configuration's `changeLanguage` switches it afterwards
   await changeLanguage(getConfiguration().locale);
 
   bindIpcMainConfiguration(ipcMain);
