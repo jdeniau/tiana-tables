@@ -7,6 +7,7 @@ const fr: SiteMessages = {
   'nav.label': 'Sections',
   'nav.editor': 'Éditeur',
   'nav.browse': 'Parcourir',
+  'nav.keyboard': 'Clavier',
   'nav.privacy': 'Confidentialité',
   'nav.charts': 'Graphes',
   'nav.themes': 'Thèmes',
@@ -22,7 +23,7 @@ const fr: SiteMessages = {
   'hero.title': 'Un client SQL pour les développeur·euse·s',
   'hero.title.short': 'Un client SQL pour les devs',
   'hero.lead':
-    'Naviguez, requêtez et modifiez vos données efficacement. Facile à utiliser, joli et multiplateforme.',
+    'Naviguez, requêtez et modifiez vos données efficacement, sans lâcher le clavier. Facile à utiliser, joli et multiplateforme.',
   'hero.download': 'Télécharger',
   'hero.source': 'Le code sur GitHub',
   'hero.other': 'Autres plateformes',
@@ -76,6 +77,26 @@ const fr: SiteMessages = {
   'edit.editors': ['date', 'ENUM / SET', 'JSON', 'texte'],
   'edit.text':
     'Si la valeur a changé, ou si la ligne a été supprimée, depuis son chargement, c’est vous qui choisissez. Rien n’est écrasé en silence. Une cellule qui ne peut pas être écrite dit pourquoi : pas de clé primaire, colonne générée, colonne binaire.',
+
+  'keyboard.title': 'Clavier',
+  'keyboard.meta': 'les principaux raccourcis',
+  'keyboard.lead':
+    'D’une table à l’autre, de la grille à l’éditeur : les mains peuvent rester sur le clavier.',
+  'keyboard.text':
+    'Les touches suivent VS Code et votre navigateur, et les menus et les boutons affichent les leurs : on les apprend en s’en servant.',
+  'keyboard.navigate': 'Aller à une table ou une base',
+  'keyboard.sqlPanel': 'Ouvrir le panneau SQL',
+  'keyboard.run': 'Exécuter la requête sous le curseur',
+  'keyboard.move': 'Passer d’une cellule à l’autre',
+  'keyboard.extend': 'Étendre la sélection',
+  'keyboard.edit': 'Modifier la cellule',
+  'keyboard.delete': 'Mettre à NULL, ou supprimer les lignes',
+  'keyboard.copy': 'Copier les cellules ou les lignes',
+  'keyboard.goToId': 'Aller à une ligne par son id',
+  'keyboard.escape.key': 'Échap',
+  'keyboard.escape': 'Vider la sélection',
+  'keyboard.connection': 'Connexion suivante',
+  'keyboard.history': 'Précédent, suivant',
 
   'privacy.title': 'Votre machine',
   'privacy.meta': 'identifiants',

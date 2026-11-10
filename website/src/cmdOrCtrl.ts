@@ -10,3 +10,8 @@ export function useCmdOrCtrl(): string {
 export function useCtrl(): string {
   return useDetectedPlatform()?.platform === Platform.MacOS ? '⌃' : 'ctrl+';
 }
+
+/** The modifier written before an `Alt` shortcut's key: `alt+` until the page knows it. */
+export function useAlt(): string {
+  return useDetectedPlatform()?.platform === Platform.MacOS ? '⌥' : 'alt+';
+}

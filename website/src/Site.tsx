@@ -4,6 +4,7 @@ import { ChartsSection } from './ChartsSection';
 import { DownloadSection } from './DownloadSection';
 import { EditorSection } from './EditorSection';
 import { Hero } from './Hero';
+import { KeyboardSection } from './KeyboardSection';
 import { PrivacySection } from './PrivacySection';
 import { SshSection } from './SshSection';
 import { ThemesSection } from './ThemesSection';
@@ -21,6 +22,7 @@ import {
 const NAV: Array<[id: string, label: SiteKey]> = [
   ['editor', 'nav.editor'],
   ['browse', 'nav.browse'],
+  ['keyboard', 'nav.keyboard'],
   ['privacy', 'nav.privacy'],
   ['charts', 'nav.charts'],
   ['themes', 'nav.themes'],
@@ -156,6 +158,7 @@ export function Site({
             <Hero release={release} />
             <EditorSection />
             <BrowseSection />
+            <KeyboardSection />
             <PrivacySection />
             <ChartsSection />
             <ThemesSection />

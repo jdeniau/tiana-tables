@@ -21,13 +21,21 @@ const githubRelease = z.object({
 });
 
 /** The release GitHub answered, with one file per package: throws when one is missing. */
-export function toRelease(answer: unknown): Release {
+export function toRelease(answer: unknown, isDev: boolean): Release {
   const { tag_name: tag, assets } = githubRelease.parse(answer);
 
   const fileOf = (kind: PackageKind): ReleaseFile => {
-    const asset = assets.find(({ name }) => FILE_PATTERNS[kind].test(name));
+    let asset = assets.find(({ name }) => FILE_PATTERNS[kind].test(name));
     if (!asset) {
-      throw new Error(`The release ${tag} has no ${kind} file`);
+      if (isDev) {
+        console.error(`Missing asset for kind ${kind} in release ${tag}`);
+        asset = {
+          name: `missing-${kind}`,
+          browser_download_url: '',
+        };
+      } else {
+        throw new Error(`The release ${tag} has no ${kind} file`);
+      }
     }
     return { name: asset.name, url: asset.browser_download_url };
   };
@@ -46,7 +54,8 @@ export function toRelease(answer: unknown): Release {
 
 /** The latest published release; a token lifts GitHub's limit of 60 calls an hour. */
 export async function fetchLatestRelease(
-  token: string | undefined
+  token: string | undefined,
+  isDev: boolean
 ): Promise<Release> {
   const response = await fetch(LATEST_RELEASE_URL, {
     headers: {
@@ -54,10 +63,11 @@ export async function fetchLatestRelease(
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
+
   if (!response.ok) {
     throw new Error(
       `GitHub answered ${response.status} for the latest release`
     );
   }
-  return toRelease(await response.json());
+  return toRelease(await response.json(), isDev);
 }

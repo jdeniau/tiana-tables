@@ -794,6 +794,10 @@ h1 .title-dot {
   content: ' ↗';
   color: var(--text);
 }
+.grid kbd {
+  font: inherit;
+  color: var(--em);
+}
 .grid tr.selected td,
 .grid td.selected {
   background: color-mix(in srgb, var(--sel) 70%, var(--bg));

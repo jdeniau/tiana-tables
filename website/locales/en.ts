@@ -6,6 +6,7 @@ export default {
   'nav.label': 'Sections',
   'nav.editor': 'Editor',
   'nav.browse': 'Browse',
+  'nav.keyboard': 'Keyboard',
   'nav.privacy': 'Privacy',
   'nav.charts': 'Charts',
   'nav.themes': 'Themes',
@@ -21,7 +22,7 @@ export default {
   'hero.title': 'A SQL client for developers',
   'hero.title.short': 'A SQL client for devs',
   'hero.lead':
-    'Browse, query and edit your data efficiently. Easy-to-use, pretty and multiplatform.',
+    'Browse, query and edit your data efficiently, without leaving the keyboard. Easy-to-use, pretty and multiplatform.',
   'hero.download': 'Download',
   'hero.source': 'Source on GitHub',
   'hero.other': 'Other platforms',
@@ -75,6 +76,26 @@ export default {
   'edit.editors': ['date picker', 'ENUM / SET', 'JSON', 'input'],
   'edit.text':
     'If the value changed, or the row was deleted, since you loaded it, you choose what happens. Nothing is overwritten silently. A cell that cannot be written says why: no primary key, generated column, binary column.',
+
+  'keyboard.title': 'Keyboard',
+  'keyboard.meta': 'the main shortcuts',
+  'keyboard.lead':
+    'From one table to the next, from the grid to the editor: your hands can stay on the keyboard.',
+  'keyboard.text':
+    'The keys follow VS Code and your browser, and the menus and buttons show theirs, so you learn them as you go.',
+  'keyboard.navigate': 'Go to a table or a database',
+  'keyboard.sqlPanel': 'Open the SQL panel',
+  'keyboard.run': 'Run the statement under the caret',
+  'keyboard.move': 'Move from cell to cell',
+  'keyboard.extend': 'Extend the selection',
+  'keyboard.edit': 'Edit the cell',
+  'keyboard.delete': 'Set to NULL, or delete the rows',
+  'keyboard.copy': 'Copy the cells or the rows',
+  'keyboard.goToId': 'Go to a row by its id',
+  'keyboard.escape.key': 'Esc',
+  'keyboard.escape': 'Clear the selection',
+  'keyboard.connection': 'Next connection',
+  'keyboard.history': 'Back, forward',
 
   'privacy.title': 'Your machine',
   'privacy.meta': 'credentials',
