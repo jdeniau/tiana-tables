@@ -78,7 +78,7 @@ const es: SiteMessages = {
   'edit.editors.label': 'Editores de celda',
   'edit.editors': ['selector de fecha', 'ENUM / SET', 'JSON', 'texto'],
   'edit.text':
-    'Si el valor cambió, o si la fila se eliminó, desde que la cargaste, tú eliges qué pasa. Nada se sobrescribe en silencio. Una celda que no se puede escribir dice por qué: sin clave primaria, columna generada, columna binaria.',
+    'Si el valor cambió, o si la fila se eliminó, desde que la cargaste, tú eliges qué pasa. Nada se sobrescribe en silencio. Una celda en la que no se puede escribir dice por qué: sin clave primaria, columna generada, columna binaria.',
 
   'keyboard.title': 'Teclado',
   'keyboard.meta': 'los atajos principales',
@@ -162,7 +162,7 @@ const es: SiteMessages = {
   'download.row.macIntel': 'macOS · Intel',
   'download.row.windowsSetup': 'Windows',
   'download.button.deb': 'Descargar el .deb',
-  'download.button.rpm': 'El .rpm',
+  'download.button.rpm': 'Descargar el .rpm',
   'download.button.macArm': 'Descargar para Apple silicon',
   'download.button.macIntel': 'Intel',
   'download.button.windowsSetup': 'Descargar para Windows',

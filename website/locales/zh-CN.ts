@@ -99,15 +99,15 @@ const zhCn: SiteMessages = {
   'privacy.title': '你的电脑',
   'privacy.meta': '凭据',
   'privacy.statement': ['无需账号。', '无云同步。', '无遥测。'],
-  'privacy.lead': 'Tiana Tables 运行在你的电脑上，直连你的数据库。',
+  'privacy.lead': 'Tiana Tables 运行在你的电脑上，连接你的数据库。',
   'privacy.text':
     '连接密码通过系统钥匙串加密。如果系统没有钥匙串，应用会如实告诉你密码只是做了混淆，而不会假装加密了。',
 
   'databases.title': '数据库',
   'databases.meta': '支持范围',
-  'databases.ssl': 'SSL，必需或验证',
+  'databases.ssl': 'SSL，必需或已验证',
   'databases.ssh': 'SSH 隧道',
-  'databases.others': '其他 SQL 数据库',
+  'databases.others': '其他 SQL 数据库引擎',
   'databases.admin': '服务器和用户管理',
   'databases.supported': '支持',
   'databases.outOfScope': '不在范围内',
@@ -117,7 +117,7 @@ const zhCn: SiteMessages = {
   'charts.title': '图表',
   'charts.meta': '柱状图或折线图，来自任意结果',
   'charts.lead':
-    '任何带数值列的 SQL 结果，都能变成柱状图或折线图。X 轴和数据系列由你来选。',
+    '任何带数值列的 SQL 查询结果，都能变成柱状图或折线图。X 轴和数据系列由你来选。',
   'charts.quote':
     '带 <code>LIMIT</code> 的结果会被特意拒绝：基于部分结果的图表会说谎。',
   'charts.text': '可以复制为图片，或者保存为 PNG，放进别人要你做的幻灯片里。',
@@ -150,7 +150,7 @@ const zhCn: SiteMessages = {
   'download.row.macIntel': 'macOS · Intel',
   'download.row.windowsSetup': 'Windows',
   'download.button.deb': '下载 .deb',
-  'download.button.rpm': '.rpm',
+  'download.button.rpm': '下载 .rpm',
   'download.button.macArm': '下载 Apple silicon 版',
   'download.button.macIntel': 'Intel 版',
   'download.button.windowsSetup': '下载 Windows 版',

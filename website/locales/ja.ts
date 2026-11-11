@@ -5,7 +5,7 @@ const ja: SiteMessages = {
   'meta.description':
     '開発者のための MySQL、MariaDB、PostgreSQL クライアント。Linux、macOS、Windows で動きます。データの閲覧、クエリ、編集を効率よく行えます。使いやすく、見た目もきれいです。',
   'nav.label': 'セクション',
-  'nav.editor': 'エディタ',
+  'nav.editor': 'エディター',
   'nav.browse': '閲覧',
   'nav.keyboard': 'キーボード',
   'nav.privacy': 'プライバシー',
@@ -46,13 +46,13 @@ const ja: SiteMessages = {
   'app.caption':
     'このウィンドウは HTML で、アプリと同じく、タイトルバーで選んだパレットで描かれています。サンプルデータは開発用データセット「Le Fil」です。',
 
-  'editor.title': 'SQL エディタ',
-  'editor.meta': 'Monaco、VS Code のエディタ',
+  'editor.title': 'SQL エディター',
+  'editor.meta': 'Monaco、VS Code のエディター',
   'editor.lead':
     'データベースエンジンの文法とデータベースのスキーマを把握しているので、キーワードに色を付けるだけではありません。',
   'editor.items': [
     'テーブル、カラム、エイリアスを補完します。<code>a.</code> の後には、そのテーブルのカラムだけが候補に出ます。',
-    '<code>FROM</code> や <code>JOIN</code> でテーブルを補完すると、エイリアスも書き込みます。外部キーでクエリ内の既存のテーブルとつながっていれば、<code>ON</code> 句も書き込みます。',
+    '<code>FROM</code> や <code>JOIN</code> でテーブルを補完すると、エイリアスも付けます。外部キーでクエリ内の既存のテーブルとつながっていれば、<code>ON</code> 句も追加します。',
     'カーソル位置で有効なキーワードだけを候補に出します。',
     '入力中に構文エラーに下線を引き、<code>u.emial</code> のような存在しないカラムを警告します。正しい SQL では何も出ません。',
     'カーソル位置のステートメントを実行します。すべてを順に実行し、最初のエラーで止めることもできます。',
@@ -62,7 +62,7 @@ const ja: SiteMessages = {
   'browse.title': '閲覧',
   'browse.meta': '仮想化グリッド、瞬時の描画',
   'browse.lead':
-    '列の多いテーブルもカクつかずにスクロールでき、続きの行もワンクリックで読み込めます。',
+    'カラムの多いテーブルもカクつかずにスクロールでき、続きの行もワンクリックで読み込めます。',
   'browse.items': [
     '<code>WHERE</code> 句で絞り込めます。条件はテーブルごとに記憶されます。',
     'セルを右クリックすると、その値、クリップボードの内容、または好きな条件で絞り込めます。',
@@ -73,8 +73,8 @@ const ja: SiteMessages = {
   'edit.title': '編集',
   'edit.meta': '楽観的な競合検出',
   'edit.lead':
-    'セルをダブルクリックすると、カラムの型に合ったエディタが開きます。',
-  'edit.editors.label': 'セルのエディタ',
+    'セルをダブルクリックすると、カラムの型に合ったエディターが開きます。',
+  'edit.editors.label': 'セルのエディター',
   'edit.editors': ['日付ピッカー', 'ENUM / SET', 'JSON', 'テキスト'],
   'edit.text':
     '読み込んだ後に値が変更されたり、行が削除されたりしていた場合は、どうするかを自分で選べます。黙って上書きされることはありません。書き込めないセルは、その理由を示します：主キーがない、生成カラム、バイナリカラム。',
@@ -82,9 +82,9 @@ const ja: SiteMessages = {
   'keyboard.title': 'キーボード',
   'keyboard.meta': '主なショートカット',
   'keyboard.lead':
-    'テーブルからテーブルへ、グリッドからエディタへ。手はキーボードに置いたままで大丈夫です。',
+    'テーブルからテーブルへ、グリッドからエディターへ。手はキーボードに置いたままで大丈夫です。',
   'keyboard.text':
-    'キー操作は VS Code とブラウザに合わせてあり、メニューやボタンにもショートカットが表示されるので、使いながら覚えられます。',
+    'キー操作は VS Code とブラウザーに合わせてあり、メニューやボタンにもショートカットが表示されるので、使いながら覚えられます。',
   'keyboard.navigate': 'テーブルやデータベースに移動',
   'keyboard.sqlPanel': 'SQL パネルを開く',
   'keyboard.run': 'カーソル位置のステートメントを実行',
@@ -115,7 +115,7 @@ const ja: SiteMessages = {
   'databases.meta': '対応範囲',
   'databases.ssl': 'SSL（必須または検証あり）',
   'databases.ssh': 'SSH トンネル',
-  'databases.others': 'その他の SQL データベース',
+  'databases.others': 'その他の SQL データベースエンジン',
   'databases.admin': 'サーバーとユーザーの管理',
   'databases.supported': '対応',
   'databases.outOfScope': '対象外',
@@ -125,7 +125,7 @@ const ja: SiteMessages = {
   'charts.title': 'グラフ',
   'charts.meta': '棒グラフか折れ線グラフ、どんな結果からでも',
   'charts.lead':
-    '数値のカラムを含む SQL の結果なら、どれでも棒グラフや折れ線グラフになります。X 軸と系列は自分で選べます。',
+    '数値のカラムを含む SQL クエリの結果なら、どれでも棒グラフや折れ線グラフになります。X 軸と系列は自分で選べます。',
   'charts.quote':
     '<code>LIMIT</code> 付きの結果は、あえて受け付けません。一部だけの結果のグラフは嘘をつくからです。',
   'charts.text':
@@ -136,7 +136,7 @@ const ja: SiteMessages = {
   'themes.title': 'テーマ',
   'themes.meta': '{count, number} 種類の base16 パレット · T キーで切り替え',
   'themes.lead':
-    'Dracula から Solarized まで、ライトもダークもあります。テーマはグリッドや SQL エディタを含むアプリ全体に適用されます。このページも同じパレットを使っています。好きなものを選んでください。',
+    'Dracula から Solarized まで、ライトもダークもあります。テーマはグリッドや SQL エディターを含むアプリ全体に適用されます。このページも同じパレットを使っています。好きなものを選んでください。',
 
   'ssh.title': 'SSH トンネル',
   'ssh.meta': 'v1.24.0 から',
@@ -148,7 +148,8 @@ const ja: SiteMessages = {
     'ssh が尋ねることは、アプリも尋ねます。未知のサーバーは信頼する前にフィンガープリントを表示し、鍵にパスフレーズが必要なときは入力を求めます。',
     'データベースのホストとポートには、SSH サーバーから見たものを指定します。',
   ],
-  'ssh.caption': 'フォームと、アプリが表示する確認の、サンプルの値です。',
+  'ssh.caption':
+    'フォームと、アプリが表示する確認ダイアログの値はサンプルです。',
 
   'download.title': 'ダウンロード',
   'download.meta': 'v{version} · MIT',
@@ -160,7 +161,7 @@ const ja: SiteMessages = {
   'download.row.macIntel': 'macOS · Intel',
   'download.row.windowsSetup': 'Windows',
   'download.button.deb': '.deb をダウンロード',
-  'download.button.rpm': '.rpm',
+  'download.button.rpm': '.rpm をダウンロード',
   'download.button.macArm': 'Apple silicon 版をダウンロード',
   'download.button.macIntel': 'Intel 版',
   'download.button.windowsSetup': 'Windows 版をダウンロード',

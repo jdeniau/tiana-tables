@@ -3,7 +3,7 @@ import { SiteMessages } from './type';
 const de: SiteMessages = {
   'meta.title': 'Tiana Tables: ein SQL-Client für Entwickler:innen',
   'meta.description':
-    'Ein MySQL-, MariaDB- und PostgreSQL-Client für Entwickler:innen, unter Linux, macOS und Windows. Durchsuche deine Daten, frag sie ab und bearbeite sie effizient. Einfach zu bedienen und schön.',
+    'Ein MySQL-, MariaDB- und PostgreSQL-Client für Entwickler:innen, unter Linux, macOS und Windows. Sieh dir deine Daten an, frag sie ab und bearbeite sie effizient. Einfach zu bedienen und schön.',
   'nav.label': 'Abschnitte',
   'nav.editor': 'Editor',
   'nav.browse': 'Durchsuchen',
@@ -23,7 +23,7 @@ const de: SiteMessages = {
   'hero.title': 'Ein SQL-Client für Entwickler:innen',
   'hero.title.short': 'Ein SQL-Client für Devs',
   'hero.lead':
-    'Durchsuche deine Daten, frag sie ab und bearbeite sie effizient, ohne die Hände von der Tastatur zu nehmen. Einfach zu bedienen, schön und plattformübergreifend.',
+    'Sieh dir deine Daten an, frag sie ab und bearbeite sie effizient, ohne die Hände von der Tastatur zu nehmen. Einfach zu bedienen, schön und plattformübergreifend.',
   'hero.download': 'Herunterladen',
   'hero.source': 'Code auf GitHub',
   'hero.other': 'Andere Plattformen',
@@ -77,14 +77,14 @@ const de: SiteMessages = {
   'edit.editors.label': 'Zelleditoren',
   'edit.editors': ['Datumsauswahl', 'ENUM / SET', 'JSON', 'Text'],
   'edit.text':
-    'Wenn sich der Wert geändert hat oder die Zeile gelöscht wurde, seit du sie geladen hast, entscheidest du, was passiert. Nichts wird stillschweigend überschrieben. Eine Zelle, die nicht geschrieben werden kann, sagt, warum: kein Primärschlüssel, generierte Spalte, binäre Spalte.',
+    'Wenn sich der Wert geändert hat oder die Zeile gelöscht wurde, seit du sie geladen hast, entscheidest du, was passiert. Nichts wird stillschweigend überschrieben. Eine Zelle, in die nicht geschrieben werden kann, sagt, warum: kein Primärschlüssel, generierte Spalte, Binärspalte.',
 
   'keyboard.title': 'Tastatur',
   'keyboard.meta': 'die wichtigsten Tastenkürzel',
   'keyboard.lead':
     'Von einer Tabelle zur nächsten, vom Grid zum Editor: Deine Hände können auf der Tastatur bleiben.',
   'keyboard.text':
-    'Die Tasten folgen VS Code und deinem Browser, und Menüs und Buttons zeigen ihre Kürzel an: So lernst du sie nebenbei.',
+    'Die Tastenkürzel orientieren sich an VS Code und deinem Browser, und Menüs und Buttons zeigen sie an: So lernst du sie nebenbei.',
   'keyboard.navigate': 'Zu einer Tabelle oder Datenbank springen',
   'keyboard.sqlPanel': 'SQL-Panel öffnen',
   'keyboard.run': 'Anweisung unter dem Cursor ausführen',
@@ -115,23 +115,23 @@ const de: SiteMessages = {
   'databases.meta': 'der Umfang',
   'databases.ssl': 'SSL, erforderlich oder verifiziert',
   'databases.ssh': 'SSH-Tunnel',
-  'databases.others': 'Andere SQL-Datenbanken',
+  'databases.others': 'Andere SQL-Datenbanksysteme',
   'databases.admin': 'Server- und Benutzerverwaltung',
   'databases.supported': 'unterstützt',
   'databases.outOfScope': 'nicht vorgesehen',
   'databases.text':
-    'Eine PostgreSQL-Verbindung öffnet eine Datenbank und listet deren Schemas dort auf, wo ein MySQL-Server seine Datenbanken auflistet. Ein anderes Datenbanksystem, das genug vom SQL-Standard teilt, kann in einem Issue besprochen werden.',
+    'Eine PostgreSQL-Verbindung öffnet eine Datenbank und listet deren Schemas dort auf, wo ein MySQL-Server seine Datenbanken auflistet. Ein anderes Datenbanksystem, das dem SQL-Standard nahe genug ist, kann in einem Issue besprochen werden.',
 
   'charts.title': 'Diagramme',
   'charts.meta': 'Balken oder Linien, aus jedem Ergebnis',
   'charts.lead':
-    'Jedes SQL-Ergebnis mit einer numerischen Spalte wird zum Balken- oder Liniendiagramm. Du wählst die X-Achse und die Datenreihen.',
+    'Jedes Ergebnis einer SQL-Abfrage mit einer numerischen Spalte wird zum Balken- oder Liniendiagramm. Du wählst die X-Achse und die Datenreihen.',
   'charts.quote':
     'Ein Ergebnis mit <code>LIMIT</code> wird absichtlich abgelehnt: Das Diagramm eines Teilergebnisses lügt.',
   'charts.text':
     'Kopiere es als Bild oder speichere es als PNG für die Folie, um die man dich gebeten hat.',
   'charts.label':
-    'Monatliche Lesevorgänge und identifizierte Leser:innen, Januar 2024 bis September 2026, beide steigend',
+    'Monatliche Lesevorgänge und identifizierte Leser, Januar 2024 bis September 2026, beide steigend',
 
   'themes.title': 'Themes',
   'themes.meta': '{count, number} base16-Paletten · T schaltet weiter',
@@ -161,7 +161,7 @@ const de: SiteMessages = {
   'download.row.macIntel': 'macOS · Intel',
   'download.row.windowsSetup': 'Windows',
   'download.button.deb': '.deb herunterladen',
-  'download.button.rpm': '.rpm',
+  'download.button.rpm': '.rpm herunterladen',
   'download.button.macArm': 'Für Apple silicon herunterladen',
   'download.button.macIntel': 'Intel',
   'download.button.windowsSetup': 'Für Windows herunterladen',

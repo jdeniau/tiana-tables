@@ -28,5 +28,6 @@ The site, tiana-tables.deniau.me, is a Vite build in `website/`, prerendered at 
 - **A drawn menu copies the app's items in its order, dividers and danger colour (base08) included**: the context menu follows `buildMenuItems` of `CellContextMenu.tsx`, and a drawn label is measured in French, the longest locale.
 - **A feature the README announces gets its line on the site too**: `website/locales/en.ts` first, then every other locale beside it.
 - **The download links are the files of GitHub's latest release, read at build** (`latestRelease.ts` through `define`, `GITHUB_TOKEN` when set): a package without its file fails the build rather than deploy a dead link. A new installer gets its pattern in `FILE_PATTERNS`.
+- **A download button's label says "download" in every language, Intel's excepted**: `DownloadPick` puts the package of the visitor's distribution first (`distributionPackage`), so the .rpm button leads on Fedora and openSUSE; only Intel's, always after Apple silicon's, may be short.
 - **The deploy waits for the release's files**: `website.yml` runs after "Publish release" succeeds. Deployed on `release: published`, the build would find the files not uploaded yet.
 - Check: `yarn website` (dev server), `yarn website:build` then `yarn vite preview website`.
