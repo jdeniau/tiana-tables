@@ -1401,32 +1401,38 @@ blockquote {
   flex: 1;
 }
 
-/* the language menu: a disclosure of links, drawn as the app's dropdown menus */
+/* the language menu: a native popover of links, drawn as the app's dropdown menus */
 .lang-menu {
-  position: relative;
-}
-.lang-menu summary {
-  display: flex;
-  align-items: center;
-  list-style: none;
+  anchor-name: --lang-menu;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   white-space: nowrap;
 }
-.lang-menu summary::-webkit-details-marker {
-  display: none;
-}
 .lang-list {
-  position: absolute;
-  top: calc(100% + var(--s1));
-  right: 0;
   width: max-content;
-  margin: 0;
   padding: var(--s1) 0;
   list-style: none;
   border: 1px solid var(--rule);
   background: var(--bg);
+  color: var(--text);
   font-size: 13px;
+}
+/* under its button where anchors exist, centred on the screen as any popover elsewhere */
+@supports (anchor-name: --lang-menu) {
+  .lang-list {
+    position-anchor: --lang-menu;
+    inset: auto;
+    top: anchor(bottom);
+    right: anchor(right);
+    margin: var(--s1) 0 0;
+  }
+}
+/* a browser without popovers would draw the list open in the title bar */
+@supports not selector(:popover-open) {
+  .lang-menu,
+  .lang-list {
+    display: none;
+  }
 }
 /* each link speaks its own language, whose fonts --mono names */
 .lang-list a {
