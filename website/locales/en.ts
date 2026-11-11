@@ -35,7 +35,7 @@ export default {
   'spec.themes': 'Themes',
   'spec.themes.value': '{count, number} themes',
   'spec.languages': 'Languages',
-  'spec.languages.value': 'English, french',
+  'spec.languages.value': 'English, French',
   'spec.account': 'Account',
   'spec.account.value': 'None. No telemetry',
   'spec.license': 'License',
