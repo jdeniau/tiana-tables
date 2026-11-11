@@ -6,6 +6,8 @@ import { useText } from './text';
 export function LanguageMenu(): ReactElement {
   const { site, locale } = useText();
   const menu = useRef<HTMLDetailsElement>(null);
+  // without its region, the menu is as narrow in every language: a phone's title bar is full
+  const { language } = new Intl.Locale(locale);
 
   // a disclosure stays open until its summary is toggled: close it as a menu closes
   useEffect(() => {
@@ -40,7 +42,7 @@ export function LanguageMenu(): ReactElement {
         className="select"
         aria-label={site('language.current', { name: LOCALE_NAMES[locale] })}
       >
-        {locale}
+        {language}
       </summary>
       <ul className="lang-list">
         {Object.values(SiteLocale).map((other) => (
