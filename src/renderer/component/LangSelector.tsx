@@ -1,5 +1,5 @@
 import { Select } from 'antd';
-import { LOCALE_LIST } from '../../configuration/locale';
+import { LOCALE_LIST, localeName } from '../../configuration/locale';
 import { useConfiguration } from '../../contexts/ConfigurationContext';
 import { useTranslation } from '../../i18n';
 
@@ -20,9 +20,10 @@ export default function LangSelector() {
         }
       }}
       value={configuration.locale}
-      options={LOCALE_LIST.map((key) => ({
-        value: key,
-        label: key,
+      // each language in its own name, so that a user lost in another one finds theirs
+      options={LOCALE_LIST.map((locale) => ({
+        value: locale,
+        label: localeName(locale),
       }))}
     />
   );

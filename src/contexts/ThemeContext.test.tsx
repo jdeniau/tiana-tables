@@ -1,11 +1,12 @@
 /**
  * @vitest-environment happy-dom
  */
-import { theme as antdTheme } from 'antd';
+import type { ReactNode } from 'react';
+import { Empty, theme as antdTheme } from 'antd';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { DEFAULT_LOCALE } from '../configuration/locale';
-import { THEME_LIST } from '../configuration/themes';
+import { DEFAULT_THEME, THEME_LIST } from '../configuration/themes';
 import {
   accent,
   background,
@@ -36,16 +37,18 @@ function TokenProbe(): null {
 
 const noop = () => {};
 
-function resolveTokens(themeName: string): GlobalToken {
-  captured = null;
-
-  renderToStaticMarkup(
+/** the static markup of `node` under the providers, with this theme and locale configured */
+function renderInProviders(
+  node: ReactNode,
+  { theme, locale }: { theme: string; locale: string }
+): string {
+  return renderToStaticMarkup(
     <ConfigurationContext
       value={{
         configuration: {
           version: 1,
-          theme: themeName,
-          locale: DEFAULT_LOCALE,
+          theme,
+          locale,
           connections: {},
         },
         addConnectionToConfig: noop,
@@ -57,11 +60,18 @@ function resolveTokens(themeName: string): GlobalToken {
         changeLanguage: noop,
       }}
     >
-      <ThemeContextProvider>
-        <TokenProbe />
-      </ThemeContextProvider>
+      <ThemeContextProvider>{node}</ThemeContextProvider>
     </ConfigurationContext>
   );
+}
+
+function resolveTokens(themeName: string): GlobalToken {
+  captured = null;
+
+  renderInProviders(<TokenProbe />, {
+    theme: themeName,
+    locale: DEFAULT_LOCALE,
+  });
 
   if (!captured) {
     throw new Error('the probe did not render');
@@ -108,5 +118,21 @@ describe.each(Object.values(THEME_LIST))('antd tokens: $name', (theme) => {
     // derived: the 11 / 13 / 15 of the type scale
     expect(token.fontSizeSM).toBe(11);
     expect(token.fontSizeLG).toBe(15);
+  });
+});
+
+describe("antd's own words", () => {
+  test.each([
+    ['en', 'No data'],
+    ['fr', 'Aucune donnée'],
+    // a locale the app is not translated into
+    ['de', 'No data'],
+  ])('in %s, an empty state reads %s', (locale, description) => {
+    const markup = renderInProviders(<Empty />, {
+      theme: DEFAULT_THEME.name,
+      locale,
+    });
+
+    expect(markup).toContain(description);
   });
 });

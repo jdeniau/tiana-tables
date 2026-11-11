@@ -3,11 +3,78 @@
   <url>
     <loc>https://tiana-tables.deniau.me/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://tiana-tables.deniau.me/" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://tiana-tables.deniau.me/de/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://tiana-tables.deniau.me/es/" />
     <xhtml:link rel="alternate" hreflang="fr" href="https://tiana-tables.deniau.me/fr/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://tiana-tables.deniau.me/ja/" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://tiana-tables.deniau.me/pt-br/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://tiana-tables.deniau.me/zh-cn/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tiana-tables.deniau.me/" />
+  </url>
+  <url>
+    <loc>https://tiana-tables.deniau.me/de/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tiana-tables.deniau.me/" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://tiana-tables.deniau.me/de/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://tiana-tables.deniau.me/es/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tiana-tables.deniau.me/fr/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://tiana-tables.deniau.me/ja/" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://tiana-tables.deniau.me/pt-br/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://tiana-tables.deniau.me/zh-cn/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tiana-tables.deniau.me/" />
+  </url>
+  <url>
+    <loc>https://tiana-tables.deniau.me/es/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tiana-tables.deniau.me/" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://tiana-tables.deniau.me/de/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://tiana-tables.deniau.me/es/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tiana-tables.deniau.me/fr/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://tiana-tables.deniau.me/ja/" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://tiana-tables.deniau.me/pt-br/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://tiana-tables.deniau.me/zh-cn/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tiana-tables.deniau.me/" />
   </url>
   <url>
     <loc>https://tiana-tables.deniau.me/fr/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://tiana-tables.deniau.me/" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://tiana-tables.deniau.me/de/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://tiana-tables.deniau.me/es/" />
     <xhtml:link rel="alternate" hreflang="fr" href="https://tiana-tables.deniau.me/fr/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://tiana-tables.deniau.me/ja/" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://tiana-tables.deniau.me/pt-br/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://tiana-tables.deniau.me/zh-cn/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tiana-tables.deniau.me/" />
+  </url>
+  <url>
+    <loc>https://tiana-tables.deniau.me/ja/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tiana-tables.deniau.me/" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://tiana-tables.deniau.me/de/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://tiana-tables.deniau.me/es/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tiana-tables.deniau.me/fr/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://tiana-tables.deniau.me/ja/" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://tiana-tables.deniau.me/pt-br/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://tiana-tables.deniau.me/zh-cn/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tiana-tables.deniau.me/" />
+  </url>
+  <url>
+    <loc>https://tiana-tables.deniau.me/pt-br/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tiana-tables.deniau.me/" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://tiana-tables.deniau.me/de/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://tiana-tables.deniau.me/es/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tiana-tables.deniau.me/fr/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://tiana-tables.deniau.me/ja/" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://tiana-tables.deniau.me/pt-br/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://tiana-tables.deniau.me/zh-cn/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tiana-tables.deniau.me/" />
+  </url>
+  <url>
+    <loc>https://tiana-tables.deniau.me/zh-cn/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tiana-tables.deniau.me/" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://tiana-tables.deniau.me/de/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://tiana-tables.deniau.me/es/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tiana-tables.deniau.me/fr/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://tiana-tables.deniau.me/ja/" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://tiana-tables.deniau.me/pt-br/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://tiana-tables.deniau.me/zh-cn/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tiana-tables.deniau.me/" />
   </url>
 </urlset>

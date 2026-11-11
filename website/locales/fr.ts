@@ -13,7 +13,7 @@ const fr: SiteMessages = {
   'nav.themes': 'Thèmes',
   'nav.ssh': 'SSH',
   'nav.download': 'Télécharger',
-  'language.other': 'English',
+  'language.current': 'Langue : {name}',
   'theme.label': 'Thème',
   'theme.system': 'Thème du système',
   'theme.dark': 'Sombres',
@@ -102,7 +102,7 @@ const fr: SiteMessages = {
   'privacy.meta': 'identifiants',
   'privacy.statement': [
     'Pas de compte.',
-    'Pas de synchro.',
+    'Pas de synchro cloud.',
     'Pas de télémétrie.',
   ],
   'privacy.lead':
@@ -124,7 +124,7 @@ const fr: SiteMessages = {
   'charts.title': 'Graphes',
   'charts.meta': 'barres ou lignes, depuis tout résultat',
   'charts.lead':
-    'Tout résultat SQL avec une colonne numérique devient un graphe en barres ou en lignes. Vous choisissez l’axe X et les séries.',
+    'Tout résultat de requête SQL avec une colonne numérique devient un graphe en barres ou en lignes. Vous choisissez l’axe X et les séries.',
   'charts.quote':
     'Un résultat avec un <code>LIMIT</code> est refusé exprès : le graphe d’un résultat partiel ment.',
   'charts.text':
@@ -161,7 +161,7 @@ const fr: SiteMessages = {
   'download.row.macIntel': 'macOS · Intel',
   'download.row.windowsSetup': 'Windows',
   'download.button.deb': 'Télécharger le .deb',
-  'download.button.rpm': 'Le .rpm',
+  'download.button.rpm': 'Télécharger le .rpm',
   'download.button.macArm': 'Télécharger pour Apple silicon',
   'download.button.macIntel': 'Intel',
   'download.button.windowsSetup': 'Télécharger pour Windows',

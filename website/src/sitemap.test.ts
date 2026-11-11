@@ -21,9 +21,14 @@ describe('sitemap.xml', () => {
     );
   });
 
-  it('gives each page an alternate per locale', () => {
-    for (const locale of Object.values(SiteLocale)) {
-      const alternate = `hreflang="${locale}" href="${ORIGIN}${localePath(locale)}"`;
+  it('gives each page an alternate per locale, and the English one by default', () => {
+    const alternates = [
+      ...Object.values(SiteLocale).map(
+        (locale) => `hreflang="${locale}" href="${ORIGIN}${localePath(locale)}"`
+      ),
+      `hreflang="x-default" href="${ORIGIN}/"`,
+    ];
+    for (const alternate of alternates) {
       expect(sitemap.split(alternate)).toHaveLength(
         Object.values(SiteLocale).length + 1
       );

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { toRelease } from './latestRelease';
 import { PackageKind } from './release';
 
@@ -26,7 +26,7 @@ const answer = (names: Array<string>): unknown => ({
 
 describe('toRelease', () => {
   it('picks the file of each package', () => {
-    const release = toRelease(answer(NAMES));
+    const release = toRelease(answer(NAMES), false);
 
     expect(release.version).toBe('1.24.0');
     expect(
@@ -45,7 +45,28 @@ describe('toRelease', () => {
 
   it('throws when a package has no file yet', () => {
     expect(() =>
-      toRelease(answer(NAMES.filter((name) => !name.endsWith('.rpm'))))
+      toRelease(answer(NAMES.filter((name) => !name.endsWith('.rpm'))), false)
     ).toThrow('The release v1.24.0 has no rpm file');
+  });
+
+  it('stands in for a missing file in development, and says so', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const release = toRelease(
+      answer(NAMES.filter((name) => !name.endsWith('.rpm'))),
+      true
+    );
+
+    expect(release.files[PackageKind.Rpm]).toEqual({
+      name: 'missing-rpm',
+      url: '',
+    });
+    expect(release.files[PackageKind.Deb].name).toBe(
+      'tiana-tables_1.24.0_amd64.deb'
+    );
+    expect(error).toHaveBeenCalledWith(
+      'Missing asset for kind rpm in release v1.24.0'
+    );
+    error.mockRestore();
   });
 });
