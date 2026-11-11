@@ -5,11 +5,12 @@ import { DownloadSection } from './DownloadSection';
 import { EditorSection } from './EditorSection';
 import { Hero } from './Hero';
 import { KeyboardSection } from './KeyboardSection';
+import { LanguageMenu } from './LanguageMenu';
 import { PrivacySection } from './PrivacySection';
 import { SshSection } from './SshSection';
 import { ThemesSection } from './ThemesSection';
 import { type Release, repositoryUrl } from './release';
-import { SiteLocale, localePath } from './siteLocale';
+import type { SiteLocale } from './siteLocale';
 import { type SiteKey, TextProvider, createText, useText } from './text';
 import {
   PALETTES,
@@ -97,9 +98,8 @@ function ThemeSelect(): ReactElement {
 }
 
 function TitleBar(): ReactElement {
-  const { site, locale } = useText();
+  const { site } = useText();
   const current = useCurrentSection();
-  const other = locale === SiteLocale.En ? SiteLocale.Fr : SiteLocale.En;
 
   return (
     <header className="titlebar">
@@ -121,14 +121,7 @@ function TitleBar(): ReactElement {
         </nav>
         <div className="tb-tools">
           <ThemeSelect />
-          <a
-            className="lang"
-            href={localePath(other)}
-            hrefLang={other}
-            lang={other}
-          >
-            {site('language.other')}
-          </a>
+          <LanguageMenu />
           <a className="tb-github" href={repositoryUrl}>
             GitHub ↗
           </a>

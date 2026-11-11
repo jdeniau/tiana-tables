@@ -43,6 +43,12 @@ export async function prerender({
             href: `${ORIGIN}${localePath(other)}`,
           })
         ),
+        // the page for a language the site is not written in
+        link({
+          rel: 'alternate',
+          hreflang: 'x-default',
+          href: `${ORIGIN}${localePath(SiteLocale.En)}`,
+        }),
       ]),
     },
   };

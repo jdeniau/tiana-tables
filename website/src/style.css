@@ -25,6 +25,18 @@
   --pad: clamp(16px, 3.2vw, 40px);
   --col: 1280px;
 }
+/* the bundled fonts have no CJK glyph: each language names its system's sans-serif
+   before the generic family, which Chrome on Windows sets to NSimSun, a serif, for Chinese */
+:lang(ja) {
+  --mono:
+    'Noto Sans Mono', 'SF Mono', Menlo, Consolas, 'Hiragino Sans',
+    'Yu Gothic UI', Meiryo, 'Noto Sans CJK JP', monospace;
+}
+:lang(zh) {
+  --mono:
+    'Noto Sans Mono', 'SF Mono', Menlo, Consolas, 'PingFang SC',
+    'Microsoft YaHei UI', 'Noto Sans CJK SC', monospace;
+}
 
 * {
   box-sizing: border-box;
@@ -419,8 +431,8 @@ h1 {
 .title-short {
   display: none;
 }
-/* the last word and the pip cannot break: em is the title's size here,
-   the threshold the width of that word in each language */
+/* the long title gives way to the short one once its widest word no longer fits,
+   the last one measured with the pip, which wraps alone: em is the title's size here */
 @container hero-title (width < 8.7em) {
   :lang(fr) .title-long {
     display: none;
@@ -429,13 +441,57 @@ h1 {
     display: inline;
   }
 }
-@container hero-title (width < 5.6em) {
-  :lang(en) .title-long {
+@container hero-title (width < 8.1em) {
+  :lang(de) .title-long {
     display: none;
   }
-  :lang(en) .title-short {
+  :lang(de) .title-short {
     display: inline;
   }
+}
+@container hero-title (width < 7.2em) {
+  :lang(ja) .title-long {
+    display: none;
+  }
+  :lang(ja) .title-short {
+    display: inline;
+  }
+}
+@container hero-title (width < 6.1em) {
+  :lang(zh) .title-long {
+    display: none;
+  }
+  :lang(zh) .title-short {
+    display: inline;
+  }
+}
+@container hero-title (width < 5.6em) {
+  :lang(en) .title-long,
+  :lang(es) .title-long {
+    display: none;
+  }
+  :lang(en) .title-short,
+  :lang(es) .title-short {
+    display: inline;
+  }
+}
+@container hero-title (width < 5em) {
+  :lang(pt-BR) .title-long {
+    display: none;
+  }
+  :lang(pt-BR) .title-short {
+    display: inline;
+  }
+}
+/* a CJK title breaks at its spaces, and inside a word only when it is wider than the line */
+:lang(ja) h1,
+:lang(zh) h1 {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+/* a CJK glyph is a full em, twice an Oswald capital: クライアント fits a 320px screen from 36px */
+:lang(ja) .hero-title {
+  font-size: clamp(36px, 7.4vw, 96px);
 }
 h1 .title-dot {
   display: inline-block;
@@ -1345,20 +1401,57 @@ blockquote {
   flex: 1;
 }
 
-.lang {
-  font-size: 12px;
-  text-decoration: none;
-  letter-spacing: 0.1em;
+/* the language menu: a disclosure of links, drawn as the app's dropdown menus */
+.lang-menu {
+  position: relative;
+}
+.lang-menu summary {
+  display: flex;
+  align-items: center;
+  list-style: none;
   text-transform: uppercase;
+  letter-spacing: 0.1em;
   white-space: nowrap;
 }
-.lang:hover {
-  color: var(--em);
+.lang-menu summary::-webkit-details-marker {
+  display: none;
 }
-@media (max-width: 720px) {
-  .lang {
-    display: none;
-  }
+.lang-list {
+  position: absolute;
+  top: calc(100% + var(--s1));
+  right: 0;
+  width: max-content;
+  margin: 0;
+  padding: var(--s1) 0;
+  list-style: none;
+  border: 1px solid var(--rule);
+  background: var(--bg);
+  font-size: 13px;
+}
+/* each link speaks its own language, whose fonts --mono names */
+.lang-list a {
+  font-family: var(--mono);
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding-inline: var(--s3);
+  text-decoration: none;
+  white-space: nowrap;
+}
+/* the current language takes the pip of the current section */
+.lang-list a::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+}
+.lang-list a[aria-current='page']::before {
+  background: var(--accent);
+}
+.lang-list a:hover,
+.lang-list a:focus-visible {
+  background: var(--sel);
+  color: var(--em);
 }
 .spec-row {
   display: contents;

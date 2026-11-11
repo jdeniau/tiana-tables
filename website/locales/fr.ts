@@ -13,7 +13,7 @@ const fr: SiteMessages = {
   'nav.themes': 'Thèmes',
   'nav.ssh': 'SSH',
   'nav.download': 'Télécharger',
-  'language.other': 'English',
+  'language.current': 'Langue : {name}',
   'theme.label': 'Thème',
   'theme.system': 'Thème du système',
   'theme.dark': 'Sombres',

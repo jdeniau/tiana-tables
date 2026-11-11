@@ -12,7 +12,7 @@ export default {
   'nav.themes': 'Themes',
   'nav.ssh': 'SSH',
   'nav.download': 'Download',
-  'language.other': 'Français',
+  'language.current': 'Language: {name}',
   'theme.label': 'Theme',
   'theme.system': 'System theme',
   'theme.dark': 'Dark',
