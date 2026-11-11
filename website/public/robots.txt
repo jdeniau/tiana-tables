@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://tiana-tables.deniau.me/sitemap.xml
