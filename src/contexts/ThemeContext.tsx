@@ -1,12 +1,20 @@
 import { createContext, use, useState } from 'react';
 import {
   ConfigProvider as AntdConfigProvider,
+  type ConfigProviderProps,
   type MappingAlgorithm,
   ThemeConfig,
   theme as antdTheme,
 } from 'antd';
+import enUS from 'antd/locale/en_US';
+import frFR from 'antd/locale/fr_FR';
 import { ThemeProvider, createGlobalStyle, styled } from 'styled-components';
 import invariant from 'tiny-invariant';
+import {
+  type AppLocale,
+  DEFAULT_LOCALE,
+  isAppLocale,
+} from '../configuration/locale';
 import {
   DEFAULT_THEME,
   THEME_LIST,
@@ -88,6 +96,12 @@ const SPLITTER = {
   style: fillStyle,
   styles: { panel: { display: 'flex', flexDirection: 'column' } },
 } as const;
+
+/** antd's own words (an empty state, a required field) in each language of the app */
+const ANTD_LOCALES: Record<
+  AppLocale,
+  NonNullable<ConfigProviderProps['locale']>
+> = { en: enUS, fr: frFR };
 
 const LayoutDiv = styled.div`
   width: 100%;
@@ -274,7 +288,17 @@ export function ThemeContextProvider({
     <ThemeProvider theme={theme}>
       <GlobalStyle />
       <ThemeContext value={themeContextValue}>
-        <AntdConfigProvider theme={antdThemeValue} splitter={SPLITTER}>
+        <AntdConfigProvider
+          theme={antdThemeValue}
+          splitter={SPLITTER}
+          locale={
+            ANTD_LOCALES[
+              isAppLocale(configuration.locale)
+                ? configuration.locale
+                : DEFAULT_LOCALE
+            ]
+          }
+        >
           <LayoutDiv>{children}</LayoutDiv>
         </AntdConfigProvider>
       </ThemeContext>
