@@ -37,11 +37,12 @@ describe('JSON cells', () => {
   test('a long payload is cut down to the readable part', () => {
     const rendered = renderCell(
       FieldKind.Json,
-      JSON.stringify({ a: 'x'.repeat(1000) })
+      JSON.stringify({ a: 'x'.repeat(2000) })
     );
 
-    expect(rendered).toContain('\u2026');
-    expect(rendered).not.toContain('x'.repeat(1000));
+    expect(rendered).toContain(
+      `>{&quot;a&quot;:&quot;${'x'.repeat(994)}\u2026<`
+    );
   });
 });
 
@@ -94,8 +95,7 @@ describe('the order of the tiers', () => {
       new Uint8Array(1000).fill(0xff)
     );
 
-    expect(rendered).toContain('\u2026');
-    expect(rendered).not.toContain('FF'.repeat(200));
+    expect(rendered).toContain(`>0x${'FF'.repeat(500)}\u2026<`);
   });
 
   // the server's text, which only the kind tells from any other string
