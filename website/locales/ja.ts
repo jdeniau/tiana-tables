@@ -14,6 +14,7 @@ const ja: SiteMessages = {
   'nav.ssh': 'SSH',
   'nav.download': 'ダウンロード',
   'language.current': '言語：{name}',
+  'language.offer': 'このサイトは日本語でもご覧いただけます',
   'theme.label': 'テーマ',
   'theme.system': 'システムのテーマ',
   'theme.dark': 'ダーク',

@@ -14,6 +14,7 @@ const zhCn: SiteMessages = {
   'nav.ssh': 'SSH',
   'nav.download': '下载',
   'language.current': '语言：{name}',
+  'language.offer': '本网站提供简体中文版',
   'theme.label': '主题',
   'theme.system': '跟随系统',
   'theme.dark': '深色',

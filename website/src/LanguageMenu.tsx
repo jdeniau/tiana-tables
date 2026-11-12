@@ -1,4 +1,5 @@
 import { type ReactElement, useId } from 'react';
+import { pickLocale } from './languageChoice';
 import { LOCALE_NAMES, SiteLocale, localePath } from './siteLocale';
 import { useText } from './text';
 
@@ -27,6 +28,7 @@ export function LanguageMenu(): ReactElement {
               hrefLang={other}
               lang={other}
               aria-current={other === locale ? 'page' : undefined}
+              onClick={() => pickLocale(other)}
             >
               {LOCALE_NAMES[other]}
             </a>

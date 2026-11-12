@@ -14,6 +14,7 @@ const ptBr: SiteMessages = {
   'nav.ssh': 'SSH',
   'nav.download': 'Download',
   'language.current': 'Idioma: {name}',
+  'language.offer': 'Este site está disponível em português',
   'theme.label': 'Tema',
   'theme.system': 'Tema do sistema',
   'theme.dark': 'Escuros',
