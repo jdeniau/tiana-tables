@@ -6,6 +6,7 @@ import { EditorSection } from './EditorSection';
 import { Hero } from './Hero';
 import { KeyboardSection } from './KeyboardSection';
 import { LanguageMenu } from './LanguageMenu';
+import { LanguageOffer } from './LanguageOffer';
 import { PrivacySection } from './PrivacySection';
 import { SshSection } from './SshSection';
 import { ThemesSection } from './ThemesSection';
@@ -127,6 +128,7 @@ function TitleBar(): ReactElement {
           </a>
         </div>
       </div>
+      <LanguageOffer />
     </header>
   );
 }

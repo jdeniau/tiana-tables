@@ -14,6 +14,7 @@ const fr: SiteMessages = {
   'nav.ssh': 'SSH',
   'nav.download': 'Télécharger',
   'language.current': 'Langue : {name}',
+  'language.offer': 'Ce site existe en français',
   'theme.label': 'Thème',
   'theme.system': 'Thème du système',
   'theme.dark': 'Sombres',

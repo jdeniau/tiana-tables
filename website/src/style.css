@@ -1459,6 +1459,49 @@ blockquote {
   background: var(--sel);
   color: var(--em);
 }
+/* hangs under the title bar, out of the flow: appearing once hydrated, it moves nothing */
+.lang-offer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--base0C) 18%, var(--bg));
+  border-bottom: 1px solid var(--base0C);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.lang-offer-in {
+  max-width: var(--col);
+  margin-inline: auto;
+  min-height: 44px;
+  padding-block: var(--s2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  font-size: 13px;
+}
+.lang-offer-text {
+  margin-right: auto;
+  color: var(--em);
+}
+.lang-offer-actions {
+  display: flex;
+  gap: var(--s2);
+}
+.lang-offer-stay {
+  height: 24px;
+  padding-inline: var(--s3);
+  border: 1px solid var(--base0C);
+  border-radius: 0;
+  background: transparent;
+  color: var(--em);
+  font: 12px var(--mono);
+  cursor: pointer;
+}
+.lang-offer-stay:hover {
+  color: var(--em);
+}
 .spec-row {
   display: contents;
 }

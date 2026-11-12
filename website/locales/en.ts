@@ -13,6 +13,7 @@ export default {
   'nav.ssh': 'SSH',
   'nav.download': 'Download',
   'language.current': 'Language: {name}',
+  'language.offer': 'This site is available in English',
   'theme.label': 'Theme',
   'theme.system': 'System theme',
   'theme.dark': 'Dark',
