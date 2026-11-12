@@ -26,6 +26,9 @@ interface TableCellFactoryProps {
 // (JSON, TEXT, blobs) need a real detail view, not a tooltip.
 const MAX_TITLE_LENGTH = 300;
 
+/** what a JSON or byte cell shows: 7 800 px at the base font size, wider than an 8K screen */
+const MAX_CELL_TEXT_LENGTH = 1000;
+
 /**
  * Set the `title` on hover rather than on render: reading `scrollWidth` forces
  * a reflow, and doing it once per cell at mount time would cost on every
@@ -79,8 +82,8 @@ function CellShell({ className, children, hasTitle, offset }: CellShellType) {
 }
 
 const BaseCell = styled(CellShell)`
-  min-width: 100px;
-  max-width: 300px;
+  /* clipped by the column width, which the user resizes; a foreign key link after it stays in view */
+  min-width: 0;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -160,23 +163,19 @@ function TextCell({ value }: CellProps<string>) {
 function JsonCell({ value }: CellProps<unknown>) {
   const text = typeof value === 'string' ? value : JSON.stringify(value);
 
-  // The cell clips at `max-width` and the tooltip at `MAX_TITLE_LENGTH`, so
-  // injecting a multi-kilobyte payload into the DOM buys nothing readable.
-  // Only the modal shows the whole value, hence the visible ellipsis here.
+  // A multi-kilobyte payload in the DOM buys nothing readable:
+  // only the modal shows the whole value, hence the visible ellipsis here.
   return (
     <ForegroundSpan hasTitle>
-      {text.length > MAX_TITLE_LENGTH
-        ? `${text.slice(0, MAX_TITLE_LENGTH)}\u2026`
+      {text.length > MAX_CELL_TEXT_LENGTH
+        ? `${text.slice(0, MAX_CELL_TEXT_LENGTH)}\u2026`
         : text}
     </ForegroundSpan>
   );
 }
 
-/**
- * How many bytes of a byte column are worth turning into text: the cell clips
- * at `max-width` long before that, and each byte costs two characters.
- */
-const MAX_BINARY_PREVIEW_BYTES = 150;
+/** How many bytes of a byte column are turned into text, two characters each: a megabyte costs ~100 ms per mount. */
+const MAX_BINARY_PREVIEW_BYTES = MAX_CELL_TEXT_LENGTH / 2;
 
 const BinarySpan = styled(BaseCell)`
   color: ${constantForeground};
