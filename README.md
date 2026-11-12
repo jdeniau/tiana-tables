@@ -142,15 +142,13 @@ yarn storybook    # component workshop, port 6006
 
 ## Release a new version
 
+From a clean `main`:
+
 ```sh
-yarn version minor
-git add package.json
-git commit -m "Release version v$(node -p "require('./package.json').version")"
-git tag v$(node -p "require('./package.json').version")
-git push origin main
-git push origin --tags
-gh release create v$(node -p "require('./package.json').version") --generate-notes
+yarn release <major|minor|patch|x.y.z>
 ```
+
+[`dev/release.sh`](dev/release.sh) bumps the version in `package.json`, commits and tags it, pushes `main` and the tag, then creates the GitHub release with generated notes.
 
 ## License
 

@@ -31,7 +31,8 @@
     "prepare": "husky",
     "knip": "knip",
     "website": "vite website",
-    "website:build": "vite build website"
+    "website:build": "vite build website",
+    "release": "dev/release.sh"
   },
   "lint-staged": {
     "*.{json,css,md}": [
