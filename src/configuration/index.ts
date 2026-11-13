@@ -225,6 +225,21 @@ export async function editConnection(
   return config;
 }
 
+/** Removes the connection, its encrypted password and its app state; an unknown slug writes nothing. */
+export function deleteConnection(slug: string): Configuration {
+  const config = getConfiguration();
+
+  if (!config.connections[slug]) {
+    return config;
+  }
+
+  delete config.connections[slug];
+
+  writeConfiguration(config);
+
+  return config;
+}
+
 export function changeTheme(theme: string): void {
   const config = getConfiguration();
   config.theme = theme;
@@ -588,6 +603,7 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.GET]: getConfiguration,
   [CONFIGURATION_CHANNEL.ADD_CONNECTION]: addConnectionToConfig,
   [CONFIGURATION_CHANNEL.EDIT_CONNECTION]: editConnection,
+  [CONFIGURATION_CHANNEL.DELETE_CONNECTION]: deleteConnection,
   [CONFIGURATION_CHANNEL.CHANGE_THEME]: changeTheme,
   [CONFIGURATION_CHANNEL.CHANGE_LANGUAGE]: changeLanguage,
   [CONFIGURATION_CHANNEL.SET_ACTIVE_DATABASE]: setActiveDatabase,

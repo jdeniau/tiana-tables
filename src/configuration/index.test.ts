@@ -14,6 +14,7 @@ import {
   addConnectionToConfig,
   changeLanguage,
   changeTheme,
+  deleteConnection,
   editConnection,
   getConfiguration,
   setActiveDatabase,
@@ -1194,6 +1195,27 @@ describe('edit', () => {
 
     await editConnection('local', { ...local, group: undefined });
     expect(lastWrittenLocal()).not.toHaveProperty('group');
+  });
+});
+
+describe('deleteConnection', () => {
+  test('removes the connection and writes the others as they were', () => {
+    mockExistingConfig();
+
+    const configuration = deleteConnection('prod');
+
+    expect(Object.keys(configuration.connections)).toEqual(['local']);
+    expect(
+      Object.keys(JSON.parse(configurationWrites().at(-1)!).connections)
+    ).toEqual(['local']);
+  });
+
+  test('an unknown slug writes nothing', () => {
+    mockExistingConfig();
+
+    deleteConnection('staging');
+
+    expect(configurationWrites()).toEqual([]);
   });
 });
 

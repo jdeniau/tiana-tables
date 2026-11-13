@@ -12,6 +12,8 @@ type ConfigurationContextType = {
     slug: string,
     connection: ConnectionObjectWithoutSlug
   ) => void;
+  /** resolves once the configuration without it is in the context */
+  deleteConnection: (slug: string) => Promise<void>;
   setActiveDatabase: (connectionSlug: string, database: string) => void;
   setActiveTable: (
     connectionSlug: string,
@@ -90,6 +92,7 @@ export function ConfigurationContextProvider({ children }: Props) {
     setPanelSize: willChangeConfiguration(window.config.setPanelSize),
     setDateDisplay: willChangeConfiguration(window.config.setDateDisplay),
     editConnection: willChangeConfiguration(window.config.editConnection),
+    deleteConnection: willChangeConfiguration(window.config.deleteConnection),
     changeLanguage: willChangeConfiguration((lang: string) => {
       changeLanguage(lang);
 

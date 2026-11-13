@@ -116,6 +116,9 @@ const meta: Meta<typeof ConnectionPage> = {
           editConnection: (name, connection) => {
             action('editConnection')(name, connection);
           },
+          deleteConnection: async (slug) => {
+            action('deleteConnection')(slug);
+          },
           changeLanguage: (language) => {
             action('changeLanguage')(language);
           },

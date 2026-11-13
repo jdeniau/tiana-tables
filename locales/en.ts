@@ -81,6 +81,10 @@ export default {
     ' other {This result cannot be plotted.}}',
   'connect.new': 'New connection',
   'connection.connecting': 'Connecting…',
+  'connection.delete.confirm': 'Delete',
+  'connection.delete.description':
+    'The connection leaves the list with its saved password, which cannot be undone.',
+  'connection.delete.title': 'Delete {name}?',
   // ICU select on `DatabaseEngine`: product names, the same in every language
   'connection.engine.name':
     '{engine, select, mysql {MySQL / MariaDB} postgresql {PostgreSQL} other {{engine}}}',
@@ -110,6 +114,7 @@ export default {
   'connection.failed.target': 'Connecting to {address} failed',
   'connection.failed.title': 'Connection failed',
   'connection.form.action.connect': 'Connect',
+  'connection.form.action.delete': 'Delete',
   'connection.form.action.saveAndConnect': 'Save and connect',
   'connection.form.color.custom': 'A colour of your own',
   'connection.form.color.label': 'Colour',

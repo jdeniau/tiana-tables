@@ -84,6 +84,10 @@ const fr: Translation = {
     ' other {Ce résultat ne peut pas être tracé.}}',
   'connect.new': 'Nouvelle connexion',
   'connection.connecting': 'Connexion…',
+  'connection.delete.confirm': 'Supprimer',
+  'connection.delete.description':
+    'La connexion disparaît de la liste avec son mot de passe enregistré, sans retour possible.',
+  'connection.delete.title': 'Supprimer {name} ?',
   // ICU select on `DatabaseEngine`: product names, the same in every language
   'connection.engine.name':
     '{engine, select, mysql {MySQL / MariaDB} postgresql {PostgreSQL} other {{engine}}}',
@@ -113,6 +117,7 @@ const fr: Translation = {
   'connection.failed.target': 'La connexion à {address} a échoué',
   'connection.failed.title': 'Connexion impossible',
   'connection.form.action.connect': 'Connecter',
+  'connection.form.action.delete': 'Supprimer',
   'connection.form.action.saveAndConnect': 'Enregistrer et connecter',
   'connection.form.color.custom': 'Une couleur à vous',
   'connection.form.color.label': 'Couleur',
