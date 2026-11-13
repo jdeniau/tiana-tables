@@ -68,6 +68,7 @@ async function render(color?: ConnectionColor): Promise<void> {
             },
             addConnectionToConfig: vi.fn(),
             editConnection: vi.fn(),
+            deleteConnection: vi.fn(),
             setActiveDatabase: vi.fn(),
             setActiveTable: vi.fn(),
             setPanelSize: vi.fn(),

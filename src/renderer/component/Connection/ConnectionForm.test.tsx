@@ -1,12 +1,13 @@
 /** @vitest-environment happy-dom */
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_THEME } from '../../../configuration/themes';
 import type { EncryptedConnectionObject } from '../../../configuration/type';
 import { testables } from '../../../contexts/ConfigurationContext';
+import { ConnectionContext } from '../../../contexts/ConnectionContext';
 import { DatabaseEngine } from '../../../sql/engine';
 import ConnectionForm from './ConnectionForm';
 
@@ -41,12 +42,17 @@ function type(input: HTMLInputElement, text: string): void {
 async function renderForm({
   connection,
   connections = {},
+  openSlugs = [],
 }: {
   connection?: EncryptedConnectionObject;
   connections?: Record<string, object>;
+  /** the connections open in the title bar */
+  openSlugs?: Array<string>;
 } = {}) {
   const addConnectionToConfig = vi.fn();
   const editConnection = vi.fn();
+  const deleteConnection = vi.fn().mockResolvedValue(undefined);
+  const closeConnection = vi.fn();
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -54,7 +60,7 @@ async function renderForm({
 
   await act(async () => {
     root.render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/connect/edit']}>
         <ThemeProvider theme={DEFAULT_THEME}>
           <ConfigurationContext
             value={
@@ -62,10 +68,27 @@ async function renderForm({
                 configuration: { connections },
                 addConnectionToConfig,
                 editConnection,
+                deleteConnection,
               } as never
             }
           >
-            <ConnectionForm connection={connection} />
+            <ConnectionContext
+              value={
+                {
+                  connectionSlugList: openSlugs,
+                  closeConnection,
+                } as never
+              }
+            >
+              <Routes>
+                <Route path="/connect" element={<p id="connection-list" />} />
+                {/* a submit navigates away, and the form stays to be submitted again */}
+                <Route
+                  path="*"
+                  element={<ConnectionForm connection={connection} />}
+                />
+              </Routes>
+            </ConnectionContext>
           </ConfigurationContext>
         </ThemeProvider>
       </MemoryRouter>
@@ -97,7 +120,44 @@ async function renderForm({
     return save.mock.lastCall?.at(-1);
   };
 
-  return { container, field, choose, submit, addConnectionToConfig };
+  /** the button of that text, in the form or in a dialog over it */
+  const button = (text: string, within: ParentNode = document.body) =>
+    [...within.querySelectorAll('button')].find(
+      (element) => element.textContent === text
+    );
+
+  const click = async (element: HTMLElement | undefined) => {
+    await act(async () => {
+      element?.click();
+    });
+  };
+
+  return {
+    container,
+    field,
+    choose,
+    submit,
+    button,
+    click,
+    addConnectionToConfig,
+    deleteConnection,
+    closeConnection,
+  };
+}
+
+const PROD: EncryptedConnectionObject = {
+  name: 'prod (dev)',
+  slug: 'prod-dev',
+  engine: DatabaseEngine.MySQL,
+  host: 'localhost',
+  port: 3306,
+  user: 'root',
+  password: 'ciphertext',
+};
+
+/** the confirmation dialog, once open */
+function dialog(): HTMLElement | null {
+  return document.querySelector('[role="dialog"]');
 }
 
 describe('ConnectionForm', () => {
@@ -343,5 +403,52 @@ describe('ConnectionForm', () => {
     expect(await submit()).toMatchObject({
       ssh: { host: '127.0.0.1', port: 12222, user: 'dev' },
     });
+  });
+
+  test('a new connection has nothing to delete', async () => {
+    const { container, button } = await renderForm();
+
+    expect(button('Delete', container)).toBeUndefined();
+  });
+
+  test('deletes only once confirmed, then goes back to the list', async () => {
+    const { container, button, click, deleteConnection, closeConnection } =
+      await renderForm({ connection: PROD });
+
+    await click(button('Delete', container));
+
+    expect(dialog()?.textContent).toContain('Delete prod (dev)?');
+    expect(deleteConnection).not.toHaveBeenCalled();
+
+    await click(button('Delete', dialog()!));
+
+    expect(deleteConnection).toHaveBeenCalledWith('prod-dev');
+    expect(closeConnection).not.toHaveBeenCalled();
+    expect(container.querySelector('#connection-list')).not.toBeNull();
+  });
+
+  test('cancelling the confirmation deletes nothing', async () => {
+    const { container, button, click, deleteConnection } = await renderForm({
+      connection: PROD,
+    });
+
+    await click(button('Delete', container));
+    await click(button('Cancel', dialog()!));
+
+    expect(deleteConnection).not.toHaveBeenCalled();
+    expect(container.querySelector('#connection-list')).toBeNull();
+  });
+
+  test('closes the connection first when it is open', async () => {
+    const { container, button, click, deleteConnection, closeConnection } =
+      await renderForm({ connection: PROD, openSlugs: ['prod-dev'] });
+
+    await click(button('Delete', container));
+    await click(button('Delete', dialog()!));
+
+    expect(closeConnection).toHaveBeenCalledWith('prod-dev');
+    expect(closeConnection.mock.invocationCallOrder[0]).toBeLessThan(
+      deleteConnection.mock.invocationCallOrder[0]
+    );
   });
 });

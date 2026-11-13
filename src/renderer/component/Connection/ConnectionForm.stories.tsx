@@ -49,6 +49,9 @@ const meta: Meta<typeof ConnectionForm> = {
           editConnection: (name, connection) => {
             action('editConnection')(name, connection);
           },
+          deleteConnection: async (slug) => {
+            action('deleteConnection')(slug);
+          },
           changeLanguage: (language) => {
             action('changeLanguage')(language);
           },
@@ -116,6 +119,23 @@ export const Edit: Story = {
       password: '',
       group: 'Client A',
     },
+  },
+};
+
+/** the confirmation the Delete button opens, over the form */
+export const ConfirmDelete: Story = {
+  args: Edit.args,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: 'Delete' })
+    );
+
+    // the dialog is portalled out of the canvas
+    const dialog = await within(document.body).findByRole('dialog');
+
+    await expect(
+      within(dialog).getByRole('button', { name: 'Delete' })
+    ).toHaveFocus();
   },
 };
 

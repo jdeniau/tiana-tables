@@ -80,6 +80,8 @@ interface Config {
     connectionSlug: string,
     connection: ConnectionObjectWithoutSlug
   ): Promise<Configuration>;
+
+  deleteConnection(connectionSlug: string): Promise<Configuration>;
 }
 
 export const config: Config = {
@@ -100,4 +102,5 @@ export const config: Config = {
   setPanelSize: bindChannel(CONFIGURATION_CHANNEL.SET_PANEL_SIZE),
   setDateDisplay: bindChannel(CONFIGURATION_CHANNEL.SET_DATE_DISPLAY),
   editConnection: bindChannel(CONFIGURATION_CHANNEL.EDIT_CONNECTION),
+  deleteConnection: bindChannel(CONFIGURATION_CHANNEL.DELETE_CONNECTION),
 };

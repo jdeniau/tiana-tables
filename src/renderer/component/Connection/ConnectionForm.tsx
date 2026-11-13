@@ -6,7 +6,9 @@ import {
   Form,
   Input,
   InputNumber,
+  Modal,
   Segmented,
+  Typography,
 } from 'antd';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router';
@@ -28,6 +30,7 @@ import {
 } from '../Style/Region';
 import ConnectionColorField from './ConnectionColorField';
 import { groupNames } from './connectionGroups';
+import { useConnectionDeletion } from './useConnectionDeletion';
 
 type Props = { connection?: EncryptedConnectionObject };
 
@@ -95,6 +98,7 @@ function ConnectionForm({ connection }: Props) {
   const { t } = useTranslation();
   const { configuration, addConnectionToConfig, editConnection } =
     useConfiguration();
+  const deletion = useConnectionDeletion();
   const navigate = useNavigate();
   const [form] = Form.useForm<FormValues>();
   const chosenEngine = Form.useWatch('engine', form) ?? engine;
@@ -376,13 +380,40 @@ function ConnectionForm({ connection }: Props) {
                 <span />
               )}
 
-              <ActionButton htmlType="submit">
-                {getSubmitButtonLabel(t, connection)}
-              </ActionButton>
+              <Flex gap={space.sm}>
+                {connection && (
+                  <Button danger onClick={deletion.askConfirmation}>
+                    {t('connection.form.action.delete')}
+                  </Button>
+                )}
+
+                <ActionButton htmlType="submit">
+                  {getSubmitButtonLabel(t, connection)}
+                </ActionButton>
+              </Flex>
             </Flex>
           </Flex>
         </Form>
       </FramedRegionBody>
+
+      {connection && (
+        <Modal
+          open={deletion.isConfirmOpen}
+          title={t('connection.delete.title', { name: connection.name })}
+          okText={t('connection.delete.confirm')}
+          // Enter deletes, Escape cancels
+          okButtonProps={{ danger: true, autoFocus: true }}
+          cancelText={t('cancel')}
+          confirmLoading={deletion.isDeleting}
+          onOk={() => void deletion.confirm(connection.slug)}
+          onCancel={deletion.cancel}
+          destroyOnHidden
+        >
+          <Typography.Paragraph>
+            {t('connection.delete.description')}
+          </Typography.Paragraph>
+        </Modal>
+      )}
     </FramedRegion>
   );
 }
