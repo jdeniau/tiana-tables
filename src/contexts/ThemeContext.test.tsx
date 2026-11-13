@@ -53,7 +53,7 @@ function renderInProviders(
         },
         addConnectionToConfig: noop,
         editConnection: noop,
-        deleteConnection: noop,
+        deleteConnection: async () => {},
         setActiveDatabase: noop,
         setActiveTable: noop,
         setPanelSize: noop,
