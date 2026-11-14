@@ -102,6 +102,7 @@ function Page({ where }: { where?: string }) {
       filterHistory={[]}
       sorting={sorting}
       displayAfterByColumn={{}}
+      displayAfterByTable={{}}
       columnWidths={{}}
     />
   );

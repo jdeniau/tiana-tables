@@ -3,6 +3,7 @@ export enum SQL_CHANNEL {
   UPDATE_CELL = 'sql:updateCell',
   DELETE_ROWS = 'sql:deleteRows',
   SELECT_ROW = 'sql:selectRow',
+  SELECT_LABELS = 'sql:selectLabels',
   LIST_DATABASES = 'sql:listDatabases',
   LIST_TABLES = 'sql:listTables',
   GET_FOREIGN_KEYS = 'sql:getForeignKeys',

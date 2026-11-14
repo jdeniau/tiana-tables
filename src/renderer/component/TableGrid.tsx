@@ -33,6 +33,7 @@ import type {
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Empty } from 'antd';
 import { styled } from 'styled-components';
+import type { DisplayAfterByTable } from '../../configuration/columnOrder';
 import type { ColumnWidthByColumn } from '../../configuration/type';
 import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
@@ -71,6 +72,7 @@ import {
 import { buildRowKey, rowIdOf } from './rowId';
 import { OpenCellMenu, ShowCellDetail, useCellDialogs } from './useCellDialogs';
 import { leftVar, useColumnWidthVars, widthVar } from './useColumnWidthVars';
+import { type LabelOf, useForeignKeyLabels } from './useForeignKeyLabels';
 import { columnId, useGridColumns } from './useGridColumns';
 import { type GridCopied, columnValue, useGridCopy } from './useGridCopy';
 import {
@@ -137,6 +139,12 @@ interface TableGridProps<R extends ResultRow> {
   onGoToId?: () => void;
   /** columns of the caller's own, holding no value of the row */
   extraColumns?: Array<ExtraColumn<R>>;
+
+  /**
+   * Given, shows after each foreign key the label of the row it points at: its column the order of its table puts first after the key.
+   * One statement per key and per hundred rows: only for rows that come in pages.
+   */
+  foreignKeyLabels?: DisplayAfterByTable;
 
   /** the widths the columns were dragged to before, by column name */
   columnWidths?: ColumnWidthByColumn;
@@ -222,6 +230,7 @@ function TableGrid<Row extends ResultRow>({
   onFilterChange,
   onGoToId,
   extraColumns = NO_EXTRA_COLUMNS,
+  foreignKeyLabels,
   columnWidths,
   onColumnResized,
   sortingAtom,
@@ -289,6 +298,24 @@ function TableGrid<Row extends ResultRow>({
   // TanStack's `getIsLastColumn('start')`: the last of the pinned ids the grid holds
   const lastPinned = columnPinning.start.findLast((id) => ids.includes(id));
 
+  const labels = useForeignKeyLabels(
+    result,
+    columnSources.flatMap(({ field, fieldIndex }, index) =>
+      field
+        ? [
+            {
+              id: ids[index],
+              fieldIndex,
+              name: field.name,
+              tableName: field.table,
+            },
+          ]
+        : []
+    ),
+    rowsAsArray,
+    foreignKeyLabels
+  );
+
   const columnsMeta: Array<ColumnMeta> = columnSources.map(
     ({ field, fieldIndex, extra }, index) => {
       const id = ids[index];
@@ -296,6 +323,7 @@ function TableGrid<Row extends ResultRow>({
       const foreignKey = field
         ? foreignKeys.getForeignKey(field.table ?? '', field.name)
         : null;
+      const labelOf = labels.get(id);
 
       return {
         id,
@@ -306,8 +334,10 @@ function TableGrid<Row extends ResultRow>({
         width: `var(${widthVar(index)})`,
         pinnedLeft: isPinned ? `var(${leftVar(index)})` : null,
         isLastPinned: id === lastPinned,
-        numeric: field?.kind === FieldKind.Number,
+        // a key followed by its label reads as a name, whatever its type
+        numeric: field?.kind === FieldKind.Number && !labelOf,
         hasForeignKey: foreignKey !== null,
+        labelOf,
         dialect,
         // the schema of the column, resolved here rather than in the modal so
         // that no context lookup happens per mounted cell
@@ -626,6 +656,8 @@ export interface ColumnMeta {
   // resolved once per column so that non-FK cells (the vast majority) don't
   // mount a ForeignKeyLink that would render null
   hasForeignKey: boolean;
+  /** the label of the row the key of this column points at, for a column that shows one */
+  labelOf?: LabelOf;
   /** the dialect of the connection, carried here so no cell looks it up */
   dialect: Dialect;
   /**
@@ -868,7 +900,11 @@ function BodyRowInner<Row extends ResultRow>({
               });
             }}
           >
-            <GridCell column={column} value={value} />
+            <GridCell
+              column={column}
+              value={value}
+              label={column.labelOf?.(original)}
+            />
           </td>
         );
       })}
@@ -916,14 +952,17 @@ const BodyRow = memo(
 const GridCell = memo(function GridCell({
   column,
   value,
+  label,
 }: {
   column: ColumnMeta;
   value: unknown;
+  label: string | undefined;
 }): ReactElement {
   return (
     <Cell
       kind={column.kind}
       value={value}
+      label={label}
       link={
         column.hasForeignKey ? (
           <ForeignKeyLink

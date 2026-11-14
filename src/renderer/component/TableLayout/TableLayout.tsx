@@ -5,6 +5,7 @@ import { Button, Splitter } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import {
   DisplayAfterByColumn,
+  DisplayAfterByTable,
   applyColumnOrder,
 } from '../../../configuration/columnOrder';
 import { PANEL } from '../../../configuration/panels';
@@ -59,6 +60,9 @@ interface TableNameProps {
   /** set on the structure page */
   displayAfterByColumn: DisplayAfterByColumn;
 
+  /** the order of every table of the database: the one a foreign key points at names its rows */
+  displayAfterByTable: DisplayAfterByTable;
+
   /** the widths the columns of this table were dragged to */
   columnWidths: ColumnWidthByColumn;
 }
@@ -72,6 +76,7 @@ export function TableLayout({
   filterHistory,
   sorting,
   displayAfterByColumn,
+  displayAfterByTable,
   columnWidths,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
@@ -227,6 +232,7 @@ export function TableLayout({
                 result={result}
                 loading={loading}
                 primaryKeys={primaryKeys}
+                foreignKeyLabels={displayAfterByTable}
                 onValueUpdated={updateValue}
                 onFilterChange={handleFilterChange}
                 onGoToId={canGoToId ? openGoToId : undefined}

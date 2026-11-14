@@ -1,5 +1,6 @@
 import log from 'electron-log';
 import invariant from 'tiny-invariant';
+import { z } from 'zod';
 import { getConfiguration } from '../configuration';
 import { decryptPassword } from '../configuration/encryption';
 import { EncryptedConnectionObject } from '../configuration/type';
@@ -28,6 +29,7 @@ import {
   ResultOrError,
   encodeError,
 } from './errorSerializer';
+import { type SelectedLabel, selectLabelsRequestSchema } from './selectLabels';
 import { type SelectedRow, selectRowRequestSchema } from './selectRow';
 import { SslMode } from './sslMode';
 import { toTableStructure } from './tableStructure';
@@ -46,6 +48,9 @@ import { UpdateCellOutcome, UpdateCellRequest } from './updateCell';
  * implicit deadline is one we cannot name in an error message nor change.
  */
 const CONNECT_TIMEOUT_MS = 10_000;
+
+/** rows read as arrays: the key's columns, then the label */
+const labelRowsSchema = z.array(z.array(z.unknown()));
 
 class ConnectionStack {
   /**
@@ -82,6 +87,7 @@ class ConnectionStack {
     [SQL_CHANNEL.UPDATE_CELL]: this.updateCell,
     [SQL_CHANNEL.DELETE_ROWS]: this.deleteRows,
     [SQL_CHANNEL.SELECT_ROW]: this.selectRow,
+    [SQL_CHANNEL.SELECT_LABELS]: this.selectLabels,
     [SQL_CHANNEL.CLOSE]: this.closeConnection,
     [SQL_CHANNEL.CLOSE_ALL]: this.closeAllConnections,
   };
@@ -298,6 +304,23 @@ class ConnectionStack {
       invariant(!isWriteResult(rows), 'A SELECT answers rows');
 
       return { fields, row: rows[0] ?? null };
+    });
+  }
+
+  /** The rows the keys point at, each with the start of its label; a key pointing at no row has none. */
+  async selectLabels(request: unknown): ResultOrError<Array<SelectedLabel>> {
+    // a malformed request is our bug, thrown rather than encoded as the server's answer
+    const parsed = selectLabelsRequestSchema.parse(request);
+    const keyLength = parsed.keys[0].length;
+
+    return this.#ask(async () => {
+      const query = this.#dialect().selectLabels(parsed);
+      const [rows] = await this.#send(query.sql, true, query.values);
+
+      return labelRowsSchema.parse(rows).map((row) => ({
+        key: row.slice(0, keyLength),
+        label: row[keyLength],
+      }));
     });
   }
 

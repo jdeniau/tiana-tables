@@ -1,3 +1,4 @@
+import type { SelectLabelsRequest } from '../sql/selectLabels';
 import type { SelectRowRequest } from '../sql/selectRow';
 
 /** The keys of the query cache, the connection first so that closing it removes all of its entries. */
@@ -16,6 +17,10 @@ export const queryKeys = {
   /** the row a foreign key points at, previewed while its value is edited */
   linkedRow: (connectionSlug: string, request: SelectRowRequest | null) =>
     [connectionSlug, request?.database ?? '', 'linkedRow', request] as const,
+
+  /** the labels of the rows some foreign keys of a grid point at */
+  foreignKeyLabels: (connectionSlug: string, request: SelectLabelsRequest) =>
+    [connectionSlug, request.database, 'foreignKeyLabels', request] as const,
 
   /** the last run of the SQL page: written by its action, never fetched */
   sqlResult: (connectionSlug: string, database: string) =>

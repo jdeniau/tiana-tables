@@ -67,6 +67,31 @@ export class ForeignKeysHelper {
     };
   }
 
+  /** Every key of the table, whole, in the order they are listed. */
+  getWholeForeignKeys(tableName: string): Array<WholeForeignKey> {
+    const byConstraint = new Map<string, WholeForeignKey>();
+
+    for (const row of this._foreignKeys) {
+      if (row.table !== tableName) {
+        continue;
+      }
+
+      const key = byConstraint.get(row.constraintName) ?? {
+        referencedDatabase: row.referencedDatabase,
+        referencedTable: row.referencedTable,
+        columns: [],
+      };
+
+      key.columns.push({
+        column: row.column,
+        referencedColumn: row.referencedColumn,
+      });
+      byConstraint.set(row.constraintName, key);
+    }
+
+    return [...byConstraint.values()];
+  }
+
   getLinkBetweenTables(
     tableName: string,
     tableList: Array<{ tableName: string; alias: string | undefined }>

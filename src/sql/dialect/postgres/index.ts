@@ -1,4 +1,5 @@
 import { DatabaseEngine } from '../../engine';
+import { MAX_LABEL_LENGTH } from '../../selectLabels';
 import { toHexDigits } from '../hex';
 import { primaryKeyClause, rowsClause } from '../primaryKeyClause';
 import type { Dialect } from '../types';
@@ -54,6 +55,19 @@ export const postgresDialect: Dialect = {
 
     return {
       sql: `SELECT * FROM ${qualify(database, table)} WHERE ${where.sql} LIMIT 1`,
+      values: where.values,
+    };
+  },
+
+  selectLabels: ({ database, table, labelColumn, keys }) => {
+    const where = rowsClause(keys, escapeIdentifier);
+    const keyColumns = keys[0].map(({ column }) => escapeIdentifier(column));
+
+    // `left` takes text only: the cast lets a number or a date name a row
+    return {
+      sql:
+        `SELECT ${keyColumns.join(', ')}, left(CAST(${escapeIdentifier(labelColumn)} AS text), ${MAX_LABEL_LENGTH}) ` +
+        `FROM ${qualify(database, table)} WHERE ${where.sql}`,
       values: where.values,
     };
   },
