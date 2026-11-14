@@ -11,6 +11,7 @@ import { DatabaseContext } from '../../contexts/DatabaseContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import type { ColumnDetail } from '../../sql/dialect/metadata';
 import { FieldKind, type ResultField } from '../../sql/resultField';
+import type { SelectLabelsRequest } from '../../sql/selectLabels';
 import type { ResultRow } from '../../sql/types';
 import { type UpdateCellRequest, UpdateCellStatus } from '../../sql/updateCell';
 import {
@@ -114,7 +115,7 @@ function makeRows(rowCount: number, columnCount: number): Array<ResultRow> {
 
 // the schema the grid reads to know what a cell may become: without it every
 // cell is read-only, which is exactly what the raw-SQL case looks like
-const ALL_COLUMNS: Array<ColumnDetail> = (
+const ITEMS_COLUMNS: Array<ColumnDetail> = (
   [
     ['id', false],
     ['name', false],
@@ -135,6 +136,22 @@ const ALL_COLUMNS: Array<ColumnDetail> = (
   allowedValues: [],
   multiValued: false,
 }));
+
+/** the table `linkedId` points at: its second column names its rows */
+const LINKED_TABLE_COLUMNS: Array<ColumnDetail> = ['id', 'title'].map(
+  (name) => ({
+    table: 'linkedTable',
+    name,
+    nullable: false,
+    generated: false,
+    binary: false,
+    hasJsonType: false,
+    allowedValues: [],
+    multiValued: false,
+  })
+);
+
+const ALL_COLUMNS = [...ITEMS_COLUMNS, ...LINKED_TABLE_COLUMNS];
 
 /**
  * The real clipboard goes through the main process, which Storybook has none
@@ -418,6 +435,60 @@ export const Editable: Story = {
     primaryKeys: ['id'],
   },
   render: (args) => <EditableGrid {...args} />,
+};
+
+/** What `window.sql.selectLabels` answers: a title per row of `linkedTable`, some too long for the column. */
+async function linkedTitles({ keys }: SelectLabelsRequest) {
+  return keys.map((parts) => {
+    const id = Number(parts[0].value);
+
+    return {
+      key: [id],
+      label: `${WORDS[id % WORDS.length]} ${WORDS.slice(0, id % 5).join(' ')}`,
+    };
+  });
+}
+
+/**
+ * `linkedId` points at `linkedTable`: each key is followed by the title of its row, set flush left.
+ * The column is narrow enough for the longer titles to be cut, never the key nor its arrow.
+ */
+export const WithForeignKeyLabels: Story = {
+  args: {
+    fields: makeFields(8),
+    result: makeRows(100, 8),
+    primaryKeys: ['id'],
+    foreignKeyLabels: {},
+    columnWidths: { linkedId: 180 },
+  },
+  beforeEach: () => {
+    window.sql = { ...window.sql, selectLabels: linkedTitles };
+  },
+  play: async ({ canvasElement }) => {
+    const labelled = await waitFor(() => {
+      const spans = canvasElement.querySelectorAll<HTMLElement>('[data-label]');
+
+      expect(spans.length).toBeGreaterThan(0);
+
+      return [...spans];
+    });
+    const [first] = labelled;
+    const cell = first.closest('td');
+
+    expect(getComputedStyle(first, '::after').content).toBe(
+      `"${first.dataset.label}"`
+    );
+    expect(cell?.classList.contains('tg-num')).toBe(false);
+
+    // the longest title overflows its cell: the ellipsis cuts it, the arrow stays inside the cell
+    const cut = labelled.find((span) => span.scrollWidth > span.clientWidth);
+    const arrow = cut?.closest('td')?.querySelector('a');
+
+    expect(cut).toBeDefined();
+    expect(arrow?.getBoundingClientRect().right).toBeLessThanOrEqual(
+      cut?.closest('td')?.getBoundingClientRect().right ?? 0
+    );
+  },
 };
 
 function SelectableGrid(args: ComponentProps<typeof TableGrid<ResultRow>>) {

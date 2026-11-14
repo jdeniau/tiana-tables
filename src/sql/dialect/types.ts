@@ -1,5 +1,6 @@
 import type { DeleteRowsRequest } from '../deleteRows';
 import type { DatabaseEngine } from '../engine';
+import type { SelectLabelsRequest } from '../selectLabels';
 import type { SelectRowRequest } from '../selectRow';
 import type { QueryReturnType } from '../types';
 import type { UpdateCellOutcome, UpdateCellRequest } from '../updateCell';
@@ -62,4 +63,7 @@ export interface Dialect {
 
   /** The one row the key points at, every column of it. */
   selectRow(request: SelectRowRequest): BuiltQuery;
+
+  /** The rows the keys point at: their key columns, then the start of their label. */
+  selectLabels(request: SelectLabelsRequest): BuiltQuery;
 }

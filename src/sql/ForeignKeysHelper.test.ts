@@ -112,6 +112,25 @@ describe('ForeignKeysHelper', () => {
     test('a column of no key has none', () => {
       expect(helper.getWholeForeignKey('envoi_newsletter', 'id')).toBeNull();
     });
+
+    test('getWholeForeignKeys lists every key of the table, each whole, and no key of another table named alike', () => {
+      expect(helper.getWholeForeignKeys('envoi_newsletter')).toEqual([
+        {
+          referencedDatabase: 'db',
+          referencedTable: 'article',
+          columns: [{ column: 'article_une_id', referencedColumn: 'id' }],
+        },
+        {
+          referencedDatabase: 'db',
+          referencedTable: 'article_media',
+          columns: [
+            { column: 'article_une_id', referencedColumn: 'article_id' },
+            { column: 'media_une_id', referencedColumn: 'media_id' },
+          ],
+        },
+      ]);
+      expect(helper.getWholeForeignKeys('newsletter')).toEqual([]);
+    });
   });
 
   test('getLinkBetweenTables', () => {

@@ -53,4 +53,19 @@ describe('postgresDialect', () => {
     );
     expect(values).toEqual({ key0: '1', key1: 2 });
   });
+
+  it('reads the key and the start of the label as text, whatever its type', () => {
+    const { sql, values } = postgresDialect.selectLabels({
+      database: 'app',
+      table: 'shipments',
+      labelColumn: 'shipped_at',
+      keys: [[{ column: 'id', value: 3 }], [{ column: 'id', value: 7 }]],
+    });
+
+    expect(sql).toBe(
+      'SELECT "id", left(CAST("shipped_at" AS text), 100) FROM "app"."shipments" ' +
+        'WHERE ("id" = :row0Key0) OR ("id" = :row1Key0)'
+    );
+    expect(values).toEqual({ row0Key0: 3, row1Key0: 7 });
+  });
 });

@@ -70,7 +70,7 @@ interface GridCopy {
 /** The value a row holds in a column: a raw query result is a list of values. */
 export function columnValue(
   row: ResultRow,
-  column: ColumnMeta,
+  column: Pick<ColumnMeta, 'fieldIndex' | 'name'>,
   rowsAsArray: boolean
 ): unknown {
   return rowsAsArray ? row[column.fieldIndex] : row[column.name];

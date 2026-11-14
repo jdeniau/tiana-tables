@@ -95,4 +95,57 @@ describe('mysqlDialect', () => {
       ).toThrow();
     });
   });
+
+  describe('selectLabels', () => {
+    it('reads the key and the start of the label of every row named', () => {
+      const { sql, values } = mysqlDialect.selectLabels({
+        database: 'tiana_dev',
+        table: 'article_media',
+        labelColumn: 'legende_specifique',
+        keys: [
+          [
+            { column: 'article_id', value: 9 },
+            { column: 'media_id', value: 237 },
+          ],
+          [
+            { column: 'article_id', value: 12 },
+            { column: 'media_id', value: '240' },
+          ],
+        ],
+      });
+
+      expect(sql).toBe(
+        'SELECT `article_id`, `media_id`, LEFT(`legende_specifique`, 100) ' +
+          'FROM `tiana_dev`.`article_media` ' +
+          'WHERE (`article_id` = :row0Key0 AND `media_id` = :row0Key1) ' +
+          'OR (`article_id` = :row1Key0 AND `media_id` = :row1Key1)'
+      );
+      expect(values).toEqual({
+        row0Key0: 9,
+        row0Key1: 237,
+        row1Key0: 12,
+        row1Key1: '240',
+      });
+    });
+
+    // a WHERE with no term would read the whole table
+    it('refuses no key, or a key of no column', () => {
+      expect(() =>
+        mysqlDialect.selectLabels({
+          database: 'shop',
+          table: 't',
+          labelColumn: 'name',
+          keys: [],
+        })
+      ).toThrow();
+      expect(() =>
+        mysqlDialect.selectLabels({
+          database: 'shop',
+          table: 't',
+          labelColumn: 'name',
+          keys: [[]],
+        })
+      ).toThrow();
+    });
+  });
 });
