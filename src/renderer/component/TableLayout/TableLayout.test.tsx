@@ -444,22 +444,28 @@ describe('while the rows are on their way', () => {
   });
 });
 
-/** labels of the database, which the row written or deleted may be one of */
-const LABELS_KEY = queryKeys.foreignKeyLabels('shop', {
-  database: 'shop',
-  table: 'items',
-  keyColumn: 'id',
-  labelColumn: 'name',
-  keys: [1],
-});
+/** labels of the database read from `table`, which the row written or deleted may be one of */
+const labelsKey = (table: string) =>
+  queryKeys.foreignKeyLabels('shop', {
+    database: 'shop',
+    table,
+    keyColumn: 'id',
+    labelColumn: 'name',
+    keys: [1],
+  });
 
-const labelsAskedAgain = (): boolean =>
-  queryClient.getQueryState(LABELS_KEY)?.isInvalidated ?? false;
+function cacheLabels(): void {
+  queryClient.setQueryData(labelsKey('items'), { 1: 'a' });
+  queryClient.setQueryData(labelsKey('categories'), { 1: 'books' });
+}
+
+const labelsAskedAgain = (table: string): boolean =>
+  queryClient.getQueryState(labelsKey(table))?.isInvalidated ?? false;
 
 describe('writing a value', () => {
   mountRows();
 
-  test('asks the labels of the database again', async () => {
+  test('asks again the labels read from the table written, and no other', async () => {
     const updateCell = vi
       .fn()
       .mockResolvedValue({ status: UpdateCellStatus.Updated, value: null });
@@ -467,7 +473,7 @@ describe('writing a value', () => {
     window.clipboard = {
       readText: async () => '',
     } as unknown as typeof window.clipboard;
-    queryClient.setQueryData(LABELS_KEY, { 1: 'a' });
+    cacheLabels();
     await render(undefined, '/', [
       column('id'),
       { ...column('name'), nullable: true },
@@ -488,17 +494,18 @@ describe('writing a value', () => {
     );
 
     expect(updateCell).toHaveBeenCalledOnce();
-    expect(labelsAskedAgain()).toBe(true);
+    expect(labelsAskedAgain('items')).toBe(true);
+    expect(labelsAskedAgain('categories')).toBe(false);
   });
 });
 
 describe('deleting rows', () => {
   mountRows();
 
-  test('deletes the row by its key, then fetches every page loaded and the labels again', async () => {
+  test('deletes the row by its key, then fetches every page loaded and every label again', async () => {
     const deleteRows = vi.fn().mockResolvedValue(1);
     window.sql = { executeQuery, deleteRows } as unknown as typeof window.sql;
-    queryClient.setQueryData(LABELS_KEY, { 1: 'a' });
+    cacheLabels();
     await render();
     executeQuery.mockResolvedValueOnce([[{ id: 2, name: 'b' }], FIELDS]);
     await clickLoadMore();
@@ -534,7 +541,9 @@ describe('deleting rows', () => {
       'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 0;',
       'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 100;',
     ]);
-    expect(labelsAskedAgain()).toBe(true);
+    // a deletion can cascade to another table
+    expect(labelsAskedAgain('items')).toBe(true);
+    expect(labelsAskedAgain('categories')).toBe(true);
   });
 });
 
