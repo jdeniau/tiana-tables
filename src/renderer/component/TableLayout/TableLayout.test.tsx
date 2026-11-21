@@ -24,7 +24,9 @@ import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext
 import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
 import { FieldKind } from '../../../sql/resultField';
+import { UpdateCellStatus } from '../../../sql/updateCell';
 import { createQueryClient } from '../../queryClient';
+import { queryKeys } from '../../queryKeys';
 import { mountRows } from '../mountRows.testing';
 import { TableLayout } from './TableLayout';
 import { readOrderParams } from './tableSearch';
@@ -442,12 +444,61 @@ describe('while the rows are on their way', () => {
   });
 });
 
+/** labels of the database, which the row written or deleted may be one of */
+const LABELS_KEY = queryKeys.foreignKeyLabels('shop', {
+  database: 'shop',
+  table: 'items',
+  keyColumn: 'id',
+  labelColumn: 'name',
+  keys: [1],
+});
+
+const labelsAskedAgain = (): boolean =>
+  queryClient.getQueryState(LABELS_KEY)?.isInvalidated ?? false;
+
+describe('writing a value', () => {
+  mountRows();
+
+  test('asks the labels of the database again', async () => {
+    const updateCell = vi
+      .fn()
+      .mockResolvedValue({ status: UpdateCellStatus.Updated, value: null });
+    window.sql = { executeQuery, updateCell } as unknown as typeof window.sql;
+    window.clipboard = {
+      readText: async () => '',
+    } as unknown as typeof window.clipboard;
+    queryClient.setQueryData(LABELS_KEY, { 1: 'a' });
+    await render(undefined, '/', [
+      column('id'),
+      { ...column('name'), nullable: true },
+    ]);
+
+    act(() => {
+      [...container.querySelectorAll('td')]
+        .find((td) => td.textContent === 'a')
+        ?.dispatchEvent(
+          new MouseEvent('contextmenu', { bubbles: true, clientX: 10 })
+        );
+    });
+    await click(
+      [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
+        // followed by its shortcut
+        (item) => item.textContent?.startsWith('Set to NULL')
+      )
+    );
+
+    expect(updateCell).toHaveBeenCalledOnce();
+    expect(labelsAskedAgain()).toBe(true);
+  });
+});
+
 describe('deleting rows', () => {
   mountRows();
 
-  test('deletes the row by its key, then fetches every page loaded again', async () => {
+  test('deletes the row by its key, then fetches every page loaded and the labels again', async () => {
     const deleteRows = vi.fn().mockResolvedValue(1);
     window.sql = { executeQuery, deleteRows } as unknown as typeof window.sql;
+    queryClient.setQueryData(LABELS_KEY, { 1: 'a' });
     await render();
     executeQuery.mockResolvedValueOnce([[{ id: 2, name: 'b' }], FIELDS]);
     await clickLoadMore();
@@ -483,6 +534,7 @@ describe('deleting rows', () => {
       'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 0;',
       'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 100;',
     ]);
+    expect(labelsAskedAgain()).toBe(true);
   });
 });
 

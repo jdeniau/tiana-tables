@@ -48,15 +48,16 @@ function knownLabels(
   request: SelectLabelsRequest
 ): LabelsByKey {
   const source = labelSource(request);
-  const [connection, database, kind] = queryKeys.foreignKeyLabels(
-    connectionSlug,
-    request
-  );
 
   return Object.assign(
     {},
     ...queryClient
-      .getQueriesData<LabelsByKey>({ queryKey: [connection, database, kind] })
+      .getQueriesData<LabelsByKey>({
+        queryKey: queryKeys.databaseForeignKeyLabels(
+          connectionSlug,
+          request.database
+        ),
+      })
       .flatMap(([queryKey, labels]) =>
         labels && labelSource(queryKey[3] as SelectLabelsRequest) === source
           ? [labels]
