@@ -85,21 +85,13 @@ function statements(dialect: Dialect): Array<[string, BuiltQuery]> {
       }),
     ],
     [
-      'selectLabels on a composite key',
+      'selectLabels',
       dialect.selectLabels({
         database: DATABASE,
         table: TABLE,
+        keyColumn: 'order_id',
         labelColumn: 'label',
-        keys: [
-          [
-            { column: 'order_id', value: 'first order' },
-            { column: 'line_id', value: 2 },
-          ],
-          [
-            { column: 'order_id', value: 'second order' },
-            { column: 'line_id', value: 3 },
-          ],
-        ],
+        keys: ['first order', 2],
       }),
     ],
     [

@@ -439,11 +439,11 @@ export const Editable: Story = {
 
 /** What `window.sql.selectLabels` answers: a title per row of `linkedTable`, some too long for the column. */
 async function linkedTitles({ keys }: SelectLabelsRequest) {
-  return keys.map((parts) => {
-    const id = Number(parts[0].value);
+  return keys.map((key) => {
+    const id = Number(key);
 
     return {
-      key: [id],
+      key,
       label: `${WORDS[id % WORDS.length]} ${WORDS.slice(0, id % 5).join(' ')}`,
     };
   });
@@ -458,7 +458,7 @@ export const WithForeignKeyLabels: Story = {
     fields: makeFields(8),
     result: makeRows(100, 8),
     primaryKeys: ['id'],
-    foreignKeyLabels: {},
+    displayAfterByTable: {},
     columnWidths: { linkedId: 180 },
   },
   beforeEach: () => {
@@ -488,6 +488,11 @@ export const WithForeignKeyLabels: Story = {
     expect(arrow?.getBoundingClientRect().right).toBeLessThanOrEqual(
       cut?.closest('td')?.getBoundingClientRect().right ?? 0
     );
+
+    // the tooltip of the cut cell shows what the cut hides
+    await userEvent.hover(cut as HTMLElement);
+
+    expect(cut?.title).toBe(`${cut?.textContent} ${cut?.dataset.label}`);
   },
 };
 

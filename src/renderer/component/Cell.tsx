@@ -74,10 +74,10 @@ function CellShell({
   offset,
   label,
 }: CellShellType) {
+  // the label is drawn by CSS: the tooltip of a cut cell names it too
+  const text = hasTitle && (label ? `${children} ${label}` : String(children));
   const title =
-    hasTitle && String(children).length < MAX_TITLE_LENGTH
-      ? String(children)
-      : undefined;
+    text !== undefined && text.length < MAX_TITLE_LENGTH ? text : undefined;
 
   return (
     <div

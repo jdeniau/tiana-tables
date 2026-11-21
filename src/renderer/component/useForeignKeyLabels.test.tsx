@@ -100,16 +100,8 @@ function rows(count: number): Array<ResultRow> {
 }
 
 /** what the server answers: every key points at a row */
-function answer({ table, keys }: SelectLabelsRequest) {
-  return keys.map((parts) => {
-    const values = parts.map(({ value }) => value);
-
-    return {
-      key: values,
-      label:
-        table === 'article' ? `Article ${values[0]}` : `#${values.join('/')}`,
-    };
-  });
+function answer({ keys }: SelectLabelsRequest) {
+  return keys.map((key) => ({ key, label: `Article ${key}` }));
 }
 
 const selectLabels = vi.fn();
@@ -167,7 +159,7 @@ async function render(
                       fields={FIELDS}
                       result={result}
                       primaryKeys={['id']}
-                      foreignKeyLabels={displayAfterByTable ?? undefined}
+                      displayAfterByTable={displayAfterByTable ?? undefined}
                     />
                   </AllColumnsContextProvider>
                 </ForeignKeysContextProvider>
@@ -209,11 +201,12 @@ describe('the labels of the foreign keys', () => {
     expect(cell(2, 0).classList.contains('tg-num')).toBe(true);
   });
 
-  test('a column of two keys shows its own, the composite key labels its other column', async () => {
+  test('a column of two keys shows its own, and the composite key labels nothing', async () => {
     await render(rows(3));
 
     expect(labelOf(3, 1)).toBe('Article 3');
-    expect(labelOf(3, 2)).toBe('#3/30');
+    expect(labelOf(3, 2)).toBeNull();
+    expect(cell(3, 2).classList.contains('tg-num')).toBe(true);
   });
 
   test('each key is asked once per hundred rows, each value once', async () => {
@@ -224,8 +217,6 @@ describe('the labels of the foreign keys', () => {
     ).toEqual([
       ['article', 30],
       ['article', 30],
-      ['article_media', 30],
-      ['article_media', 30],
     ]);
   });
 
@@ -276,10 +267,7 @@ describe('the labels of the foreign keys', () => {
         table,
         labelColumn,
       ])
-    ).toEqual([
-      ['article', 'slug'],
-      ['article_media', 'position'],
-    ]);
+    ).toEqual([['article', 'slug']]);
   });
 
   test('off, nothing is asked and a key stays a number', async () => {

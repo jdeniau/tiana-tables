@@ -2,7 +2,11 @@ import { escape } from 'mysql';
 import { DatabaseEngine } from '../../engine';
 import { MAX_LABEL_LENGTH } from '../../selectLabels';
 import { toHexDigits } from '../hex';
-import { primaryKeyClause, rowsClause } from '../primaryKeyClause';
+import {
+  keysInClause,
+  primaryKeyClause,
+  rowsClause,
+} from '../primaryKeyClause';
 import type { Dialect } from '../types';
 import { escapeIdentifier } from './escapeIdentifier';
 import { mysqlGuardedUpdate } from './guardedUpdate';
@@ -68,13 +72,12 @@ export const mysqlDialect: Dialect = {
     };
   },
 
-  selectLabels: ({ database, table, labelColumn, keys }) => {
-    const where = rowsClause(keys, escapeIdentifier);
-    const keyColumns = keys[0].map(({ column }) => escapeIdentifier(column));
+  selectLabels: ({ database, table, keyColumn, labelColumn, keys }) => {
+    const where = keysInClause(keyColumn, keys, escapeIdentifier);
 
     return {
       sql:
-        `SELECT ${keyColumns.join(', ')}, LEFT(${escapeIdentifier(labelColumn)}, ${MAX_LABEL_LENGTH}) ` +
+        `SELECT ${escapeIdentifier(keyColumn)}, LEFT(${escapeIdentifier(labelColumn)}, ${MAX_LABEL_LENGTH}) ` +
         `FROM ${qualify(database, table)} WHERE ${where.sql}`,
       values: where.values,
     };

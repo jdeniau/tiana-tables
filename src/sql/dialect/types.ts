@@ -64,6 +64,6 @@ export interface Dialect {
   /** The one row the key points at, every column of it. */
   selectRow(request: SelectRowRequest): BuiltQuery;
 
-  /** The rows the keys point at: their key columns, then the start of their label. */
+  /** The rows the keys point at: their key, then the start of their label. */
   selectLabels(request: SelectLabelsRequest): BuiltQuery;
 }

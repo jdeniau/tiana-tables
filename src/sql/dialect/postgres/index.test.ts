@@ -58,14 +58,15 @@ describe('postgresDialect', () => {
     const { sql, values } = postgresDialect.selectLabels({
       database: 'app',
       table: 'shipments',
+      keyColumn: 'id',
       labelColumn: 'shipped_at',
-      keys: [[{ column: 'id', value: 3 }], [{ column: 'id', value: 7 }]],
+      keys: [3, 7],
     });
 
     expect(sql).toBe(
       'SELECT "id", left(CAST("shipped_at" AS text), 100) FROM "app"."shipments" ' +
-        'WHERE ("id" = :row0Key0) OR ("id" = :row1Key0)'
+        'WHERE "id" IN (:key0, :key1)'
     );
-    expect(values).toEqual({ row0Key0: 3, row1Key0: 7 });
+    expect(values).toEqual({ key0: 3, key1: 7 });
   });
 });

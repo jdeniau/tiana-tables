@@ -49,8 +49,8 @@ import { UpdateCellOutcome, UpdateCellRequest } from './updateCell';
  */
 const CONNECT_TIMEOUT_MS = 10_000;
 
-/** rows read as arrays: the key's columns, then the label */
-const labelRowsSchema = z.array(z.array(z.unknown()));
+/** rows read as arrays: the key, then the label */
+const labelRowsSchema = z.array(z.tuple([z.unknown(), z.unknown()]));
 
 class ConnectionStack {
   /**
@@ -311,16 +311,14 @@ class ConnectionStack {
   async selectLabels(request: unknown): ResultOrError<Array<SelectedLabel>> {
     // a malformed request is our bug, thrown rather than encoded as the server's answer
     const parsed = selectLabelsRequestSchema.parse(request);
-    const keyLength = parsed.keys[0].length;
 
     return this.#ask(async () => {
       const query = this.#dialect().selectLabels(parsed);
       const [rows] = await this.#send(query.sql, true, query.values);
 
-      return labelRowsSchema.parse(rows).map((row) => ({
-        key: row.slice(0, keyLength),
-        label: row[keyLength],
-      }));
+      return labelRowsSchema
+        .parse(rows)
+        .map(([key, label]) => ({ key, label }));
     });
   }
 

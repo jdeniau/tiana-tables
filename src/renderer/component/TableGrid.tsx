@@ -141,10 +141,10 @@ interface TableGridProps<R extends ResultRow> {
   extraColumns?: Array<ExtraColumn<R>>;
 
   /**
-   * Given, shows after each foreign key the label of the row it points at: its column the order of its table puts first after the key.
-   * One statement per key and per hundred rows: only for rows that come in pages.
+   * Given, shows after each foreign key the label of the row it points at: the first column its table shows, keys and bytes aside.
+   * One statement per key and per page of the table: only for rows that come in pages.
    */
-  foreignKeyLabels?: DisplayAfterByTable;
+  displayAfterByTable?: DisplayAfterByTable;
 
   /** the widths the columns were dragged to before, by column name */
   columnWidths?: ColumnWidthByColumn;
@@ -230,7 +230,7 @@ function TableGrid<Row extends ResultRow>({
   onFilterChange,
   onGoToId,
   extraColumns = NO_EXTRA_COLUMNS,
-  foreignKeyLabels,
+  displayAfterByTable,
   columnWidths,
   onColumnResized,
   sortingAtom,
@@ -313,7 +313,7 @@ function TableGrid<Row extends ResultRow>({
         : []
     ),
     rowsAsArray,
-    foreignKeyLabels
+    displayAfterByTable
   );
 
   const columnsMeta: Array<ColumnMeta> = columnSources.map(

@@ -14,22 +14,19 @@ import type { SelectLabelsRequest } from '../../sql/selectLabels';
 import type { ResultRow } from '../../sql/types';
 import { queryKeys } from '../queryKeys';
 import {
+  TABLE_ROWS_GC_TIME,
+  TABLE_ROWS_PAGE_SIZE,
+  TABLE_ROWS_STALE_TIME,
+} from './TableLayout/tableRowsQuery';
+import {
   type GridColumn,
   type LabelsByKey,
+  findLabel,
   labelledKeys,
   labelsByKey,
   labelsRequest,
-  rowKeyText,
 } from './foreignKeyLabels';
-
-/** the rows asked about in one statement: a page of the table view */
-const ROWS_PER_REQUEST = 100;
-
-/** kept as long as the rows they label */
-const LABELS_GC_TIME = 30 * 60 * 1000;
-
-/** asked again by a grid opened after this long, as its rows are */
-const LABELS_STALE_TIME = 5 * 1000;
+import { columnValue } from './useGridCopy';
 
 /** The label a row's key points at, `undefined` until it is known or when there is none. */
 export type LabelOf = (row: ResultRow) => string | undefined;
@@ -37,14 +34,10 @@ export type LabelOf = (row: ResultRow) => string | undefined;
 /** what tells the labels of one column of one table from those of another */
 function labelSource({
   table,
+  keyColumn,
   labelColumn,
-  keys,
 }: SelectLabelsRequest): string {
-  return JSON.stringify([
-    table,
-    labelColumn,
-    keys[0].map(({ column }) => column),
-  ]);
+  return JSON.stringify([table, keyColumn, labelColumn]);
 }
 
 /** Every label already answered for the column the request reads, whichever rows asked for it. */
@@ -81,8 +74,8 @@ function labelsQuery(
     queryFn: async () => labelsByKey(await window.sql.selectLabels(request)),
     // a key edited in a page keeps the labels of the others on screen while the page is asked again
     placeholderData: () => knownLabels(queryClient, connectionSlug, request),
-    gcTime: LABELS_GC_TIME,
-    staleTime: LABELS_STALE_TIME,
+    gcTime: TABLE_ROWS_GC_TIME,
+    staleTime: TABLE_ROWS_STALE_TIME,
   });
 }
 
@@ -95,7 +88,7 @@ function answersOf(
 
 /**
  * The label each column of the grid shows after its value, by column id: the row a foreign key points at, named by one of its columns.
- * One statement per key and per hundred rows; nothing is asked without `displayAfterByTable`.
+ * One statement per key and per page of the table; nothing is asked without `displayAfterByTable`.
  */
 export function useForeignKeyLabels(
   rows: ReadonlyArray<ResultRow> | null,
@@ -124,10 +117,10 @@ export function useForeignKeyLabels(
 
   for (
     let start = 0;
-    keys.length > 0 && rows && start < rows.length;
-    start += ROWS_PER_REQUEST
+    rows && start < rows.length;
+    start += TABLE_ROWS_PAGE_SIZE
   ) {
-    chunks.push(rows.slice(start, start + ROWS_PER_REQUEST));
+    chunks.push(rows.slice(start, start + TABLE_ROWS_PAGE_SIZE));
   }
 
   const requests = keys.flatMap((key, keyIndex) =>
@@ -153,13 +146,10 @@ export function useForeignKeyLabels(
           index === keyIndex ? [answers[requestIndex] ?? {}] : []
         )
       );
-      const labelOf: LabelOf = (row) => {
-        const text = rowKeyText(row, key, rowsAsArray);
+      const labelOf: LabelOf = (row) =>
+        findLabel(labels, columnValue(row, key.column, rowsAsArray));
 
-        return text === null ? undefined : labels[text];
-      };
-
-      return [key.columnId, labelOf];
+      return [key.column.id, labelOf];
     })
   );
 }

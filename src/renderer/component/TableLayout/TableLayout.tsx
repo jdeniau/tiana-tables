@@ -232,7 +232,7 @@ export function TableLayout({
                 result={result}
                 loading={loading}
                 primaryKeys={primaryKeys}
-                foreignKeyLabels={displayAfterByTable}
+                displayAfterByTable={displayAfterByTable}
                 onValueUpdated={updateValue}
                 onFilterChange={handleFilterChange}
                 onGoToId={canGoToId ? openGoToId : undefined}

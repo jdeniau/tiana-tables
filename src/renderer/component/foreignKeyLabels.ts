@@ -3,16 +3,13 @@ import {
   applyColumnOrder,
 } from '../../configuration/columnOrder';
 import type { ColumnDetailHelper } from '../../sql/ColumnDetailHelper';
-import type {
-  ForeignKeysHelper,
-  WholeForeignKey,
-} from '../../sql/ForeignKeysHelper';
+import type { ForeignKeysHelper } from '../../sql/ForeignKeysHelper';
 import type {
   SelectLabelsRequest,
   SelectedLabel,
 } from '../../sql/selectLabels';
 import type { ResultRow } from '../../sql/types';
-import type { PrimaryKeyPart } from '../../sql/updateCell';
+import { isStringOrNumber } from '../utils/isStringOrNumber';
 import type { ColumnMeta } from './TableGrid';
 import { columnValue } from './useGridCopy';
 
@@ -22,38 +19,43 @@ export type GridColumn = Pick<
   'id' | 'fieldIndex' | 'name' | 'tableName'
 >;
 
-/** A foreign key whose label one column of the grid shows. */
+/** A column of the grid holding a foreign key of its own, and where the label of the row it points at is read. */
 export interface LabelledKey {
-  /** the grid column the label is drawn in */
-  columnId: string;
-  foreignKey: WholeForeignKey;
-  /** the grid column holding each column of the key, in the key's order */
-  keyColumns: Array<GridColumn>;
+  /** the grid column holding the key, its label drawn after its value */
+  column: GridColumn;
+  referencedDatabase: string;
+  referencedTable: string;
+  referencedColumn: string;
   /** the column of the referenced table whose value names its rows */
   labelColumn: string;
 }
 
 /**
- * The column naming the rows of a table: the first one shown, the key's own aside.
- * `null` for bytes, which read as no text.
+ * The column naming the rows of a table: the first one shown, keys and bytes aside.
+ * `keyColumns` are the columns of every key of the table: they hold ids, not names.
  */
 export function labelColumnOf(
   columns: ReadonlyArray<{ name: string; binary: boolean }>,
   keyColumns: ReadonlyArray<string>,
   displayAfterByColumn: DisplayAfterByColumn | undefined
 ): string | null {
-  const name = applyColumnOrder(
-    columns.map((column) => column.name),
+  const binaryColumns = new Set(
+    columns.flatMap(({ name, binary }) => (binary ? [name] : []))
+  );
+  const shown = applyColumnOrder(
+    columns.map(({ name }) => name),
     displayAfterByColumn
-  ).find((column) => !keyColumns.includes(column));
-  const column = columns.find((candidate) => candidate.name === name);
+  );
 
-  return column && !column.binary ? column.name : null;
+  return (
+    shown.find(
+      (name) => !keyColumns.includes(name) && !binaryColumns.has(name)
+    ) ?? null
+  );
 }
 
 /**
- * The keys whose label the grid shows, one per column at most.
- * A key of one column labels it; a composite key labels its last column shown that no other key labels.
+ * The keys whose label the grid shows: those of one column, a composite key having no column of its own to label.
  * Only the tables of `database` are known well enough to pick a label column.
  */
 export function labelledKeys(
@@ -63,108 +65,67 @@ export function labelledKeys(
   database: string,
   displayAfterOf: (table: string) => DisplayAfterByColumn | undefined
 ): Array<LabelledKey> {
-  const tables = new Set(
-    columns.flatMap(({ tableName }) => (tableName ? [tableName] : []))
-  );
-  const candidates = [...tables]
-    .flatMap((table) =>
-      foreignKeys.getWholeForeignKeys(table).map((foreignKey) => ({
-        foreignKey,
-        keyColumns: foreignKey.columns.map(({ column }) =>
-          columns.find(
-            (gridColumn) =>
-              gridColumn.tableName === table && gridColumn.name === column
-          )
-        ),
-      }))
-    )
-    // a key with a column the grid lacks has no value to look up
-    .flatMap(({ foreignKey, keyColumns }) =>
-      keyColumns.every((column) => column !== undefined) &&
-      foreignKey.referencedDatabase === database
-        ? [{ foreignKey, keyColumns }]
-        : []
-    )
-    .toSorted((a, b) => a.keyColumns.length - b.keyColumns.length);
+  return columns.flatMap((column) => {
+    const foreignKey = foreignKeys
+      .getWholeForeignKeys(column.tableName ?? '')
+      .find(
+        ({ columns: [first, ...others] }) =>
+          others.length === 0 && first.column === column.name
+      );
 
-  const labelled: Array<LabelledKey> = [];
-  const taken = new Set<string>();
-
-  for (const { foreignKey, keyColumns } of candidates) {
-    const labelColumn = labelColumnOf(
-      allColumns.getColumnsForTable(foreignKey.referencedTable),
-      foreignKey.columns.map(({ referencedColumn }) => referencedColumn),
-      displayAfterOf(foreignKey.referencedTable)
-    );
-    const column = keyColumns
-      .toSorted((a, b) => columns.indexOf(b) - columns.indexOf(a))
-      .find(({ id }) => !taken.has(id));
-
-    if (labelColumn && column) {
-      taken.add(column.id);
-      labelled.push({
-        columnId: column.id,
-        foreignKey,
-        keyColumns,
-        labelColumn,
-      });
+    if (!foreignKey || foreignKey.referencedDatabase !== database) {
+      return [];
     }
-  }
 
-  return labelled;
-}
+    const {
+      referencedDatabase,
+      referencedTable,
+      columns: [{ referencedColumn }],
+    } = foreignKey;
+    const labelColumn = labelColumnOf(
+      allColumns.getColumnsForTable(referencedTable),
+      [
+        referencedColumn,
+        ...foreignKeys
+          .getWholeForeignKeys(referencedTable)
+          .flatMap(({ columns: ownKey }) => ownKey.map(({ column }) => column)),
+      ],
+      displayAfterOf(referencedTable)
+    );
 
-/** What a key is found by, `null` for one holding a value no key can be compared with: NULL, bytes, an object. */
-export function keyText(values: ReadonlyArray<unknown>): string | null {
-  if (
-    !values.every(
-      (value) => typeof value === 'string' || typeof value === 'number'
-    )
-  ) {
-    return null;
-  }
-
-  return JSON.stringify(values.map(String));
-}
-
-function keyValuesOf(
-  row: ResultRow,
-  { keyColumns }: LabelledKey,
-  rowsAsArray: boolean
-): Array<unknown> {
-  return keyColumns.map((column) => columnValue(row, column, rowsAsArray));
-}
-
-/** The text of the key a row holds, `null` when it points at no row. */
-export function rowKeyText(
-  row: ResultRow,
-  labelledKey: LabelledKey,
-  rowsAsArray: boolean
-): string | null {
-  return keyText(keyValuesOf(row, labelledKey, rowsAsArray));
+    return labelColumn
+      ? [
+          {
+            column,
+            referencedDatabase,
+            referencedTable,
+            referencedColumn,
+            labelColumn,
+          },
+        ]
+      : [];
+  });
 }
 
 /** The question for the labels of these rows, each key asked once; `null` when none points at a row. */
 export function labelsRequest(
   rows: ReadonlyArray<ResultRow>,
-  labelledKey: LabelledKey,
+  {
+    column,
+    referencedDatabase,
+    referencedTable,
+    referencedColumn,
+    labelColumn,
+  }: LabelledKey,
   rowsAsArray: boolean
 ): SelectLabelsRequest | null {
-  const { foreignKey, labelColumn } = labelledKey;
-  const keys = new Map<string, Array<PrimaryKeyPart>>();
+  const keys = new Map<string, string | number>();
 
   for (const row of rows) {
-    const values = keyValuesOf(row, labelledKey, rowsAsArray);
-    const text = keyText(values);
+    const value = columnValue(row, column, rowsAsArray);
 
-    if (text !== null) {
-      keys.set(
-        text,
-        foreignKey.columns.map(({ referencedColumn }, index) => ({
-          column: referencedColumn,
-          value: values[index] as PrimaryKeyPart['value'],
-        }))
-      );
+    if (isStringOrNumber(value)) {
+      keys.set(String(value), value);
     }
   }
 
@@ -173,33 +134,38 @@ export function labelsRequest(
   }
 
   return {
-    database: foreignKey.referencedDatabase,
-    table: foreignKey.referencedTable,
+    database: referencedDatabase,
+    table: referencedTable,
+    keyColumn: referencedColumn,
     labelColumn,
     keys: [...keys.values()],
   };
 }
 
-/** Labels by the text of their key: a plain object, which the query cache keeps as is while its content stays the same. */
+/** Labels by their key as text: a plain object, which the query cache keeps as is while its content stays the same. */
 export type LabelsByKey = Record<string, string>;
 
-/** The labels answered, by the text of their key: a label that reads as no text is left out. */
+/** The labels answered, by their key as text: the server answers a label as text, NULL for a NULL, and an empty one is left out. */
 export function labelsByKey(
   answers: ReadonlyArray<SelectedLabel>
 ): LabelsByKey {
   const labels: LabelsByKey = {};
 
   for (const { key, label } of answers) {
-    const text = keyText(key);
-
-    if (
-      text !== null &&
-      (typeof label === 'string' || typeof label === 'number') &&
-      label !== ''
-    ) {
-      labels[text] = String(label);
+    if (isStringOrNumber(key) && typeof label === 'string' && label !== '') {
+      labels[String(key)] = label;
     }
   }
 
   return labels;
+}
+
+/** The label of the row a key points at, the same for `9` and `'9'`: a key named like a method of `Object` finds none. */
+export function findLabel(
+  labels: LabelsByKey,
+  value: unknown
+): string | undefined {
+  return isStringOrNumber(value) && Object.hasOwn(labels, String(value))
+    ? labels[String(value)]
+    : undefined;
 }

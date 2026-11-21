@@ -328,48 +328,30 @@ describe('database-scoped queries', () => {
   describe('selecting the labels of the rows some keys point at', () => {
     const request = {
       database: 'tiana_dev',
-      table: 'article_media',
-      labelColumn: 'legende_specifique',
-      keys: [
-        [
-          { column: 'article_id', value: 9 },
-          { column: 'media_id', value: 237 },
-        ],
-        [
-          { column: 'article_id', value: 12 },
-          { column: 'media_id', value: 240 },
-        ],
-      ],
+      table: 'article',
+      keyColumn: 'id',
+      labelColumn: 'titre',
+      keys: [9, 12],
     };
 
     test('sends one SELECT read as arrays, and splits each row into its key and its label', async () => {
-      query.mockResolvedValueOnce([[[9, 237, 'Une']], []]);
+      query.mockResolvedValueOnce([[[9, 'Une']], []]);
 
       const { result } = await connectionStack.selectLabels(request);
 
       expect(query).toHaveBeenCalledOnce();
       expect(query.mock.calls[0][0]).toMatchObject({
         sql: expect.stringMatching(
-          /^SELECT `article_id`, `media_id`, LEFT\(`legende_specifique`, 100\) FROM `tiana_dev`.`article_media` WHERE /
+          /^SELECT `id`, LEFT\(`titre`, 100\) FROM `tiana_dev`.`article` WHERE /
         ),
         rowsAsArray: true,
       });
-      expect(result).toEqual([{ key: [9, 237], label: 'Une' }]);
+      expect(result).toEqual([{ key: 9, label: 'Une' }]);
     });
 
-    // the columns read are the first key's: another key would be compared with them
-    test('keys naming other columns are refused rather than sent', async () => {
+    test('no key is refused rather than sent', async () => {
       await expect(
-        connectionStack.selectLabels({
-          ...request,
-          keys: [
-            [{ column: 'article_id', value: 9 }],
-            [{ column: 'media_id', value: 237 }],
-          ],
-        })
-      ).rejects.toThrow();
-      await expect(
-        connectionStack.selectLabels({ ...request, keys: [[]] })
+        connectionStack.selectLabels({ ...request, keys: [] })
       ).rejects.toThrow();
 
       expect(query).not.toHaveBeenCalled();

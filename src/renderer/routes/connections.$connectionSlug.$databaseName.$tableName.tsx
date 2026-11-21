@@ -48,7 +48,7 @@ export const loader =
       tableConfig?.displayAfterByColumn ?? {};
     const columnWidthByColumn: ColumnWidthByColumn =
       tableConfig?.columnWidthByColumn ?? {};
-    // read here rather than from the configuration's context, which the structure page writes around
+    // read here: the configuration's context does not see the order the structure page writes
     const displayAfterByTable: DisplayAfterByTable = Object.fromEntries(
       Object.entries(tables).map(([table, config]) => [
         table,

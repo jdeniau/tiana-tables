@@ -65,3 +65,17 @@ export function rowsClause(
     values: Object.assign({}, ...clauses.map(({ values }) => values)),
   };
 }
+
+/** The `WHERE` that targets the rows whose `column` holds one of these keys. */
+export function keysInClause(
+  column: string,
+  keys: ReadonlyArray<string | number>,
+  escapeIdentifier: (identifier: string) => string
+): BuiltQuery {
+  const names = keys.map((_, index) => primaryKeyParameter('key', index));
+
+  return {
+    sql: `${escapeIdentifier(column)} IN (${names.map((name) => `:${name}`).join(', ')})`,
+    values: Object.fromEntries(keys.map((key, index) => [names[index], key])),
+  };
+}

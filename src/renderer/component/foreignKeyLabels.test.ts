@@ -4,16 +4,23 @@ import { ForeignKeysHelper } from '../../sql/ForeignKeysHelper';
 import type { ColumnDetail, ForeignKey } from '../../sql/dialect/metadata';
 import {
   type GridColumn,
-  keyText,
+  findLabel,
   labelColumnOf,
   labelledKeys,
   labelsByKey,
   labelsRequest,
-  rowKeyText,
 } from './foreignKeyLabels';
 
-// the keys of `envoi_newsletter` in the dev dataset: `article_une_id` belongs to two
+// the keys of `envoi_newsletter` in the dev dataset, `article_une_id` belonging to two, and one of `article`
 const FOREIGN_KEYS: Array<ForeignKey> = [
+  {
+    constraintName: 'fk_article_auteur',
+    table: 'article',
+    column: 'auteur_id',
+    referencedDatabase: 'tiana_dev',
+    referencedTable: 'auteur',
+    referencedColumn: 'id',
+  },
   {
     constraintName: 'fk_envoi_article',
     table: 'envoi_newsletter',
@@ -66,7 +73,8 @@ function columnsOf(
 }
 
 const ALL_COLUMNS = new ColumnDetailHelper([
-  ...columnsOf('article', ['id', 'titre', 'slug']),
+  // a key of its own before the column naming its rows
+  ...columnsOf('article', ['id', 'auteur_id', 'titre', 'slug']),
   // a table of the same name as the one the key to `archive` points at
   ...columnsOf('newsletter', ['id', 'nom']),
   ...columnsOf('article_media', [
@@ -114,17 +122,17 @@ describe('labelColumnOf', () => {
     expect(labelColumnOf(article, ['id'], { slug: 'id' })).toBe('slug');
   });
 
-  test('a composite key leaves all of its columns aside', () => {
+  test('bytes and the columns of a key are passed over for the next column', () => {
     expect(
       labelColumnOf(
-        columnsOf('article_media', ['article_id', 'media_id', 'position']),
-        ['article_id', 'media_id'],
+        columnsOf('t', ['id', 'hash', 'contract_id', 'label'], ['hash']),
+        ['id', 'contract_id'],
         undefined
       )
-    ).toBe('position');
+    ).toBe('label');
   });
 
-  test('bytes name no row, and neither does a table of no other column', () => {
+  test('a table of keys and bytes only has no label', () => {
     expect(
       labelColumnOf(columnsOf('t', ['id', 'hash'], ['hash']), ['id'], undefined)
     ).toBeNull();
@@ -133,80 +141,40 @@ describe('labelColumnOf', () => {
 });
 
 describe('labelledKeys', () => {
-  test('a column of two keys shows the one of its own, and the composite key labels its other column', () => {
+  test('a column of its own key shows its label, and a composite key none', () => {
     expect(
       keysOf([ID, NEWSLETTER, ARTICLE, MEDIA]).map(
-        ({ columnId, foreignKey, labelColumn, keyColumns }) => ({
-          columnId,
-          table: foreignKey.referencedTable,
+        ({ column, referencedTable, referencedColumn, labelColumn }) => ({
+          column: column.id,
+          referencedTable,
+          referencedColumn,
           labelColumn,
-          keyColumns: keyColumns.map(({ id }) => id),
         })
       )
     ).toEqual([
       {
-        columnId: 'article_une_id',
-        table: 'article',
+        column: 'article_une_id',
+        referencedTable: 'article',
+        referencedColumn: 'id',
         labelColumn: 'titre',
-        keyColumns: ['article_une_id'],
-      },
-      {
-        columnId: 'media_une_id',
-        table: 'article_media',
-        labelColumn: 'position',
-        keyColumns: ['article_une_id', 'media_une_id'],
       },
     ]);
   });
 
-  test('a composite key labels its last column shown, in the order of the grid', () => {
-    const compositeOnly = FOREIGN_KEYS.filter(
-      ({ constraintName }) => constraintName === 'fk_envoi_media_une'
-    );
-
-    expect(
-      keysOf([ID, ARTICLE, MEDIA], {}, compositeOnly).map(
-        ({ columnId }) => columnId
-      )
-    ).toEqual(['media_une_id']);
-    expect(
-      keysOf([ID, MEDIA, ARTICLE], {}, compositeOnly).map(
-        ({ columnId }) => columnId
-      )
-    ).toEqual(['article_une_id']);
-  });
-
-  test('a key of one column keeps its column, whichever key the server lists first', () => {
+  test('a column of a composite key and of its own shows its own, whichever the server lists first', () => {
     expect(
       keysOf([ID, ARTICLE, MEDIA], {}, FOREIGN_KEYS.toReversed()).map(
-        ({ columnId, foreignKey }) => [columnId, foreignKey.referencedTable]
+        ({ column, referencedTable }) => [column.id, referencedTable]
       )
-    ).toEqual([
-      ['article_une_id', 'article'],
-      ['media_une_id', 'article_media'],
-    ]);
-  });
-
-  test('a composite key whose last column shown has a key of its own labels the column before', () => {
-    expect(
-      keysOf([ID, MEDIA, ARTICLE]).map(({ columnId, foreignKey }) => [
-        columnId,
-        foreignKey.referencedTable,
-      ])
-    ).toEqual([
-      ['article_une_id', 'article'],
-      ['media_une_id', 'article_media'],
-    ]);
-  });
-
-  test('a composite key the grid holds part of labels nothing', () => {
-    expect(
-      keysOf([ID, MEDIA]).map(({ foreignKey }) => foreignKey.referencedTable)
-    ).toEqual([]);
+    ).toEqual([['article_une_id', 'article']]);
   });
 
   test('a key to another database labels nothing, even where a table of the current one is named alike', () => {
     expect(keysOf([NEWSLETTER])).toEqual([]);
+  });
+
+  test('a key of the referenced table holds none of its labels', () => {
+    expect(keysOf([ARTICLE])[0].labelColumn).toBe('titre');
   });
 
   test('the label column follows the order given to the referenced table', () => {
@@ -221,73 +189,60 @@ describe('labelledKeys', () => {
 });
 
 describe('keys and labels', () => {
-  const [, composite] = keysOf([ID, NEWSLETTER, ARTICLE, MEDIA]);
+  const [article] = keysOf([ID, ARTICLE]);
 
-  test('a key is found by its values whatever their type, and holds no NULL, bytes or object', () => {
-    expect(keyText([9, '237'])).toBe('["9","237"]');
-    expect(keyText(['9', 237])).toBe('["9","237"]');
-    expect(keyText([9, null])).toBeNull();
-    expect(keyText([new Uint8Array([1])])).toBeNull();
-    expect(keyText([{ x: 1 }])).toBeNull();
-  });
-
-  test('the rows of a result read as objects or as arrays point at the same key', () => {
-    expect(
-      rowKeyText({ article_une_id: 9, media_une_id: 237 }, composite, false)
-    ).toBe(rowKeyText([1, 2, 9, 237] as never, composite, true));
-  });
-
-  test('each key is asked once, by the referenced columns, and a key holding a NULL not at all', () => {
+  test('each key is asked once, by the referenced column, and a NULL, bytes or an object not at all', () => {
     expect(
       labelsRequest(
         [
-          { article_une_id: 9, media_une_id: 237 },
-          { article_une_id: 9, media_une_id: 237 },
-          { article_une_id: 9, media_une_id: null },
-          { article_une_id: 12, media_une_id: 240 },
+          { article_une_id: 9 },
+          { article_une_id: 9 },
+          { article_une_id: null },
+          { article_une_id: new Uint8Array([1]) },
+          { article_une_id: { x: 1 } },
+          { article_une_id: 12 },
         ],
-        composite,
+        article,
         false
       )
     ).toEqual({
       database: 'tiana_dev',
-      table: 'article_media',
-      labelColumn: 'position',
-      keys: [
-        [
-          { column: 'article_id', value: 9 },
-          { column: 'media_id', value: 237 },
-        ],
-        [
-          { column: 'article_id', value: 12 },
-          { column: 'media_id', value: 240 },
-        ],
-      ],
+      table: 'article',
+      keyColumn: 'id',
+      labelColumn: 'titre',
+      keys: [9, 12],
     });
+  });
+
+  test('a result read as arrays is read by the index of the column', () => {
+    expect(labelsRequest([[1, 2, 9]] as never, article, true)?.keys).toEqual([
+      9,
+    ]);
   });
 
   test('rows pointing nowhere ask nothing', () => {
     expect(
-      labelsRequest(
-        [{ article_une_id: null, media_une_id: null }],
-        composite,
-        false
-      )
+      labelsRequest([{ article_une_id: null }], article, false)
     ).toBeNull();
   });
 
-  test('a label is text or a number; NULL, bytes and an empty text name nothing', () => {
+  test('a label is the text the server answers: NULL and an empty text name nothing', () => {
     expect(
       labelsByKey([
-        { key: [9, 237], label: 'Une' },
-        { key: [12, 240], label: 2 },
-        { key: [13, 241], label: null },
-        { key: [14, 242], label: new Uint8Array([1]) },
-        { key: [15, 243], label: '' },
+        { key: 9, label: 'Une' },
+        { key: 13, label: null },
+        { key: 15, label: '' },
       ])
-    ).toEqual({
-      '["9","237"]': 'Une',
-      '["12","240"]': '2',
-    });
+    ).toEqual({ '9': 'Une' });
+  });
+
+  test('a label is found by its key whatever its type, and a key named like a method of Object finds none', () => {
+    const labels = labelsByKey([{ key: 9, label: 'Une' }]);
+
+    expect(findLabel(labels, 9)).toBe('Une');
+    expect(findLabel(labels, '9')).toBe('Une');
+    expect(findLabel(labels, 12)).toBeUndefined();
+    expect(findLabel(labels, null)).toBeUndefined();
+    expect(findLabel(labels, 'constructor')).toBeUndefined();
   });
 });
