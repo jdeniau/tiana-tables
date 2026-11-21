@@ -43,28 +43,37 @@ export class ForeignKeysHelper {
     tableName: string,
     columnName: string
   ): WholeForeignKey | null {
-    const first = this._foreignKeys.find(
-      (r) => r.table === tableName && r.column === columnName
+    return (
+      this.getWholeForeignKeys(tableName).find(({ columns }) =>
+        columns.some(({ column }) => column === columnName)
+      ) ?? null
     );
+  }
 
-    if (!first) {
-      return null;
+  /** Every key of the table, whole, in the order they are listed. */
+  getWholeForeignKeys(tableName: string): Array<WholeForeignKey> {
+    const byConstraint = new Map<string, WholeForeignKey>();
+
+    for (const row of this._foreignKeys) {
+      // by table and name: PostgreSQL lets two tables name a key alike
+      if (row.table !== tableName) {
+        continue;
+      }
+
+      const key = byConstraint.get(row.constraintName) ?? {
+        referencedDatabase: row.referencedDatabase,
+        referencedTable: row.referencedTable,
+        columns: [],
+      };
+
+      key.columns.push({
+        column: row.column,
+        referencedColumn: row.referencedColumn,
+      });
+      byConstraint.set(row.constraintName, key);
     }
 
-    return {
-      referencedDatabase: first.referencedDatabase,
-      referencedTable: first.referencedTable,
-      // by table and name: PostgreSQL lets two tables name a key alike
-      columns: this._foreignKeys
-        .filter(
-          (r) =>
-            r.table === tableName && r.constraintName === first.constraintName
-        )
-        .map((r) => ({
-          column: r.column,
-          referencedColumn: r.referencedColumn,
-        })),
-    };
+    return [...byConstraint.values()];
   }
 
   getLinkBetweenTables(

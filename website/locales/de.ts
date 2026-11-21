@@ -67,7 +67,7 @@ const de: SiteMessages = {
   'browse.items': [
     'Filtere mit einer <code>WHERE</code>-Klausel, die für jede Tabelle gespeichert wird.',
     'Ein Rechtsklick auf eine Zelle filtert nach ihrem Wert, nach deiner Zwischenablage oder wonach du willst.',
-    'Fremdschlüssel sind Links: Ein Klick führt zur referenzierten Zeile.',
+    'Auf einen Fremdschlüssel folgt die Bezeichnung der Zeile, auf die er verweist, und er ist ein Link: Ein Klick führt zu dieser Zeile.',
     'Kopiere die Werte der angeklickten Zellen oder ganze Zeilen als TSV, CSV, Markdown, JSON oder <code>INSERT</code>-Anweisungen.',
   ],
 

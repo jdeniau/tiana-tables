@@ -68,7 +68,7 @@ const es: SiteMessages = {
   'browse.items': [
     'Filtra con una cláusula <code>WHERE</code>, recordada para cada tabla.',
     'Haz clic derecho en una celda para filtrar por su valor, por tu portapapeles o por lo que quieras.',
-    'Las claves foráneas son enlaces: un clic te lleva a la fila referenciada.',
+    'Una clave foránea va seguida de la etiqueta de la fila a la que apunta, y es un enlace: un clic te lleva a esa fila.',
     'Copia los valores de las celdas en las que haces clic, o filas enteras como TSV, CSV, Markdown, JSON o <code>INSERT</code> de SQL.',
   ],
 

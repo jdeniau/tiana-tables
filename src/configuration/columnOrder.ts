@@ -1,6 +1,9 @@
 /** The column each column is displayed after, by column name. */
 export type DisplayAfterByColumn = Record<string, string>;
 
+/** The column order of each table of a database, by table name. */
+export type DisplayAfterByTable = Record<string, DisplayAfterByColumn>;
+
 /**
  * The columns in the order the user asked for, from the order the database gives.
  * Anchors are names rather than positions, so what the schema no longer honours — an unknown column, an unknown anchor, a cycle — is ignored.

@@ -4,7 +4,7 @@ import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { Button, Splitter } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import {
-  DisplayAfterByColumn,
+  DisplayAfterByTable,
   applyColumnOrder,
 } from '../../../configuration/columnOrder';
 import { PANEL } from '../../../configuration/panels';
@@ -56,8 +56,8 @@ interface TableNameProps {
   /** the order the URL gives, which the rows are fetched in */
   sorting: TableSorting;
 
-  /** set on the structure page */
-  displayAfterByColumn: DisplayAfterByColumn;
+  /** the column order of each table of the database, set on the structure page */
+  displayAfterByTable: DisplayAfterByTable;
 
   /** the widths the columns of this table were dragged to */
   columnWidths: ColumnWidthByColumn;
@@ -71,7 +71,7 @@ export function TableLayout({
   where,
   filterHistory,
   sorting,
-  displayAfterByColumn,
+  displayAfterByTable,
   columnWidths,
 }: TableNameProps): ReactElement {
   const { t } = useTranslation();
@@ -134,7 +134,7 @@ export function TableLayout({
   const fieldsByName = new Map(shownFields.map((field) => [field.name, field]));
   const orderedFields = applyColumnOrder(
     shownFields.map((field) => field.name),
-    displayAfterByColumn
+    displayAfterByTable[tableName]
   ).flatMap((name) => fieldsByName.get(name) ?? []);
 
   // a column's kind comes with the rows: until they answer, the key is typed as text
@@ -227,6 +227,7 @@ export function TableLayout({
                 result={result}
                 loading={loading}
                 primaryKeys={primaryKeys}
+                displayAfterByTable={displayAfterByTable}
                 onValueUpdated={updateValue}
                 onFilterChange={handleFilterChange}
                 onGoToId={canGoToId ? openGoToId : undefined}

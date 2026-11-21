@@ -1,6 +1,11 @@
 import { DatabaseEngine } from '../../engine';
+import { MAX_LABEL_LENGTH } from '../../selectLabels';
 import { toHexDigits } from '../hex';
-import { primaryKeyClause, rowsClause } from '../primaryKeyClause';
+import {
+  keysInClause,
+  primaryKeyClause,
+  rowsClause,
+} from '../primaryKeyClause';
 import type { Dialect } from '../types';
 import { escapeIdentifier, escapeLiteral } from './escape';
 import { postgresGuardedUpdate } from './guardedUpdate';
@@ -54,6 +59,18 @@ export const postgresDialect: Dialect = {
 
     return {
       sql: `SELECT * FROM ${qualify(database, table)} WHERE ${where.sql} LIMIT 1`,
+      values: where.values,
+    };
+  },
+
+  selectLabels: ({ database, table, keyColumn, labelColumn, keys }) => {
+    const where = keysInClause(keyColumn, keys, escapeIdentifier);
+
+    // `left` takes text only: the cast lets a number or a date name a row
+    return {
+      sql:
+        `SELECT ${escapeIdentifier(keyColumn)}, left(CAST(${escapeIdentifier(labelColumn)} AS text), ${MAX_LABEL_LENGTH}) ` +
+        `FROM ${qualify(database, table)} WHERE ${where.sql}`,
       values: where.values,
     };
   },

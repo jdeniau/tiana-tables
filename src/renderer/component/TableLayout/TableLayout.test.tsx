@@ -15,6 +15,7 @@ import {
 } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { DisplayAfterByTable } from '../../../configuration/columnOrder';
 import { DEFAULT_THEME } from '../../../configuration/themes';
 import type { TableSorting } from '../../../configuration/type';
 import { AllColumnsContextProvider } from '../../../contexts/AllColumnsContext';
@@ -23,7 +24,9 @@ import { ForeignKeysContextProvider } from '../../../contexts/ForeignKeysContext
 import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { mysqlDialect } from '../../../sql/dialect/mysql';
 import { FieldKind } from '../../../sql/resultField';
+import { UpdateCellStatus } from '../../../sql/updateCell';
 import { createQueryClient } from '../../queryClient';
+import { queryKeys } from '../../queryKeys';
 import { mountRows } from '../mountRows.testing';
 import { TableLayout } from './TableLayout';
 import { readOrderParams } from './tableSearch';
@@ -87,9 +90,10 @@ function ageTheRows(): void {
 }
 
 function Page({ where }: { where?: string }) {
-  const { primaryKeys, sorting } = useLoaderData() as {
+  const { primaryKeys, sorting, displayAfterByTable } = useLoaderData() as {
     primaryKeys: Array<string>;
     sorting: TableSorting;
+    displayAfterByTable: DisplayAfterByTable;
   };
 
   return (
@@ -101,7 +105,7 @@ function Page({ where }: { where?: string }) {
       where={where}
       filterHistory={[]}
       sorting={sorting}
-      displayAfterByColumn={{}}
+      displayAfterByTable={displayAfterByTable}
       columnWidths={{}}
     />
   );
@@ -112,7 +116,8 @@ async function render(
   where?: string,
   url = '/',
   allColumns: Array<ColumnDetail> = [],
-  primaryKeys: Array<string> = ['id']
+  primaryKeys: Array<string> = ['id'],
+  displayAfterByTable: DisplayAfterByTable = {}
 ): Promise<void> {
   container = document.createElement('div');
   document.body.append(container);
@@ -127,6 +132,7 @@ async function render(
         loader: ({ request }) => ({
           primaryKeys,
           sorting: readOrderParams(new URL(request.url).searchParams) ?? [],
+          displayAfterByTable,
         }),
         element: <Page where={where} />,
       },
@@ -182,6 +188,14 @@ const clickLoadMore = (): Promise<void> =>
       (button) => button.textContent === 'Load more…'
     )
   );
+
+describe('column order', () => {
+  test('the order set on the structure page places the columns of the table', async () => {
+    await render(undefined, '/', [], [], { items: { id: 'name' } });
+
+    expect(header('name').cellIndex).toBeLessThan(header('id').cellIndex);
+  });
+});
 
 describe('load more', () => {
   test('asks for the next page once', async () => {
@@ -430,12 +444,68 @@ describe('while the rows are on their way', () => {
   });
 });
 
+/** labels of the database read from `table`, which the row written or deleted may be one of */
+const labelsKey = (table: string) =>
+  queryKeys.foreignKeyLabels('shop', {
+    database: 'shop',
+    table,
+    keyColumn: 'id',
+    labelColumn: 'name',
+    keys: [1],
+  });
+
+function cacheLabels(): void {
+  queryClient.setQueryData(labelsKey('items'), { 1: 'a' });
+  queryClient.setQueryData(labelsKey('categories'), { 1: 'books' });
+}
+
+const labelsAskedAgain = (table: string): boolean =>
+  queryClient.getQueryState(labelsKey(table))?.isInvalidated ?? false;
+
+describe('writing a value', () => {
+  mountRows();
+
+  test('asks again the labels read from the table written, and no other', async () => {
+    const updateCell = vi
+      .fn()
+      .mockResolvedValue({ status: UpdateCellStatus.Updated, value: null });
+    window.sql = { executeQuery, updateCell } as unknown as typeof window.sql;
+    window.clipboard = {
+      readText: async () => '',
+    } as unknown as typeof window.clipboard;
+    cacheLabels();
+    await render(undefined, '/', [
+      column('id'),
+      { ...column('name'), nullable: true },
+    ]);
+
+    act(() => {
+      [...container.querySelectorAll('td')]
+        .find((td) => td.textContent === 'a')
+        ?.dispatchEvent(
+          new MouseEvent('contextmenu', { bubbles: true, clientX: 10 })
+        );
+    });
+    await click(
+      [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
+        // followed by its shortcut
+        (item) => item.textContent?.startsWith('Set to NULL')
+      )
+    );
+
+    expect(updateCell).toHaveBeenCalledOnce();
+    expect(labelsAskedAgain('items')).toBe(true);
+    expect(labelsAskedAgain('categories')).toBe(false);
+  });
+});
+
 describe('deleting rows', () => {
   mountRows();
 
-  test('deletes the row by its key, then fetches every page loaded again', async () => {
+  test('deletes the row by its key, then fetches every page loaded and every label again', async () => {
     const deleteRows = vi.fn().mockResolvedValue(1);
     window.sql = { executeQuery, deleteRows } as unknown as typeof window.sql;
+    cacheLabels();
     await render();
     executeQuery.mockResolvedValueOnce([[{ id: 2, name: 'b' }], FIELDS]);
     await clickLoadMore();
@@ -471,6 +541,9 @@ describe('deleting rows', () => {
       'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 0;',
       'SELECT * FROM `shop`.`items` ORDER BY `id` LIMIT 100 OFFSET 100;',
     ]);
+    // a deletion can cascade to another table
+    expect(labelsAskedAgain('items')).toBe(true);
+    expect(labelsAskedAgain('categories')).toBe(true);
   });
 });
 

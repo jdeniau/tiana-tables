@@ -18,6 +18,8 @@ import toHexLiteral from './hexLiteral';
 interface TableCellFactoryProps {
   kind: FieldKind;
   value: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** what the foreign key holding the value points at */
+  label?: string;
 }
 
 // The native tooltip is the cheapest way to reveal a truncated cell, but it
@@ -52,6 +54,8 @@ type CellShellType = {
   className?: string;
   /** drawn after the value by a styled variant, from the `data-offset` attribute */
   offset?: string;
+  /** what a foreign key points at, drawn after the value from the `data-label` attribute */
+  label?: string;
 } & (
   | {
       children: ReactNode;
@@ -63,11 +67,17 @@ type CellShellType = {
     }
 );
 
-function CellShell({ className, children, hasTitle, offset }: CellShellType) {
+function CellShell({
+  className,
+  children,
+  hasTitle,
+  offset,
+  label,
+}: CellShellType) {
+  // the label is drawn by CSS: the tooltip of a cut cell names it too
+  const text = hasTitle && (label ? `${children} ${label}` : String(children));
   const title =
-    hasTitle && String(children).length < MAX_TITLE_LENGTH
-      ? String(children)
-      : undefined;
+    text !== undefined && text.length < MAX_TITLE_LENGTH ? text : undefined;
 
   return (
     <div
@@ -75,6 +85,7 @@ function CellShell({ className, children, hasTitle, offset }: CellShellType) {
       onMouseEnter={setTitleIfTruncated}
       title={title}
       data-offset={offset}
+      data-label={label}
     >
       {children}
     </div>
@@ -88,10 +99,23 @@ const BaseCell = styled(CellShell)`
   overflow: hidden;
   white-space: nowrap;
   word-break: keep-all;
+
+  /* an attribute rather than a span: one more element per cell costs on every scroll tick */
+  &[data-label]::after {
+    content: attr(data-label);
+    margin-inline-start: ${space.sm};
+    font-size: ${fontSize.sm};
+    color: ${commentForeground};
+  }
 `;
 
 interface CellProps<T> {
   value: T;
+}
+
+/** a value a foreign key can hold, which a label can follow */
+interface KeyCellProps<T> extends CellProps<T> {
+  label?: string;
 }
 
 const NullSpan = styled(BaseCell)`
@@ -131,19 +155,31 @@ function DateCell({ value, kind }: CellProps<string> & { kind: FieldKind }) {
 const StringSpan = styled(BaseCell)`
   color: ${stringForeground};
 `;
-function StringCell({ value }: CellProps<string>) {
-  return <StringSpan hasTitle>{value}</StringSpan>;
+function StringCell({ value, label }: KeyCellProps<string>) {
+  return (
+    <StringSpan hasTitle label={label}>
+      {value}
+    </StringSpan>
+  );
 }
 
 const NumberSpan = styled(BaseCell)`
   color: ${constantForeground};
 `;
-function NumberCell({ value }: CellProps<number>) {
-  return <NumberSpan hasTitle>{value}</NumberSpan>;
+function NumberCell({ value, label }: KeyCellProps<number>) {
+  return (
+    <NumberSpan hasTitle label={label}>
+      {value}
+    </NumberSpan>
+  );
 }
 
-function TextCell({ value }: CellProps<string>) {
-  return <ForegroundSpan hasTitle>{value}</ForegroundSpan>;
+function TextCell({ value, label }: KeyCellProps<string>) {
+  return (
+    <ForegroundSpan hasTitle label={label}>
+      {value}
+    </ForegroundSpan>
+  );
 }
 
 /**
@@ -203,7 +239,7 @@ function BinaryCell({ value }: CellProps<Uint8Array>) {
  * to text. A cell renders something whatever arrives: blanking the grid on a
  * type nobody thought of is the one outcome worth ruling out.
  */
-function TableCellFactory({ kind, value }: TableCellFactoryProps) {
+function TableCellFactory({ kind, value, label }: TableCellFactoryProps) {
   if (isNullish(value)) {
     return <NullCell />;
   }
@@ -219,10 +255,10 @@ function TableCellFactory({ kind, value }: TableCellFactoryProps) {
 
   switch (kind) {
     case FieldKind.Number:
-      return <NumberCell value={value} />;
+      return <NumberCell value={value} label={label} />;
 
     case FieldKind.String:
-      return <StringCell value={value} />;
+      return <StringCell value={value} label={label} />;
 
     case FieldKind.Json:
       return <JsonCell value={value} />;
@@ -235,7 +271,7 @@ function TableCellFactory({ kind, value }: TableCellFactoryProps) {
     // `Text` and everything the app has no rendering of: a `TIME` reads
     // `HH:MM:SS`, a boolean `true`, and an unknown type whatever it answered
     default:
-      return <TextCell value={String(value)} />;
+      return <TextCell value={String(value)} label={label} />;
   }
 }
 

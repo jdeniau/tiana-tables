@@ -1,3 +1,4 @@
+import type { SelectLabelsRequest } from '../sql/selectLabels';
 import type { SelectRowRequest } from '../sql/selectRow';
 
 /** The keys of the query cache, the connection first so that closing it removes all of its entries. */
@@ -16,6 +17,17 @@ export const queryKeys = {
   /** the row a foreign key points at, previewed while its value is edited */
   linkedRow: (connectionSlug: string, request: SelectRowRequest | null) =>
     [connectionSlug, request?.database ?? '', 'linkedRow', request] as const,
+
+  /** every label of a database: a write to one of its rows can rename what a key points at */
+  databaseForeignKeyLabels: (connectionSlug: string, database: string) =>
+    [connectionSlug, database, 'foreignKeyLabels'] as const,
+
+  /** the labels of the rows some foreign keys of a grid point at */
+  foreignKeyLabels: (connectionSlug: string, request: SelectLabelsRequest) =>
+    [
+      ...queryKeys.databaseForeignKeyLabels(connectionSlug, request.database),
+      request,
+    ] as const,
 
   /** the last run of the SQL page: written by its action, never fetched */
   sqlResult: (connectionSlug: string, database: string) =>

@@ -7,16 +7,12 @@ import { isPlainNumber } from '../../../sql/filterClause';
 import { FieldKind, type ResultField } from '../../../sql/resultField';
 import type { ResultRow } from '../../../sql/types';
 import type { PrimaryKeyPart } from '../../../sql/updateCell';
+import { isStringOrNumber } from '../../utils/isStringOrNumber';
 import type { EditableValue } from '../CellEditor/editableValue';
 import {
   type RowDetailField,
   rowDetailFields,
 } from '../RowDetailPanel/rowDetailFields';
-
-/** what the server can be asked to compare a key column with */
-function keyValue(value: unknown): string | number | null {
-  return typeof value === 'string' || typeof value === 'number' ? value : null;
-}
 
 /**
  * The key to look the linked row up by, or `null` when there is nothing to look up:
@@ -44,10 +40,10 @@ export function linkedRowKey(
   const parts: Array<PrimaryKeyPart> = [];
 
   for (const { column, referencedColumn } of key.columns) {
-    const value = column === editedColumn ? draft : keyValue(row[column]);
+    const value = column === editedColumn ? draft : row[column];
 
     // a key holding a NULL is not checked by the server: it points at no row
-    if (value === null) {
+    if (!isStringOrNumber(value)) {
       return null;
     }
 

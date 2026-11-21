@@ -5,9 +5,11 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import type { ResultField } from '../../../sql/resultField';
+import type { SelectLabelsRequest } from '../../../sql/selectLabels';
 import type { ResultRow } from '../../../sql/types';
 import type { PrimaryKeyPart } from '../../../sql/updateCell';
 import { useDialect } from '../../hooks/useDialect';
+import { queryKeys } from '../../queryKeys';
 import { TablePage } from './tableQuery';
 import { TableRowsPage, tableRowsQuery } from './tableRowsQuery';
 
@@ -24,9 +26,9 @@ interface TableRows {
   loadingMore: boolean;
   /** fetches the next page and appends it to `result` */
   loadMore: () => void;
-  /** writes the value the server answered into the row already loaded */
+  /** writes the value the server answered into the row already loaded, then asks again the labels read from this table */
   updateValue: (rowIndex: number, columnName: string, value: unknown) => void;
-  /** deletes rows by their primary key, then fetches the pages loaded again, the rows below having moved up */
+  /** deletes rows by their primary key, then fetches the pages loaded and the labels again, the rows below having moved up */
   deleteRows: (rowKeys: Array<Array<PrimaryKeyPart>>) => Promise<void>;
 }
 
@@ -53,6 +55,11 @@ export function useTableRows(
 
   const lastPage = data?.pages.at(-1);
 
+  const labelsKey = queryKeys.databaseForeignKeyLabels(
+    connectionSlug,
+    page.database
+  );
+
   // patched in place, not re-fetched: the value is the server's (see `updateCell`),
   // as fresh as a reload, without losing the rows loaded nor the scroll
   const updateValue = (
@@ -64,6 +71,12 @@ export function useTableRows(
       rowsQuery.queryKey,
       (previous) => previous && patchRow(previous, rowIndex, columnName, value)
     );
+    // a label is read from the table its key points at: a write elsewhere changes none
+    void queryClient.invalidateQueries({
+      queryKey: labelsKey,
+      predicate: ({ queryKey }) =>
+        (queryKey[3] as SelectLabelsRequest).table === page.tableName,
+    });
   };
 
   const deleteRows = async (rowKeys: Array<Array<PrimaryKeyPart>>) => {
@@ -72,7 +85,11 @@ export function useTableRows(
       table: page.tableName,
       rows: rowKeys,
     });
-    await queryClient.invalidateQueries({ queryKey: rowsQuery.queryKey });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: rowsQuery.queryKey }),
+      // an ON DELETE CASCADE can reach any table of the database
+      queryClient.invalidateQueries({ queryKey: labelsKey }),
+    ]);
   };
 
   return {

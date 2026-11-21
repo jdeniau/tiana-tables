@@ -325,6 +325,39 @@ describe('database-scoped queries', () => {
     });
   });
 
+  describe('selecting the labels of the rows some keys point at', () => {
+    const request = {
+      database: 'tiana_dev',
+      table: 'article',
+      keyColumn: 'id',
+      labelColumn: 'titre',
+      keys: [9, 12],
+    };
+
+    test('sends one SELECT read as arrays, and splits each row into its key and its label', async () => {
+      query.mockResolvedValueOnce([[[9, 'Une']], []]);
+
+      const { result } = await connectionStack.selectLabels(request);
+
+      expect(query).toHaveBeenCalledOnce();
+      expect(query.mock.calls[0][0]).toMatchObject({
+        sql: expect.stringMatching(
+          /^SELECT `id`, LEFT\(`titre`, 100\) FROM `tiana_dev`.`article` WHERE /
+        ),
+        rowsAsArray: true,
+      });
+      expect(result).toEqual([{ key: 9, label: 'Une' }]);
+    });
+
+    test('no key is refused rather than sent', async () => {
+      await expect(
+        connectionStack.selectLabels({ ...request, keys: [] })
+      ).rejects.toThrow();
+
+      expect(query).not.toHaveBeenCalled();
+    });
+  });
+
   // tagged by the driver, so the result tab can tell it from a crash
   test('a statement the server refused crosses IPC as one', async () => {
     query.mockRejectedValue(

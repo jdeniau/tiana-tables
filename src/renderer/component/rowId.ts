@@ -1,5 +1,6 @@
 import type { ResultRow } from '../../sql/types';
 import type { PrimaryKeyPart } from '../../sql/updateCell';
+import { isStringOrNumber } from '../utils/isStringOrNumber';
 
 /** The id a grid selects a row by: its primary key, or its position without one. */
 export function rowIdOf(
@@ -12,11 +13,6 @@ export function rowIdOf(
   }
 
   return String(index);
-}
-
-/** A scalar the driver answers with, and binds back unchanged: a date is the server's text. */
-function isPrimaryKeyValue(value: unknown): value is PrimaryKeyPart['value'] {
-  return typeof value === 'string' || typeof value === 'number';
 }
 
 /**
@@ -39,7 +35,7 @@ export function buildRowKey(
   for (const column of primaryKeys) {
     const value = row[column];
 
-    if (!isPrimaryKeyValue(value)) {
+    if (!isStringOrNumber(value)) {
       return null;
     }
 

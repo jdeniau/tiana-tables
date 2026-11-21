@@ -256,7 +256,7 @@ try {
     `location.hash.startsWith('#/connections/${CONNECTION}/')`
   );
 
-  // what each type looks like, side by side: an enum, a foreign key, a datetime and its NULLs, numbers, a decimal, a boolean, JSON
+  // what each type looks like, side by side: an enum, a foreign key and its label, a datetime and its NULLs, numbers, a decimal, a boolean, JSON
   const order = [
     'id',
     'titre',
@@ -270,10 +270,10 @@ try {
   ];
   const widths = {
     id: 56,
-    titre: 210,
-    statut: 100,
-    auteur_id: 100,
-    vues: 70,
+    titre: 160,
+    statut: 95,
+    auteur_id: 128,
+    vues: 65,
     note_moyenne: 125,
     en_une: 75,
   };

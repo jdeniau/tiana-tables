@@ -841,7 +841,8 @@ h1 .title-dot {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.grid .time-zone {
+.grid .time-zone,
+.grid .row-label {
   color: var(--rule);
   font-size: 11px;
   margin-left: var(--s2);

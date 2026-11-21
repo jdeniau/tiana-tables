@@ -2,7 +2,7 @@ import { QueryClient, noop } from '@tanstack/react-query';
 import { LoaderFunctionArgs, Params, useLoaderData } from 'react-router';
 import invariant from 'tiny-invariant';
 import { getDatabaseAppState } from '../../configuration/appState';
-import type { DisplayAfterByColumn } from '../../configuration/columnOrder';
+import type { DisplayAfterByTable } from '../../configuration/columnOrder';
 import type { ColumnWidthByColumn } from '../../configuration/type';
 import TableLayout from '../component/TableLayout';
 import { tableRowsQuery } from '../component/TableLayout/tableRowsQuery';
@@ -35,17 +35,21 @@ export const loader =
 
     const configuration = await window.config.getConfiguration();
 
-    const tableConfig = getDatabaseAppState(
-      configuration,
-      connectionSlug,
-      databaseName
-    )?.tables[tableName];
+    const tables =
+      getDatabaseAppState(configuration, connectionSlug, databaseName)
+        ?.tables ?? {};
+    const tableConfig = tables[tableName];
 
     const storedFilter = tableConfig?.currentFilter || '';
-    const displayAfterByColumn: DisplayAfterByColumn =
-      tableConfig?.displayAfterByColumn ?? {};
     const columnWidthByColumn: ColumnWidthByColumn =
       tableConfig?.columnWidthByColumn ?? {};
+    // read here: the configuration's context does not see the order the structure page writes
+    const displayAfterByTable: DisplayAfterByTable = Object.fromEntries(
+      Object.entries(tables).map(([table, config]) => [
+        table,
+        config.displayAfterByColumn ?? {},
+      ])
+    );
 
     const searchParams = new URL(request.url).searchParams;
 
@@ -97,7 +101,7 @@ export const loader =
       whereFilter: where,
       filterHistory,
       sorting,
-      displayAfterByColumn,
+      displayAfterByTable,
       columnWidthByColumn,
     };
   };
@@ -108,7 +112,7 @@ export default function TableNamePage() {
     whereFilter,
     filterHistory,
     sorting,
-    displayAfterByColumn,
+    displayAfterByTable,
     columnWidthByColumn,
   } = useLoaderData() as Awaited<ReturnType<ReturnType<typeof loader>>>;
 
@@ -119,7 +123,7 @@ export default function TableNamePage() {
       where={whereFilter}
       filterHistory={filterHistory}
       sorting={sorting}
-      displayAfterByColumn={displayAfterByColumn}
+      displayAfterByTable={displayAfterByTable}
       columnWidths={columnWidthByColumn}
     />
   );

@@ -95,4 +95,22 @@ describe('mysqlDialect', () => {
       ).toThrow();
     });
   });
+
+  describe('selectLabels', () => {
+    it('reads the key and the start of the label of every row named', () => {
+      const { sql, values } = mysqlDialect.selectLabels({
+        database: 'tiana_dev',
+        table: 'article',
+        keyColumn: 'id',
+        labelColumn: 'titre',
+        keys: [9, '12'],
+      });
+
+      expect(sql).toBe(
+        'SELECT `id`, LEFT(`titre`, 100) FROM `tiana_dev`.`article` ' +
+          'WHERE `id` IN (:key0, :key1)'
+      );
+      expect(values).toEqual({ key0: 9, key1: '12' });
+    });
+  });
 });
