@@ -168,6 +168,22 @@ const ROWS: Array<Row> = [
 
 const SELECTED_ID = 4;
 
+/** `auteur.nom` of each `auteur_id` above, the label the app shows after the key */
+const AUTHOR_NAMES: Record<number, string> = {
+  4: 'Laurent',
+  16: 'Roche',
+  25: 'Leroux',
+  27: 'Perrin',
+  29: 'Clement',
+  32: 'Bourgeois',
+  33: 'David',
+  38: 'Dupont',
+  39: 'Bernard',
+  40: 'Richard',
+  41: 'Giraud',
+  42: 'Roger',
+};
+
 /** The table page of the app, drawn: sidebar, filters and the grid of `article`. */
 export function AppWindow(): ReactElement {
   const { site, app } = useText();
@@ -256,7 +272,7 @@ export function AppWindow(): ReactElement {
                     <th className="numeric">id</th>
                     <th>titre</th>
                     <th>statut</th>
-                    <th className="numeric">auteur_id</th>
+                    <th>auteur_id</th>
                     <th>
                       publie_le <em>{local}</em>
                     </th>
@@ -284,8 +300,11 @@ export function AppWindow(): ReactElement {
                         <td className="numeric number">{id}</td>
                         <td className="truncated">{title}</td>
                         <td className="string">{status}</td>
-                        <td className="numeric number foreign-key">
+                        <td className="number foreign-key">
                           {authorId}
+                          <span className="row-label">
+                            {AUTHOR_NAMES[authorId]}
+                          </span>
                         </td>
                         {publishedAt ? (
                           <td>
