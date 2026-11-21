@@ -57,7 +57,8 @@ columns.
 The grid is virtualized, so a wide table scrolls without stuttering. Rows load
 100 at a time. Filter with a `WHERE` clause, which is remembered per table, or
 right-click a cell to filter on its value, on your clipboard, or on something
-you type. Foreign keys are links: click through to the referenced row.
+you type. A foreign key is followed by the label of the row it points at, and
+is a link: click through to that row.
 
 ## Editing
 

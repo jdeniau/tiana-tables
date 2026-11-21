@@ -65,7 +65,7 @@ const zhCn: SiteMessages = {
   'browse.items': [
     '用 <code>WHERE</code> 子句筛选，每张表都会记住筛选条件。',
     '右键点击单元格，可以按它的值、剪贴板内容或任意条件筛选。',
-    '外键是链接：点击即可跳转到被引用的行。',
+    '外键后面会显示其引用行的标签，外键本身也是链接：点击即可跳转到该行。',
     '复制所点单元格的值，或把整行复制为 TSV、CSV、Markdown、JSON 或 SQL <code>INSERT</code>。',
   ],
 

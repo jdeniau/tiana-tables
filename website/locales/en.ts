@@ -66,7 +66,7 @@ export default {
   'browse.items': [
     'Filter with a <code>WHERE</code> clause, remembered per table.',
     'Right-click a cell to filter on its value, on your clipboard, or on whatever you want.',
-    'Foreign keys are links: click through to the referenced row.',
+    'A foreign key is followed by the label of the row it points at, and is a link: click through to that row.',
     'Copy the values of the cells you click, or whole rows as TSV, CSV, Markdown, JSON or SQL <code>INSERT</code>.',
   ],
 

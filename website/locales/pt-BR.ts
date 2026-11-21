@@ -67,7 +67,7 @@ const ptBr: SiteMessages = {
   'browse.items': [
     'Filtre com uma cláusula <code>WHERE</code>, lembrada para cada tabela.',
     'Clique com o botão direito numa célula para filtrar pelo valor dela, pela sua área de transferência ou pelo que você quiser.',
-    'Chaves estrangeiras são links: um clique leva à linha referenciada.',
+    'Uma chave estrangeira vem seguida do rótulo da linha a que se refere, e é um link: um clique leva a essa linha.',
     'Copie os valores das células em que você clica, ou linhas inteiras como TSV, CSV, Markdown, JSON ou <code>INSERT</code> SQL.',
   ],
 

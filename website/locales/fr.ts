@@ -66,7 +66,7 @@ const fr: SiteMessages = {
   'browse.items': [
     'Filtrez avec une clause <code>WHERE</code>, retenue pour chaque table.',
     'Un clic droit sur une cellule filtre sur sa valeur, sur votre presse-papiers ou sur ce que vous voulez.',
-    'Les clés étrangères sont des liens : un clic mène à la ligne référencée.',
+    'Une clé étrangère est suivie du libellé de la ligne qu’elle référence, et c’est un lien : un clic mène à cette ligne.',
     'Copiez les valeurs des cellules cliquées, ou des lignes entières en TSV, CSV, Markdown, JSON ou <code>INSERT</code> SQL.',
   ],
 
