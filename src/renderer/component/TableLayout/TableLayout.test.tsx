@@ -15,6 +15,7 @@ import {
 } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { DisplayAfterByTable } from '../../../configuration/columnOrder';
 import { DEFAULT_THEME } from '../../../configuration/themes';
 import type { TableSorting } from '../../../configuration/type';
 import { AllColumnsContextProvider } from '../../../contexts/AllColumnsContext';
@@ -87,9 +88,10 @@ function ageTheRows(): void {
 }
 
 function Page({ where }: { where?: string }) {
-  const { primaryKeys, sorting } = useLoaderData() as {
+  const { primaryKeys, sorting, displayAfterByTable } = useLoaderData() as {
     primaryKeys: Array<string>;
     sorting: TableSorting;
+    displayAfterByTable: DisplayAfterByTable;
   };
 
   return (
@@ -101,8 +103,7 @@ function Page({ where }: { where?: string }) {
       where={where}
       filterHistory={[]}
       sorting={sorting}
-      displayAfterByColumn={{}}
-      displayAfterByTable={{}}
+      displayAfterByTable={displayAfterByTable}
       columnWidths={{}}
     />
   );
@@ -113,7 +114,8 @@ async function render(
   where?: string,
   url = '/',
   allColumns: Array<ColumnDetail> = [],
-  primaryKeys: Array<string> = ['id']
+  primaryKeys: Array<string> = ['id'],
+  displayAfterByTable: DisplayAfterByTable = {}
 ): Promise<void> {
   container = document.createElement('div');
   document.body.append(container);
@@ -128,6 +130,7 @@ async function render(
         loader: ({ request }) => ({
           primaryKeys,
           sorting: readOrderParams(new URL(request.url).searchParams) ?? [],
+          displayAfterByTable,
         }),
         element: <Page where={where} />,
       },
@@ -183,6 +186,14 @@ const clickLoadMore = (): Promise<void> =>
       (button) => button.textContent === 'Load more…'
     )
   );
+
+describe('column order', () => {
+  test('the order set on the structure page places the columns of the table', async () => {
+    await render(undefined, '/', [], [], { items: { id: 'name' } });
+
+    expect(header('name').cellIndex).toBeLessThan(header('id').cellIndex);
+  });
+});
 
 describe('load more', () => {
   test('asks for the next page once', async () => {
