@@ -220,6 +220,16 @@ describe('the labels of the foreign keys', () => {
     ]);
   });
 
+  test('pages holding the same keys share one query', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await render(rows(150).map((row) => ({ ...row, article_une_id: 7 })));
+
+    expect(selectLabels).toHaveBeenCalledOnce();
+    expect(labelOf(2, 1)).toBe('Article 7');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   test('a key pointing at no row shows no label', async () => {
     selectLabels.mockResolvedValue([]);
     await render(rows(1));

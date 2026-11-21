@@ -1,6 +1,7 @@
 import {
   type QueryClient,
   type QueryObserverResult,
+  hashKey,
   queryOptions,
   useQueries,
   useQueryClient,
@@ -123,16 +124,26 @@ export function useForeignKeyLabels(
     chunks.push(rows.slice(start, start + TABLE_ROWS_PAGE_SIZE));
   }
 
-  const requests = keys.flatMap((key, keyIndex) =>
+  // pages holding the same keys share one query: `useQueries` warns on a duplicate
+  const requests = new Map<string, SelectLabelsRequest>();
+  const requestHashesOfKey = keys.map((key) =>
     chunks.flatMap((chunk) => {
       const request = labelsRequest(chunk, key, rowsAsArray);
 
-      return request ? [{ keyIndex, request }] : [];
+      if (!request) {
+        return [];
+      }
+
+      const hash = hashKey([request]);
+      requests.set(hash, request);
+
+      return [hash];
     })
   );
+  const hashes = [...requests.keys()];
 
   const answers = useQueries({
-    queries: requests.map(({ request }) =>
+    queries: [...requests.values()].map((request) =>
       labelsQuery(queryClient, currentConnectionSlug ?? '', request)
     ),
     combine: answersOf,
@@ -142,8 +153,8 @@ export function useForeignKeyLabels(
     keys.map((key, keyIndex) => {
       const labels: LabelsByKey = Object.assign(
         {},
-        ...requests.flatMap(({ keyIndex: index }, requestIndex) =>
-          index === keyIndex ? [answers[requestIndex] ?? {}] : []
+        ...requestHashesOfKey[keyIndex].map(
+          (hash) => answers[hashes.indexOf(hash)] ?? {}
         )
       );
       const labelOf: LabelOf = (row) =>
