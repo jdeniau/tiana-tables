@@ -8,8 +8,21 @@ const CITIES = Array.from({ length: 40 }, (_, index) =>
   index === 30 ? 'Paris' : `Ville ${index}`
 );
 
+/** the Edit menu's Find, chosen by a story in place of the main process */
+let chooseFind = () => {};
+
 const meta: Meta<typeof FindBar> = {
   component: FindBar,
+  beforeEach: () => {
+    // @ts-expect-error a story has no main process to send Find
+    window.editMenu = {
+      onFind: (callback: () => void) => {
+        chooseFind = callback;
+
+        return () => {};
+      },
+    };
+  },
   decorators: [
     (Story) => (
       <Page>
@@ -122,6 +135,46 @@ export const ActiveMatchRemoved: Story = {
       ).toBe(added[2].firstChild);
     } finally {
       added.forEach((paragraph) => paragraph.remove());
+    }
+  },
+};
+
+/** Find in the Edit menu, the focus in the page: the bar opens. */
+export const FindFromTheMenu: Story = {
+  play: async ({ canvas }) => {
+    chooseFind();
+
+    await waitFor(() =>
+      expect(canvas.getByPlaceholderText('Find in page')).toHaveFocus()
+    );
+  },
+};
+
+/** Find in the Edit menu, the focus in a SQL editor: its own find opens, not the bar. */
+export const FindFromTheMenuInAnEditor: Story = {
+  play: async ({ canvas, canvasElement }) => {
+    const [monaco] = await Promise.all([
+      import('monaco-editor'),
+      import('../MonacoEditor/userWorker'),
+    ]);
+    const container = document.createElement('div');
+
+    container.style.height = '100px';
+    canvasElement.append(container);
+    const editor = monaco.editor.create(container, { value: 'SELECT 1' });
+
+    try {
+      editor.focus();
+      await waitFor(() => expect(editor.hasTextFocus()).toBe(true));
+      chooseFind();
+
+      await waitFor(() =>
+        expect(document.activeElement?.closest('.find-widget')).not.toBeNull()
+      );
+      await expect(canvas.queryByPlaceholderText('Find in page')).toBeNull();
+    } finally {
+      editor.dispose();
+      container.remove();
     }
   },
 };

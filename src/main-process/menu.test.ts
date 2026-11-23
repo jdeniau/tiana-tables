@@ -66,6 +66,14 @@ describe.each([
 
     expect(unlabelled).toEqual([]);
   });
+
+  test('the Edit menu finds with Ctrl/Cmd+F', async () => {
+    const edit = submenu(await buildMenu(isMac, 'en'), 'Edit');
+
+    expect(edit.find(({ label }) => label === 'Find…')?.accelerator).toBe(
+      'CmdOrCtrl+F'
+    );
+  });
 });
 
 test('the menus are in the language of the app', async () => {
@@ -90,6 +98,7 @@ test('the menus are in the language of the app', async () => {
     'Copier',
     'Coller',
     'Tout sélectionner',
+    'Rechercher…',
   ]);
 });
 

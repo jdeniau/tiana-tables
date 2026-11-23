@@ -196,6 +196,7 @@ export default {
   'menu.app.unhide': 'Show All',
   'menu.edit.copy': 'Copy',
   'menu.edit.cut': 'Cut',
+  'menu.edit.find': 'Find…',
   'menu.edit.paste': 'Paste',
   'menu.edit.pasteAndMatchStyle': 'Paste and Match Style',
   'menu.edit.redo': 'Redo',

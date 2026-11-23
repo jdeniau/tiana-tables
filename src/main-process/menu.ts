@@ -40,6 +40,15 @@ export function createMenu(mainWindow: BrowserWindow): Menu {
     },
   };
 
+  // the renderer decides where to find: the SQL editor holding the focus, or the page
+  const findItem = {
+    label: t('menu.edit.find'),
+    accelerator: 'CmdOrCtrl+F',
+    click: () => {
+      mainWindow.webContents.send(EDIT_MENU_CHANNEL.FIND);
+    },
+  };
+
   const template = [
     ...(isMac
       ? [
@@ -90,6 +99,7 @@ export function createMenu(mainWindow: BrowserWindow): Menu {
               },
               selectAllItem,
               { type: 'separator' },
+              findItem,
               {
                 label: t('menu.edit.speech'),
                 submenu: [
@@ -101,7 +111,12 @@ export function createMenu(mainWindow: BrowserWindow): Menu {
                 ],
               },
             ]
-          : [{ type: 'separator' }, selectAllItem]),
+          : [
+              { type: 'separator' },
+              selectAllItem,
+              { type: 'separator' },
+              findItem,
+            ]),
       ],
     },
     //

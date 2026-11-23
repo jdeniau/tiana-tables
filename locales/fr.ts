@@ -194,6 +194,7 @@ const fr: Translation = {
   'menu.app.unhide': 'Tout afficher',
   'menu.edit.copy': 'Copier',
   'menu.edit.cut': 'Couper',
+  'menu.edit.find': 'Rechercher…',
   'menu.edit.paste': 'Coller',
   'menu.edit.pasteAndMatchStyle': 'Coller et adapter le style',
   'menu.edit.redo': 'Rétablir',

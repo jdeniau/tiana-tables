@@ -12,6 +12,7 @@ import {
   size,
   space,
 } from '../../theme';
+import { findInFocusedEditor } from '../MonacoEditor/findInFocusedEditor';
 import {
   FindHighlight,
   FoundInPage,
@@ -68,7 +69,7 @@ function usePageFinder(
   return { ...found, ...finder };
 }
 
-/** Ctrl/Cmd+F outside the SQL editor: finds a text in what the page shows. */
+/** Ctrl/Cmd+F or the Edit menu's Find, outside the SQL editor: finds a text in what the page shows. */
 export default function FindBar(): ReactElement | null {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -78,8 +79,18 @@ export default function FindBar(): ReactElement | null {
   const { matches, active, find, next, previous, clear } =
     usePageFinder(barRef);
 
-  // Monaco stops the propagation of its own Ctrl+F: the key never bubbles here from the editor
   useEffect(() => {
+    const show = () => {
+      flushSync(() => setOpen(true));
+      inputRef.current?.focus({ cursor: 'all' });
+
+      // reopened on the text it was closed on
+      if (!open) {
+        find(text);
+      }
+    };
+
+    // Monaco stops the propagation of its own Ctrl+F: the key never bubbles here from the editor
     const onKeyDown = (event: KeyboardEvent) => {
       if (
         (event.ctrlKey || event.metaKey) &&
@@ -89,19 +100,21 @@ export default function FindBar(): ReactElement | null {
         !event.defaultPrevented
       ) {
         event.preventDefault();
-        flushSync(() => setOpen(true));
-        inputRef.current?.focus({ cursor: 'all' });
-
-        // reopened on the text it was closed on
-        if (!open) {
-          find(text);
-        }
+        show();
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
+    const unsubscribe = window.editMenu.onFind(() => {
+      if (!findInFocusedEditor()) {
+        show();
+      }
+    });
 
-    return () => window.removeEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      unsubscribe();
+    };
   }, [open, text, find]);
 
   const close = () => {
