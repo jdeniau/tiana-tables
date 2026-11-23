@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { FieldKind } from './resultField';
 
 /** How many characters of a label the server sends: a `LONGTEXT` would cross IPC whole for one line of a cell. */
 export const MAX_LABEL_LENGTH = 100;
@@ -19,6 +20,13 @@ export interface SelectLabelsRequest {
 export interface SelectedLabel {
   key: unknown;
   label: unknown;
+}
+
+/** The rows some keys point at, and what their label is read from. */
+export interface SelectedLabels {
+  /** the kind of the label column, as its cell has it: each label is its text all the same */
+  kind: FieldKind;
+  labels: Array<SelectedLabel>;
 }
 
 export const selectLabelsRequestSchema: z.ZodType<SelectLabelsRequest> =

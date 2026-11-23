@@ -4,6 +4,7 @@ import {
 } from '../../configuration/columnOrder';
 import type { ColumnDetailHelper } from '../../sql/ColumnDetailHelper';
 import type { ForeignKeysHelper } from '../../sql/ForeignKeysHelper';
+import type { FieldKind } from '../../sql/resultField';
 import type {
   SelectLabelsRequest,
   SelectedLabel,
@@ -144,6 +145,13 @@ export function labelsRequest(
 
 /** Labels by their key as text: a plain object, which the query cache keeps as is while its content stays the same. */
 export type LabelsByKey = Record<string, string>;
+
+/** What the query cache keeps of the labels of one column: plain data too. */
+export interface ColumnLabels {
+  /** the kind of the column the labels are read from */
+  kind: FieldKind;
+  byKey: LabelsByKey;
+}
 
 /** The labels answered, by their key as text: the server answers a label as text, NULL for a NULL, and an empty one is left out. */
 export function labelsByKey(

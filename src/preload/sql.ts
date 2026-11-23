@@ -7,7 +7,7 @@ import type {
   TableStructureRow,
 } from '../sql/dialect/metadata';
 import { decodeError } from '../sql/errorSerializer';
-import type { SelectLabelsRequest, SelectedLabel } from '../sql/selectLabels';
+import type { SelectLabelsRequest, SelectedLabels } from '../sql/selectLabels';
 import type { SelectRowRequest, SelectedRow } from '../sql/selectRow';
 import type { QueryResult, QueryReturnType } from '../sql/types';
 import type { UpdateCellOutcome, UpdateCellRequest } from '../sql/updateCell';
@@ -29,8 +29,8 @@ interface Sql {
   deleteRows(request: DeleteRowsRequest): Promise<number>;
   /** The row a key points at, its value bound rather than written into the SQL text. */
   selectRow(request: SelectRowRequest): Promise<SelectedRow>;
-  /** The rows some keys point at, each with the start of its label: one statement for every key. */
-  selectLabels(request: SelectLabelsRequest): Promise<Array<SelectedLabel>>;
+  /** The rows some keys point at, each with the start of its label, and the kind of the column it is read from: two statements, however many keys. */
+  selectLabels(request: SelectLabelsRequest): Promise<SelectedLabels>;
   closeConnection(connectionSlug: string): Promise<void>;
   closeAllConnections(): Promise<void>;
   connectionNameChanged(

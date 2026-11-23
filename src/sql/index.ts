@@ -29,7 +29,7 @@ import {
   ResultOrError,
   encodeError,
 } from './errorSerializer';
-import { type SelectedLabel, selectLabelsRequestSchema } from './selectLabels';
+import { type SelectedLabels, selectLabelsRequestSchema } from './selectLabels';
 import { type SelectedRow, selectRowRequestSchema } from './selectRow';
 import { SslMode } from './sslMode';
 import { toTableStructure } from './tableStructure';
@@ -308,17 +308,26 @@ class ConnectionStack {
   }
 
   /** The rows the keys point at, each with the start of its label; a key pointing at no row has none. */
-  async selectLabels(request: unknown): ResultOrError<Array<SelectedLabel>> {
+  async selectLabels(request: unknown): ResultOrError<SelectedLabels> {
     // a malformed request is our bug, thrown rather than encoded as the server's answer
     const parsed = selectLabelsRequestSchema.parse(request);
 
     return this.#ask(async () => {
+      const column = this.#dialect().selectLabelColumn(parsed);
+      const [, [labelField]] = await this.#send(
+        column.sql,
+        true,
+        column.values
+      );
       const query = this.#dialect().selectLabels(parsed);
       const [rows] = await this.#send(query.sql, true, query.values);
 
-      return labelRowsSchema
-        .parse(rows)
-        .map(([key, label]) => ({ key, label }));
+      return {
+        kind: labelField.kind,
+        labels: labelRowsSchema
+          .parse(rows)
+          .map(([key, label]) => ({ key, label })),
+      };
     });
   }
 

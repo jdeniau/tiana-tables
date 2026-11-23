@@ -74,4 +74,9 @@ export const postgresDialect: Dialect = {
       values: where.values,
     };
   },
+
+  selectLabelColumn: ({ database, table, labelColumn }) => ({
+    sql: `SELECT ${escapeIdentifier(labelColumn)} FROM ${qualify(database, table)} LIMIT 0`,
+    values: {},
+  }),
 };

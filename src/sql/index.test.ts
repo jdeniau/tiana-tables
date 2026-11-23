@@ -330,23 +330,33 @@ describe('database-scoped queries', () => {
       database: 'tiana_dev',
       table: 'article',
       keyColumn: 'id',
-      labelColumn: 'titre',
+      labelColumn: 'publie_le',
       keys: [9, 12],
     };
 
-    test('sends one SELECT read as arrays, and splits each row into its key and its label', async () => {
-      query.mockResolvedValueOnce([[[9, 'Une']], []]);
+    // the label is read as text, so its kind comes from the column alone
+    test('reads the kind of the label column, then splits each row into its key and its label', async () => {
+      query
+        .mockResolvedValueOnce([
+          [],
+          // as mysql2 describes a `DATETIME` column
+          [{ name: 'publie_le', orgTable: 'article', type: 12 }],
+        ])
+        .mockResolvedValueOnce([[[9, '2024-09-09 14:02:15']], []]);
 
       const { result } = await connectionStack.selectLabels(request);
 
-      expect(query).toHaveBeenCalledOnce();
-      expect(query.mock.calls[0][0]).toMatchObject({
-        sql: expect.stringMatching(
-          /^SELECT `id`, LEFT\(`titre`, 100\) FROM `tiana_dev`.`article` WHERE /
+      expect(statementsSent()).toEqual([
+        'SELECT `publie_le` FROM `tiana_dev`.`article` LIMIT 0',
+        expect.stringMatching(
+          /^SELECT `id`, LEFT\(`publie_le`, 100\) FROM `tiana_dev`.`article` WHERE /
         ),
-        rowsAsArray: true,
+      ]);
+      expect(query.mock.calls[1][0]).toMatchObject({ rowsAsArray: true });
+      expect(result).toEqual({
+        kind: FieldKind.DateTime,
+        labels: [{ key: 9, label: '2024-09-09 14:02:15' }],
       });
-      expect(result).toEqual([{ key: 9, label: 'Une' }]);
     });
 
     test('no key is refused rather than sent', async () => {

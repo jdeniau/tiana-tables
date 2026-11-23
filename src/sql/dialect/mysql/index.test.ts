@@ -113,4 +113,17 @@ describe('mysqlDialect', () => {
       expect(values).toEqual({ key0: 9, key1: '12' });
     });
   });
+
+  it('asks the label column alone, for no row', () => {
+    expect(
+      mysqlDialect.selectLabelColumn({
+        database: 'tiana_dev',
+        table: 'article',
+        labelColumn: 'publie_le',
+      })
+    ).toEqual({
+      sql: 'SELECT `publie_le` FROM `tiana_dev`.`article` LIMIT 0',
+      values: {},
+    });
+  });
 });
