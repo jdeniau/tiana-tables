@@ -55,6 +55,7 @@
     "@tanstack/react-store": "^0.11.2",
     "@tanstack/react-table": "^9.2.6",
     "@tanstack/react-virtual": "^3.14.13",
+    "advanced-mark.js": "^3.0.0",
     "antd": "^6.6.5",
     "compare-versions": "^6.1.1",
     "dt-sql-parser": "^4.5.0",

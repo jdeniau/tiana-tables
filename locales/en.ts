@@ -181,6 +181,12 @@ export default {
   'errorPage.goHome': 'Go back to the home page',
   'errorPage.sorry': 'Sorry, an unexpected error has occurred.',
   'errorPage.title': 'Oops!',
+  'findBar.close': 'Close',
+  'findBar.count':
+    '{matches, plural, =0 {No results} other {{active} of {matches}}}',
+  'findBar.next': 'Next match',
+  'findBar.placeholder': 'Find in page',
+  'findBar.previous': 'Previous match',
   'language.switch.label': 'Language',
   'menu.app.about': 'About {name}',
   'menu.app.hide': 'Hide {name}',

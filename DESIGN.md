@@ -36,6 +36,7 @@ Every colour on screen comes from this table. Nothing else gets a colour.
 | `base05` | body text, table names, cell values                 | `#f8f8f2` | `#6c696e`      |
 | `base07` | emphasis: region names                              | `#ffffff` | `#322d34`      |
 | `base09` | numbers in results                                  | `#bd93f9` | `#d65407`      |
+| `base0A` | find matches: 40 % mixed, the active one in full    | `#8be9fd` | `#dc8a0e`      |
 | `base0D` | the accent mark: Run, active pip, current statement | `#50fa7b` | `#775dff`      |
 
 The text on the accent fill is `base00`, which holds at least 3.4:1 on every palette where white drops to 1.3:1. `base02` on `base00` is weak for the selected row on some light palettes (about 1.1:1 on Rosé Pine Dawn, Tokyo Night Light, One Light): accepted, since the selected table's 3px `base0D` rule carries the signal there.

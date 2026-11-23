@@ -179,6 +179,12 @@ const fr: Translation = {
   'errorPage.goHome': "Retourner à la page d'accueil",
   'errorPage.sorry': "Désolé, une erreur inattendue s'est produite.",
   'errorPage.title': 'Oups !',
+  'findBar.close': 'Fermer',
+  'findBar.count':
+    '{matches, plural, =0 {Aucun résultat} other {{active} sur {matches}}}',
+  'findBar.next': 'Résultat suivant',
+  'findBar.placeholder': 'Rechercher dans la page',
+  'findBar.previous': 'Résultat précédent',
   'language.switch.label': 'Langue',
   'menu.app.about': 'À propos de {name}',
   'menu.app.hide': 'Masquer {name}',
