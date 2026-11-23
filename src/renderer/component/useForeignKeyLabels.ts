@@ -10,18 +10,20 @@ import type { DisplayAfterByTable } from '../../configuration/columnOrder';
 import { useAllColumnsContext } from '../../contexts/AllColumnsContext';
 import { useConnectionContext } from '../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../contexts/DatabaseContext';
+import { useDateDisplay } from '../../contexts/DateDisplayContext';
 import { useForeignKeysContext } from '../../contexts/ForeignKeysContext';
 import type { SelectLabelsRequest } from '../../sql/selectLabels';
 import type { ResultRow } from '../../sql/types';
 import { queryKeys } from '../queryKeys';
+import { formatDateText, isDateKind } from '../utils/dateFormatter';
 import {
   TABLE_ROWS_GC_TIME,
   TABLE_ROWS_PAGE_SIZE,
   TABLE_ROWS_STALE_TIME,
 } from './TableLayout/tableRowsQuery';
 import {
+  type ColumnLabels,
   type GridColumn,
-  type LabelsByKey,
   findLabel,
   labelledKeys,
   labelsByKey,
@@ -41,18 +43,31 @@ function labelSource({
   return JSON.stringify([table, keyColumn, labelColumn]);
 }
 
+/** Several answers for one label column as one, `undefined` for none. */
+function mergeLabels(
+  answers: ReadonlyArray<ColumnLabels>
+): ColumnLabels | undefined {
+  const [first] = answers;
+
+  return (
+    first && {
+      kind: first.kind,
+      byKey: Object.assign({}, ...answers.map(({ byKey }) => byKey)),
+    }
+  );
+}
+
 /** Every label already answered for the column the request reads, whichever rows asked for it. */
 function knownLabels(
   queryClient: QueryClient,
   connectionSlug: string,
   request: SelectLabelsRequest
-): LabelsByKey {
+): ColumnLabels | undefined {
   const source = labelSource(request);
 
-  return Object.assign(
-    {},
-    ...queryClient
-      .getQueriesData<LabelsByKey>({
+  return mergeLabels(
+    queryClient
+      .getQueriesData<ColumnLabels>({
         queryKey: queryKeys.databaseForeignKeyLabels(
           connectionSlug,
           request.database
@@ -73,7 +88,11 @@ function labelsQuery(
 ) {
   return queryOptions({
     queryKey: queryKeys.foreignKeyLabels(connectionSlug, request),
-    queryFn: async () => labelsByKey(await window.sql.selectLabels(request)),
+    queryFn: async (): Promise<ColumnLabels> => {
+      const { kind, labels } = await window.sql.selectLabels(request);
+
+      return { kind, byKey: labelsByKey(labels) };
+    },
     // a key edited in a page keeps the labels of the others on screen while the page is asked again
     placeholderData: () => knownLabels(queryClient, connectionSlug, request),
     gcTime: TABLE_ROWS_GC_TIME,
@@ -83,14 +102,14 @@ function labelsQuery(
 
 // declared once, so that TanStack hands the same array back until an answer changes
 function answersOf(
-  results: Array<QueryObserverResult<LabelsByKey>>
-): Array<LabelsByKey | undefined> {
+  results: Array<QueryObserverResult<ColumnLabels>>
+): Array<ColumnLabels | undefined> {
   return results.map(({ data }) => data);
 }
 
 /**
  * The label each column of the grid shows after its value, by column id: the row a foreign key points at, named by one of its columns.
- * One statement per key and per page of the table; nothing is asked without `displayAfterByTable`.
+ * Two statements per key and per page of the table; nothing is asked without `displayAfterByTable`.
  */
 export function useForeignKeyLabels(
   rows: ReadonlyArray<ResultRow> | null,
@@ -103,6 +122,7 @@ export function useForeignKeyLabels(
   const { database } = useDatabaseContext();
   const { currentConnectionSlug } = useConnectionContext();
   const queryClient = useQueryClient();
+  const { shift } = useDateDisplay();
 
   const keys =
     displayAfterByTable && database && currentConnectionSlug
@@ -152,14 +172,21 @@ export function useForeignKeyLabels(
 
   return new Map(
     keys.map((key, keyIndex) => {
-      const labels: LabelsByKey = Object.assign(
-        {},
-        ...requestHashesOfKey[keyIndex].map(
-          (hash) => answers[hashes.indexOf(hash)] ?? {}
+      const labels = mergeLabels(
+        requestHashesOfKey[keyIndex].flatMap(
+          (hash) => answers[hashes.indexOf(hash)] ?? []
         )
       );
-      const labelOf: LabelOf = (row) =>
-        findLabel(labels, columnValue(row, key.column, rowsAsArray));
+      const labelOf: LabelOf = (row) => {
+        const label =
+          labels &&
+          findLabel(labels.byKey, columnValue(row, key.column, rowsAsArray));
+
+        // a date follows the date switch, as its cell does, without the offset a label has no room for
+        return labels && label !== undefined && isDateKind(labels.kind)
+          ? formatDateText(label, labels.kind, shift).text
+          : label;
+      };
 
       return [key.column.id, labelOf];
     })

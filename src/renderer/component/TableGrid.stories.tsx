@@ -439,14 +439,17 @@ export const Editable: Story = {
 
 /** What `window.sql.selectLabels` answers: a title per row of `linkedTable`, some too long for the column. */
 async function linkedTitles({ keys }: SelectLabelsRequest) {
-  return keys.map((key) => {
-    const id = Number(key);
+  return {
+    kind: FieldKind.String,
+    labels: keys.map((key) => {
+      const id = Number(key);
 
-    return {
-      key,
-      label: `${WORDS[id % WORDS.length]} ${WORDS.slice(0, id % 5).join(' ')}`,
-    };
-  });
+      return {
+        key,
+        label: `${WORDS[id % WORDS.length]} ${WORDS.slice(0, id % 5).join(' ')}`,
+      };
+    }),
+  };
 }
 
 /**

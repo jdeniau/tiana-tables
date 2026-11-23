@@ -66,4 +66,9 @@ export interface Dialect {
 
   /** The rows the keys point at: their key, then the start of their label. */
   selectLabels(request: SelectLabelsRequest): BuiltQuery;
+
+  /** The label column and no row: the driver announces its type all the same, which `selectLabels` casts to text. */
+  selectLabelColumn(
+    request: Pick<SelectLabelsRequest, 'database' | 'table' | 'labelColumn'>
+  ): BuiltQuery;
 }

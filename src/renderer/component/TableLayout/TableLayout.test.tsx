@@ -455,8 +455,14 @@ const labelsKey = (table: string) =>
   });
 
 function cacheLabels(): void {
-  queryClient.setQueryData(labelsKey('items'), { 1: 'a' });
-  queryClient.setQueryData(labelsKey('categories'), { 1: 'books' });
+  queryClient.setQueryData(labelsKey('items'), {
+    kind: FieldKind.String,
+    byKey: { 1: 'a' },
+  });
+  queryClient.setQueryData(labelsKey('categories'), {
+    kind: FieldKind.String,
+    byKey: { 1: 'books' },
+  });
 }
 
 const labelsAskedAgain = (table: string): boolean =>

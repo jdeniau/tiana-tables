@@ -69,4 +69,17 @@ describe('postgresDialect', () => {
     );
     expect(values).toEqual({ key0: 3, key1: 7 });
   });
+
+  it('asks the label column alone, for no row', () => {
+    expect(
+      postgresDialect.selectLabelColumn({
+        database: 'app',
+        table: 'shipments',
+        labelColumn: 'shipped_at',
+      })
+    ).toEqual({
+      sql: 'SELECT "shipped_at" FROM "app"."shipments" LIMIT 0',
+      values: {},
+    });
+  });
 });

@@ -8,10 +8,12 @@ import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { DisplayAfterByTable } from '../../configuration/columnOrder';
+import { DateDisplay } from '../../configuration/dateDisplay';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { AllColumnsContextProvider } from '../../contexts/AllColumnsContext';
 import { ConnectionContext } from '../../contexts/ConnectionContext';
 import { DatabaseContext } from '../../contexts/DatabaseContext';
+import { testables as dateDisplayTestables } from '../../contexts/DateDisplayContext';
 import { ForeignKeysContextProvider } from '../../contexts/ForeignKeysContext';
 import type { ColumnDetail, ForeignKey } from '../../sql/dialect/metadata';
 import { mysqlDialect } from '../../sql/dialect/mysql';
@@ -19,6 +21,7 @@ import { FieldKind } from '../../sql/resultField';
 import type { SelectLabelsRequest } from '../../sql/selectLabels';
 import type { ResultRow } from '../../sql/types';
 import { createQueryClient } from '../queryClient';
+import type { ZoneShift } from '../utils/dateFormatter';
 import TableGrid from './TableGrid';
 import { mountRows } from './mountRows.testing';
 
@@ -101,7 +104,10 @@ function rows(count: number): Array<ResultRow> {
 
 /** what the server answers: every key points at a row */
 function answer({ keys }: SelectLabelsRequest) {
-  return keys.map((key) => ({ key, label: `Article ${key}` }));
+  return {
+    kind: FieldKind.String,
+    labels: keys.map((key) => ({ key, label: `Article ${key}` })),
+  };
 }
 
 const selectLabels = vi.fn();
@@ -127,11 +133,14 @@ afterEach(() => {
 
 const queryClient = createQueryClient;
 
+const { DateDisplayContext } = dateDisplayTestables;
+
 async function render(
   result: Array<ResultRow>,
   {
     displayAfterByTable = {} as DisplayAfterByTable | null,
     client = queryClient(),
+    shift = null as ZoneShift | null,
   } = {}
 ): Promise<void> {
   await act(async () => {
@@ -155,12 +164,22 @@ async function render(
                   database="tiana_dev"
                 >
                   <AllColumnsContextProvider allColumns={ALL_COLUMNS}>
-                    <TableGrid
-                      fields={FIELDS}
-                      result={result}
-                      primaryKeys={['id']}
-                      displayAfterByTable={displayAfterByTable ?? undefined}
-                    />
+                    <DateDisplayContext
+                      value={{
+                        display: shift ? DateDisplay.Local : DateDisplay.Server,
+                        segments: [],
+                        shift,
+                        serverZone: null,
+                        setDisplay: () => {},
+                      }}
+                    >
+                      <TableGrid
+                        fields={FIELDS}
+                        result={result}
+                        primaryKeys={['id']}
+                        displayAfterByTable={displayAfterByTable ?? undefined}
+                      />
+                    </DateDisplayContext>
                   </AllColumnsContextProvider>
                 </ForeignKeysContextProvider>
               </DatabaseContext>
@@ -231,7 +250,7 @@ describe('the labels of the foreign keys', () => {
   });
 
   test('a key pointing at no row shows no label', async () => {
-    selectLabels.mockResolvedValue([]);
+    selectLabels.mockResolvedValue({ kind: FieldKind.String, labels: [] });
     await render(rows(1));
 
     expect(cell(1, 1).textContent).toBe('1');
@@ -286,5 +305,39 @@ describe('the labels of the foreign keys', () => {
     expect(selectLabels).not.toHaveBeenCalled();
     expect(labelOf(2, 1)).toBeNull();
     expect(cell(2, 1).classList.contains('tg-num')).toBe(true);
+  });
+});
+
+describe('a label read from a date', () => {
+  const IN_UTC = '2025-04-30 12:00:00.123456';
+  const TO_KOLKATA: ZoneShift = { from: 'UTC', to: 'Asia/Kolkata' };
+
+  /** the label column, of the kind the server announces */
+  const answerAs =
+    (kind: FieldKind) =>
+    async ({ keys }: SelectLabelsRequest) => ({
+      kind,
+      labels: keys.map((key) => ({ key, label: IN_UTC })),
+    });
+
+  test('follows the date switch, without the offset its cell shows', async () => {
+    selectLabels.mockImplementation(answerAs(FieldKind.DateTime));
+    await render(rows(1), { shift: TO_KOLKATA });
+
+    expect(labelOf(1, 1)).toBe('2025-04-30 17:30:00');
+  });
+
+  test('shows the wall clock of the server to the second, as its cell does', async () => {
+    selectLabels.mockImplementation(answerAs(FieldKind.DateTime));
+    await render(rows(1));
+
+    expect(labelOf(1, 1)).toBe('2025-04-30 12:00:00');
+  });
+
+  test('a text holding a date is no date: it stays as the server wrote it', async () => {
+    selectLabels.mockImplementation(answerAs(FieldKind.String));
+    await render(rows(1), { shift: TO_KOLKATA });
+
+    expect(labelOf(1, 1)).toBe(IN_UTC);
   });
 });
