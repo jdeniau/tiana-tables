@@ -983,6 +983,7 @@ const GridCell = memo(function GridCell({
 // A selected row or cell takes 70% of the selection fill over the background,
 // the row under the cursor the fill itself:
 // the stronger mark follows the pointer, and both keep the colours of their text.
+// A selected cell is also framed in the text colour, which the hovered row's fill cannot hide.
 type StyledProps = Parameters<typeof selection>[0];
 
 // opaque: a pinned cell must hide the cells scrolling under it
@@ -1027,6 +1028,11 @@ const ScrollContainer = styled.div`
   .tg-row[data-selected] .tg-cell,
   .tg-cell[data-selected] {
     background: ${selectedBackground};
+  }
+
+  /* inset: a border would shift the cell's content */
+  .tg-cell[data-selected] {
+    box-shadow: inset 0 0 0 1px ${foreground};
   }
 
   .tg-row:hover .tg-cell {

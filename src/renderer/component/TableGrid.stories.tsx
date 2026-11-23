@@ -542,7 +542,19 @@ export const Selectable: Story = {
       };
     };
 
+    /** the cells whose frame tells them from the row under the pointer */
+    const framedCells = (): Array<HTMLTableCellElement> =>
+      [...grid.querySelectorAll('td')].filter(
+        (cell) => getComputedStyle(cell).boxShadow !== 'none'
+      );
+
     await userEvent.click(canvas.getByText('lorem-0'));
+
+    // Dracula's base05
+    expect(
+      framedCells().map((cell) => getComputedStyle(cell).boxShadow)
+    ).toEqual(['rgb(248, 248, 242) 0px 0px 0px 1px inset']);
+
     await userEvent.keyboard('{ArrowDown>40/}');
 
     // the row just came into view: whole, against the bottom edge
@@ -582,5 +594,11 @@ export const Selectable: Story = {
       pinnedKey?.getBoundingClientRect().right ?? Number.NaN,
       0
     );
+
+    await userEvent.keyboard('{Shift>}{ArrowDown}{/Shift}');
+
+    // selected rows keep their fill only
+    expect(grid.querySelectorAll('tr[data-selected]')).toHaveLength(2);
+    expect(framedCells()).toHaveLength(0);
   },
 };

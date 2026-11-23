@@ -859,6 +859,9 @@ h1 .title-dot {
 .grid td.selected {
   background: color-mix(in srgb, var(--sel) 70%, var(--bg));
 }
+.grid td.selected {
+  box-shadow: inset 0 0 0 1px var(--text);
+}
 .workspace-foot {
   color: var(--muted);
   font-size: 12px;
