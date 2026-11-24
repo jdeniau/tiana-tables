@@ -109,11 +109,14 @@ describe('the engine of a connection', () => {
   // the text of a tab is its name, and its colour is the prod/dev mark
   test('is told by the tooltip of its tab, not by its text', async () => {
     const container = await render(<Nav />);
-    const tab = [...container.querySelectorAll('a')].find(
-      (link) => link.textContent === 'pg (dev)'
+    const link = [...container.querySelectorAll('a')].find(
+      (anchor) => anchor.textContent === 'pg (dev)'
     );
 
-    expect(tab?.getAttribute('title')).toBe('pg (dev) · PostgreSQL');
+    // the tab holds the link and its cross, so the whole tab carries the tooltip
+    expect(link?.closest('[title]')?.getAttribute('title')).toBe(
+      'pg (dev) · PostgreSQL'
+    );
   });
 });
 

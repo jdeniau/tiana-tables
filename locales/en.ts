@@ -80,6 +80,7 @@ export default {
     ' noNumericColumn {Plotting needs a numeric column to chart against another column.}' +
     ' other {This result cannot be plotted.}}',
   'connect.new': 'New connection',
+  'connection.close': 'Close connection',
   'connection.connecting': 'Connecting…',
   'connection.delete.confirm': 'Delete',
   'connection.delete.description':

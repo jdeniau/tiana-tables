@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Layout } from 'antd';
-import { action } from 'storybook/actions';
+import { expect, fn, userEvent } from 'storybook/test';
 import reactRouterDecorator from '../../../../.storybook/decorators/reactRouterDecorator';
 import { ConnectionContext } from '../../../contexts/ConnectionContext';
 import { Brand, TitleBar, TitleGroup } from '../Style/TitleBar';
 import Nav from './Nav';
+
+const closeConnection = fn();
 
 const meta: Meta<typeof Nav> = {
   component: Nav,
@@ -28,9 +30,7 @@ const meta: Meta<typeof Nav> = {
           currentConnectionSlug: 'production',
           connectionSlugList: ['test', 'production', 'staging', 'development'],
           addConnectionToList: () => {},
-          closeConnection: (connectionSlug) => {
-            action('closeConnection')(connectionSlug);
-          },
+          closeConnection,
         }}
       >
         <Story />
@@ -45,4 +45,24 @@ type Story = StoryObj<typeof Nav>;
 
 export const Primary: Story = {
   render: () => <Nav />,
+};
+
+export const CloseConnection: Story = {
+  render: () => <Nav />,
+  play: async ({ canvas }) => {
+    closeConnection.mockClear();
+    const crosses = canvas.getAllByRole('button', {
+      name: 'Close connection',
+    });
+
+    await userEvent.click(crosses[2]);
+    await expect(closeConnection).toHaveBeenLastCalledWith('staging');
+
+    await userEvent.pointer({
+      keys: '[MouseMiddle]',
+      target: canvas.getByText('development'),
+    });
+    await expect(closeConnection).toHaveBeenLastCalledWith('development');
+    await expect(closeConnection).toHaveBeenCalledTimes(2);
+  },
 };

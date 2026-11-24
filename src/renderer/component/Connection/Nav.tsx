@@ -1,12 +1,17 @@
-import { MouseEvent, ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useTranslation } from '../../../i18n';
 import { KeyboardShortcutTooltip, ShortcutModifier } from '../KeyboardShortcut';
-import { TabStrip, TabStripLink } from '../Style/TabStrip';
+import {
+  TabStrip,
+  TabStripClosableLink,
+  TabStripLink,
+} from '../Style/TabStrip';
 
 /**
  * The connections, as a run in the title bar: the active one carries the pip,
+ * each closes on its cross or the middle button,
  * the last item opens the form for a new one.
  */
 export default function Nav(): ReactElement | null {
@@ -14,21 +19,6 @@ export default function Nav(): ReactElement | null {
     useConnectionContext();
   const { configuration } = useConfiguration();
   const { t } = useTranslation();
-
-  /** Middle click closes the connection, the way it closes a browser tab. */
-  function handleAuxClick(
-    event: MouseEvent<HTMLAnchorElement>,
-    connectionSlug: string
-  ): void {
-    if (event.button !== 1) {
-      return;
-    }
-
-    // Without this, Chromium asks for a window of its own for the link.
-    event.preventDefault();
-
-    closeConnection(connectionSlug);
-  }
 
   if (!connectionSlugList.length) {
     return null;
@@ -41,12 +31,9 @@ export default function Nav(): ReactElement | null {
         const connectionName = connection?.name || connectionSlug;
 
         return (
-          <TabStripLink
+          <TabStripClosableLink
             key={connectionSlug}
             active={connectionSlug === currentConnectionSlug}
-            onAuxClick={(event) => {
-              handleAuxClick(event, connectionSlug);
-            }}
             // the engine in the tooltip only: the text of a tab is its name, and its colour the prod/dev mark
             title={
               connection
@@ -54,9 +41,11 @@ export default function Nav(): ReactElement | null {
                 : connectionName
             }
             to={`/connections/${connectionSlug}`}
+            onClose={() => closeConnection(connectionSlug)}
+            closeLabel={t('connection.close')}
           >
             {connectionName}
-          </TabStripLink>
+          </TabStripClosableLink>
         );
       })}
 
