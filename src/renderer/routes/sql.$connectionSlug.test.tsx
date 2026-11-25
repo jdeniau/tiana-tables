@@ -12,6 +12,7 @@ import { DatabaseEngine } from '../../sql/engine';
 import { RunMode } from '../../sql/runMode';
 import type { SqlError } from '../../sql/sqlError';
 import { createQueryClient } from '../queryClient';
+import { queryKeys } from '../queryKeys';
 import SqlPage, { action } from './sql.$connectionSlug';
 
 // the page alone: Monaco, the result grid and the contexts they read stay out
@@ -88,6 +89,7 @@ describe('action', () => {
 
     window.queryHistory = {
       record: vi.fn(() => Promise.resolve()),
+      load: vi.fn(),
       clear: vi.fn(),
     };
 
@@ -219,6 +221,27 @@ describe('action', () => {
         }),
       ],
     ]);
+  });
+
+  test('refreshes what the editor learnt once the statement is recorded', async () => {
+    const queryClient = createQueryClient();
+    const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
+    const recorded = Promise.withResolvers<void>();
+
+    queryClient.setQueryData(learnt, { blocks: [] });
+    vi.mocked(window.queryHistory.record).mockReturnValue(recorded.promise);
+
+    const answered = runAction('shop', 'SELECT 1', { queryClient });
+
+    await vi.waitFor(() =>
+      expect(window.queryHistory.record).toHaveBeenCalled()
+    );
+    expect(queryClient.getQueryState(learnt)?.isInvalidated).toBe(false);
+
+    recorded.resolve();
+    await answered;
+
+    expect(queryClient.getQueryState(learnt)?.isInvalidated).toBe(true);
   });
 
   test('answers what ran even when the history cannot record it', async () => {

@@ -26,6 +26,7 @@ import {
 import { QUERY_HISTORY_CHANNEL } from '../../preload/queryHistoryChannel';
 import {
   Clause,
+  type QueryHistoryContent,
   type RecordedStatement,
 } from '../../sql/history/recordedStatement';
 import { block, run, statement } from './schema';
@@ -222,6 +223,30 @@ function record(
   });
 }
 
+function load(
+  connectionSlug: string,
+  databaseName: string
+): QueryHistoryContent {
+  const blocks = openHistory()
+    .select({
+      clause: block.clause,
+      shape: block.shape,
+      sql: block.sql,
+      aliases: block.aliases,
+      runCount: block.runCount,
+    })
+    .from(block)
+    .where(
+      and(
+        eq(block.history, historyOf(connectionSlug)),
+        eq(block.databaseName, databaseName)
+      )
+    )
+    .all();
+
+  return { blocks };
+}
+
 /** the file goes, rather than its rows: a deleted row can linger in the file's free pages */
 function clear(): void {
   database?.$client.close();
@@ -240,11 +265,16 @@ export function bindIpcMainQueryHistory(ipcMain: Electron.IpcMain): void {
     )
   );
 
+  ipcMain.handle(QUERY_HISTORY_CHANNEL.LOAD, (event, ...args) =>
+    load(...z.tuple([z.string(), z.string()]).parse(args))
+  );
+
   ipcMain.handle(QUERY_HISTORY_CHANNEL.CLEAR, () => clear());
 }
 
 export const testables = {
   record,
+  load,
   applyRetention,
   openHistory,
   clear,

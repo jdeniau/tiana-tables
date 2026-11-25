@@ -29,6 +29,10 @@ export const queryKeys = {
       request,
     ] as const,
 
+  /** what the editor learnt from the statements run on a database */
+  queryHistory: (connectionSlug: string, database: string) =>
+    [connectionSlug, database, 'queryHistory'] as const,
+
   /** the last run of the SQL page: written by its action, never fetched */
   sqlResult: (connectionSlug: string, database: string) =>
     [connectionSlug, database, 'sqlResult'] as const,

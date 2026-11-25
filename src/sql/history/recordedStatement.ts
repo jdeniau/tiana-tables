@@ -32,3 +32,15 @@ export type RecordedStatement = {
   /** a `SELECT` cut into its clauses, none for any other statement */
   blocks: Array<RecordedBlock>;
 };
+
+/** A clause as the history keeps it: as it last ran, and how many times its shape did. */
+export type HistoryBlock = RecordedBlock & {
+  /** the tables the aliases of `sql` stand for */
+  aliases: Record<string, string>;
+  runCount: number;
+};
+
+/** What the history holds for one database of a connection. */
+export type QueryHistoryContent = {
+  blocks: Array<HistoryBlock>;
+};

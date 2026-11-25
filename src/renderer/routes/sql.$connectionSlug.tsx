@@ -92,6 +92,7 @@ async function runStatement(
 
 /** what the editor suggests is learnt from here: a statement that ran, never one that failed */
 async function recordInHistory(
+  queryClient: QueryClient,
   connectionSlug: string,
   databaseName: string,
   sql: string,
@@ -103,6 +104,10 @@ async function recordInHistory(
 
     if (statement) {
       await window.queryHistory.record(connectionSlug, databaseName, statement);
+      // not awaited: the results wait for the write, not for the editor to load it again
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.queryHistory(connectionSlug, databaseName),
+      });
     }
   } catch (error) {
     console.error('The statement was not recorded in the history', error);
@@ -130,7 +135,12 @@ export const action =
     invariant(connectionSlug, 'Connection slug is required');
     invariant(databaseName, 'Database name is required');
 
-    const result = await runEditor(request, connectionSlug, databaseName);
+    const result = await runEditor(
+      queryClient,
+      request,
+      connectionSlug,
+      databaseName
+    );
 
     queryClient.setQueryData(
       sqlResultQuery(connectionSlug, databaseName).queryKey,
@@ -141,6 +151,7 @@ export const action =
   };
 
 async function runEditor(
+  queryClient: QueryClient,
   request: Request,
   connectionSlug: string,
   databaseName: string
@@ -187,7 +198,13 @@ async function runEditor(
       break;
     }
 
-    await recordInHistory(connectionSlug, databaseName, sql, dialect.engine);
+    await recordInHistory(
+      queryClient,
+      connectionSlug,
+      databaseName,
+      sql,
+      dialect.engine
+    );
   }
 
   return { outcomes };

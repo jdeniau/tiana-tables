@@ -8,6 +8,8 @@ import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
 import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { DatabaseEngine } from '../../../sql/engine';
+import { HistoryUsage } from '../../../sql/history/HistoryUsage';
+import { Clause } from '../../../sql/history/recordedStatement';
 import { QuerySchema } from './queryAnalysis';
 import { setQueryPrefix } from './queryPrefix';
 import { buildCompletionProvider, validateModel } from './useCompletion';
@@ -63,7 +65,8 @@ const WHERE_PREFIX = 'SELECT * FROM `employee` WHERE ';
 /** `|` marks the caret, which reads better than a column number */
 function completionsAt(
   sqlWithCaret: string,
-  queryPrefix?: string
+  queryPrefix?: string,
+  usage = new HistoryUsage([])
 ): Array<languages.CompletionItem> {
   const caret = sqlWithCaret.indexOf('|');
 
@@ -87,7 +90,8 @@ function completionsAt(
       DatabaseEngine.MySQL,
       TABLE_LIST,
       FOREIGN_KEYS,
-      ALL_COLUMNS
+      ALL_COLUMNS,
+      usage
     ).provideCompletionItems(
       model,
       position,
@@ -159,6 +163,88 @@ describe('tables', () => {
 
   it('proposes no table where a table cannot go', () => {
     expect(tables('SELECT | FROM employee e')).toEqual([]);
+  });
+});
+
+describe('ranking by usage', () => {
+  const USAGE = new HistoryUsage([
+    {
+      clause: Clause.From,
+      shape: 'FROM planning',
+      sql: 'FROM planning',
+      aliases: { planning: 'planning' },
+      runCount: 4,
+    },
+    {
+      clause: Clause.Join,
+      shape: 'JOIN title ON title . id = employee . title_id',
+      sql: 'JOIN title t ON t.id = e.title_id',
+      aliases: { e: 'employee', t: 'title' },
+      runCount: 2,
+    },
+    {
+      clause: Clause.Where,
+      shape: 'WHERE employee . name = ?',
+      sql: "WHERE e.name = 'Ada'",
+      aliases: { e: 'employee' },
+      runCount: 3,
+    },
+  ]);
+
+  /** the labels of a kind as the suggest widget lists them before a letter is typed */
+  function ranked(
+    sqlWithCaret: string,
+    kind: languages.CompletionItemKind,
+    usage: HistoryUsage
+  ): Array<string> {
+    return completionsAt(sqlWithCaret, undefined, usage)
+      .filter((item) => item.kind === kind)
+      .toSorted((a, b) => ((a.sortText ?? '') < (b.sortText ?? '') ? -1 : 1))
+      .map((item) => String(item.label));
+  }
+
+  it('lists the tables by name without a history', () => {
+    expect(
+      ranked(
+        'SELECT * FROM |',
+        languages.CompletionItemKind.Variable,
+        new HistoryUsage([])
+      )
+    ).toEqual(['employee', 'planning', 'title']);
+  });
+
+  it('puts the most used tables first, then the others by name', () => {
+    expect(
+      ranked('SELECT * FROM |', languages.CompletionItemKind.Variable, USAGE)
+    ).toEqual(['planning', 'title', 'employee']);
+  });
+
+  it('puts first the tables most joined to those of the query', () => {
+    expect(
+      ranked(
+        'SELECT * FROM employee e JOIN |',
+        languages.CompletionItemKind.Variable,
+        USAGE
+      )
+    ).toEqual(['title', 'planning', 'employee']);
+  });
+
+  it('puts the most used columns first', () => {
+    expect(
+      ranked(
+        'SELECT * FROM employee e WHERE e.|',
+        languages.CompletionItemKind.Field,
+        USAGE
+      )
+    ).toEqual(['name', 'id']);
+  });
+
+  it('keeps the keywords after the names', () => {
+    const [last] = completionsAt('SELECT * FROM |', undefined, USAGE)
+      .toSorted((a, b) => ((a.sortText ?? '') < (b.sortText ?? '') ? 1 : -1))
+      .map((item) => item.kind);
+
+    expect(last).toBe(languages.CompletionItemKind.Keyword);
   });
 });
 

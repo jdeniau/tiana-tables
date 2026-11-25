@@ -20,7 +20,8 @@ vi.mock('../../configuration/filePaths', () => ({
   getConfigurationFolder: () => folder.path,
 }));
 
-const { record, applyRetention, openHistory, clear, migrations } = testables;
+const { record, load, applyRetention, openHistory, clear, migrations } =
+  testables;
 
 const groups: Record<string, string | undefined> = {
   'client-a-prod': 'Client A',
@@ -309,6 +310,48 @@ describe('the retention', () => {
       { history: 'connection:solo', shape: 'SELECT 2' },
       { history: 'connection:solo', shape: 'SELECT 3' },
     ]);
+  });
+});
+
+describe('loading a history', () => {
+  const where = (sql: string, shape: string) => ({
+    ...statement(`SELECT * FROM article a ${sql}`, shape),
+    aliases: { a: 'article' },
+    blocks: [{ clause: Clause.Where, sql, shape }],
+  });
+
+  test('holds the clauses run on that database by every connection of the group', () => {
+    record(
+      'client-a-prod',
+      'blog',
+      where('WHERE a.id = 3', 'WHERE article . id = ?'),
+      1
+    );
+    record(
+      'client-a-staging',
+      'blog',
+      where('WHERE a.id = 7', 'WHERE article . id = ?'),
+      2
+    );
+    record(
+      'client-a-staging',
+      'shop',
+      where('WHERE a.id = 1', 'WHERE article . id = ?'),
+      3
+    );
+    record('solo', 'blog', where('WHERE a.statut = 1', 'WHERE x'), 4);
+
+    expect(load('client-a-prod', 'blog')).toEqual({
+      blocks: [
+        {
+          clause: Clause.Where,
+          shape: 'WHERE article . id = ?',
+          sql: 'WHERE a.id = 7',
+          aliases: { a: 'article' },
+          runCount: 2,
+        },
+      ],
+    });
   });
 });
 
