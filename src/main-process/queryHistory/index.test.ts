@@ -3,17 +3,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { getConfiguration } from '../configuration';
-import type { Configuration } from '../configuration/type';
-import { QUERY_HISTORY_CHANNEL } from '../preload/queryHistoryChannel';
-import { Clause } from '../sql/history/recordedStatement';
-import { bindIpcMainQueryHistory, testables } from './queryHistory';
+import { getConfiguration } from '../../configuration';
+import type { Configuration } from '../../configuration/type';
+import { QUERY_HISTORY_CHANNEL } from '../../preload/queryHistoryChannel';
+import { Clause } from '../../sql/history/recordedStatement';
+import { bindIpcMainQueryHistory, testables } from '.';
 
 const folder = vi.hoisted(() => ({ path: '' }));
 
-vi.mock('../configuration', () => ({ getConfiguration: vi.fn() }));
+vi.mock('../../configuration', () => ({ getConfiguration: vi.fn() }));
 
-vi.mock('../configuration/filePaths', () => ({
+vi.mock('../../configuration/filePaths', () => ({
   createConfigurationFolderIfNotExists: vi.fn(),
   getConfigurationFolder: () => folder.path,
 }));
