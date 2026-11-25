@@ -78,10 +78,19 @@ describe('a text that ran', () => {
     expect(ranAfter(runs, 'SELECT * FROM a')).toBe('rticle');
   });
 
-  it('completes a write whole, its WHERE included', () => {
+  it('cuts a write at its clauses too', () => {
     expect(ranAfter(['DELETE FROM article WHERE id = 3'], 'DELETE ')).toBe(
-      'FROM article WHERE id = 3'
+      'FROM article'
     );
+    const update = 'UPDATE article SET vues = 0 WHERE id = 3';
+
+    expect(ranAfter([update], 'UPDATE ')).toBe('article');
+    expect(ranAfter([update], 'UPDATE article ')).toBe('SET vues = 0');
+
+    const insert = "INSERT INTO tag (nom) VALUES ('sql') RETURNING id";
+
+    expect(ranAfter([insert], 'INSERT ')).toBe('INTO tag (nom)');
+    expect(ranAfter([insert], 'INSERT INTO tag (nom) ')).toBe("VALUES ('sql')");
   });
 
   it('proposes nothing past what ran, nor for an empty statement', () => {

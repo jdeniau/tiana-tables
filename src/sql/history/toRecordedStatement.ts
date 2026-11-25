@@ -36,6 +36,13 @@ const RECORDED_VERBS: ReadonlySet<string> = new Set([
   'WITH',
 ]);
 
+/** the words that open a clause of a write, past those it shares with a `SELECT` */
+const WRITE_CLAUSE_KEYWORDS: ReadonlySet<string> = new Set([
+  'SET',
+  'VALUES',
+  'RETURNING',
+]);
+
 const JOIN_KEYWORDS: ReadonlySet<string> = new Set(['JOIN', 'STRAIGHT_JOIN']);
 
 /** the words that may come before the `JOIN` they belong to */
@@ -127,7 +134,7 @@ export function toRecordedStatement(
   };
 }
 
-/** where each clause of a `SELECT` starts in its text, none for any other statement */
+/** where each clause of a statement starts in its text, the `SET` or the `VALUES` of a write included */
 export function clauseStarts(
   sql: string,
   engine: DatabaseEngine
@@ -137,11 +144,13 @@ export function clauseStarts(
     .filter((token) => token.channel === CODE_CHANNEL);
   const words = tokens.map((token) => (token.text ?? '').toUpperCase());
 
-  return words[0] === 'SELECT'
-    ? cutClauses(tokens, words, engine).map(
-        ({ start }) => tokens[start]?.start ?? 0
-      )
-    : [];
+  return topLevelKeywords(tokens, words, engine)
+    .indexes.filter(
+      (index) =>
+        clauseAt(words, index) !== undefined ||
+        WRITE_CLAUSE_KEYWORDS.has(words[index] ?? '')
+    )
+    .map((index) => tokens[index]?.start ?? 0);
 }
 
 /** what each token is in the shape, `null` for a token the shape drops */
@@ -215,9 +224,28 @@ function cutClauses(
   words: ReadonlyArray<string>,
   engine: DatabaseEngine
 ): Array<{ clause: Clause; start: number; end: number }> {
-  const starts: Array<{ clause: Clause; start: number }> = [];
+  const { indexes, end } = topLevelKeywords(tokens, words, engine);
+  const starts = indexes.flatMap((start) => {
+    const clause = clauseAt(words, start);
+
+    return clause === undefined ? [] : [{ clause, start }];
+  });
+
+  return starts.map(({ clause, start }, position) => ({
+    clause,
+    start,
+    end: starts[position + 1]?.start ?? end,
+  }));
+}
+
+/** the keywords outside any parenthesis, up to the set operator that ends the first `SELECT` of a compound one */
+function topLevelKeywords(
+  tokens: ReadonlyArray<SqlToken>,
+  words: ReadonlyArray<string>,
+  engine: DatabaseEngine
+): { indexes: Array<number>; end: number } {
+  const indexes: Array<number> = [];
   let depth = 0;
-  let end = words.length;
 
   for (const [index, word] of words.entries()) {
     if (word === '(') {
@@ -231,22 +259,13 @@ function cutClauses(
     }
 
     if (SET_OPERATORS.has(word)) {
-      end = index;
-      break;
+      return { indexes, end: index };
     }
 
-    const clause = clauseAt(words, index);
-
-    if (clause !== undefined) {
-      starts.push({ clause, start: index });
-    }
+    indexes.push(index);
   }
 
-  return starts.map(({ clause, start }, position) => ({
-    clause,
-    start,
-    end: starts[position + 1]?.start ?? end,
-  }));
+  return { indexes, end: words.length };
 }
 
 /** the clause of a `SELECT` the keyword at `index` opens */
