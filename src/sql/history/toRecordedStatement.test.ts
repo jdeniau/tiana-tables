@@ -133,6 +133,18 @@ describe('the clauses of a SELECT', () => {
   });
 });
 
+describe('a statement the history keeps', () => {
+  test.each([
+    'SELECT * FROM tag',
+    "INSERT INTO tag (nom) VALUES ('sql')",
+    "UPDATE tag SET nom = 'sql' WHERE id = 3",
+    'DELETE FROM tag WHERE id = 3',
+    'WITH vieux AS (SELECT id FROM tag) DELETE FROM tag WHERE id IN (SELECT id FROM vieux)',
+  ])('reads or writes rows: %s', (sql) => {
+    expect(toRecordedStatement(sql, MySQL)).not.toBeNull();
+  });
+});
+
 describe('a statement left out of the history', () => {
   test.each([
     ["CREATE USER 'app'@'%' IDENTIFIED BY 'S3cret!'", MySQL],
@@ -141,7 +153,12 @@ describe('a statement left out of the history', () => {
     ["SET PASSWORD FOR 'app'@'%' = 'S3cret!'", MySQL],
     ["CREATE ROLE app LOGIN PASSWORD 'S3cret!'", PostgreSQL],
     ["ALTER ROLE app PASSWORD 'S3cret!'", PostgreSQL],
-  ])('manages an account: %s', (sql, engine) => {
+    ['ALTER TABLE tag ADD COLUMN couleur TEXT', MySQL],
+    ['DROP TABLE tag', MySQL],
+    ['TRUNCATE TABLE tag', MySQL],
+    ['SHOW TABLES', MySQL],
+    ['CALL recalcule_vues()', MySQL],
+  ])('neither reads nor writes rows: %s', (sql, engine) => {
     expect(toRecordedStatement(sql, engine)).toBeNull();
   });
 

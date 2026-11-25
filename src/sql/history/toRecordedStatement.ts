@@ -26,6 +26,15 @@ const CLAUSE_KEYWORDS: ReadonlyMap<string, Clause> = new Map([
   ['LIMIT', Clause.Limit],
 ]);
 
+/** what a statement the history keeps opens on: it reads or writes rows, `WITH` opening one of them */
+const RECORDED_VERBS: ReadonlySet<string> = new Set([
+  'SELECT',
+  'INSERT',
+  'UPDATE',
+  'DELETE',
+  'WITH',
+]);
+
 const JOIN_KEYWORDS: ReadonlySet<string> = new Set(['JOIN', 'STRAIGHT_JOIN']);
 
 /** the words that may come before the `JOIN` they belong to */
@@ -72,7 +81,8 @@ export function toRecordedStatement(
 
   const words = tokens.map((token) => (token.text ?? '').toUpperCase());
 
-  if (tokens.length === 0 || managesAccounts(words)) {
+  // never a `GRANT`, an `ALTER` or a `CREATE USER`, and the password it may hold
+  if (!RECORDED_VERBS.has(words[0] ?? '')) {
     return null;
   }
 
@@ -96,18 +106,6 @@ export function toRecordedStatement(
     aliases,
     blocks,
   };
-}
-
-/** `CREATE USER … IDENTIFIED BY 'secret'`, `ALTER ROLE … PASSWORD 'secret'`: a password written in clear */
-function managesAccounts(words: ReadonlyArray<string>): boolean {
-  const [first, second] = words;
-
-  return (
-    ((first === 'CREATE' || first === 'ALTER') &&
-      (second === 'USER' || second === 'ROLE')) ||
-    (first === 'SET' && second === 'PASSWORD') ||
-    words.includes('IDENTIFIED')
-  );
 }
 
 /** what each token is in the shape, `null` for a token the shape drops */
