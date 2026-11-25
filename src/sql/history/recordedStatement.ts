@@ -42,7 +42,7 @@ export type HistoryBlock = Omit<RecordedBlock, 'tables'> & {
 
 /** What the history holds for one database of a connection. */
 export type QueryHistoryContent = {
-  /** the texts that ran, those of the most run shapes first, then the most recent; never an `UPDATE` or a `DELETE` */
+  /** the texts that ran, those of the most run shapes first, then the most recent */
   runs: Array<string>;
   /** the most run first */
   blocks: Array<HistoryBlock>;

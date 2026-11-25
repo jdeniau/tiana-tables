@@ -9,7 +9,7 @@ import { HistoryContinuation } from '../../../sql/history/HistoryContinuation';
 import { buildGhostTextProvider } from './useGhostText';
 
 const CONTINUATION = new HistoryContinuation({
-  runs: ['SELECT * FROM lecture', 'SHOW TABLES\nLIKE ?'],
+  runs: ['SELECT * FROM lecture', 'DELETE FROM lecture\nWHERE id = ?'],
   blocks: [],
 });
 
@@ -51,7 +51,7 @@ describe('the ghost text', () => {
   });
 
   it('shows a text on several lines from the end of a line only', () => {
-    expect(ghostTextAt('SHOW TABLES|')).toEqual(['\nLIKE ?']);
-    expect(ghostTextAt('SHOW TABLES|  ')).toEqual([]);
+    expect(ghostTextAt('DELETE FROM lecture|')).toEqual(['\nWHERE id = ?']);
+    expect(ghostTextAt('DELETE FROM lecture|  ')).toEqual([]);
   });
 });

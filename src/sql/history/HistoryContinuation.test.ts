@@ -78,9 +78,9 @@ describe('a text that ran', () => {
     expect(ranAfter(runs, 'SELECT * FROM a')).toBe('rticle');
   });
 
-  it('completes any other statement up to its end', () => {
-    expect(ranAfter(["SHOW TABLES FROM blog LIKE 'art%'"], 'SHOW ')).toBe(
-      "TABLES FROM blog LIKE 'art%'"
+  it('completes a write whole, its WHERE included', () => {
+    expect(ranAfter(['DELETE FROM article WHERE id = 3'], 'DELETE ')).toBe(
+      'FROM article WHERE id = 3'
     );
   });
 

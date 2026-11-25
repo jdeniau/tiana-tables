@@ -413,25 +413,6 @@ describe('loading a history', () => {
       'WHERE statut',
     ]);
   });
-
-  test('never holds the text of an UPDATE or a DELETE, even behind a WITH', () => {
-    const shapes = [
-      'UPDATE article SET vues = ?',
-      'DELETE FROM article',
-      'WITH old AS ( SELECT id FROM article ) DELETE FROM article',
-      'SELECT * FROM article FOR UPDATE',
-      'WITH recent AS ( SELECT id FROM article ) SELECT * FROM recent',
-    ];
-
-    for (const [at, shape] of shapes.entries()) {
-      record('solo', 'blog', statement(shape, shape), at);
-    }
-
-    expect(load('solo', 'blog').runs).toEqual([
-      'WITH recent AS ( SELECT id FROM article ) SELECT * FROM recent',
-      'SELECT * FROM article FOR UPDATE',
-    ]);
-  });
 });
 
 describe('clearing the history', () => {
