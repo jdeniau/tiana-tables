@@ -20,6 +20,7 @@ import {
   warnIfDevToolsHookIsMissing,
 } from './main-process/installReactDevToolsExtension';
 import { bindMenuListeners, createMenu } from './main-process/menu';
+import { bindIpcMainQueryHistory } from './main-process/queryHistory';
 import { bindIpcMainSqlFileStorage } from './main-process/sqlFileStorage';
 import {
   bindIpcMainTitleBar,
@@ -205,6 +206,7 @@ app.whenReady().then(async () => {
 
   bindIpcMainConfiguration(ipcMain);
   bindIpcMainSqlFileStorage(ipcMain);
+  bindIpcMainQueryHistory(ipcMain);
   bindIpcMainClipboard(ipcMain);
   bindIpcMainTitleBar(ipcMain);
   bindIpcMainUpdate(ipcMain);

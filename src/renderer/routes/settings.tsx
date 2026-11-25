@@ -1,6 +1,7 @@
 import { Flex } from 'antd';
 import packageJson from '../../../package.json';
 import { useTranslation } from '../../i18n';
+import ClearQueryHistory from '../component/ClearQueryHistory';
 import LangSelector from '../component/LangSelector';
 import {
   Centered,
@@ -13,7 +14,7 @@ import {
 import ThemeSelector from '../component/ThemeSelector';
 import { space } from '../theme';
 
-/** Language, theme and what version this is, reached from the application menu (`CmdOrCtrl+,`). */
+/** Language, theme, the query history and what version this is, reached from the application menu (`CmdOrCtrl+,`). */
 export default function Settings() {
   const { t } = useTranslation();
 
@@ -28,6 +29,7 @@ export default function Settings() {
           <Flex vertical gap={space.md}>
             <LangSelector />
             <ThemeSelector />
+            <ClearQueryHistory />
             <RegionMeta>v{packageJson.version}</RegionMeta>
           </Flex>
         </FramedRegionBody>

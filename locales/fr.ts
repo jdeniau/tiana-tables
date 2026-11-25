@@ -262,6 +262,12 @@ const fr: Translation = {
     ' other {Exécuter la requête sous le curseur}}',
   'rawSql.run.more': "Autres façons d'exécuter",
   'rawSql.submit': 'Exécuter',
+  'settings.queryHistory.clear': 'Effacer l’historique des requêtes…',
+  'settings.queryHistory.cleared': 'Historique des requêtes effacé',
+  'settings.queryHistory.confirm.description':
+    'L’éditeur SQL suggère ce qui a déjà été exécuté. Toutes les requêtes dont il a appris, sur toutes les connexions, sont oubliées, sans retour possible.',
+  'settings.queryHistory.confirm.ok': 'Effacer',
+  'settings.queryHistory.confirm.title': 'Effacer l’historique des requêtes ?',
   'settings.title': 'Réglages',
   'sqlPanel.callerButton': 'SQL',
   'table.columns.count': '{count, plural, one {# colonne} other {# colonnes}}',

@@ -86,6 +86,11 @@ describe('action', () => {
       executeQuery: vi.fn(() => Promise.resolve([[], []])),
     };
 
+    window.queryHistory = {
+      record: vi.fn(() => Promise.resolve()),
+      clear: vi.fn(),
+    };
+
     // the action reads the engine of the connection to know how to spell `USE`
     window.config = {
       // @ts-expect-error only the connections are read here
@@ -104,6 +109,8 @@ describe('action', () => {
     window.sql = undefined;
     // @ts-expect-error same
     window.config = undefined;
+    // @ts-expect-error same
+    window.queryHistory = undefined;
   });
 
   test('escapes the database name of the USE it sends first', async () => {
@@ -185,6 +192,51 @@ describe('action', () => {
     ).toEqual({
       outcomes: [expect.objectContaining({ sql: 'SELECT 1' })],
     });
+  });
+
+  test('records in the history what ran, by its shape, and not what failed', async () => {
+    vi.mocked(window.sql.executeQuery).mockImplementation((query) =>
+      query.includes('nope')
+        ? Promise.reject(sqlError('Table `nope` does not exist'))
+        : Promise.resolve([[], []])
+    );
+
+    await runAction(
+      'shop',
+      'SELECT * FROM orders WHERE id = 3;\nSELECT * FROM nope;',
+      {
+        mode: RunMode.All,
+      }
+    );
+
+    await vi.waitFor(() =>
+      expect(window.queryHistory.record).toHaveBeenCalled()
+    );
+    expect(vi.mocked(window.queryHistory.record).mock.calls).toEqual([
+      [
+        'connectionSlug',
+        'shop',
+        expect.objectContaining({
+          sql: 'SELECT * FROM orders WHERE id = 3',
+          shape: 'SELECT * FROM orders WHERE id = ?',
+        }),
+      ],
+    ]);
+  });
+
+  test('answers what ran even when the history cannot record it', async () => {
+    const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    vi.mocked(window.queryHistory.record).mockRejectedValue(
+      new Error('disk full')
+    );
+
+    await expect(runAction('shop', 'SELECT 1')).resolves.toEqual({
+      outcomes: [expect.objectContaining({ sql: 'SELECT 1' })],
+    });
+    await vi.waitFor(() => expect(logError).toHaveBeenCalled());
+
+    logError.mockRestore();
   });
 
   test('sends nothing at all when the editor holds no statement', async () => {

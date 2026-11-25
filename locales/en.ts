@@ -263,6 +263,12 @@ export default {
     ' other {Run the query under the caret}}',
   'rawSql.run.more': 'Other ways to run',
   'rawSql.submit': 'Run',
+  'settings.queryHistory.clear': 'Clear query history…',
+  'settings.queryHistory.cleared': 'Query history cleared',
+  'settings.queryHistory.confirm.description':
+    'The SQL editor suggests what was already run. Every query it learnt from, on every connection, is forgotten, with no way back.',
+  'settings.queryHistory.confirm.ok': 'Clear',
+  'settings.queryHistory.confirm.title': 'Clear the query history?',
   'settings.title': 'Settings',
   'sqlPanel.callerButton': 'SQL',
   'table.columns.count': '{count, plural, one {# column} other {# columns}}',

@@ -1,5 +1,5 @@
 import type { DatabaseEngine } from './engine';
-import { getParser } from './parser';
+import { CODE_CHANNEL, getParser } from './parser';
 
 /** A statement of the editor, and where it sits in the content. */
 export type SqlStatement = {
@@ -10,12 +10,6 @@ export type SqlStatement = {
   /** offset just after its last character */
   end: number;
 };
-
-/**
- * The channel the lexer puts SQL on. Whitespace and comments go to another
- * one, which is what tells a separator from a `;` written in a comment.
- */
-const CODE_CHANNEL = 0;
 
 /**
  * Cut the content of the editor into the statements it holds.

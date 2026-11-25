@@ -13,6 +13,7 @@ import { PANEL } from '../../configuration/panels';
 import { useTranslation } from '../../i18n';
 import type { DatabaseEngine } from '../../sql/engine';
 import { hasLimitClause } from '../../sql/hasLimitClause';
+import { toRecordedStatement } from '../../sql/history/toRecordedStatement';
 import { RunMode, toRunMode } from '../../sql/runMode';
 import { splitStatements, statementAtOffset } from '../../sql/splitStatements';
 import { isSqlError } from '../../sql/sqlError';
@@ -87,6 +88,28 @@ async function runStatement(
 
     return { sql, error };
   }
+}
+
+/** what the editor suggests is learnt from here: a statement that ran, never one that failed */
+function recordInHistory(
+  connectionSlug: string,
+  databaseName: string,
+  sql: string,
+  engine: DatabaseEngine
+): void {
+  // in a promise, so that nothing the history does can fail a statement that ran
+  Promise.resolve()
+    .then(() => {
+      const statement = toRecordedStatement(sql, engine);
+
+      return (
+        statement &&
+        window.queryHistory.record(connectionSlug, databaseName, statement)
+      );
+    })
+    .catch((error: unknown) =>
+      console.error('The statement was not recorded in the history', error)
+    );
 }
 
 /** the last run of the page: written by the action, never fetched, kept until the connection closes */
@@ -166,6 +189,8 @@ async function runEditor(
     if (outcome.error) {
       break;
     }
+
+    recordInHistory(connectionSlug, databaseName, sql, dialect.engine);
   }
 
   return { outcomes };
