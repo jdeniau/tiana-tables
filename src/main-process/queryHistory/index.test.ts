@@ -371,6 +371,10 @@ describe('loading a history', () => {
     record('solo', 'blog', where('WHERE a.statut = 1', 'WHERE x'), 4);
 
     expect(load('client-a-prod', 'blog')).toEqual({
+      runs: [
+        'SELECT * FROM article a WHERE a.id = 7',
+        'SELECT * FROM article a WHERE a.id = 3',
+      ],
       blocks: [
         {
           clause: Clause.Where,
@@ -381,6 +385,52 @@ describe('loading a history', () => {
         },
       ],
     });
+  });
+
+  test('ranks the texts by how often their shape ran, then the most recent first', () => {
+    record('solo', 'blog', statement('SELECT 1', 'SELECT ?'), 1);
+    record('solo', 'blog', statement('SELECT * FROM t', 'SELECT * FROM t'), 2);
+    record('solo', 'blog', statement('SELECT 2', 'SELECT ?'), 3);
+    record('solo', 'blog', statement('SELECT * FROM u', 'SELECT * FROM u'), 4);
+
+    expect(load('solo', 'blog').runs).toEqual([
+      'SELECT 2',
+      'SELECT 1',
+      'SELECT * FROM u',
+      'SELECT * FROM t',
+    ]);
+  });
+
+  test('ranks the clauses by how often they ran, then the most recent first', () => {
+    record('solo', 'blog', where('WHERE a.id = 3', 'WHERE id'), 1);
+    record('solo', 'blog', where('WHERE a.id = 4', 'WHERE id'), 2);
+    record('solo', 'blog', where('WHERE a.statut = 1', 'WHERE statut'), 3);
+    record('solo', 'blog', where('WHERE a.vues > 9', 'WHERE vues'), 4);
+
+    expect(load('solo', 'blog').blocks.map(({ shape }) => shape)).toEqual([
+      'WHERE id',
+      'WHERE vues',
+      'WHERE statut',
+    ]);
+  });
+
+  test('never holds the text of an UPDATE or a DELETE, even behind a WITH', () => {
+    const shapes = [
+      'UPDATE article SET vues = ?',
+      'DELETE FROM article',
+      'WITH old AS ( SELECT id FROM article ) DELETE FROM article',
+      'SELECT * FROM article FOR UPDATE',
+      'WITH recent AS ( SELECT id FROM article ) SELECT * FROM recent',
+    ];
+
+    for (const [at, shape] of shapes.entries()) {
+      record('solo', 'blog', statement(shape, shape), at);
+    }
+
+    expect(load('solo', 'blog').runs).toEqual([
+      'WITH recent AS ( SELECT id FROM article ) SELECT * FROM recent',
+      'SELECT * FROM article FOR UPDATE',
+    ]);
   });
 });
 

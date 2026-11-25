@@ -1,0 +1,57 @@
+/**
+ * @vitest-environment happy-dom
+ */
+import { Position, editor, languages } from 'monaco-editor';
+import { LanguageIdEnum } from 'monaco-sql-languages';
+import { describe, expect, it } from 'vitest';
+import { DatabaseEngine } from '../../../sql/engine';
+import { HistoryContinuation } from '../../../sql/history/HistoryContinuation';
+import { buildGhostTextProvider } from './useGhostText';
+
+const CONTINUATION = new HistoryContinuation({
+  runs: ['SELECT * FROM lecture', 'SHOW TABLES\nLIKE ?'],
+  blocks: [],
+});
+
+/** `|` marks the caret */
+function ghostTextAt(sqlWithCaret: string): Array<string> {
+  const caret = sqlWithCaret.indexOf('|');
+  const before = sqlWithCaret.slice(0, caret);
+  const model = editor.createModel(
+    sqlWithCaret.replace('|', ''),
+    LanguageIdEnum.MYSQL
+  );
+
+  try {
+    const result = buildGhostTextProvider(
+      DatabaseEngine.MySQL,
+      CONTINUATION
+    ).provideInlineCompletions(
+      model,
+      new Position(before.split('\n').length, caret - before.lastIndexOf('\n')),
+      {} as languages.InlineCompletionContext,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {} as any
+    ) as languages.InlineCompletions;
+
+    return result.items.map(({ insertText }) => String(insertText));
+  } finally {
+    model.dispose();
+  }
+}
+
+describe('the ghost text', () => {
+  it('continues the statement the caret ends, before its semicolon too', () => {
+    expect(ghostTextAt('SELECT 1;\nSELECT * FROM |')).toEqual(['lecture']);
+    expect(ghostTextAt('SELECT * FROM | ;')).toEqual(['lecture']);
+  });
+
+  it('shows nothing while the caret is inside the statement', () => {
+    expect(ghostTextAt('SELECT * FROM | WHERE id = 1')).toEqual([]);
+  });
+
+  it('shows a text on several lines from the end of a line only', () => {
+    expect(ghostTextAt('SHOW TABLES|')).toEqual(['\nLIKE ?']);
+    expect(ghostTextAt('SHOW TABLES|  ')).toEqual([]);
+  });
+});

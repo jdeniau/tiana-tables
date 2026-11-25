@@ -18,6 +18,7 @@ import useCurrentStatementHighlight, {
   CURRENT_STATEMENT_BAR_CLASS,
   CURRENT_STATEMENT_CLASS,
 } from './useCurrentStatementHighlight';
+import useGhostText from './useGhostText';
 import useMonaco, { MONACO_THEME } from './useMonaco';
 import useSemanticTokens from './useSemanticTokens';
 
@@ -146,6 +147,7 @@ export function RawSqlEditor({
   const theme = useTheme();
 
   useCompletion();
+  useGhostText();
   useSemanticTokens();
 
   useImperativeHandle(

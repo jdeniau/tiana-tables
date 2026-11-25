@@ -127,6 +127,23 @@ export function toRecordedStatement(
   };
 }
 
+/** where each clause of a `SELECT` starts in its text, none for any other statement */
+export function clauseStarts(
+  sql: string,
+  engine: DatabaseEngine
+): Array<number> {
+  const tokens = getParser(engine)
+    .getAllTokens(sql)
+    .filter((token) => token.channel === CODE_CHANNEL);
+  const words = tokens.map((token) => (token.text ?? '').toUpperCase());
+
+  return words[0] === 'SELECT'
+    ? cutClauses(tokens, words, engine).map(
+        ({ start }) => tokens[start]?.start ?? 0
+      )
+    : [];
+}
+
 /** what each token is in the shape, `null` for a token the shape drops */
 function shapeWords(
   tokens: ReadonlyArray<SqlToken>,

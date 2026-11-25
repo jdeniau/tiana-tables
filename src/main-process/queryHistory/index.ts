@@ -53,6 +53,14 @@ const MIGRATION_FILES = import.meta.glob<string>(
   { query: '?raw', import: 'default', eager: true }
 );
 
+/** what may follow a `WITH` */
+const QUERY_VERBS: ReadonlySet<string> = new Set([
+  'SELECT',
+  'INSERT',
+  'UPDATE',
+  'DELETE',
+]);
+
 /** the client stays reachable, for `clear()` to close it */
 type HistoryDatabase = NodeSQLiteDatabase & { $client: DatabaseSync };
 
@@ -261,11 +269,49 @@ function record(
   return countRun(db, history, databaseName);
 }
 
+/** `UPDATE …`, `DELETE …`, the same behind a `WITH`: kept, but never proposed to be run again */
+function isUpdateOrDelete(shape: string): boolean {
+  const words = shape.split(' ');
+  let depth = 0;
+
+  if (words[0] !== 'WITH') {
+    return words[0] === 'UPDATE' || words[0] === 'DELETE';
+  }
+
+  for (const word of words) {
+    if (word === '(') {
+      depth++;
+    } else if (word === ')') {
+      depth--;
+    } else if (depth === 0 && QUERY_VERBS.has(word)) {
+      return word === 'UPDATE' || word === 'DELETE';
+    }
+  }
+
+  return false;
+}
+
 function load(
   connectionSlug: string,
   databaseName: string
 ): QueryHistoryContent {
-  const blocks = openHistory()
+  const db = openHistory();
+  const history = historyOf(connectionSlug);
+
+  const runs = db
+    .select({ sql: run.sql, shape: statement.shape })
+    .from(run)
+    .innerJoin(statement, eq(run.statementId, statement.id))
+    .where(
+      and(
+        eq(statement.history, history),
+        eq(statement.databaseName, databaseName)
+      )
+    )
+    .orderBy(desc(statement.runCount), desc(run.ranAt), desc(run.id))
+    .all();
+
+  const blocks = db
     .select({
       clause: block.clause,
       shape: block.shape,
@@ -275,14 +321,17 @@ function load(
     })
     .from(block)
     .where(
-      and(
-        eq(block.history, historyOf(connectionSlug)),
-        eq(block.databaseName, databaseName)
-      )
+      and(eq(block.history, history), eq(block.databaseName, databaseName))
     )
+    .orderBy(desc(block.runCount), desc(block.lastRunAt), desc(block.id))
     .all();
 
-  return { blocks };
+  return {
+    runs: runs
+      .filter(({ shape }) => !isUpdateOrDelete(shape))
+      .map(({ sql: text }) => text),
+    blocks,
+  };
 }
 
 /** the file goes, rather than its rows: a deleted row can linger in the file's free pages */

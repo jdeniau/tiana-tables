@@ -228,7 +228,7 @@ describe('action', () => {
     const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
     const recorded = Promise.withResolvers<number>();
 
-    queryClient.setQueryData(learnt, { blocks: [] });
+    queryClient.setQueryData(learnt, { runs: [], blocks: [] });
     vi.mocked(window.queryHistory.record).mockReturnValue(recorded.promise);
 
     const answered = runAction('shop', 'SELECT 1', { queryClient });
@@ -256,7 +256,7 @@ describe('action', () => {
       const queryClient = createQueryClient();
       const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
 
-      queryClient.setQueryData(learnt, { blocks: [] });
+      queryClient.setQueryData(learnt, { runs: [], blocks: [] });
       vi.mocked(window.queryHistory.record).mockResolvedValue(runs);
 
       await runAction('shop', 'SELECT 1', { queryClient });

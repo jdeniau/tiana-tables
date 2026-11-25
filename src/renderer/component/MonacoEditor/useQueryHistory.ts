@@ -1,20 +1,13 @@
 import { queryOptions, skipToken, useQuery } from '@tanstack/react-query';
 import { useConnectionContext } from '../../../contexts/ConnectionContext';
 import { useDatabaseContext } from '../../../contexts/DatabaseContext';
-import { HistoryUsage } from '../../../sql/history/HistoryUsage';
 import type { QueryHistoryContent } from '../../../sql/history/recordedStatement';
 import { queryKeys } from '../../queryKeys';
 
-const NO_USAGE = new HistoryUsage([]);
-
-/** a function of the module, so that the query computes it once per answer */
-function toUsage({ blocks }: QueryHistoryContent): HistoryUsage {
-  return new HistoryUsage(blocks);
-}
-
-function historyUsageQuery(
+function queryHistoryQuery<T>(
   connectionSlug: string | null,
-  database: string | null
+  database: string | null,
+  select: (content: QueryHistoryContent) => T
 ) {
   return queryOptions({
     queryKey: queryKeys.queryHistory(connectionSlug ?? '', database ?? ''),
@@ -22,15 +15,20 @@ function historyUsageQuery(
       connectionSlug && database
         ? () => window.queryHistory.load(connectionSlug, database)
         : skipToken,
-    select: toUsage,
+    select,
   });
 }
 
-/** what the history of the current database tells of its tables and columns, nothing until it is loaded */
-export default function useHistoryUsage(): HistoryUsage {
+/**
+ * What the history of the current database tells through `select`, `undefined` until it is loaded.
+ * `select` is a function of a module, so that it runs once per answer.
+ */
+export default function useQueryHistory<T>(
+  select: (content: QueryHistoryContent) => T
+): T | undefined {
   const { currentConnectionSlug } = useConnectionContext();
   const { database } = useDatabaseContext();
-  const { data } = useQuery(historyUsageQuery(currentConnectionSlug, database));
 
-  return data ?? NO_USAGE;
+  return useQuery(queryHistoryQuery(currentConnectionSlug, database, select))
+    .data;
 }

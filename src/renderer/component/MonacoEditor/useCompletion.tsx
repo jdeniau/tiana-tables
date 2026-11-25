@@ -11,7 +11,8 @@ import { useTableListContext } from '../../../contexts/TableListContext';
 import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
 import type { DatabaseEngine } from '../../../sql/engine';
-import type { HistoryUsage } from '../../../sql/history/HistoryUsage';
+import { HistoryUsage } from '../../../sql/history/HistoryUsage';
+import type { QueryHistoryContent } from '../../../sql/history/recordedStatement';
 import { getParser } from '../../../sql/parser';
 import {
   splitStatements,
@@ -29,7 +30,7 @@ import {
   prefixedValue,
   toPrefixedPosition,
 } from './queryPrefix';
-import useHistoryUsage from './useHistoryUsage';
+import useQueryHistory from './useQueryHistory';
 import useQuerySchema from './useQuerySchema';
 
 /*
@@ -48,6 +49,12 @@ for (const [, language] of SQL_LANGUAGES) {
 }
 
 type CompletionRange = languages.CompletionItem['range'];
+
+const NO_USAGE = new HistoryUsage([]);
+
+function toUsage({ blocks }: QueryHistoryContent): HistoryUsage {
+  return new HistoryUsage(blocks);
+}
 
 export function buildCompletionProvider(
   engine: DatabaseEngine,
@@ -354,7 +361,7 @@ export default function useCompletion(): void {
   const foreignKeys = useForeignKeysContext();
   const allColumns = useAllColumnsContext();
   const schema = useQuerySchema();
-  const usage = useHistoryUsage();
+  const usage = useQueryHistory(toUsage) ?? NO_USAGE;
 
   useEffect(() => {
     const providers = SQL_LANGUAGES.map(([engine, language]) =>

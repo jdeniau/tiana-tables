@@ -52,25 +52,18 @@ export class HistoryUsage {
     }
 
     if (clause === Clause.Join) {
-      const start = words.findIndex((word) => JOIN_KEYWORDS.has(word)) + 1;
-      // `JOIN blog . auteur`: the table is the last part of the name
-      const joined = words[start + 1] === '.' ? words[start + 2] : words[start];
+      const joined = joinedTable(words, tables);
 
-      if (joined === undefined || !tables.has(joined)) {
+      if (joined === undefined) {
         return;
       }
 
       add(this.tables, joined, runCount);
 
-      const named = new Set(
-        words.filter(
-          (word, index) =>
-            word !== joined && tables.has(word) && words[index + 1] === '.'
-        )
-      );
       // of two tables, the join joins the other, which `USING ( auteur_id )` or `NATURAL JOIN` never names
-      const others =
-        tables.size === 2 ? tables.difference(new Set([joined])) : named;
+      const others = (
+        tables.size === 2 ? tables : qualifiers(words, tables)
+      ).difference(new Set([joined]));
 
       for (const other of others) {
         add(this.joins, key(joined, other), runCount);
@@ -78,6 +71,28 @@ export class HistoryUsage {
       }
     }
   }
+}
+
+/** the table a `JOIN` block joins, `undefined` when it is not one the statement read */
+export function joinedTable(
+  words: ReadonlyArray<string>,
+  tables: ReadonlySet<string>
+): string | undefined {
+  const start = words.findIndex((word) => JOIN_KEYWORDS.has(word)) + 1;
+  // `JOIN blog . auteur`: the table is the last part of the name
+  const joined = words[start + 1] === '.' ? words[start + 2] : words[start];
+
+  return joined !== undefined && tables.has(joined) ? joined : undefined;
+}
+
+/** the tables of the statement a shape qualifies a column with */
+export function qualifiers(
+  words: ReadonlyArray<string>,
+  tables: ReadonlySet<string>
+): Set<string> {
+  return new Set(
+    words.filter((word, index) => tables.has(word) && words[index + 1] === '.')
+  );
 }
 
 /** the columns a clause reads, as `table.column` keys: those it qualifies, and its bare columns when the statement reads one table */
