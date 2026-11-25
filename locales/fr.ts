@@ -83,6 +83,7 @@ const fr: Translation = {
     " noNumericColumn {Il faut une colonne numérique à tracer en face d'une autre colonne.}" +
     ' other {Ce résultat ne peut pas être tracé.}}',
   'connect.new': 'Nouvelle connexion',
+  'connection.close': 'Fermer la connexion',
   'connection.connecting': 'Connexion…',
   'connection.delete.confirm': 'Supprimer',
   'connection.delete.description':

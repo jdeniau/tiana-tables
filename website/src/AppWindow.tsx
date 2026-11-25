@@ -197,7 +197,9 @@ export function AppWindow(): ReactElement {
         <span className="app-name">
           Tiana Tables <i>☰</i>
         </span>
-        <span className="tab active live-dot">Le Fil (dev)</span>
+        <span className="tab active live-dot">
+          Le Fil (dev)<b>×</b>
+        </span>
         <span className="tab plus">+</span>
         <span className="sql">SQL</span>
       </div>

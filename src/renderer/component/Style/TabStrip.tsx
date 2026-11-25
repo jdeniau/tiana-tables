@@ -221,6 +221,8 @@ const ClosableItem = styled.div<ItemProps>`
   min-width: 96px;
   padding-inline-end: ${space.xs};
   cursor: default;
+  /* in the title bar, the gaps around the link and the cross would drag the window and swallow the middle button */
+  -webkit-app-region: no-drag;
 
   &:hover ${Close} {
     opacity: 1;

@@ -596,6 +596,11 @@ h1 .title-dot {
 .app-bar .tab.active {
   border-right: 1px solid var(--rule);
 }
+.app-bar .tab b {
+  font-weight: 400;
+  color: var(--rule);
+  margin-left: var(--s1);
+}
 .app-bar .plus {
   color: var(--rule);
 }
