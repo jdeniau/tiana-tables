@@ -11,6 +11,7 @@ import AppMenuButton from '../component/AppMenuButton';
 import ConnectionStack from '../component/Connection/ConnectionStack';
 import ConnectionNav from '../component/Connection/Nav';
 import SshQuestions from '../component/Connection/SshQuestions';
+import FindBar from '../component/FindBar/FindBar';
 import {
   KeyboardShortcutTooltip,
   ShortcutModifier,
@@ -133,6 +134,7 @@ export default function Root() {
           </Layout>
 
           <SshQuestions />
+          <FindBar />
         </ConnectionStack>
       </ThemeContextProvider>
     </ConfigurationContextProvider>

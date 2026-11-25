@@ -46,6 +46,10 @@ export const constantForeground = ({ theme }: StyledProps): string =>
 export const classForeground = ({ theme }: StyledProps): string =>
   theme.palette.base0A;
 
+/** Search text background: the matches of the find bar (base0A) */
+export const searchBackground = ({ theme }: StyledProps): string =>
+  theme.palette.base0A;
+
 /** Strings, diff inserted — text cells (base0B) */
 export const stringForeground = ({ theme }: StyledProps): string =>
   theme.palette.base0B;

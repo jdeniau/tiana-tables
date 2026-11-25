@@ -10,6 +10,7 @@
 ### Plan, then prove
 
 - For any non-trivial task (3+ steps, an architectural decision, several packages), write a plan before editing: the files touched, the contracts changed, the tests added. If something goes sideways, **stop and re-plan** rather than push through.
+- **A size estimate counts tests and stories at the repo's own rate, and each step is weighed against its estimate when it ends: a third over, stop and tell the user before the next step.** Feature PRs here add about 1.2 lines of tests and stories per line of code (`git diff --numstat` over the last merges); an estimate at 0.7 came out 60 % short.
 - One task, one thread: no unrelated change. A pre-existing problem found on the way is named, not swept in.
 - **A bug found on the way becomes a GitHub issue or a step of the current plan, never a ClickUp card**: the repository is open source and independent of Mapado, whose team rules also load here.
 - **Never call a task done without proving it works.** When behaviour changes, diff before/after explicitly and say what changed. Would a staff engineer approve the PR?
