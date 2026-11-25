@@ -33,7 +33,7 @@ Every colour on screen comes from this table. Nothing else gets a colour.
 | `base01` | **unused** — unusable as structure                  | `#21222c` | `#e1e1e2`      |
 | `base02` | selection fill, scrollbar thumb, cell separators    | `#44475a` | `#c4c3c5`      |
 | `base03` | structural rules, meta text, line numbers           | `#6272a4` | `#a7a5a8`      |
-| `base05` | body text, table names, cell values                 | `#f8f8f2` | `#6c696e`      |
+| `base05` | body text, table names, cell values, selected cell  | `#f8f8f2` | `#6c696e`      |
 | `base07` | emphasis: region names                              | `#ffffff` | `#322d34`      |
 | `base09` | numbers in results                                  | `#bd93f9` | `#d65407`      |
 | `base0D` | the accent mark: Run, active pip, current statement | `#50fa7b` | `#775dff`      |
@@ -44,7 +44,7 @@ The text on the accent fill is `base00`, which holds at least 3.4:1 on every pal
 
 An active item is marked by a **6px `base0D` square** before its label: the active connection in the title bar, the current statement in the result tab strip, the active table tab. Not an underline — it crowded the descenders.
 
-The selected **table** in the sidebar also gets a `base02` row fill and a 3px `base0D` left border (antd's Menu can only draw its bar on the right, so the rule is ours, on `TableLink`). A grid row under the cursor gets the `base02` fill; a selected **row** or **cell** gets `base02` mixed at 70% into `base00`, weaker so that the pointer stays the stronger mark. Both keep the colours of their text. The grid keeps a `base02` separator between rows.
+The selected **table** in the sidebar also gets a `base02` row fill and a 3px `base0D` left border (antd's Menu can only draw its bar on the right, so the rule is ours, on `TableLink`). A grid row under the cursor gets the `base02` fill; a selected **row** or **cell** gets `base02` mixed at 70% into `base00`, weaker so that the pointer stays the stronger mark. Both keep the colours of their text. A selected **cell** is also framed by a 1px inset `base05` rule, which the fill of the row under the cursor cannot hide, so that what Ctrl+C copies stays visible; the cells of a selected row are not framed. The grid keeps a `base02` separator between rows.
 
 ## Separators
 
