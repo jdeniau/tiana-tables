@@ -124,6 +124,35 @@ describe('recording a statement', () => {
     ]);
   });
 
+  test('answers how many runs the history holds for the database', () => {
+    const shape = 'SELECT * FROM article WHERE id = ?';
+    const byId = (id: number) =>
+      statement(`SELECT * FROM article WHERE id = ${id}`, shape);
+
+    expect(record('solo', 'blog', byId(1))).toBe(1);
+    // a shape run again is a run more, though no statement more
+    expect(record('solo', 'blog', byId(2))).toBe(2);
+    expect(record('solo', 'blog', statement('SELECT 1', 'SELECT ?'))).toBe(3);
+
+    expect(record('solo', 'shop', byId(1))).toBe(1);
+    expect(record('other', 'blog', byId(1))).toBe(1);
+    expect(record('client-a-prod', 'blog', byId(1))).toBe(1);
+    expect(record('client-a-staging', 'blog', byId(1))).toBe(2);
+  });
+
+  test('counts the runs an earlier launch recorded', () => {
+    openHistory()
+      .$client.prepare(
+        `INSERT INTO statement (history, database_name, shape, run_count, last_run_at)
+         VALUES ('connection:solo', 'blog', 'SELECT ?', 150, 1)`
+      )
+      .run();
+
+    expect(
+      record('solo', 'blog', statement('SELECT 1, 2', 'SELECT ?, ?'))
+    ).toBe(151);
+  });
+
   test('counts a clause by its shape and keeps the text it last ran with', () => {
     const join = (sql: string, aliases: Record<string, string>) => ({
       ...statement(sql, sql),
@@ -362,8 +391,10 @@ describe('clearing the history', () => {
 
     expect(existsSync(join(folder.path, 'history.sqlite'))).toBe(false);
 
-    record('solo', 'blog', statement('SELECT 2', 'SELECT ?'), 2);
-
+    // its runs are counted from none again
+    expect(record('solo', 'blog', statement('SELECT 2', 'SELECT ?'), 2)).toBe(
+      1
+    );
     expect(rows('SELECT run_count FROM statement')).toEqual([{ run_count: 1 }]);
   });
 

@@ -7,11 +7,12 @@ import { QUERY_HISTORY_CHANNEL } from './queryHistoryChannel';
 
 /** The statements run, one history per group of connections. */
 interface QueryHistory {
+  /** answers how many runs the history of this database holds, this one included */
   record(
     connectionSlug: string,
     databaseName: string,
     statement: RecordedStatement
-  ): Promise<void>;
+  ): Promise<number>;
   /** what ran on this database, on this connection or another of its group */
   load(
     connectionSlug: string,

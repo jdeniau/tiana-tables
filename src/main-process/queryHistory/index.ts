@@ -145,12 +145,48 @@ function historyOf(connectionSlug: string): string {
   return group ? `group:${group}` : `connection:${connectionSlug}`;
 }
 
+/**
+ * The runs each history holds for a database, summed from the file once, then counted here:
+ * the sum reads every statement of the database, 1 ms for 5,000.
+ */
+const runTotals = new Map<string, number>();
+
+/** How many runs the history holds for this database, the one just recorded included. */
+function countRun(
+  db: NodeSQLiteDatabase,
+  history: string,
+  databaseName: string
+): number {
+  const key = JSON.stringify([history, databaseName]);
+  const counted = runTotals.get(key);
+  const total =
+    counted === undefined
+      ? db
+          .select({
+            runs: sql<number>`coalesce(sum(${statement.runCount}), 0)`,
+          })
+          .from(statement)
+          .where(
+            and(
+              eq(statement.history, history),
+              eq(statement.databaseName, databaseName)
+            )
+          )
+          .all()[0].runs
+      : counted + 1;
+
+  runTotals.set(key, total);
+
+  return total;
+}
+
+/** Records a statement that ran, and answers how many runs the history of its database now holds. */
 function record(
   connectionSlug: string,
   databaseName: string,
   recorded: RecordedStatement,
   now = Date.now()
-): void {
+): number {
   const db = openHistory();
   const history = historyOf(connectionSlug);
 
@@ -221,6 +257,8 @@ function record(
         .run();
     }
   });
+
+  return countRun(db, history, databaseName);
 }
 
 function load(
@@ -251,6 +289,7 @@ function load(
 function clear(): void {
   database?.$client.close();
   database = undefined;
+  runTotals.clear();
 
   // a crash in the middle of a write leaves the journal, which holds rows as they were
   for (const suffix of ['', '-journal']) {

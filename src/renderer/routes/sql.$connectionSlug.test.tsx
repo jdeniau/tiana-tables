@@ -88,7 +88,7 @@ describe('action', () => {
     };
 
     window.queryHistory = {
-      record: vi.fn(() => Promise.resolve()),
+      record: vi.fn(() => Promise.resolve(1)),
       load: vi.fn(),
       clear: vi.fn(),
     };
@@ -226,7 +226,7 @@ describe('action', () => {
   test('refreshes what the editor learnt once the statement is recorded', async () => {
     const queryClient = createQueryClient();
     const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
-    const recorded = Promise.withResolvers<void>();
+    const recorded = Promise.withResolvers<number>();
 
     queryClient.setQueryData(learnt, { blocks: [] });
     vi.mocked(window.queryHistory.record).mockReturnValue(recorded.promise);
@@ -238,11 +238,32 @@ describe('action', () => {
     );
     expect(queryClient.getQueryState(learnt)?.isInvalidated).toBe(false);
 
-    recorded.resolve();
+    recorded.resolve(1);
     await answered;
 
     expect(queryClient.getQueryState(learnt)?.isInvalidated).toBe(true);
   });
+
+  test.each([
+    { runs: 99, reloaded: true },
+    { runs: 100, reloaded: true },
+    { runs: 101, reloaded: false },
+    { runs: 110, reloaded: false },
+    { runs: 120, reloaded: true },
+  ])(
+    'refreshes it at each run of a young history, then one run in twenty: $reloaded at $runs runs',
+    async ({ runs, reloaded }) => {
+      const queryClient = createQueryClient();
+      const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
+
+      queryClient.setQueryData(learnt, { blocks: [] });
+      vi.mocked(window.queryHistory.record).mockResolvedValue(runs);
+
+      await runAction('shop', 'SELECT 1', { queryClient });
+
+      expect(queryClient.getQueryState(learnt)?.isInvalidated).toBe(reloaded);
+    }
+  );
 
   test('answers what ran even when the history cannot record it', async () => {
     const logError = vi.spyOn(console, 'error').mockImplementation(() => {});

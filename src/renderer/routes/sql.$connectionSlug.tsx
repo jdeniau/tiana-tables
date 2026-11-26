@@ -90,6 +90,17 @@ async function runStatement(
   }
 }
 
+/** a history this young is loaded again at each run: one run can reorder what the editor proposes */
+const YOUNG_HISTORY_RUNS = 100;
+
+/** past it the order moves little and loading costs more: one run in twenty loads it again */
+const RUNS_BETWEEN_RELOADS = 20;
+
+/** whether the editor loads the history again, now that it holds this many runs */
+function isReloadDue(runs: number): boolean {
+  return runs < YOUNG_HISTORY_RUNS || runs % RUNS_BETWEEN_RELOADS === 0;
+}
+
 /** what the editor suggests is learnt from here: a statement that ran, never one that failed */
 async function recordInHistory(
   queryClient: QueryClient,
@@ -103,11 +114,18 @@ async function recordInHistory(
     const statement = toRecordedStatement(sql, engine);
 
     if (statement) {
-      await window.queryHistory.record(connectionSlug, databaseName, statement);
-      // not awaited: the results wait for the write, not for the editor to load it again
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.queryHistory(connectionSlug, databaseName),
-      });
+      const runs = await window.queryHistory.record(
+        connectionSlug,
+        databaseName,
+        statement
+      );
+
+      if (isReloadDue(runs)) {
+        // not awaited: the results wait for the write, not for the editor to load it again
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.queryHistory(connectionSlug, databaseName),
+        });
+      }
     }
   } catch (error) {
     console.error('The statement was not recorded in the history', error);
