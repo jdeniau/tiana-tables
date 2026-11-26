@@ -209,9 +209,6 @@ describe('action', () => {
       }
     );
 
-    await vi.waitFor(() =>
-      expect(window.queryHistory.record).toHaveBeenCalled()
-    );
     expect(vi.mocked(window.queryHistory.record).mock.calls).toEqual([
       [
         'connectionSlug',
@@ -234,7 +231,7 @@ describe('action', () => {
     await expect(runAction('shop', 'SELECT 1')).resolves.toEqual({
       outcomes: [expect.objectContaining({ sql: 'SELECT 1' })],
     });
-    await vi.waitFor(() => expect(logError).toHaveBeenCalled());
+    expect(logError).toHaveBeenCalled();
 
     logError.mockRestore();
   });

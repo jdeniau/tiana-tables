@@ -91,25 +91,22 @@ async function runStatement(
 }
 
 /** what the editor suggests is learnt from here: a statement that ran, never one that failed */
-function recordInHistory(
+async function recordInHistory(
   connectionSlug: string,
   databaseName: string,
   sql: string,
   engine: DatabaseEngine
-): void {
-  // in a promise, so that nothing the history does can fail a statement that ran
-  Promise.resolve()
-    .then(() => {
-      const statement = toRecordedStatement(sql, engine);
+): Promise<void> {
+  // nothing the history does can fail a statement that ran
+  try {
+    const statement = toRecordedStatement(sql, engine);
 
-      return (
-        statement &&
-        window.queryHistory.record(connectionSlug, databaseName, statement)
-      );
-    })
-    .catch((error: unknown) =>
-      console.error('The statement was not recorded in the history', error)
-    );
+    if (statement) {
+      await window.queryHistory.record(connectionSlug, databaseName, statement);
+    }
+  } catch (error) {
+    console.error('The statement was not recorded in the history', error);
+  }
 }
 
 /** the last run of the page: written by the action, never fetched, kept until the connection closes */
@@ -190,7 +187,7 @@ async function runEditor(
       break;
     }
 
-    recordInHistory(connectionSlug, databaseName, sql, dialect.engine);
+    await recordInHistory(connectionSlug, databaseName, sql, dialect.engine);
   }
 
   return { outcomes };
