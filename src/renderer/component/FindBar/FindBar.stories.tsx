@@ -8,16 +8,24 @@ const CITIES = Array.from({ length: 40 }, (_, index) =>
   index === 30 ? 'Paris' : `Ville ${index}`
 );
 
-/** the Edit menu's Find, chosen by a story in place of the main process */
-let chooseFind = () => {};
+/** what the bar listens to the Edit menu's Find with, nothing until it does */
+let onFindChosen: (() => void) | undefined;
+
+/** Find chosen in the Edit menu, by a story in place of the main process. */
+async function chooseFind(): Promise<void> {
+  // the bar listens from an effect, which a built Storybook has not always run when the play starts
+  await waitFor(() => expect(onFindChosen).toBeDefined());
+  onFindChosen?.();
+}
 
 const meta: Meta<typeof FindBar> = {
   component: FindBar,
   beforeEach: () => {
+    onFindChosen = undefined;
     // @ts-expect-error a story has no main process to send Find
     window.editMenu = {
       onFind: (callback: () => void) => {
-        chooseFind = callback;
+        onFindChosen = callback;
 
         return () => {};
       },
@@ -142,7 +150,7 @@ export const ActiveMatchRemoved: Story = {
 /** Find in the Edit menu, the focus in the page: the bar opens. */
 export const FindFromTheMenu: Story = {
   play: async ({ canvas }) => {
-    chooseFind();
+    await chooseFind();
 
     await waitFor(() =>
       expect(canvas.getByPlaceholderText('Find in page')).toHaveFocus()
@@ -166,7 +174,7 @@ export const FindFromTheMenuInAnEditor: Story = {
     try {
       editor.focus();
       await waitFor(() => expect(editor.hasTextFocus()).toBe(true));
-      chooseFind();
+      await chooseFind();
 
       await waitFor(() =>
         expect(document.activeElement?.closest('.find-widget')).not.toBeNull()
