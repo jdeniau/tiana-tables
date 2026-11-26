@@ -41,6 +41,19 @@ describe('tables', () => {
 
     expect(usage.ofTable('auteur')).toBe(1);
   });
+
+  it('counts the tables named like a keyword, which the shape writes in upper case', () => {
+    const usage = new HistoryUsage(
+      blocksOf(
+        'SELECT * FROM user u JOIN role r ON r.id = u.role_id WHERE u.status = 1'
+      )
+    );
+
+    expect(usage.ofTable('user')).toBe(1);
+    expect(usage.ofTable('role')).toBe(1);
+    expect(usage.ofJoin('user', 'role')).toBe(1);
+    expect(usage.ofColumn('user', 'status')).toBe(1);
+  });
 });
 
 describe('columns', () => {

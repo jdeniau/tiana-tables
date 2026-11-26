@@ -1,14 +1,14 @@
 import { unquote } from '../tableName';
 import { Clause, type HistoryBlock } from './recordedStatement';
 
-const JOIN_KEYWORDS: ReadonlySet<string> = new Set(['JOIN', 'STRAIGHT_JOIN']);
+const JOIN_KEYWORDS: ReadonlySet<string> = new Set(['join', 'straight_join']);
 
 /** what a shape holds besides names: punctuation, operators, the `?` of a value */
 const NOT_A_NAME = /^[^\p{L}_`"[]/u;
 
 /**
  * How many runs of the history read each table and column, and joined each pair of tables,
- * which the completion ranks by. Names are compared in lower case: a shape upper-cases a column named like a keyword.
+ * which the completion ranks by. Names are compared in lower case: a shape upper-cases a table or a column named like a keyword.
  */
 export class HistoryUsage {
   private readonly tables = new Map<string, number>();
@@ -37,12 +37,14 @@ export class HistoryUsage {
   }
 
   private count({ clause, shape, aliases, runCount }: HistoryBlock): void {
-    const words = shape.split(' ').map(unquote);
-    const tables = new Set(Object.values(aliases));
+    const words = shape.split(' ').map((word) => unquote(word).toLowerCase());
+    const tables = new Set(
+      Object.values(aliases).map((table) => table.toLowerCase())
+    );
 
     if (clause === Clause.From) {
       for (const table of new Set(words.filter((word) => tables.has(word)))) {
-        add(this.tables, table.toLowerCase(), runCount);
+        add(this.tables, table, runCount);
       }
 
       return;
@@ -63,7 +65,7 @@ export class HistoryUsage {
         return;
       }
 
-      add(this.tables, joined.toLowerCase(), runCount);
+      add(this.tables, joined, runCount);
 
       const others = new Set(
         words.filter(
