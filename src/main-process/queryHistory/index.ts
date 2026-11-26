@@ -220,7 +220,8 @@ function clear(): void {
   database?.$client.close();
   database = undefined;
 
-  for (const suffix of ['', '-journal', '-wal', '-shm']) {
+  // a crash in the middle of a write leaves the journal, which holds rows as they were
+  for (const suffix of ['', '-journal']) {
     rmSync(`${historyPath()}${suffix}`, { force: true });
   }
 }

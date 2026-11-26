@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -253,5 +253,14 @@ describe('clearing the history', () => {
     record('solo', 'blog', statement('SELECT 2', 'SELECT ?'), 2);
 
     expect(rows('SELECT run_count FROM statement')).toEqual([{ run_count: 1 }]);
+  });
+
+  test('deletes the journal a crash left beside it', () => {
+    const journal = join(folder.path, 'history.sqlite-journal');
+
+    writeFileSync(journal, 'SELECT 1');
+    clear();
+
+    expect(existsSync(journal)).toBe(false);
   });
 });
