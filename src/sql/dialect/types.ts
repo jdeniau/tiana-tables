@@ -39,8 +39,8 @@ export interface Dialect {
   /** A table named by its database: `` `db`.`t` `` on MySQL. */
   qualify(databaseName: string, tableName: string): string;
 
-  /** The statement making unqualified names resolve in `databaseName`. */
-  useDatabase(databaseName: string): string;
+  /** The statement making unqualified names resolve in `databaseName`, absent where a connection opens one database. */
+  useDatabase?(databaseName: string): string;
 
   /** Quote a string so it reads as one value, whatever it holds. */
   escapeLiteral(text: string): string;

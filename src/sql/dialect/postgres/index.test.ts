@@ -7,7 +7,7 @@ describe('postgresDialect', () => {
   });
 
   it('switches schema through the search path, that schema alone', () => {
-    expect(postgresDialect.useDatabase('app')).toBe(
+    expect(postgresDialect.useDatabase?.('app')).toBe(
       'SET search_path TO "app";'
     );
   });

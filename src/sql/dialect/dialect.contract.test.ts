@@ -167,12 +167,16 @@ describe.each(DIALECTS)('the %s dialect', (_engine, dialect) => {
     );
   });
 
-  it('switches database in one statement naming it quoted', () => {
-    const statement = dialect.useDatabase('my.db');
+  // an engine whose connection opens one database has nothing to switch
+  it.runIf(dialect.useDatabase)(
+    'switches database in one statement naming it quoted',
+    () => {
+      const statement = dialect.useDatabase?.('my.db');
 
-    expect(statement).toContain(dialect.escapeIdentifier('my.db'));
-    expect(statement.trim().replace(/;$/, '')).not.toContain(';');
-  });
+      expect(statement).toContain(dialect.escapeIdentifier('my.db'));
+      expect(statement?.trim().replace(/;$/, '')).not.toContain(';');
+    }
+  );
 
   it('tells true from false', () => {
     expect(dialect.booleanLiteral(true)).not.toBe(
