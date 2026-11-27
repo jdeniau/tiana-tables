@@ -119,6 +119,24 @@ describe('the clauses of a SELECT', () => {
     ]);
   });
 
+  test.each([
+    ["date > '2026-01-01'", ['seance']],
+    ['value NOT IN (1, 2)', ['seance']],
+    ["s.debut >= DATE '2026-01-01'", []],
+    ['s.id NOT IN (1, 2) AND NOT s.annulee', []],
+    ['s.prix IS NOT NULL', []],
+  ])(
+    'name the tables of the statement where a column named like a keyword is compared: %s',
+    (condition, tables) => {
+      const recorded = toRecordedStatement(
+        `SELECT * FROM seance s WHERE ${condition}`,
+        MySQL
+      );
+
+      expect(recorded?.blocks.at(-1)?.tables).toEqual(tables);
+    }
+  );
+
   test('name no table for the type of a PostgreSQL cast', () => {
     const recorded = toRecordedStatement(
       "SELECT * FROM article a WHERE a.meta::jsonb = '{}'",
