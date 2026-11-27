@@ -50,12 +50,12 @@ export default {
   'editor.title': 'SQL editor',
   'editor.meta': 'Monaco, the editor of VS Code',
   'editor.lead':
-    'It knows the grammar of your engine and the schema of your database, so it does more than colour keywords.',
+    'It knows the grammar of your engine, PostgreSQL’s standing in for SQLite, and the schema of your database, so it does more than colour keywords.',
   'editor.items': [
     'Completes tables, columns and aliases. After <code>a.</code>, you get that table’s columns and nothing else.',
     'Completing a table in <code>FROM</code> or <code>JOIN</code> writes its alias, and the <code>ON</code> clause when a foreign key links it to a table already in the query.',
     'Suggests only the keywords that are valid at the caret.',
-    'Underlines syntax errors as you type, and warns on unknown columns like <code>u.emial</code>. Never on valid SQL.',
+    'Underlines syntax errors as you type, except on SQLite, and warns on unknown columns like <code>u.emial</code>. Never on valid SQL.',
     'Runs the statement under the caret, or all of them in order, stopping at the first error.',
   ],
   'editor.label': 'SQL query with the completion list open after a.',
