@@ -176,10 +176,9 @@ describe('a statement left out of the history', () => {
   });
 
   test('is not one touching a column named password', () => {
-    // `password` is a keyword of the MySQL lexer, hence upper case in the shape
     expect(
       shapeOf("UPDATE utilisateur SET password = '$2y$10$abc' WHERE id = 3")
-    ).toBe('UPDATE utilisateur SET PASSWORD = ? WHERE id = ?');
+    ).toBe('UPDATE utilisateur SET password = ? WHERE id = ?');
   });
 
   test('holds no code', () => {
