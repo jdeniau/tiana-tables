@@ -9,7 +9,7 @@ import {
 } from '../../../sql/splitStatements';
 import { SQL_LANGUAGES } from './language';
 import { getQueryPrefix, prefixedValue } from './queryPrefix';
-import useQueryHistory from './useQueryHistory';
+import useQueryHistory, { useRecentRuns } from './useQueryHistory';
 
 const NO_CONTINUATION = new HistoryContinuation({ runs: [], blocks: [] });
 
@@ -17,10 +17,14 @@ function toContinuation(content: QueryHistoryContent): HistoryContinuation {
   return new HistoryContinuation(content);
 }
 
-/** what the history ran after the statement the caret ends, shown past the caret */
+function toRecentContinuation(runs: Array<string>): HistoryContinuation {
+  return new HistoryContinuation({ runs, blocks: [] });
+}
+
+/** what the history ran after the statement the caret ends, shown past the caret: the first continuation that has one wins */
 export function buildGhostTextProvider(
   engine: DatabaseEngine,
-  continuation: HistoryContinuation
+  continuations: ReadonlyArray<HistoryContinuation>
 ): languages.InlineCompletionsProvider {
   return {
     provideInlineCompletions(model, position) {
@@ -35,9 +39,12 @@ export function buildGhostTextProvider(
       const endsStatement =
         statement !== undefined &&
         content.slice(caret, statement.end).replace(/;$/, '').trim() === '';
-      const text = endsStatement
-        ? continuation.after(content.slice(statement.start, caret), engine)
-        : null;
+      const typed = endsStatement ? content.slice(statement.start, caret) : '';
+      let text: string | null = null;
+
+      for (const continuation of typed ? continuations : []) {
+        text ??= continuation.after(typed, engine);
+      }
       // Monaco shows a text on several lines only from the end of a line
       const fits =
         !text?.includes('\n') ||
@@ -68,15 +75,18 @@ export function buildGhostTextProvider(
 /** the ghost text: what the history of the database ran after what is typed */
 export default function useGhostText(): void {
   const continuation = useQueryHistory(toContinuation) ?? NO_CONTINUATION;
+  // rebuilt at each run, while the history is rebuilt only when it loads again
+  const recent = useRecentRuns(toRecentContinuation);
 
   useEffect(() => {
+    const continuations = recent ? [recent, continuation] : [continuation];
     const providers = SQL_LANGUAGES.map(([engine, language]) =>
       languages.registerInlineCompletionsProvider(
         language,
-        buildGhostTextProvider(engine, continuation)
+        buildGhostTextProvider(engine, continuations)
       )
     );
 
     return () => providers.forEach((provider) => provider.dispose());
-  }, [continuation]);
+  }, [recent, continuation]);
 }

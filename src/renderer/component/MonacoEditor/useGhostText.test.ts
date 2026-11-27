@@ -26,7 +26,8 @@ const CONTINUATION = new HistoryContinuation({
 /** `|` marks the caret; `queryPrefix` is the query the editor holds the end of, as in the table filter */
 function ghostTextAt(
   sqlWithCaret: string,
-  queryPrefix?: string
+  queryPrefix?: string,
+  continuations = [CONTINUATION]
 ): Array<string> {
   const caret = sqlWithCaret.indexOf('|');
   const before = sqlWithCaret.slice(0, caret);
@@ -40,7 +41,7 @@ function ghostTextAt(
   try {
     const result = buildGhostTextProvider(
       DatabaseEngine.MySQL,
-      CONTINUATION
+      continuations
     ).provideInlineCompletions(
       model,
       new Position(before.split('\n').length, caret - before.lastIndexOf('\n')),
@@ -75,5 +76,19 @@ describe('the ghost text', () => {
 
     expect(ghostTextAt('s|', filter)).toEqual([]);
     expect(ghostTextAt('|', filter)).toEqual(['`lecture`.lu = 1']);
+  });
+
+  it('proposes the texts that ran since the history loaded before the history', () => {
+    const recent = new HistoryContinuation({
+      runs: ['SELECT * FROM livre'],
+      blocks: [],
+    });
+
+    expect(
+      ghostTextAt('SELECT * FROM |', undefined, [recent, CONTINUATION])
+    ).toEqual(['livre']);
+    expect(
+      ghostTextAt('DELETE FROM lecture|', undefined, [recent, CONTINUATION])
+    ).toEqual(['\nWHERE id = ?']);
   });
 });

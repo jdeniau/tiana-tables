@@ -265,22 +265,38 @@ describe('action', () => {
     }
   );
 
-  test('adds the text that ran to what the editor learnt, between two refreshes', async () => {
+  test('adds the text that ran to the recent runs between two refreshes, the history left as it is', async () => {
     const queryClient = createQueryClient();
     const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
+    const recent = queryKeys.recentRuns('connectionSlug', 'shop');
+    const content = { runs: ['SELECT * FROM article', 'SELECT 1'], blocks: [] };
 
-    queryClient.setQueryData(learnt, {
-      runs: ['SELECT * FROM article', 'SELECT 1'],
-      blocks: [],
-    });
+    queryClient.setQueryData(learnt, content);
+    queryClient.setQueryData(recent, ['SELECT 2', 'SELECT 1']);
     vi.mocked(window.queryHistory.record).mockResolvedValue(101);
 
     await runAction('shop', 'SELECT 1', { queryClient });
 
-    expect(queryClient.getQueryData(learnt)).toEqual({
-      runs: ['SELECT 1', 'SELECT * FROM article'],
+    expect(queryClient.getQueryData(recent)).toEqual(['SELECT 1', 'SELECT 2']);
+    expect(queryClient.getQueryData(learnt)).toBe(content);
+  });
+
+  test('forgets the recent runs once the history loads again', async () => {
+    const queryClient = createQueryClient();
+    const recent = queryKeys.recentRuns('connectionSlug', 'shop');
+
+    queryClient.setQueryData(queryKeys.queryHistory('connectionSlug', 'shop'), {
+      runs: [],
       blocks: [],
     });
+    queryClient.setQueryData(recent, ['SELECT 2']);
+    vi.mocked(window.queryHistory.record).mockResolvedValue(120);
+
+    await runAction('shop', 'SELECT 1', { queryClient });
+
+    await vi.waitFor(() =>
+      expect(queryClient.getQueryData(recent)).toEqual([])
+    );
   });
 
   test('answers what ran even when the history cannot record it', async () => {

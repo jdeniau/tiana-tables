@@ -32,3 +32,22 @@ export default function useQueryHistory<T>(
   return useQuery(queryHistoryQuery(currentConnectionSlug, database, select))
     .data;
 }
+
+/** The texts run on the current database since its history last loaded, through `select`, as `useQueryHistory`. */
+export function useRecentRuns<T>(
+  select: (runs: Array<string>) => T
+): T | undefined {
+  const { currentConnectionSlug } = useConnectionContext();
+  const { database } = useDatabaseContext();
+
+  return useQuery(
+    queryOptions<Array<string>, Error, T>({
+      queryKey: queryKeys.recentRuns(
+        currentConnectionSlug ?? '',
+        database ?? ''
+      ),
+      queryFn: skipToken,
+      select,
+    })
+  ).data;
+}

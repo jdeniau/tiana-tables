@@ -33,6 +33,10 @@ export const queryKeys = {
   queryHistory: (connectionSlug: string, database: string) =>
     [connectionSlug, database, 'queryHistory'] as const,
 
+  /** the texts run on a database since its history last loaded, most recent first: written by the SQL page's action, never fetched */
+  recentRuns: (connectionSlug: string, database: string) =>
+    [connectionSlug, database, 'recentRuns'] as const,
+
   /** the last run of the SQL page: written by its action, never fetched */
   sqlResult: (connectionSlug: string, database: string) =>
     [connectionSlug, database, 'sqlResult'] as const,
