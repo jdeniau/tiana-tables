@@ -26,7 +26,7 @@ const OPENING_WORDS: ReadonlyMap<string, Clause> = new Map([
   ['LIMIT', Clause.Limit],
 ]);
 
-/** the words before a `JOIN` that make it take no `ON`, which every join of the history has */
+/** the words before a `JOIN` that make it take no `ON`: no join of the history follows one, nor is one */
 const JOINS_WITHOUT_CONDITION: ReadonlySet<string> = new Set([
   'NATURAL',
   'CROSS',
@@ -77,20 +77,27 @@ export class HistoryContinuation {
         return [{ block, joined: undefined, reads: new Set(), exact: false }];
       }
 
+      const exact = namesBareColumn(words, tables, block.shape.split(' '));
+
       if (block.clause === Clause.Join) {
+        if (JOINS_WITHOUT_CONDITION.has(words[0]?.toUpperCase() ?? '')) {
+          return [];
+        }
+
         const joined = joinedTable(words, tables);
 
         return [
           {
             block,
             joined,
-            reads: qualifiers(words, tables).difference(new Set([joined])),
-            exact: false,
+            // `USING ( commande_id )` names columns that only the tables of its statement hold
+            reads: (exact ? tables : qualifiers(words, tables)).difference(
+              new Set([joined])
+            ),
+            exact,
           },
         ];
       }
-
-      const exact = namesBareColumn(words, tables, block.shape.split(' '));
 
       return [
         {

@@ -153,6 +153,39 @@ describe('a clause of the history', () => {
     expect(blockAfter('SELECT * FROM article a CROSS JOIN ')).toBeNull();
   });
 
+  it('proposes neither a join that took no condition, nor one on a bare column of other tables', () => {
+    const continuation = new HistoryContinuation({
+      runs: [],
+      blocks: [
+        ...blocksOf(
+          'SELECT * FROM commande co JOIN ligne_commande lc USING (commande_id)',
+          5
+        ),
+        ...blocksOf('SELECT * FROM article a CROSS JOIN tag t', 4),
+        ...blocksOf('SELECT * FROM commande NATURAL JOIN ligne_commande', 3),
+        ...blocksOf(
+          'SELECT * FROM article a JOIN commentaire c ON c.article_id = a.id',
+          2
+        ),
+      ],
+    });
+    const after = (typed: string): string | null =>
+      continuation.after(typed, DatabaseEngine.MySQL);
+
+    expect(after('SELECT * FROM article a JOIN ')).toBe(
+      'commentaire c ON c.article_id = a.id'
+    );
+    expect(after('SELECT * FROM commande x JOIN ')).toBe(
+      'ligne_commande lc USING (commande_id)'
+    );
+    expect(
+      after(
+        'SELECT * FROM commande x JOIN client cl ON cl.id = x.client_id JOIN '
+      )
+    ).toBeNull();
+    expect(after('SELECT * FROM utilisateur u LEFT JOIN ')).toBeNull();
+  });
+
   it('renames the joined table when the query already uses its alias', () => {
     expect(
       blockAfter(
