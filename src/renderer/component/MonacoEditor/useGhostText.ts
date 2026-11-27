@@ -8,6 +8,7 @@ import {
   statementAtOffset,
 } from '../../../sql/splitStatements';
 import { SQL_LANGUAGES } from './language';
+import { getQueryPrefix, prefixedValue } from './queryPrefix';
 import useQueryHistory from './useQueryHistory';
 
 const NO_CONTINUATION = new HistoryContinuation({ runs: [], blocks: [] });
@@ -23,8 +24,9 @@ export function buildGhostTextProvider(
 ): languages.InlineCompletionsProvider {
   return {
     provideInlineCompletions(model, position) {
-      const content = model.getValue();
-      const caret = model.getOffsetAt(position);
+      // the table filter holds the body of a `WHERE`: its query starts with the prefix
+      const content = prefixedValue(model);
+      const caret = getQueryPrefix(model).length + model.getOffsetAt(position);
       const statement = statementAtOffset(
         splitStatements(content, engine),
         caret

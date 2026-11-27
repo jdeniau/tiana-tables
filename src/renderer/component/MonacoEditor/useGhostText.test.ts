@@ -6,21 +6,36 @@ import { LanguageIdEnum } from 'monaco-sql-languages';
 import { describe, expect, it } from 'vitest';
 import { DatabaseEngine } from '../../../sql/engine';
 import { HistoryContinuation } from '../../../sql/history/HistoryContinuation';
+import { Clause } from '../../../sql/history/recordedStatement';
+import { setQueryPrefix } from './queryPrefix';
 import { buildGhostTextProvider } from './useGhostText';
 
 const CONTINUATION = new HistoryContinuation({
   runs: ['SELECT * FROM lecture', 'DELETE FROM lecture\nWHERE id = ?'],
-  blocks: [],
+  blocks: [
+    {
+      clause: Clause.Where,
+      sql: 'WHERE l.lu = 1',
+      shape: 'WHERE lecture . lu = ?',
+      aliases: { l: 'lecture' },
+      runCount: 1,
+    },
+  ],
 });
 
-/** `|` marks the caret */
-function ghostTextAt(sqlWithCaret: string): Array<string> {
+/** `|` marks the caret; `queryPrefix` is the query the editor holds the end of, as in the table filter */
+function ghostTextAt(
+  sqlWithCaret: string,
+  queryPrefix?: string
+): Array<string> {
   const caret = sqlWithCaret.indexOf('|');
   const before = sqlWithCaret.slice(0, caret);
   const model = editor.createModel(
     sqlWithCaret.replace('|', ''),
     LanguageIdEnum.MYSQL
   );
+
+  setQueryPrefix(model, queryPrefix);
 
   try {
     const result = buildGhostTextProvider(
@@ -53,5 +68,12 @@ describe('the ghost text', () => {
   it('shows a text on several lines from the end of a line only', () => {
     expect(ghostTextAt('DELETE FROM lecture|')).toEqual(['\nWHERE id = ?']);
     expect(ghostTextAt('DELETE FROM lecture|  ')).toEqual([]);
+  });
+
+  it('reads the table filter as the end of the query it filters', () => {
+    const filter = 'SELECT * FROM `lecture` WHERE ';
+
+    expect(ghostTextAt('s|', filter)).toEqual([]);
+    expect(ghostTextAt('|', filter)).toEqual(['lecture.lu = 1']);
   });
 });
