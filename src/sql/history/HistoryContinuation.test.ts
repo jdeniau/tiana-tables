@@ -354,6 +354,27 @@ describe('a clause of the history', () => {
     expect(after('SELECT * FROM ')).toBe('article a');
   });
 
+  it('keeps the aliases a subquery of the clause declares', () => {
+    const after = (statement: string): string | null =>
+      new HistoryContinuation({ runs: [], blocks: blocksOf(statement) }).after(
+        'SELECT * FROM article x JOIN commentaire y ON y.article_id = x.id WHERE ',
+        DatabaseEngine.MySQL
+      );
+
+    expect(
+      after(
+        'SELECT * FROM article a WHERE EXISTS (SELECT 1 FROM commentaire c WHERE c.article_id = a.id)'
+      )
+    ).toBe('EXISTS (SELECT 1 FROM commentaire c WHERE c.article_id = x.id)');
+    expect(
+      after(
+        'SELECT * FROM article a WHERE EXISTS (SELECT 1 FROM blog.commentaire WHERE commentaire.article_id = a.id)'
+      )
+    ).toBe(
+      'EXISTS (SELECT 1 FROM blog.commentaire WHERE commentaire.article_id = x.id)'
+    );
+  });
+
   it('reads the tables of the query outside its subqueries', () => {
     const continuation = new HistoryContinuation({
       runs: [],

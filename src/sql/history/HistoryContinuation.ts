@@ -350,6 +350,7 @@ function rewrite(
       : declared;
   }
 
+  const ownAliases = subqueryAliases(tokens, words, tableOf);
   let text = '';
   let from = first.start;
 
@@ -358,7 +359,7 @@ function rewrite(
     const table = tableOf.get(word);
     let replacement: string | undefined;
 
-    if (index < start || table === undefined) {
+    if (index < start || table === undefined || ownAliases.has(word)) {
       continue;
     } else if (index === declaration && joinedAlias !== undefined) {
       replacement = joinedAlias;
@@ -382,4 +383,26 @@ function rewrite(
   }
 
   return (text + block.sql.slice(from)).trimEnd();
+}
+
+/** the aliases a subquery of the block declares, which stay its own: `EXISTS (SELECT 1 FROM commentaire c …)` */
+function subqueryAliases(
+  tokens: ReadonlyArray<SqlToken>,
+  words: ReadonlyArray<string>,
+  tableOf: ReadonlyMap<string, string>
+): Set<string> {
+  const declared = new Set<string>();
+  let depth = 0;
+
+  for (const [index, token] of tokens.entries()) {
+    const word = unquote(token.text ?? '');
+
+    depth += word === '(' ? 1 : word === ')' ? -1 : 0;
+
+    if (depth > 0 && tableOf.has(word) && words[index + 1] !== '.') {
+      declared.add(word);
+    }
+  }
+
+  return declared;
 }
