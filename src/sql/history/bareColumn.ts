@@ -17,6 +17,14 @@ export function tablesOf(aliases: Record<string, string>): Set<string> {
 /** the comparisons that make a reserved word before them a column: `WHERE date > ?`, unlike `DATE '2026-01-01'` */
 const COMPARISON = /^(?:[<>=!]+|in|is|like|ilike|between)$/;
 
+/** what ends a key of an `ORDER BY` or a `GROUP BY`, `undefined` for the end of the clause */
+const AFTER_KEY: ReadonlySet<string | undefined> = new Set([
+  ',',
+  'asc',
+  'desc',
+  undefined,
+]);
+
 /** whether a clause names a column without its table, `written` holding its words as the shape writes them */
 export function namesBareColumn(
   words: ReadonlyArray<string>,
@@ -26,7 +34,9 @@ export function namesBareColumn(
   return words.some(
     (_, index) =>
       // `date` may be the keyword of `DATE '2026-01-01'`, `` `date` `` is a column
-      (!isReservedKeyword(written[index] ?? '') || isCompared(words, index)) &&
+      (!isReservedKeyword(written[index] ?? '') ||
+        isCompared(words, index) ||
+        isKey(words, index)) &&
       isBareName(words, index, tables)
   );
 }
@@ -36,6 +46,15 @@ function isCompared(words: ReadonlyArray<string>, index: number): boolean {
   const next = words[index + 1] === 'not' ? words[index + 2] : words[index + 1];
 
   return words[index] !== 'not' && COMPARISON.test(next ?? '');
+}
+
+/** whether the word at `index` is a whole key of an `ORDER BY` or a `GROUP BY`: `ORDER BY date DESC`, unlike `ORDER BY CASE WHEN …` */
+function isKey(words: ReadonlyArray<string>, index: number): boolean {
+  return (
+    ['order', 'group'].includes(words[0] ?? '') &&
+    ['by', ','].includes(words[index - 1] ?? '') &&
+    AFTER_KEY.has(words[index + 1])
+  );
 }
 
 /** whether the word at `index` is a name without its table: neither a table, a function, an alias nor a type */

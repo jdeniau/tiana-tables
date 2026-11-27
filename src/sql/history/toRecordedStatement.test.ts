@@ -138,6 +138,36 @@ describe('the clauses of a SELECT', () => {
   );
 
   test.each([
+    ['SELECT * FROM seance s ORDER BY date DESC', ['seance']],
+    ['SELECT * FROM seance s ORDER BY s.id, position', ['seance']],
+    ['SELECT * FROM seance s GROUP BY year', ['seance']],
+    ['SELECT * FROM seance s ORDER BY s.prix DESC', []],
+    [
+      'SELECT * FROM seance s ORDER BY CASE WHEN s.annulee THEN 1 ELSE 0 END',
+      [],
+    ],
+  ])(
+    'name the tables of the statement where a column named like a keyword is a key of the order or the grouping: %s',
+    (sql, tables) => {
+      const recorded = toRecordedStatement(sql, MySQL);
+
+      expect(recorded?.blocks.at(-1)?.tables).toEqual(tables);
+    }
+  );
+
+  test('name no table for a keyword the list of a SELECT ends on', () => {
+    const recorded = toRecordedStatement(
+      'SELECT s.titre, CURRENT_DATE FROM seance s',
+      MySQL
+    );
+
+    expect(recorded?.blocks[0]).toMatchObject({
+      clause: Clause.Select,
+      tables: [],
+    });
+  });
+
+  test.each([
     ['SELECT * FROM seance s ORDER BY `date` DESC', MySQL],
     ['SELECT * FROM seance s ORDER BY "user"', PostgreSQL],
   ])(
