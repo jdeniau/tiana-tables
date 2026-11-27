@@ -346,7 +346,7 @@ describe('loading a history', () => {
   const where = (sql: string, shape: string) => ({
     ...statement(`SELECT * FROM article a ${sql}`, shape),
     aliases: { a: 'article' },
-    blocks: [{ clause: Clause.Where, sql, shape }],
+    blocks: [{ clause: Clause.Where, sql, shape, tables: [] }],
   });
 
   test('holds the clauses run on that database by every connection of the group', () => {

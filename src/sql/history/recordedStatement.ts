@@ -34,7 +34,7 @@ export type RecordedStatement = {
 };
 
 /** A clause as the history keeps it: as it last ran, and how many times its shape did. */
-export type HistoryBlock = RecordedBlock & {
+export type HistoryBlock = Omit<RecordedBlock, 'tables'> & {
   /** the tables the aliases of `sql` stand for */
   aliases: Record<string, string>;
   runCount: number;
