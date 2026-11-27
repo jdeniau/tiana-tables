@@ -184,6 +184,8 @@ function record(
       .where(and(eq(run.statementId, id), notInArray(run.id, latestRuns)))
       .run();
 
+    const tables = [...new Set(Object.values(recorded.aliases))].sort();
+
     for (const { clause, shape, sql: text } of recorded.blocks) {
       tx.insert(block)
         .values({
@@ -191,6 +193,7 @@ function record(
           databaseName,
           clause,
           shape,
+          tables,
           sql: text,
           aliases: recorded.aliases,
           runCount: 1,
@@ -202,6 +205,7 @@ function record(
             block.databaseName,
             block.clause,
             block.shape,
+            block.tables,
           ],
           set: {
             runCount: sql`${block.runCount} + 1`,
@@ -236,4 +240,10 @@ export function bindIpcMainQueryHistory(ipcMain: Electron.IpcMain): void {
   ipcMain.handle(QUERY_HISTORY_CHANNEL.CLEAR, () => clear());
 }
 
-export const testables = { record, applyRetention, openHistory, clear };
+export const testables = {
+  record,
+  applyRetention,
+  openHistory,
+  clear,
+  migrations,
+};

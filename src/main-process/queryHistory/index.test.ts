@@ -2,6 +2,8 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { drizzle } from 'drizzle-orm/node-sqlite';
+import { migrateSync } from 'drizzle-orm/sqlite-core/async/session';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { getConfiguration } from '../../configuration';
 import type { Configuration } from '../../configuration/type';
@@ -18,7 +20,7 @@ vi.mock('../../configuration/filePaths', () => ({
   getConfigurationFolder: () => folder.path,
 }));
 
-const { record, applyRetention, openHistory, clear } = testables;
+const { record, applyRetention, openHistory, clear, migrations } = testables;
 
 const groups: Record<string, string | undefined> = {
   'client-a-prod': 'Client A',
@@ -163,6 +165,66 @@ describe('recording a statement', () => {
         aliases: '{"art":"article","auteur":"auteur"}',
         run_count: 2,
       },
+    ]);
+  });
+
+  test('counts a clause apart on each set of tables, whose shape names none', () => {
+    const byId = (table: string) => ({
+      ...statement(`SELECT * FROM ${table} WHERE id = 3`, ''),
+      aliases: { [table]: table },
+      blocks: [
+        { clause: Clause.Where, sql: 'WHERE id = 3', shape: 'WHERE id = ?' },
+      ],
+    });
+
+    record('solo', 'blog', byId('article'), 1);
+    record('solo', 'blog', byId('article'), 2);
+    record('solo', 'blog', byId('commentaire'), 3);
+
+    expect(rows('SELECT tables, aliases, run_count FROM block')).toEqual([
+      { tables: '["article"]', aliases: '{"article":"article"}', run_count: 2 },
+      {
+        tables: '["commentaire"]',
+        aliases: '{"commentaire":"commentaire"}',
+        run_count: 1,
+      },
+    ]);
+  });
+
+  test('counts on the clauses of a history written before their tables were kept', () => {
+    const path = join(folder.path, 'history.sqlite');
+    const db = drizzle({ client: new DatabaseSync(path) });
+
+    migrateSync(migrations().slice(0, 1), db._.session);
+    db.$client.exec(
+      `INSERT INTO block (history, database_name, clause, shape, sql, aliases, run_count, last_run_at)
+       VALUES ('connection:solo', 'blog', 'join', 'JOIN auteur ON auteur . id = article . auteur_id',
+         'JOIN auteur au ON au.id = a.auteur_id', '{"a":"article","au":"auteur"}', 4, 1)`
+    );
+    db.$client.close();
+
+    record(
+      'solo',
+      'blog',
+      {
+        ...statement(
+          'SELECT * FROM article JOIN auteur ON auteur.id = article.auteur_id',
+          ''
+        ),
+        aliases: { auteur: 'auteur', article: 'article' },
+        blocks: [
+          {
+            clause: Clause.Join,
+            sql: 'JOIN auteur ON auteur.id = article.auteur_id',
+            shape: 'JOIN auteur ON auteur . id = article . auteur_id',
+          },
+        ],
+      },
+      2
+    );
+
+    expect(rows('SELECT tables, run_count FROM block')).toEqual([
+      { tables: '["article","auteur"]', run_count: 5 },
     ]);
   });
 
