@@ -11,6 +11,8 @@ import { useTableListContext } from '../../../contexts/TableListContext';
 import { ColumnDetailHelper } from '../../../sql/ColumnDetailHelper';
 import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
 import type { DatabaseEngine } from '../../../sql/engine';
+import { HistoryUsage } from '../../../sql/history/HistoryUsage';
+import type { QueryHistoryContent } from '../../../sql/history/recordedStatement';
 import { getParser } from '../../../sql/parser';
 import {
   splitStatements,
@@ -28,6 +30,7 @@ import {
   prefixedValue,
   toPrefixedPosition,
 } from './queryPrefix';
+import useQueryHistory from './useQueryHistory';
 import useQuerySchema from './useQuerySchema';
 
 /*
@@ -47,11 +50,18 @@ for (const [, language] of SQL_LANGUAGES) {
 
 type CompletionRange = languages.CompletionItem['range'];
 
+const NO_USAGE = new HistoryUsage([]);
+
+function toUsage({ blocks }: QueryHistoryContent): HistoryUsage {
+  return new HistoryUsage(blocks);
+}
+
 export function buildCompletionProvider(
   engine: DatabaseEngine,
   tableList: Array<string>,
   foreignKeys: ForeignKeysHelper,
-  allColumns: ColumnDetailHelper
+  allColumns: ColumnDetailHelper,
+  usage: HistoryUsage
 ): languages.CompletionItemProvider {
   return {
     triggerCharacters: [' ', '.'],
@@ -96,7 +106,7 @@ export function buildCompletionProvider(
       if (qualifier) {
         return {
           suggestions: qualifiedTable
-            ? columnCompletions(allColumns, [qualifiedTable], range)
+            ? columnCompletions(allColumns, [qualifiedTable], range, usage)
             : [],
         };
       }
@@ -106,7 +116,13 @@ export function buildCompletionProvider(
       for (const { syntaxContextType } of suggestions.syntax) {
         if (syntaxContextType === EntityContextType.TABLE) {
           items.push(
-            ...tableCompletions(tableList, foreignKeys, tableAliases, range)
+            ...tableCompletions(
+              tableList,
+              foreignKeys,
+              tableAliases,
+              range,
+              usage
+            )
           );
         }
 
@@ -115,7 +131,8 @@ export function buildCompletionProvider(
             ...columnCompletions(
               allColumns,
               [...new Set(Object.values(tableAliases))],
-              range
+              range,
+              usage
             )
           );
         }
@@ -139,13 +156,15 @@ export function buildCompletionProvider(
   };
 }
 
-/** `FROM ` / `JOIN `: propose every table, aliased and joined when possible */
+/** `FROM ` / `JOIN `: propose every table, aliased and joined when possible, the most joined to the query's tables first, then the most read */
 function tableCompletions(
   tableList: Array<string>,
   foreignKeys: ForeignKeysHelper,
   tableAliases: Record<string, string>,
-  range: CompletionRange
+  range: CompletionRange,
+  usage: HistoryUsage
 ): Array<languages.CompletionItem> {
+  const queryTables = new Set(Object.values(tableAliases));
   const usedAliases = Object.keys(tableAliases);
   const usedTables = Object.entries(tableAliases).map(([alias, tableName]) => ({
     tableName,
@@ -162,13 +181,21 @@ function tableCompletions(
         }.${foreignKey.columnName} `
       : '';
 
+    // a table the query reads is joined already
+    const joins = queryTables.has(table)
+      ? 0
+      : [...queryTables].reduce(
+          (total, queryTable) => total + usage.ofJoin(table, queryTable),
+          0
+        );
+
     return {
       label: table,
       detail: foreignKey?.referencedTableName ?? undefined,
       kind: languages.CompletionItemKind.Variable,
       insertText: `${table} ${alias} ${joinString}`,
       range,
-      sortText: `1${table}`,
+      sortText: `1${mostUsedFirst(joins, usage.ofTable(table))}${table}`,
     };
   });
 }
@@ -201,10 +228,12 @@ function qualifierBefore(
   );
 }
 
+/** the columns of the tables, the most used first */
 function columnCompletions(
   allColumns: ColumnDetailHelper,
   tableNames: ReadonlyArray<string>,
-  range: CompletionRange
+  range: CompletionRange,
+  usage: HistoryUsage
 ): Array<languages.CompletionItem> {
   return tableNames.flatMap((tableName) =>
     allColumns
@@ -215,9 +244,26 @@ function columnCompletions(
         kind: languages.CompletionItemKind.Field,
         detail: tableName,
         range,
-        sortText: `1${column.name}`,
+        sortText: `1${mostUsedFirst(usage.ofColumn(tableName, column.name))}${column.name}`,
       }))
   );
+}
+
+const MOST_USES = 999_999_999;
+
+/**
+ * A `sortText` prefix ranking the most used first, each count deciding when the ones before it are equal.
+ * Monaco compares `sortText` as text, among the items the typed word matches equally well.
+ */
+function mostUsedFirst(...counts: ReadonlyArray<number>): string {
+  return counts
+    .map((count) =>
+      String(MOST_USES - Math.min(count, MOST_USES)).padStart(
+        String(MOST_USES).length,
+        '0'
+      )
+    )
+    .join('');
 }
 
 const MARKER_OWNER = 'sql-syntax';
@@ -315,17 +361,24 @@ export default function useCompletion(): void {
   const foreignKeys = useForeignKeysContext();
   const allColumns = useAllColumnsContext();
   const schema = useQuerySchema();
+  const usage = useQueryHistory(toUsage) ?? NO_USAGE;
 
   useEffect(() => {
     const providers = SQL_LANGUAGES.map(([engine, language]) =>
       languages.registerCompletionItemProvider(
         language,
-        buildCompletionProvider(engine, tableList, foreignKeys, allColumns)
+        buildCompletionProvider(
+          engine,
+          tableList,
+          foreignKeys,
+          allColumns,
+          usage
+        )
       )
     );
 
     return () => providers.forEach((provider) => provider.dispose());
-  }, [allColumns, foreignKeys, tableList]);
+  }, [allColumns, foreignKeys, tableList, usage]);
 
   // an effect event: the schema changes identity on every render of its
   // provider, and rebuilding the watchers would reset their debounce each time

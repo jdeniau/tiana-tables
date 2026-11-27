@@ -30,6 +30,7 @@
     "chromatic": "npx chromatic",
     "prepare": "husky",
     "knip": "knip",
+    "history:generate": "drizzle-kit generate",
     "website": "vite website",
     "website:build": "vite build website",
     "release": "dev/release.sh"
@@ -58,6 +59,7 @@
     "advanced-mark.js": "^3.0.0",
     "antd": "^6.6.5",
     "compare-versions": "^6.1.1",
+    "drizzle-orm": "1.0.0-rc.5",
     "dt-sql-parser": "^4.5.0",
     "electron-log": "^5.4.4",
     "electron-squirrel-startup": "^1.0.1",
@@ -115,6 +117,7 @@
     "@vitest/coverage-v8": "^5.0.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "chromatic": "^18.11.0",
+    "drizzle-kit": "1.0.0-rc.5",
     "electron": "^44.5.1",
     "electron-devtools-installer": "^4.0.0",
     "eslint": "^10.12.0",

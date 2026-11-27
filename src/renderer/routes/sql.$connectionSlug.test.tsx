@@ -2,16 +2,18 @@
  * @vitest-environment happy-dom
  */
 import { act } from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider, QueryObserver } from '@tanstack/react-query';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { DatabaseEngine } from '../../sql/engine';
+import type { QueryHistoryContent } from '../../sql/history/recordedStatement';
 import { RunMode } from '../../sql/runMode';
 import type { SqlError } from '../../sql/sqlError';
 import { createQueryClient } from '../queryClient';
+import { queryKeys } from '../queryKeys';
 import SqlPage, { action } from './sql.$connectionSlug';
 
 // the page alone: Monaco, the result grid and the contexts they read stay out
@@ -86,6 +88,12 @@ describe('action', () => {
       executeQuery: vi.fn(() => Promise.resolve([[], []])),
     };
 
+    window.queryHistory = {
+      record: vi.fn(() => Promise.resolve(1)),
+      load: vi.fn(),
+      clear: vi.fn(),
+    };
+
     // the action reads the engine of the connection to know how to spell `USE`
     window.config = {
       // @ts-expect-error only the connections are read here
@@ -104,6 +112,8 @@ describe('action', () => {
     window.sql = undefined;
     // @ts-expect-error same
     window.config = undefined;
+    // @ts-expect-error same
+    window.queryHistory = undefined;
   });
 
   test('escapes the database name of the USE it sends first', async () => {
@@ -185,6 +195,157 @@ describe('action', () => {
     ).toEqual({
       outcomes: [expect.objectContaining({ sql: 'SELECT 1' })],
     });
+  });
+
+  test('records in the history what ran, by its shape, and not what failed', async () => {
+    vi.mocked(window.sql.executeQuery).mockImplementation((query) =>
+      query.includes('nope')
+        ? Promise.reject(sqlError('Table `nope` does not exist'))
+        : Promise.resolve([[], []])
+    );
+
+    await runAction(
+      'shop',
+      'SELECT * FROM orders WHERE id = 3;\nSELECT * FROM nope;',
+      {
+        mode: RunMode.All,
+      }
+    );
+
+    expect(vi.mocked(window.queryHistory.record).mock.calls).toEqual([
+      [
+        'connectionSlug',
+        'shop',
+        expect.objectContaining({
+          sql: 'SELECT * FROM orders WHERE id = 3',
+          shape: 'SELECT * FROM orders WHERE id = ?',
+        }),
+      ],
+    ]);
+  });
+
+  test('refreshes what the editor learnt once the statement is recorded', async () => {
+    const queryClient = createQueryClient();
+    const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
+    const recorded = Promise.withResolvers<number>();
+
+    queryClient.setQueryData(learnt, { runs: [], blocks: [] });
+    vi.mocked(window.queryHistory.record).mockReturnValue(recorded.promise);
+
+    const answered = runAction('shop', 'SELECT 1', { queryClient });
+
+    await vi.waitFor(() =>
+      expect(window.queryHistory.record).toHaveBeenCalled()
+    );
+    expect(queryClient.getQueryState(learnt)?.isInvalidated).toBe(false);
+
+    recorded.resolve(1);
+    await answered;
+
+    expect(queryClient.getQueryState(learnt)?.isInvalidated).toBe(true);
+  });
+
+  test.each([
+    { runs: 99, reloaded: true },
+    { runs: 100, reloaded: true },
+    { runs: 101, reloaded: false },
+    { runs: 110, reloaded: false },
+    { runs: 120, reloaded: true },
+  ])(
+    'refreshes it at each run of a young history, then one run in twenty: $reloaded at $runs runs',
+    async ({ runs, reloaded }) => {
+      const queryClient = createQueryClient();
+      const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
+
+      queryClient.setQueryData(learnt, { runs: [], blocks: [] });
+      vi.mocked(window.queryHistory.record).mockResolvedValue(runs);
+
+      await runAction('shop', 'SELECT 1', { queryClient });
+
+      expect(queryClient.getQueryState(learnt)?.isInvalidated).toBe(reloaded);
+    }
+  );
+
+  test('adds the text that ran to the recent runs between two refreshes, the history left as it is', async () => {
+    const queryClient = createQueryClient();
+    const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
+    const recent = queryKeys.recentRuns('connectionSlug', 'shop');
+    const content = { runs: ['SELECT * FROM article', 'SELECT 1'], blocks: [] };
+
+    queryClient.setQueryData(learnt, content);
+    queryClient.setQueryData(recent, ['SELECT 2', 'SELECT 1']);
+    vi.mocked(window.queryHistory.record).mockResolvedValue(101);
+
+    await runAction('shop', 'SELECT 1', { queryClient });
+
+    expect(queryClient.getQueryData(recent)).toEqual(['SELECT 1', 'SELECT 2']);
+    expect(queryClient.getQueryData(learnt)).toBe(content);
+  });
+
+  test('forgets the recent runs once the history loads again', async () => {
+    const queryClient = createQueryClient();
+    const recent = queryKeys.recentRuns('connectionSlug', 'shop');
+
+    queryClient.setQueryData(queryKeys.queryHistory('connectionSlug', 'shop'), {
+      runs: [],
+      blocks: [],
+    });
+    queryClient.setQueryData(recent, ['SELECT 2']);
+    vi.mocked(window.queryHistory.record).mockResolvedValue(120);
+
+    await runAction('shop', 'SELECT 1', { queryClient });
+
+    await vi.waitFor(() =>
+      expect(queryClient.getQueryData(recent)).toEqual([])
+    );
+  });
+
+  test('keeps the recent runs recorded while the history loads again', async () => {
+    const queryClient = createQueryClient();
+    const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
+    const recent = queryKeys.recentRuns('connectionSlug', 'shop');
+    const load = Promise.withResolvers<QueryHistoryContent>();
+
+    queryClient.setQueryData(learnt, { runs: [], blocks: [] });
+
+    // the editor observes the history, which loads again once invalidated
+    const unsubscribe = new QueryObserver(queryClient, {
+      queryKey: learnt,
+      queryFn: () => load.promise,
+      staleTime: Infinity,
+    }).subscribe(() => {});
+
+    vi.mocked(window.queryHistory.record)
+      .mockResolvedValueOnce(120)
+      .mockResolvedValueOnce(121)
+      .mockResolvedValueOnce(122);
+
+    await runAction('shop', 'SELECT 1;\nSELECT 2;\nSELECT 3;', {
+      mode: RunMode.All,
+      queryClient,
+    });
+    load.resolve({ runs: ['SELECT 1'], blocks: [] });
+    await vi.waitFor(() => expect(queryClient.isFetching()).toBe(0));
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(queryClient.getQueryData(recent)).toEqual(['SELECT 3', 'SELECT 2']);
+
+    unsubscribe();
+  });
+
+  test('answers what ran even when the history cannot record it', async () => {
+    const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    vi.mocked(window.queryHistory.record).mockRejectedValue(
+      new Error('disk full')
+    );
+
+    await expect(runAction('shop', 'SELECT 1')).resolves.toEqual({
+      outcomes: [expect.objectContaining({ sql: 'SELECT 1' })],
+    });
+    expect(logError).toHaveBeenCalled();
+
+    logError.mockRestore();
   });
 
   test('sends nothing at all when the editor holds no statement', async () => {

@@ -13,6 +13,7 @@ import { PANEL } from '../../configuration/panels';
 import { useTranslation } from '../../i18n';
 import type { DatabaseEngine } from '../../sql/engine';
 import { hasLimitClause } from '../../sql/hasLimitClause';
+import { toRecordedStatement } from '../../sql/history/toRecordedStatement';
 import { RunMode, toRunMode } from '../../sql/runMode';
 import { splitStatements, statementAtOffset } from '../../sql/splitStatements';
 import { isSqlError } from '../../sql/sqlError';
@@ -89,6 +90,66 @@ async function runStatement(
   }
 }
 
+/** a history this young is loaded again at each run: one run can reorder what the editor proposes */
+const YOUNG_HISTORY_RUNS = 100;
+
+/** past it the order moves little and loading costs more: one run in twenty loads it again */
+const RUNS_BETWEEN_RELOADS = 20;
+
+/** whether the editor loads the history again, now that it holds this many runs */
+function isReloadDue(runs: number): boolean {
+  return runs < YOUNG_HISTORY_RUNS || runs % RUNS_BETWEEN_RELOADS === 0;
+}
+
+/** what the editor suggests is learnt from here: a statement that ran, never one that failed */
+async function recordInHistory(
+  queryClient: QueryClient,
+  connectionSlug: string,
+  databaseName: string,
+  sql: string,
+  engine: DatabaseEngine
+): Promise<void> {
+  // nothing the history does can fail a statement that ran
+  try {
+    const statement = toRecordedStatement(sql, engine);
+
+    if (statement) {
+      const runs = await window.queryHistory.record(
+        connectionSlug,
+        databaseName,
+        statement
+      );
+
+      const queryKey = queryKeys.queryHistory(connectionSlug, databaseName);
+      const recentKey = queryKeys.recentRuns(connectionSlug, databaseName);
+
+      if (isReloadDue(runs)) {
+        // the load holds the texts recorded so far, not those recorded while it runs
+        const loaded = new Set(
+          queryClient.getQueryData<Array<string>>(recentKey)
+        );
+
+        // not awaited: the results wait for the write, not for the editor to load it again
+        void queryClient
+          .invalidateQueries({ queryKey })
+          .then(() =>
+            queryClient.setQueryData<Array<string>>(recentKey, (recent = []) =>
+              recent.filter((text) => !loaded.has(text))
+            )
+          );
+      } else {
+        // the order waits for the next load, not the text: the ghost text proposes it at once
+        queryClient.setQueryData<Array<string>>(recentKey, (recent = []) => [
+          statement.sql,
+          ...recent.filter((text) => text !== statement.sql),
+        ]);
+      }
+    }
+  } catch (error) {
+    console.error('The statement was not recorded in the history', error);
+  }
+}
+
 /** the last run of the page: written by the action, never fetched, kept until the connection closes */
 function sqlResultQuery(connectionSlug: string, databaseName: string) {
   return queryOptions<SqlActionReturnTypes>({
@@ -110,7 +171,12 @@ export const action =
     invariant(connectionSlug, 'Connection slug is required');
     invariant(databaseName, 'Database name is required');
 
-    const result = await runEditor(request, connectionSlug, databaseName);
+    const result = await runEditor(
+      queryClient,
+      request,
+      connectionSlug,
+      databaseName
+    );
 
     queryClient.setQueryData(
       sqlResultQuery(connectionSlug, databaseName).queryKey,
@@ -121,6 +187,7 @@ export const action =
   };
 
 async function runEditor(
+  queryClient: QueryClient,
   request: Request,
   connectionSlug: string,
   databaseName: string
@@ -166,6 +233,14 @@ async function runEditor(
     if (outcome.error) {
       break;
     }
+
+    await recordInHistory(
+      queryClient,
+      connectionSlug,
+      databaseName,
+      sql,
+      dialect.engine
+    );
   }
 
   return { outcomes };

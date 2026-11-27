@@ -29,6 +29,9 @@ jobs:
       - run: corepack enable yarn
       - run: yarn install --immutable
       - run: yarn lint
+      # a change to the query history's schema ships with its migration, written by `yarn history:generate`
+      - name: Check the query history's migrations against its schema
+        run: yarn drizzle-kit generate --explain --output json | tee /dev/stderr | grep '"status":"no_changes"' > /dev/null
 
   knip:
     runs-on: ubuntu-latest

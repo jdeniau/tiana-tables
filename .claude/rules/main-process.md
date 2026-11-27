@@ -39,6 +39,10 @@ Credentials are encrypted with Electron's `safeStorage`, config in `src/configur
 - **`app.exit()` only posts the shutdown**: the code after it runs on, in a packaged build up to `createWindow()`, whose window state then saves a blank configuration. Quitting from a dialog of the startup throws (`QuitToFixConfigurationError`) and `whenReady` stops on it; a dev run hides the gap, since installing React DevTools yields first.
 - **The configuration file is not validated** (parsed with a cast). A missing or old field is decided in `loadConfiguration` (default engine, a port read with `Number()`), with no migration and no `version` bump.
 
+## Query history (`main-process/queryHistory/`)
+
+- **A migration `yarn history:generate` writes is read before it is committed**: drizzle-kit 1.0.0-rc.5 leaves out a change to the columns of a SQLite index, which its snapshot records all the same, so the CI check finds no change. The `DROP INDEX` / `CREATE UNIQUE INDEX`, and any `UPDATE` of the rows already there, are written into the generated `migration.sql`, and a test opens a history written by the migrations before it (`migrations().slice(0, n)`).
+
 ## Dev tooling (`installReactDevToolsExtension.ts`)
 
 - **`electron-devtools-installer` never refreshes its cache**: a re-download is forced when the cached `.crx` is older than 30 days.

@@ -1,8 +1,13 @@
-import { EntityContextType } from 'dt-sql-parser';
+import { type EntityContext, EntityContextType } from 'dt-sql-parser';
 import { AttrName } from 'dt-sql-parser/dist/parser/common/entityCollector';
 import type { DatabaseEngine } from './engine';
 import { SQL_RESERVED_KEYWORDS } from './keywords';
-import { collectEntities, getParser } from './parser';
+import {
+  CODE_CHANNEL,
+  type SqlParser,
+  collectEntities,
+  getParser,
+} from './parser';
 
 export function generateTableAlias(
   tableName: string,
@@ -75,7 +80,12 @@ export function unquote(name: string): string {
 
 /** `db1.t1` and `` `t1` `` both refer to the table `t1` */
 function unqualify(tableNamePath: string): TableName {
-  return unquote(tableNamePath.split('.').at(-1) ?? tableNamePath);
+  return unquote(lastSegment(tableNamePath));
+}
+
+/** `` db1.`t1` `` is `` `t1` `` once its database is left out */
+function lastSegment(tableNamePath: string): string {
+  return tableNamePath.split('.').at(-1) ?? tableNamePath;
 }
 
 /**
@@ -90,16 +100,54 @@ export function extractTableAliases(
   sql: string,
   engine: DatabaseEngine
 ): Record<Alias, TableName> {
-  const tables = collectEntities(getParser(engine), sql).filter(
+  return aliasesOf(tableEntities(getParser(engine), sql));
+}
+
+/**
+ * The tables of a query outside any parenthesis, those of a subquery being out of its scope,
+ * by what qualifies their columns: their alias, or their name as written, quotes kept (`"Article".statut`).
+ */
+export function extractOuterTableAliases(
+  sql: string,
+  engine: DatabaseEngine
+): Record<Alias, TableName> {
+  const parser = getParser(engine);
+  const parentheses = parser
+    .getAllTokens(sql)
+    .filter(
+      (token) =>
+        token.channel === CODE_CHANNEL &&
+        (token.text === '(' || token.text === ')')
+    );
+  const depthAt = (index: number): number =>
+    parentheses
+      .filter((token) => token.start < index)
+      .reduce((depth, token) => depth + (token.text === '(' ? 1 : -1), 0);
+
+  return aliasesOf(
+    tableEntities(parser, sql).filter(
+      (table) => depthAt(table.position.startIndex) === 0
+    ),
+    lastSegment
+  );
+}
+
+function tableEntities(parser: SqlParser, sql: string): Array<EntityContext> {
+  return collectEntities(parser, sql).filter(
     (entity) => entity.entityContextType === EntityContextType.TABLE
   );
+}
 
+/** by the alias of each table, or by `ownName` of its path when it has none */
+function aliasesOf(
+  tables: Array<EntityContext>,
+  ownName = unqualify
+): Record<Alias, TableName> {
   return Object.fromEntries(
     tables.map((table) => {
-      const tableName = unqualify(table.text);
       const alias = table[AttrName.alias]?.text;
 
-      return [alias ?? tableName, tableName];
+      return [alias ?? ownName(table.text), unqualify(table.text)];
     })
   );
 }

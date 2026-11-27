@@ -4,7 +4,10 @@ import {
   MySQL,
   PostgreSQL,
 } from 'dt-sql-parser';
+import { MySqlLexer } from 'dt-sql-parser/dist/lib/mysql/MySqlLexer';
+import { PostgreSqlLexer } from 'dt-sql-parser/dist/lib/postgresql/PostgreSqlLexer';
 import { DatabaseEngine } from '../engine';
+import { isReservedKeyword } from '../keywords';
 
 /** What the app asks of a grammar: the same four methods on every engine. */
 export type SqlParser = Pick<
@@ -51,6 +54,67 @@ const PARSERS: Record<DatabaseEngine, SqlParser> = {
 
 export function getParser(engine: DatabaseEngine): SqlParser {
   return PARSERS[engine];
+}
+
+/** A token of the content, as `getAllTokens` hands it. */
+export type SqlToken = ReturnType<SqlParser['getAllTokens']>[number];
+
+/**
+ * The channel the lexer puts SQL on. Whitespace and comments go to another
+ * one, which is what tells a separator from a `;` written in a comment.
+ */
+export const CODE_CHANNEL = 0;
+
+/** What a token of the content stands for, whatever the engine. */
+export enum TokenKind {
+  Keyword = 'keyword',
+  /** a value written in the query: a string, a number, a bit or hex string */
+  Literal = 'literal',
+  Other = 'other',
+}
+
+/** A dollar-quoted string is three tokens on PostgreSQL, each one a literal. */
+const LITERAL_TYPES: Record<DatabaseEngine, ReadonlySet<number>> = {
+  [DatabaseEngine.MySQL]: new Set([
+    MySqlLexer.STRING_LITERAL,
+    MySqlLexer.START_NATIONAL_STRING_LITERAL,
+    MySqlLexer.DECIMAL_LITERAL,
+    MySqlLexer.ZERO_DECIMAL,
+    MySqlLexer.ONE_DECIMAL,
+    MySqlLexer.TWO_DECIMAL,
+    MySqlLexer.THREE_DECIMAL,
+    MySqlLexer.REAL_LITERAL,
+    MySqlLexer.HEXADECIMAL_LITERAL,
+    MySqlLexer.BIT_STRING,
+  ]),
+  [DatabaseEngine.PostgreSQL]: new Set([
+    PostgreSqlLexer.StringConstant,
+    PostgreSqlLexer.EscapeStringConstant,
+    PostgreSqlLexer.UnicodeEscapeStringConstant,
+    PostgreSqlLexer.BeginDollarStringConstant,
+    PostgreSqlLexer.DollarText,
+    PostgreSqlLexer.EndDollarStringConstant,
+    PostgreSqlLexer.BinaryStringConstant,
+    PostgreSqlLexer.HexadecimalStringConstant,
+    PostgreSqlLexer.Integral,
+    PostgreSqlLexer.Numeric,
+  ]),
+};
+
+export function tokenKind(engine: DatabaseEngine, token: SqlToken): TokenKind {
+  // the MySQL lexer reads a backquoted name as a string literal
+  if (token.text?.startsWith('`')) {
+    return TokenKind.Other;
+  }
+
+  if (LITERAL_TYPES[engine].has(token.type)) {
+    return TokenKind.Literal;
+  }
+
+  // the lexers' own keywords take in a column named `password` or `name`
+  return isReservedKeyword(token.text ?? '')
+    ? TokenKind.Keyword
+    : TokenKind.Other;
 }
 
 /** an incomplete clause is a few tokens long, no need to trim further */

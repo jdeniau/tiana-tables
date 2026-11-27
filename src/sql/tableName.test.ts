@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import { DatabaseEngine } from './engine';
-import { extractTableAliases, generateTableAlias } from './tableName';
+import {
+  extractOuterTableAliases,
+  extractTableAliases,
+  generateTableAlias,
+} from './tableName';
 
 describe('tableName', () => {
   test.each([
@@ -110,5 +114,36 @@ describe('extractTableAliases', () => {
     ['SELECT * FROM t1 a; SELECT * FROM t2 b JOIN ', { a: 't1' }],
   ])('table aliases in unfinished query %j', (sql, expected) => {
     expect(extractTableAliases(sql, DatabaseEngine.MySQL)).toEqual(expected);
+  });
+});
+
+describe('extractOuterTableAliases', () => {
+  test.each([
+    [
+      'SELECT * FROM article a WHERE a.id IN (SELECT article_id FROM commentaire c) ORDER BY a.id',
+      { a: 'article' },
+    ],
+    [
+      'SELECT * FROM article a WHERE EXISTS (SELECT 1 FROM commentaire c WHERE c.article_id = a.id) ORDER BY a.id',
+      { a: 'article' },
+    ],
+    ["SELECT * FROM article a WHERE a.titre = '(' AND ", { a: 'article' }],
+  ])('table aliases outside parentheses %j', (sql, expected) => {
+    expect(extractOuterTableAliases(sql, DatabaseEngine.MySQL)).toEqual(
+      expected
+    );
+  });
+
+  test('names a table without alias as the query writes it, quotes kept', () => {
+    expect(
+      extractOuterTableAliases(
+        'SELECT * FROM `ligne-commande` JOIN blog.`Tag` ON 1 JOIN auteur',
+        DatabaseEngine.MySQL
+      )
+    ).toEqual({
+      '`ligne-commande`': 'ligne-commande',
+      '`Tag`': 'Tag',
+      auteur: 'auteur',
+    });
   });
 });
