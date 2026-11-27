@@ -63,7 +63,7 @@ const JOINS_WITHOUT_CONDITION: ReadonlySet<string> = new Set([
 ]);
 
 /** what ends the first `SELECT` of a compound one: only its clauses are recorded */
-const SET_OPERATORS: ReadonlySet<string> = new Set([
+export const SET_OPERATORS: ReadonlySet<string> = new Set([
   'UNION',
   'INTERSECT',
   'EXCEPT',

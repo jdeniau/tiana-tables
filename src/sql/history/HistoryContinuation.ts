@@ -12,7 +12,7 @@ import {
   type HistoryBlock,
   type QueryHistoryContent,
 } from './recordedStatement';
-import { clauseStarts } from './toRecordedStatement';
+import { SET_OPERATORS, clauseStarts } from './toRecordedStatement';
 
 /** the words a clause opens on, `JOIN` whatever its modifiers */
 const OPENING_WORDS: ReadonlyMap<string, Clause> = new Map([
@@ -154,7 +154,9 @@ export class HistoryContinuation {
   }
 
   private fromBlocks(typed: string, engine: DatabaseEngine): string | null {
-    const words = codeTokens(typed, engine).map(upperCase);
+    const tokens = codeTokens(typed, engine);
+    const start = lastSelect(tokens.map(upperCase));
+    const words = tokens.slice(start).map(upperCase);
     const clause = openedClause(words);
 
     if (
@@ -167,7 +169,10 @@ export class HistoryContinuation {
       return null;
     }
 
-    const aliases = extractOuterTableAliases(typed, engine);
+    const aliases = extractOuterTableAliases(
+      typed.slice(tokens[start]?.start),
+      engine
+    );
     const tables = tablesOf(aliases);
     const readsEachOnce = tables.size === Object.keys(aliases).length;
 
@@ -263,6 +268,25 @@ function openedClause(words: ReadonlyArray<string>): Clause | undefined {
     OPENING_WORDS.get(words.at(-1) ?? '') ??
     OPENING_WORDS.get(words.slice(-2).join(' '))
   );
+}
+
+/** where the last `SELECT` of a compound one starts, which sees only its own tables */
+function lastSelect(words: ReadonlyArray<string>): number {
+  let depth = 0;
+  let start = 0;
+
+  for (const [index, word] of words.entries()) {
+    depth += word === '(' ? 1 : word === ')' ? -1 : 0;
+
+    if (depth === 0 && SET_OPERATORS.has(word)) {
+      // `UNION ALL SELECT`
+      start = ['ALL', 'DISTINCT'].includes(words[index + 1] ?? '')
+        ? index + 2
+        : index + 1;
+    }
+  }
+
+  return start;
 }
 
 /** how many parentheses are still open: a subquery has its own tables */

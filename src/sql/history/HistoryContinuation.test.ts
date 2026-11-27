@@ -368,6 +368,31 @@ describe('a clause of the history', () => {
     ).toBeNull();
   });
 
+  it('reads only the tables of the last SELECT of a compound one', () => {
+    expect(
+      blockAfter(
+        'SELECT id FROM article a UNION SELECT id FROM brouillon b WHERE '
+      )
+    ).toBeNull();
+    expect(
+      blockAfter(
+        'SELECT id FROM article a UNION SELECT id FROM brouillon b JOIN '
+      )
+    ).toBeNull();
+    expect(
+      blockAfter(
+        'SELECT id FROM brouillon b UNION ALL SELECT id FROM article a WHERE '
+      )
+    ).toBe('a.statut = 1');
+    // on PostgreSQL: the MySQL parser loses `article` after a closed subquery
+    expect(
+      new HistoryContinuation({ runs: [], blocks: BLOCKS }).after(
+        'SELECT * FROM article a WHERE a.id IN (SELECT 1 UNION SELECT 2) ORDER BY ',
+        DatabaseEngine.PostgreSQL
+      )
+    ).toBe('a.vues DESC');
+  });
+
   it('reads no clause in the FROM of `IS DISTINCT FROM`', () => {
     expect(
       blockAfter('SELECT * FROM article a WHERE a.statut IS DISTINCT FROM ')
