@@ -310,6 +310,25 @@ describe('a clause of the history', () => {
     ).toBe('a.statut = 1');
   });
 
+  it('proposes no clause of a statement that read a table twice, but its FROM', () => {
+    const continuation = new HistoryContinuation({
+      runs: [],
+      blocks: [
+        ...blocksOf(
+          'SELECT * FROM article a JOIN article p ON p.id = a.parent_id WHERE p.statut = 1 AND a.statut = 0',
+          2
+        ),
+        ...blocksOf('SELECT * FROM article art WHERE art.statut = 1'),
+      ],
+    });
+    const after = (typed: string): string | null =>
+      continuation.after(typed, DatabaseEngine.MySQL);
+
+    expect(after('SELECT * FROM commentaire c JOIN ')).toBeNull();
+    expect(after('SELECT * FROM article x WHERE ')).toBe('x.statut = 1');
+    expect(after('SELECT * FROM ')).toBe('article a');
+  });
+
   it('reads the tables of the query outside its subqueries', () => {
     const continuation = new HistoryContinuation({
       runs: [],

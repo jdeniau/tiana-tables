@@ -77,6 +77,11 @@ export class HistoryContinuation {
         return [{ block, joined: undefined, reads: new Set(), exact: false }];
       }
 
+      // a self-join: the shape no longer tells which copy each alias stood for
+      if (tables.size !== Object.keys(block.aliases).length) {
+        return [];
+      }
+
       const exact = namesBareColumn(words, tables, block.shape.split(' '));
 
       if (block.clause === Clause.Join) {
