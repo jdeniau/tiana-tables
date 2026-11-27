@@ -53,6 +53,19 @@ const Edit = styled(ButtonLink)`
   }
 `;
 
+/**
+ * Cut at its start when the row is too narrow, since a file's name and a server's database come last.
+ * Positioned for its `title`, under the `a::before` antd stretches over the row.
+ */
+const Address = styled(RegionMeta)`
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+`;
+
 /** Where the connection leads: its file, or the account, server and database it opens. */
 function addressOf(connection: EncryptedConnectionObject): string {
   if (opensFile(connection)) {
@@ -62,6 +75,21 @@ function addressOf(connection: EncryptedConnectionObject): string {
   const { user, host, port, database } = connection;
 
   return `${user}@${host}:${port}${database ? `/${database}` : ''}`;
+}
+
+function ConnectionAddress({
+  connection,
+}: {
+  connection: EncryptedConnectionObject;
+}) {
+  const address = addressOf(connection);
+
+  return (
+    <Address title={address}>
+      {/* left to right inside the right-to-left box, or a path's leading `/` would end it */}
+      <bdi>{address}</bdi>
+    </Address>
+  );
 }
 
 /**
@@ -112,7 +140,7 @@ function ConnectionPage(): JSX.Element {
           </RegionGroup>
         ) : (
           <RegionGroup>
-            <RegionMeta>{addressOf(connection)}</RegionMeta>
+            <ConnectionAddress connection={connection} />
             <RegionMeta>
               <EngineIcon engine={connection.engine} />
             </RegionMeta>

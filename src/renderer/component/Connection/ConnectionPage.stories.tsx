@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { action } from 'storybook/actions';
+import { expect, waitFor, within } from 'storybook/test';
 import dataRouterDecorator from '../../../../.storybook/decorators/dataRouterDecorator';
 import { DEFAULT_LOCALE } from '../../../configuration/locale';
 import { DEFAULT_THEME } from '../../../configuration/themes';
@@ -10,6 +11,9 @@ import { Centered } from '../Style/Region';
 import ConnectionPage from './ConnectionPage';
 
 const { ConfigurationContext } = testables;
+
+const LONG_PATH =
+  '/home/me/Documents/projects/2026/field-notes/archive/notes.db';
 
 const meta: Meta<typeof ConnectionPage> = {
   component: ConnectionPage,
@@ -67,7 +71,7 @@ const meta: Meta<typeof ConnectionPage> = {
                 name: 'notes',
                 engine: DatabaseEngine.SQLite,
                 slug: 'notes',
-                file: '/home/me/notes/notes.db',
+                file: LONG_PATH,
               },
               'client-b': {
                 name: 'client B',
@@ -144,7 +148,36 @@ type Story = StoryObj<typeof ConnectionPage>;
  * See https://storybook.js.org/docs/api/csf
  * to learn how to use render functions.
  */
-export const Primary: Story = {};
+export const Primary: Story = {
+  // a path too long for its row is cut at its start: the file name stays in view, the logo in the row
+  play: async ({ canvasElement }) => {
+    const address = await waitFor(() =>
+      within(canvasElement).getByTitle(LONG_PATH)
+    );
+    const text = address.querySelector('bdi');
+    const row = address.closest('a');
+    const logo = row?.querySelector('[role="img"]');
+
+    expect(text?.getBoundingClientRect().left).toBeLessThan(
+      address.getBoundingClientRect().left
+    );
+    expect(text?.getBoundingClientRect().right).toBeLessThanOrEqual(
+      address.getBoundingClientRect().right
+    );
+    expect(logo?.getBoundingClientRect().right).toBeLessThanOrEqual(
+      row?.getBoundingClientRect().right ?? 0
+    );
+
+    // the mouse reaches the whole path, though antd stretches the link over the row
+    const { x, y, width, height } = address.getBoundingClientRect();
+
+    expect(
+      document
+        .elementFromPoint(x + width / 2, y + height / 2)
+        ?.closest('[title]')
+    ).toBe(address);
+  },
+};
 
 // export const Edit: Story = {
 //   args: {
