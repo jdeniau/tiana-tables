@@ -1,4 +1,4 @@
-import { isBareName, tablesOf, wordsOf } from './bareColumn';
+import { isBareColumn, tablesOf, wordsOf } from './bareColumn';
 import { Clause, type HistoryBlock } from './recordedStatement';
 
 const JOIN_KEYWORDS: ReadonlySet<string> = new Set(['join', 'straight_join']);
@@ -45,7 +45,7 @@ export class HistoryUsage {
       return;
     }
 
-    const columns = columnsOf(words, tables);
+    const columns = columnsOf(words, tables, shape.split(' '));
 
     for (const column of columns) {
       add(this.columns, column, runCount);
@@ -77,10 +77,11 @@ export class HistoryUsage {
   }
 }
 
-/** the columns a clause reads, as `table.column` keys: those it qualifies, and its bare names when the statement reads one table */
+/** the columns a clause reads, as `table.column` keys: those it qualifies, and its bare columns when the statement reads one table */
 function columnsOf(
   words: ReadonlyArray<string>,
-  tables: ReadonlySet<string>
+  tables: ReadonlySet<string>,
+  written: ReadonlyArray<string>
 ): Set<string> {
   const [onlyTable] = tables.size === 1 ? tables : [];
   const columns = new Set<string>();
@@ -88,7 +89,10 @@ function columnsOf(
   for (const [index, word] of words.entries()) {
     if (words[index - 1] === '.' && tables.has(words[index - 2] ?? '')) {
       columns.add(key(words[index - 2] ?? '', word));
-    } else if (onlyTable !== undefined && isBareName(words, index, tables)) {
+    } else if (
+      onlyTable !== undefined &&
+      isBareColumn(words, index, tables, written)
+    ) {
       columns.add(key(onlyTable, word));
     }
   }

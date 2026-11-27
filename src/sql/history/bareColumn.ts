@@ -31,13 +31,22 @@ export function namesBareColumn(
   tables: ReadonlySet<string>,
   written: ReadonlyArray<string>
 ): boolean {
-  return words.some(
-    (_, index) =>
-      // `date` may be the keyword of `DATE '2026-01-01'`, `` `date` `` is a column
-      (!isReservedKeyword(written[index] ?? '') ||
-        isCompared(words, index) ||
-        isKey(words, index)) &&
-      isBareName(words, index, tables)
+  return words.some((_, index) => isBareColumn(words, index, tables, written));
+}
+
+/** whether the word at `index` is a column without its table: an unquoted reserved word is one only where it is compared, or a key of an `ORDER BY` or a `GROUP BY` */
+export function isBareColumn(
+  words: ReadonlyArray<string>,
+  index: number,
+  tables: ReadonlySet<string>,
+  written: ReadonlyArray<string>
+): boolean {
+  return (
+    // `date` may be the keyword of `DATE '2026-01-01'`, `` `date` `` is a column
+    (!isReservedKeyword(written[index] ?? '') ||
+      isCompared(words, index) ||
+      isKey(words, index)) &&
+    isBareName(words, index, tables)
   );
 }
 
@@ -58,7 +67,7 @@ function isKey(words: ReadonlyArray<string>, index: number): boolean {
 }
 
 /** whether the word at `index` is a name without its table: neither a table, a function, an alias nor a type */
-export function isBareName(
+function isBareName(
   words: ReadonlyArray<string>,
   index: number,
   tables: ReadonlySet<string>
