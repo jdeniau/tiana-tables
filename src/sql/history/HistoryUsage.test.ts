@@ -106,6 +106,15 @@ describe('columns', () => {
     expect(usage.ofColumn('seance', 'order')).toBe(0);
   });
 
+  it('counts a quoted column named like a keyword wherever it is read', () => {
+    const usage = new HistoryUsage(
+      blocksOf('SELECT `key`, `value` FROM setting ORDER BY `key`')
+    );
+
+    expect(usage.ofColumn('setting', 'key')).toBe(2);
+    expect(usage.ofColumn('setting', 'value')).toBe(1);
+  });
+
   it('leaves out the bare names of a statement that reads several tables', () => {
     const usage = new HistoryUsage(
       blocksOf(
