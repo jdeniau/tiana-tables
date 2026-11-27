@@ -139,6 +139,19 @@ describe('a clause of the history', () => {
     ).toBe('blog.tag ta ON ta.article_id = t.id');
   });
 
+  it('joins a table named like a keyword, which the shape writes in upper case', () => {
+    const continuation = new HistoryContinuation({
+      runs: [],
+      blocks: blocksOf(
+        'SELECT * FROM user u JOIN role r ON r.id = u.role_id WHERE u.status = 1'
+      ),
+    });
+
+    expect(
+      continuation.after('SELECT * FROM user x JOIN ', DatabaseEngine.MySQL)
+    ).toBe('role r ON r.id = x.role_id');
+  });
+
   it('skips a table the query already joins, and a condition on a table it lacks', () => {
     expect(
       blockAfter(

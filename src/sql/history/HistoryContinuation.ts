@@ -1,7 +1,7 @@
 import type { DatabaseEngine } from '../engine';
 import { CODE_CHANNEL, type SqlToken, getParser } from '../parser';
 import { extractTableAliases, generateTableAlias, unquote } from '../tableName';
-import { joinedTable, qualifiers } from './HistoryUsage';
+import { joinedTable, qualifiers, tablesOf, wordsOf } from './HistoryUsage';
 import {
   Clause,
   type HistoryBlock,
@@ -44,8 +44,8 @@ export class HistoryContinuation {
   constructor({ runs, blocks }: QueryHistoryContent) {
     this.runs = runs;
     this.candidates = blocks.flatMap((block): Array<Candidate> => {
-      const words = block.shape.split(' ').map(unquote);
-      const tables = new Set(Object.values(block.aliases));
+      const words = wordsOf(block.shape);
+      const tables = tablesOf(block.aliases);
 
       if (block.clause === Clause.From) {
         return [{ block, joined: undefined, reads: new Set() }];
@@ -114,7 +114,7 @@ export class HistoryContinuation {
     }
 
     const aliases = extractTableAliases(typed, engine);
-    const tables = new Set(Object.values(aliases));
+    const tables = tablesOf(aliases);
 
     for (const { block, joined, reads } of this.candidates) {
       if (
@@ -215,9 +215,17 @@ function rewrite(
     return null;
   }
 
-  const tableOf = new Map(Object.entries(block.aliases));
+  const tableOf = new Map(
+    Object.entries(block.aliases).map(([alias, table]) => [
+      alias,
+      table.toLowerCase(),
+    ])
+  );
   const aliasOf = new Map(
-    Object.entries(aliases).map(([alias, table]) => [table, alias])
+    Object.entries(aliases).map(([alias, table]) => [
+      table.toLowerCase(),
+      alias,
+    ])
   );
 
   // `JOIN blog . auteur au`: the alias follows the last part of the name
