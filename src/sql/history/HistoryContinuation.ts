@@ -1,6 +1,10 @@
 import type { DatabaseEngine } from '../engine';
 import { CODE_CHANNEL, type SqlToken, getParser } from '../parser';
-import { extractTableAliases, generateTableAlias, unquote } from '../tableName';
+import {
+  extractOuterTableAliases,
+  generateTableAlias,
+  unquote,
+} from '../tableName';
 import { joinedTable, qualifiers } from './HistoryUsage';
 import { namesBareColumn, tablesOf, wordsOf } from './bareColumn';
 import {
@@ -135,7 +139,7 @@ export class HistoryContinuation {
       return null;
     }
 
-    const aliases = extractTableAliases(typed, engine);
+    const aliases = extractOuterTableAliases(typed, engine);
     const tables = tablesOf(aliases);
     const readsEachOnce = tables.size === Object.keys(aliases).length;
 

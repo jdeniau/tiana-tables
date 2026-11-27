@@ -1,8 +1,13 @@
-import { EntityContextType } from 'dt-sql-parser';
+import { type EntityContext, EntityContextType } from 'dt-sql-parser';
 import { AttrName } from 'dt-sql-parser/dist/parser/common/entityCollector';
 import type { DatabaseEngine } from './engine';
 import { SQL_RESERVED_KEYWORDS } from './keywords';
-import { collectEntities, getParser } from './parser';
+import {
+  CODE_CHANNEL,
+  type SqlParser,
+  collectEntities,
+  getParser,
+} from './parser';
 
 export function generateTableAlias(
   tableName: string,
@@ -90,10 +95,41 @@ export function extractTableAliases(
   sql: string,
   engine: DatabaseEngine
 ): Record<Alias, TableName> {
-  const tables = collectEntities(getParser(engine), sql).filter(
+  return aliasesOf(tableEntities(getParser(engine), sql));
+}
+
+/** the tables of a query outside any parenthesis, by alias: those of a subquery are out of its scope */
+export function extractOuterTableAliases(
+  sql: string,
+  engine: DatabaseEngine
+): Record<Alias, TableName> {
+  const parser = getParser(engine);
+  const parentheses = parser
+    .getAllTokens(sql)
+    .filter(
+      (token) =>
+        token.channel === CODE_CHANNEL &&
+        (token.text === '(' || token.text === ')')
+    );
+  const depthAt = (index: number): number =>
+    parentheses
+      .filter((token) => token.start < index)
+      .reduce((depth, token) => depth + (token.text === '(' ? 1 : -1), 0);
+
+  return aliasesOf(
+    tableEntities(parser, sql).filter(
+      (table) => depthAt(table.position.startIndex) === 0
+    )
+  );
+}
+
+function tableEntities(parser: SqlParser, sql: string): Array<EntityContext> {
+  return collectEntities(parser, sql).filter(
     (entity) => entity.entityContextType === EntityContextType.TABLE
   );
+}
 
+function aliasesOf(tables: Array<EntityContext>): Record<Alias, TableName> {
   return Object.fromEntries(
     tables.map((table) => {
       const tableName = unqualify(table.text);

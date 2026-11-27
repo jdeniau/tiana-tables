@@ -263,6 +263,20 @@ describe('a clause of the history', () => {
     ).toBe('commentaire c ON c.article_id = a.id');
   });
 
+  it('reads the tables of the query outside its subqueries', () => {
+    const continuation = new HistoryContinuation({
+      runs: [],
+      blocks: blocksOf('SELECT * FROM commentaire c ORDER BY c.date DESC'),
+    });
+
+    expect(
+      continuation.after(
+        'SELECT * FROM article a WHERE a.id IN (SELECT article_id FROM commentaire c) ORDER BY ',
+        DatabaseEngine.MySQL
+      )
+    ).toBeNull();
+  });
+
   it('waits for the clause to open, in a SELECT, outside any subquery', () => {
     expect(blockAfter('SELECT * FROM article a WHERE')).toBeNull();
     expect(blockAfter('DELETE FROM ')).toBeNull();
