@@ -229,6 +229,16 @@ describe('ranking by usage', () => {
     ).toEqual(['title', 'planning', 'employee']);
   });
 
+  it('ranks by their joins only the tables the query does not read yet', () => {
+    expect(
+      ranked(
+        'SELECT * FROM employee e JOIN title t ON t.id = e.title_id JOIN |',
+        languages.CompletionItemKind.Variable,
+        USAGE
+      )
+    ).toEqual(['planning', 'title', 'employee']);
+  });
+
   it('puts the most used columns first', () => {
     expect(
       ranked(

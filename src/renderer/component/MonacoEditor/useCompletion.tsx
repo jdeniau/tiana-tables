@@ -174,10 +174,13 @@ function tableCompletions(
         }.${foreignKey.columnName} `
       : '';
 
-    const joins = [...queryTables].reduce(
-      (total, queryTable) => total + usage.ofJoin(table, queryTable),
-      0
-    );
+    // a table the query reads is joined already
+    const joins = queryTables.has(table)
+      ? 0
+      : [...queryTables].reduce(
+          (total, queryTable) => total + usage.ofJoin(table, queryTable),
+          0
+        );
 
     return {
       label: table,
