@@ -127,6 +127,19 @@ describe('action', () => {
     );
   });
 
+  test('sends no USE on an engine that has none', async () => {
+    vi.mocked(window.config.getConfiguration).mockResolvedValue({
+      // @ts-expect-error only the connections are read here
+      connections: { connectionSlug: { engine: DatabaseEngine.SQLite } },
+    });
+
+    await runAction('main', 'SELECT 1');
+
+    expect(vi.mocked(window.sql.executeQuery).mock.calls).toEqual([
+      ['SELECT 1', true],
+    ]);
+  });
+
   test('sends the query the user wrote as written', async () => {
     await runAction('shop', "SELECT * FROM orders WHERE label = 'a:b'");
 

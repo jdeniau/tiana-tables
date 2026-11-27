@@ -1,6 +1,6 @@
 import { ConnectionColor } from '../configuration/connectionColor';
 import type { SshTunnel } from '../ssh/types';
-import { DatabaseEngine } from './engine';
+import type { FileEngine, ServerEngine } from './engine';
 import { ResultField } from './resultField';
 import { SslMode } from './sslMode';
 
@@ -31,14 +31,18 @@ export type QueryResult<T extends QueryReturnType = QueryReturnType> = Promise<
   [T, Array<ResultField>]
 >;
 
-/**
- * Represent a connection object that is stored in the configuration file.
- * It is also used to connect to the database.
- */
-export type ConnectionObject = {
+/** What every saved connection holds, whatever its engine. */
+interface ConnectionIdentity {
   name: string;
   slug: string;
-  engine: DatabaseEngine;
+  color?: ConnectionColor;
+  /** absent: the connection is listed before every group */
+  group?: string;
+}
+
+/** A server the configuration file holds the address and credentials of. */
+export interface ServerConnection extends ConnectionIdentity {
+  engine: ServerEngine;
   host: string;
   port: number;
   user: string;
@@ -47,14 +51,22 @@ export type ConnectionObject = {
   database?: string;
   /** absent on a connection saved before the field existed, which stays in the clear */
   ssl?: SslMode;
-  color?: ConnectionColor;
-  /** absent: the connection is listed before every group */
-  group?: string;
   /** the bastion `host` and `port` are reached from, absent for a server reached directly */
   ssh?: SshTunnel;
-};
+}
 
-export type ConnectionObjectWithoutSlug = Omit<ConnectionObject, 'slug'>;
+/** A database file the app opens in place. */
+export interface FileConnection extends ConnectionIdentity {
+  engine: FileEngine;
+  file: string;
+}
+
+/** A connection as the configuration file stores it, and as it is opened. */
+export type ConnectionObject = ServerConnection | FileConnection;
+
+/** A connection as the form submits it: its slug is derived from its name. */
+export type ConnectionObjectWithoutSlug =
+  Omit<ServerConnection, 'slug'> | Omit<FileConnection, 'slug'>;
 
 /**
  * A value bound to a placeholder of an UPDATE. Values travel over IPC, so they

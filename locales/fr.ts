@@ -91,7 +91,7 @@ const fr: Translation = {
   'connection.delete.title': 'Supprimer {name} ?',
   // ICU select on `DatabaseEngine`: product names, the same in every language
   'connection.engine.name':
-    '{engine, select, mysql {MySQL / MariaDB} postgresql {PostgreSQL} other {{engine}}}',
+    '{engine, select, mysql {MySQL / MariaDB} postgresql {PostgreSQL} sqlite {SQLite} other {{engine}}}',
   'connection.failed.back': 'Retour aux connexions',
   // ICU select on the `ConnectionFailure` enum
   'connection.failed.reason':
@@ -113,6 +113,8 @@ const fr: Translation = {
     ' sshHostKeyChanged {Le serveur SSH ne présente pas la clé d’hôte que votre known_hosts a pour lui : il a peut-être été réinstallé, ou quelqu’un s’est peut-être placé entre vous deux. S’il a été réinstallé, supprimez son ancienne clé avec ssh-keygen -R, puis réessayez.}' +
     ' sshHostKeyRejected {La clé d’hôte du serveur SSH n’a pas été acceptée.}' +
     ' sshForwardFailed {Le serveur SSH n’a pas pu joindre la base de données. L’hôte et le port sont ceux que voit le serveur SSH.}' +
+    ' cannotOpenFile {Ce fichier n’a pas pu être ouvert : il n’existe pas, c’est un dossier, ou votre compte n’a pas le droit de l’ouvrir.}' +
+    ' notADatabase {Ce fichier n’est pas une base de données SQLite.}' +
     " other {La connexion n'a pas pu être ouverte.}}",
   'connection.failed.retry': 'Réessayer',
   'connection.failed.target': 'La connexion à {address} a échoué',
@@ -125,6 +127,10 @@ const fr: Translation = {
   'connection.form.color.none': 'Aucune couleur',
   'connection.form.color.palette': 'Couleur {hex} du thème',
   'connection.form.database.label': 'Base de données',
+  'connection.form.file.anyFile': 'Tous les fichiers',
+  'connection.form.file.browse': 'Parcourir…',
+  'connection.form.file.filter': 'Bases de données SQLite',
+  'connection.form.file.label': 'Fichier',
   'connection.form.group.label': 'Groupe',
   'connection.form.group.placeholder': 'Aucun groupe',
   'connection.form.host.label': 'Hôte',

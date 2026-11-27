@@ -153,3 +153,43 @@ export const EditThroughSsh: Story = {
     },
   },
 };
+
+/** a file engine asks for its file alone: no server, route, encryption or account */
+export const CreateSqlite: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByText('SQLite'));
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: /name/i }),
+      'notes (dev)'
+    );
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: /file/i }),
+      '/home/me/notes.db'
+    );
+
+    await expect(canvas.queryByRole('textbox', { name: /host/i })).toBeNull();
+
+    await userEvent.click(canvas.getByText(/Save and connect/i));
+
+    await waitFor(() =>
+      expect(addConnectionToConfig).toHaveBeenCalledWith({
+        name: 'notes (dev)',
+        engine: DatabaseEngine.SQLite,
+        file: '/home/me/notes.db',
+      })
+    );
+  },
+};
+
+export const EditSqlite: Story = {
+  args: {
+    connection: {
+      name: 'notes (dev)',
+      engine: DatabaseEngine.SQLite,
+      slug: 'notes-dev',
+      file: '/home/me/notes.db',
+    },
+  },
+};

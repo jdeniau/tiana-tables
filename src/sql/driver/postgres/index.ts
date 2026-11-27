@@ -2,7 +2,7 @@ import type { Duplex } from 'node:stream';
 import log from 'electron-log';
 import pg from 'pg';
 import invariant from 'tiny-invariant';
-import type { Driver } from '..';
+import type { Driver, ServerConnectionParams } from '..';
 import { NetworkErrorCode } from '../../../networkErrorCode';
 import type { ResultField } from '../../resultField';
 import { asSqlError } from '../../sqlError';
@@ -122,7 +122,7 @@ function asSocket(stream: Duplex): Duplex {
   });
 }
 
-export const postgresDriver: Driver = {
+export const postgresDriver: Driver<ServerConnectionParams> = {
   async connect(params, options) {
     // a PostgreSQL connection opens one database, and browses its schemas
     invariant(params.database, 'A PostgreSQL connection names a database');

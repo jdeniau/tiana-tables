@@ -10,6 +10,7 @@ import type { ColumnDetail } from '../../../sql/dialect/metadata';
 import { DatabaseEngine } from '../../../sql/engine';
 import { HistoryUsage } from '../../../sql/history/HistoryUsage';
 import { Clause } from '../../../sql/history/recordedStatement';
+import { SQLITE_LANGUAGE } from './language';
 import { QuerySchema } from './queryAnalysis';
 import { setQueryPrefix } from './queryPrefix';
 import { buildCompletionProvider, validateModel } from './useCompletion';
@@ -420,5 +421,42 @@ describe('a query prefix', () => {
         WHERE_PREFIX
       )
     ).toEqual(['id', 'name']);
+  });
+});
+
+describe('an engine whose grammar is borrowed', () => {
+  const SCHEMA: QuerySchema = {
+    database: 'main',
+    tables: new Set(['employee']),
+    columns: new Map([['employee', new Set(['id', 'name'])]]),
+  };
+
+  // valid SQLite, which the PostgreSQL grammar does not know
+  const UPSERT = 'INSERT OR REPLACE INTO employee (id) VALUES (1)';
+
+  function markersOf(sql: string, language: string): Array<editor.IMarker> {
+    const model = editor.createModel(sql, language);
+
+    try {
+      validateModel(model, SCHEMA);
+
+      return editor.getModelMarkers({ resource: model.uri });
+    } finally {
+      model.dispose();
+    }
+  }
+
+  it('underlines no syntax error', () => {
+    expect(markersOf(UPSERT, LanguageIdEnum.PG)).not.toEqual([]);
+    expect(markersOf(UPSERT, SQLITE_LANGUAGE)).toEqual([]);
+  });
+
+  it('still warns on a column the table does not have', () => {
+    const [marker] = markersOf(
+      'SELECT employee.wrong FROM employee',
+      SQLITE_LANGUAGE
+    );
+
+    expect(marker?.message).toBe('Unknown column `wrong` on table `employee`');
   });
 });

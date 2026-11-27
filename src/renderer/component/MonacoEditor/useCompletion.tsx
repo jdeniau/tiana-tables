@@ -1,7 +1,11 @@
 import { useEffect, useEffectEvent } from 'react';
 import { EntityContextType } from 'dt-sql-parser';
 import { MarkerSeverity, Position, editor, languages } from 'monaco-editor';
-import { setupLanguageFeatures } from 'monaco-sql-languages';
+import {
+  LanguageIdEnum,
+  registerLanguage,
+  setupLanguageFeatures,
+} from 'monaco-sql-languages';
 // register the `mysql` and `pgsql` languages; Monaco loads a tokenizer when a model first uses it
 import 'monaco-sql-languages/esm/languages/mysql/mysql.contribution';
 import 'monaco-sql-languages/esm/languages/pgsql/pgsql.contribution';
@@ -13,7 +17,7 @@ import { ForeignKeysHelper } from '../../../sql/ForeignKeysHelper';
 import type { DatabaseEngine } from '../../../sql/engine';
 import { HistoryUsage } from '../../../sql/history/HistoryUsage';
 import type { QueryHistoryContent } from '../../../sql/history/recordedStatement';
-import { getParser } from '../../../sql/parser';
+import { getParser, reportsSyntaxErrors } from '../../../sql/parser';
 import {
   splitStatements,
   statementAtOffset,
@@ -22,7 +26,7 @@ import {
   extractTableAliases,
   generateTableAlias,
 } from '../../../sql/tableName';
-import { SQL_LANGUAGES, engineOf } from './language';
+import { SQLITE_LANGUAGE, SQL_LANGUAGES, engineOf } from './language';
 import { QuerySchema, analyzeQuery } from './queryAnalysis';
 import {
   fromPrefixedRange,
@@ -41,12 +45,18 @@ import useQuerySchema from './useQuerySchema';
  * and rebuilt on `dt-sql-parser` — which we already depend on, and which is
  * fast enough on the main thread for editor-sized queries.
  */
-for (const [, language] of SQL_LANGUAGES) {
+for (const language of [LanguageIdEnum.MYSQL, LanguageIdEnum.PG]) {
   setupLanguageFeatures(language, {
     completionItems: false,
     diagnostics: false,
   });
 }
+
+registerLanguage({
+  id: SQLITE_LANGUAGE,
+  aliases: ['SQLite'],
+  loader: () => import('monaco-sql-languages/esm/languages/pgsql/pgsql'),
+});
 
 type CompletionRange = languages.CompletionItem['range'];
 
@@ -289,8 +299,12 @@ export function validateModel(
   const prefix = getQueryPrefix(model);
   const sql = prefixedValue(model);
 
-  const syntaxErrors = getParser(engine)
-    .validate(sql)
+  // a grammar borrowed from another engine would underline valid SQL
+  const parseErrors = reportsSyntaxErrors(engine)
+    ? getParser(engine).validate(sql)
+    : [];
+
+  const syntaxErrors = parseErrors
     .map((error) => ({
       severity: MarkerSeverity.Error,
       message: error.message,

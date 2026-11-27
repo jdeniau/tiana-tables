@@ -209,16 +209,18 @@ async function runEditor(
     return { outcomes: [] };
   }
 
-  const useDatabase = dialect.useDatabase(databaseName);
+  const useDatabase = dialect.useDatabase?.(databaseName);
 
-  try {
-    await window.sql.executeQuery(useDatabase);
-  } catch (error) {
-    if (!isSqlError(error)) {
-      throw error;
+  if (useDatabase !== undefined) {
+    try {
+      await window.sql.executeQuery(useDatabase);
+    } catch (error) {
+      if (!isSqlError(error)) {
+        throw error;
+      }
+
+      return { outcomes: [{ sql: useDatabase, error }] };
     }
-
-    return { outcomes: [{ sql: useDatabase, error }] };
   }
 
   const outcomes: Array<StatementOutcome> = [];

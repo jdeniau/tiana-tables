@@ -99,6 +99,23 @@ describe('the engine of a connection', () => {
     expect(container.textContent).toContain('postgres@localhost:5432/shop');
   });
 
+  test('an SQLite connection is shown by its file', async () => {
+    const container = await render(<ConnectionPage />, {
+      'notes-dev': {
+        name: 'notes (dev)',
+        slug: 'notes-dev',
+        engine: DatabaseEngine.SQLite,
+        file: '/data/notes.db',
+      },
+    });
+
+    expect(
+      container.querySelector('[role="img"]')?.getAttribute('aria-label')
+    ).toBe('SQLite');
+    expect(container.textContent).toContain('/data/notes.db');
+    expect(container.textContent).not.toContain('undefined');
+  });
+
   test('is edited from an icon that names what it does', async () => {
     const container = await render(<ConnectionPage />);
     const edit = container.querySelector('a[href$="/connect/edit/pg-dev"]');

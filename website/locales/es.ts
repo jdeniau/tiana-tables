@@ -3,7 +3,7 @@ import { SiteMessages } from './type';
 const es: SiteMessages = {
   'meta.title': 'Tiana Tables: un cliente SQL para quienes programan',
   'meta.description':
-    'Un cliente MySQL, MariaDB y PostgreSQL para quienes programan, en Linux, macOS y Windows. Explora, consulta y edita tus datos con eficiencia. Fácil de usar y bonito.',
+    'Un cliente MySQL, MariaDB, PostgreSQL y SQLite para quienes programan, en Linux, macOS y Windows. Explora, consulta y edita tus datos con eficiencia. Fácil de usar y bonito.',
   'nav.label': 'Secciones',
   'nav.editor': 'Editor',
   'nav.browse': 'Explorar',
@@ -20,7 +20,8 @@ const es: SiteMessages = {
   'theme.dark': 'Oscuros',
   'theme.light': 'Claros',
 
-  'hero.eyebrow': 'MySQL · MariaDB · PostgreSQL · Linux, macOS, Windows',
+  'hero.eyebrow':
+    'MySQL · MariaDB · PostgreSQL · SQLite · Linux, macOS, Windows',
   'hero.title': 'Un cliente SQL para quienes programan',
   'hero.title.short': 'Un cliente SQL para devs',
   'hero.lead':
@@ -29,7 +30,7 @@ const es: SiteMessages = {
   'hero.source': 'Código en GitHub',
   'hero.other': 'Otras plataformas',
   'spec.engines': 'Motores',
-  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL',
+  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL, SQLite',
   'spec.runsOn': 'Sistemas',
   'spec.runsOn.value': 'Linux, macOS, Windows',
   'spec.connects': 'Conexión',
@@ -126,7 +127,7 @@ const es: SiteMessages = {
   'databases.supported': 'compatible',
   'databases.outOfScope': 'fuera de alcance',
   'databases.text':
-    'Una conexión PostgreSQL abre una base de datos y lista sus esquemas donde un servidor MySQL lista sus bases de datos. Otro motor que comparta lo suficiente del estándar SQL se puede discutir en un issue.',
+    'Una conexión PostgreSQL abre una base de datos y lista sus esquemas donde un servidor MySQL lista sus bases de datos. Una conexión SQLite abre un archivo. Otro motor que comparta lo suficiente del estándar SQL se puede discutir en un issue.',
 
   'charts.title': 'Gráficos',
   'charts.meta': 'barras o líneas, desde cualquier resultado',

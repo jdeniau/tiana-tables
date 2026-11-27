@@ -8,6 +8,7 @@ const SCOPE: Array<[name: string | { key: SiteKey }, status: SiteKey | null]> =
     ['MySQL', 'databases.supported'],
     ['MariaDB', 'databases.supported'],
     ['PostgreSQL', 'databases.supported'],
+    ['SQLite', 'databases.supported'],
     [{ key: 'databases.ssl' }, 'databases.supported'],
     [{ key: 'databases.ssh' }, 'databases.supported'],
     [{ key: 'databases.others' }, null],

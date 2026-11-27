@@ -3,7 +3,6 @@ import invariant from 'tiny-invariant';
 import { z } from 'zod';
 import { getConfiguration } from '../configuration';
 import { decryptPassword } from '../configuration/encryption';
-import { EncryptedConnectionObject } from '../configuration/type';
 import { SQL_CHANNEL } from '../preload/sqlChannel';
 import { askpassServer } from '../ssh/askpass/ipc';
 import { type OpenedTunnel, openTunnel } from '../ssh/tunnel';
@@ -23,7 +22,8 @@ import {
 import type { ReadQuery } from './dialect/readQuery';
 import type { Dialect } from './dialect/types';
 import { loadDriver } from './driver';
-import type { DriverConnection } from './driver';
+import type { ConnectOptions, DriverConnection } from './driver';
+import { opensFile } from './engine';
 import {
   QueryResultOrError,
   ResultOrError,
@@ -34,8 +34,11 @@ import { type SelectedRow, selectRowRequestSchema } from './selectRow';
 import { SslMode } from './sslMode';
 import { toTableStructure } from './tableStructure';
 import {
+  type ConnectionObject,
+  type FileConnection,
   QueryResult,
   QueryReturnType,
+  type ServerConnection,
   SqlBoundValues,
   isWriteResult,
 } from './types';
@@ -445,9 +448,7 @@ class ConnectionStack {
       throw new Error(`Connection "${connectionSlug}" not found`);
     }
 
-    const { appState: _, ...connectionConfig } = connections[connectionSlug];
-
-    const connection = this.#connect(connectionConfig);
+    const connection = this.#connect(connections[connectionSlug]);
 
     this.#connections.set(connectionSlug, connection);
 
@@ -461,24 +462,55 @@ class ConnectionStack {
     return await connection;
   }
 
-  async #connect(
-    params: Omit<EncryptedConnectionObject, 'appState'>
-  ): Promise<DriverConnection> {
-    const {
-      slug,
-      name,
-      engine,
-      host,
-      port,
-      user,
-      password,
-      database,
-      ssl = SslMode.Disable,
-      ssh,
-    } = params;
+  #connect(connection: ConnectionObject): Promise<DriverConnection> {
+    log.debug(`Open connection to "${connection.slug}"`);
 
-    log.debug(`Open connection to "${slug}"`);
+    return opensFile(connection)
+      ? this.#openFile(connection)
+      : this.#reachServer(connection);
+  }
 
+  #connectOptions(slug: string): ConnectOptions {
+    return {
+      connectTimeoutMs: CONNECT_TIMEOUT_MS,
+      onClosed: () => {
+        log.debug(`Connection to "${slug}" ended`);
+        this.#connections.delete(slug);
+      },
+    };
+  }
+
+  async #openFile({
+    slug,
+    engine,
+    file,
+  }: FileConnection): Promise<DriverConnection> {
+    const driver = await loadDriver(engine);
+
+    try {
+      return await driver.connect({ file }, this.#connectOptions(slug));
+    } catch (error) {
+      log.error(`Could not open "${slug}"`, error);
+
+      throw asConnectionError(error, {
+        host: file,
+        timeoutMs: CONNECT_TIMEOUT_MS,
+      });
+    }
+  }
+
+  async #reachServer({
+    slug,
+    name,
+    engine,
+    host,
+    port,
+    user,
+    password,
+    database,
+    ssl = SslMode.Disable,
+    ssh,
+  }: ServerConnection): Promise<DriverConnection> {
     const driver = await loadDriver(engine);
     let tunnel: OpenedTunnel | undefined;
     // until the SSH server lets us through, a failure is the SSH server's, and told at its address
@@ -529,13 +561,7 @@ class ConnectionStack {
           ssl,
           stream: tunnel?.stream,
         },
-        {
-          connectTimeoutMs: CONNECT_TIMEOUT_MS,
-          onClosed: () => {
-            log.debug(`Connection to "${slug}" ended`);
-            this.#connections.delete(slug);
-          },
-        }
+        this.#connectOptions(slug)
       );
     } catch (error) {
       log.error(`Could not connect to "${slug}"`, error);

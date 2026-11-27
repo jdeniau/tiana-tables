@@ -7,6 +7,7 @@ import { styled } from 'styled-components';
 import { EncryptedConnectionObject } from '../../../configuration/type';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
+import { opensFile } from '../../../sql/engine';
 import { foreground, size, space } from '../../theme';
 import ButtonLink from '../ButtonLink';
 import {
@@ -53,6 +54,45 @@ const Edit = styled(ButtonLink)`
 `;
 
 /**
+ * Cut at its start when the row is too narrow, since a file's name and a server's database come last.
+ * Positioned for its `title`, under the `a::before` antd stretches over the row.
+ */
+const Address = styled(RegionMeta)`
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+`;
+
+/** Where the connection leads: its file, or the account, server and database it opens. */
+function addressOf(connection: EncryptedConnectionObject): string {
+  if (opensFile(connection)) {
+    return connection.file;
+  }
+
+  const { user, host, port, database } = connection;
+
+  return `${user}@${host}:${port}${database ? `/${database}` : ''}`;
+}
+
+function ConnectionAddress({
+  connection,
+}: {
+  connection: EncryptedConnectionObject;
+}) {
+  const address = addressOf(connection);
+
+  return (
+    <Address title={address}>
+      {/* left to right inside the right-to-left box, or a path's leading `/` would end it */}
+      <bdi>{address}</bdi>
+    </Address>
+  );
+}
+
+/**
  * The connection the router is on its way to, if any.
  *
  * Read-only: the rows stay plain `Link`s, and the state clears itself when the
@@ -85,9 +125,7 @@ function ConnectionPage(): JSX.Element {
   }
 
   // the same Menu as the sidebar's tables, so the rows are the same rows
-  const connectionItem = (
-    connection: EncryptedConnectionObject
-  ): MenuItem => ({
+  const connectionItem = (connection: EncryptedConnectionObject): MenuItem => ({
     key: connection.slug,
     label: (
       <Open
@@ -102,10 +140,7 @@ function ConnectionPage(): JSX.Element {
           </RegionGroup>
         ) : (
           <RegionGroup>
-            <RegionMeta>
-              {connection.user}@{connection.host}:{connection.port}
-              {connection.database ? `/${connection.database}` : ''}
-            </RegionMeta>
+            <ConnectionAddress connection={connection} />
             <RegionMeta>
               <EngineIcon engine={connection.engine} />
             </RegionMeta>

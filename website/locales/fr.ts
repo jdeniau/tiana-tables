@@ -3,7 +3,7 @@ import { SiteMessages } from './type';
 const fr: SiteMessages = {
   'meta.title': 'Tiana Tables : un client SQL pour les développeur·euse·s',
   'meta.description':
-    'Un client MySQL, MariaDB et PostgreSQL pour les développeur·euse·s, sous Linux, macOS et Windows. Naviguez, requêtez et modifiez vos données efficacement. Facile à utiliser et joli.',
+    'Un client MySQL, MariaDB, PostgreSQL et SQLite pour les développeur·euse·s, sous Linux, macOS et Windows. Naviguez, requêtez et modifiez vos données efficacement. Facile à utiliser et joli.',
   'nav.label': 'Sections',
   'nav.editor': 'Éditeur',
   'nav.browse': 'Parcourir',
@@ -20,7 +20,8 @@ const fr: SiteMessages = {
   'theme.dark': 'Sombres',
   'theme.light': 'Clairs',
 
-  'hero.eyebrow': 'MySQL · MariaDB · PostgreSQL · Linux, macOS, Windows',
+  'hero.eyebrow':
+    'MySQL · MariaDB · PostgreSQL · SQLite · Linux, macOS, Windows',
   'hero.title': 'Un client SQL pour les développeur·euse·s',
   'hero.title.short': 'Un client SQL pour les devs',
   'hero.lead':
@@ -29,7 +30,7 @@ const fr: SiteMessages = {
   'hero.source': 'Le code sur GitHub',
   'hero.other': 'Autres plateformes',
   'spec.engines': 'Moteurs',
-  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL',
+  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL, SQLite',
   'spec.runsOn': 'Systèmes',
   'spec.runsOn.value': 'Linux, macOS, Windows',
   'spec.connects': 'Connexion',
@@ -125,7 +126,7 @@ const fr: SiteMessages = {
   'databases.supported': 'pris en charge',
   'databases.outOfScope': 'hors périmètre',
   'databases.text':
-    'Une connexion PostgreSQL ouvre une base, et liste ses schémas là où un serveur MySQL liste ses bases. Un autre moteur assez proche du standard SQL peut se discuter dans une issue.',
+    'Une connexion PostgreSQL ouvre une base, et liste ses schémas là où un serveur MySQL liste ses bases. Une connexion SQLite ouvre un fichier. Un autre moteur assez proche du standard SQL peut se discuter dans une issue.',
 
   'charts.title': 'Graphes',
   'charts.meta': 'barres ou lignes, depuis tout résultat',

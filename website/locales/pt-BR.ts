@@ -3,7 +3,7 @@ import { SiteMessages } from './type';
 const ptBr: SiteMessages = {
   'meta.title': 'Tiana Tables: um cliente SQL para quem programa',
   'meta.description':
-    'Um cliente MySQL, MariaDB e PostgreSQL para quem programa, no Linux, macOS e Windows. Navegue, consulte e edite seus dados com eficiência. Fácil de usar e bonito.',
+    'Um cliente MySQL, MariaDB, PostgreSQL e SQLite para quem programa, no Linux, macOS e Windows. Navegue, consulte e edite seus dados com eficiência. Fácil de usar e bonito.',
   'nav.label': 'Seções',
   'nav.editor': 'Editor',
   'nav.browse': 'Navegar',
@@ -20,7 +20,8 @@ const ptBr: SiteMessages = {
   'theme.dark': 'Escuros',
   'theme.light': 'Claros',
 
-  'hero.eyebrow': 'MySQL · MariaDB · PostgreSQL · Linux, macOS, Windows',
+  'hero.eyebrow':
+    'MySQL · MariaDB · PostgreSQL · SQLite · Linux, macOS, Windows',
   'hero.title': 'Um cliente SQL para quem programa',
   'hero.title.short': 'Um cliente SQL para devs',
   'hero.lead':
@@ -29,7 +30,7 @@ const ptBr: SiteMessages = {
   'hero.source': 'Código no GitHub',
   'hero.other': 'Outras plataformas',
   'spec.engines': 'Bancos de dados',
-  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL',
+  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL, SQLite',
   'spec.runsOn': 'Sistemas',
   'spec.runsOn.value': 'Linux, macOS, Windows',
   'spec.connects': 'Conexão',
@@ -125,7 +126,7 @@ const ptBr: SiteMessages = {
   'databases.supported': 'suportado',
   'databases.outOfScope': 'fora do escopo',
   'databases.text':
-    'Uma conexão PostgreSQL abre um banco de dados e lista os schemas dele onde um servidor MySQL lista os bancos de dados. Outro SGBD próximo o bastante do padrão SQL pode ser discutido em uma issue.',
+    'Uma conexão PostgreSQL abre um banco de dados e lista os schemas dele onde um servidor MySQL lista os bancos de dados. Uma conexão SQLite abre um arquivo. Outro SGBD próximo o bastante do padrão SQL pode ser discutido em uma issue.',
 
   'charts.title': 'Gráficos',
   'charts.meta': 'barras ou linhas, a partir de qualquer resultado',

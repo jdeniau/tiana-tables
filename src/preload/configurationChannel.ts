@@ -15,4 +15,5 @@ export enum CONFIGURATION_CHANNEL {
   SET_COLUMN_WIDTH = 'config:connection:setColumnWidth',
   SET_PANEL_SIZE = 'config:panel:setSize',
   SET_DATE_DISPLAY = 'config:dateDisplay:set',
+  PICK_DATABASE_FILE = 'config:connection:pickDatabaseFile',
 }

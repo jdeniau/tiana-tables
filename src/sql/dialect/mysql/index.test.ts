@@ -7,7 +7,7 @@ describe('mysqlDialect', () => {
   });
 
   it('switches database with a statement of its own', () => {
-    expect(mysqlDialect.useDatabase('my-db')).toBe('USE `my-db`;');
+    expect(mysqlDialect.useDatabase?.('my-db')).toBe('USE `my-db`;');
   });
 
   // the escaping itself is the driver's, and testing its table is not our job

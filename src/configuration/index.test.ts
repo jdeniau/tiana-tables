@@ -1,8 +1,9 @@
-import { app, dialog, safeStorage } from 'electron';
+import { BrowserWindow, app, dialog, safeStorage } from 'electron';
 import { existsSync, readFileSync, renameSync, statSync } from 'node:fs';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { sync as writeFileAtomicSync } from 'write-file-atomic';
 import { changeLanguage as changeI18nLanguage } from '../i18n';
+import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
 import { DatabaseEngine } from '../sql/engine';
 import { DateDisplay } from './dateDisplay';
 import { DEFAULT_LOCALE } from './locale';
@@ -12,6 +13,7 @@ import { Configuration } from './type';
 import { QuitToFixConfigurationError } from './unreadableConfiguration';
 import {
   addConnectionToConfig,
+  bindIpcMain,
   changeLanguage,
   changeTheme,
   deleteConnection,
@@ -106,7 +108,9 @@ vi.mock('electron', () => ({
     isAsyncEncryptionAvailable: vi.fn(() => Promise.resolve(true)),
     getSelectedStorageBackend: vi.fn(() => 'gnome_libsecret'),
   },
+  BrowserWindow: { fromWebContents: vi.fn() },
   dialog: {
+    showOpenDialog: vi.fn(),
     showErrorBox: vi.fn(),
     showMessageBox: vi.fn(() => Promise.resolve({ response: 0 })),
     showMessageBoxSync: vi.fn(),
@@ -218,7 +222,7 @@ describe('read configuration from file', () => {
       },
     });
 
-    expect(getConfiguration().connections.local.port).toBe(3307);
+    expect(getConfiguration().connections.local).toMatchObject({ port: 3307 });
   });
 
   test('existing file with connexions', () => {
@@ -378,7 +382,9 @@ describe('add connection to config', () => {
     });
 
     // the connection already there is untouched
-    expect(configuration.connections.local.host).toBe('localhost');
+    expect(configuration.connections.local).toMatchObject({
+      host: 'localhost',
+    });
     expect(configuration.connections['local-2']).toMatchObject({
       name: 'LOCAL',
       host: 'elsewhere',
@@ -1037,7 +1043,7 @@ describe('edit', () => {
       password: 'password',
     });
 
-    expect(configuration.connections.prod.host).toBe('prod2');
+    expect(configuration.connections.prod).toMatchObject({ host: 'prod2' });
 
     expect(mockWriteFile).toHaveBeenCalledWith(
       'userData/config/config.json',
@@ -1092,9 +1098,9 @@ describe('edit', () => {
       'my-new-local-connection',
     ]);
     expect(configuration.connections.local).toBeUndefined();
-    expect(configuration.connections['my-new-local-connection'].host).toBe(
-      'local2'
-    );
+    expect(configuration.connections['my-new-local-connection']).toMatchObject({
+      host: 'local2',
+    });
 
     expect(mockWriteFile).toHaveBeenCalledWith(
       'userData/config/config.json',
@@ -1170,14 +1176,16 @@ describe('edit', () => {
       'docker-dev',
       'docker-dev-2',
     ]);
-    expect(configuration.connections['docker-dev-2'].port).toBe(13308);
+    expect(configuration.connections['docker-dev-2']).toMatchObject({
+      port: 13308,
+    });
   });
 
   test('a group is saved, and an edit without one removes it from the file', async () => {
     mockExistingConfig();
     const local = {
       name: 'local',
-      engine: DatabaseEngine.MySQL,
+      engine: DatabaseEngine.MySQL as const,
       host: 'localhost',
       user: 'root',
       port: 3306,
@@ -1195,6 +1203,109 @@ describe('edit', () => {
 
     await editConnection('local', { ...local, group: undefined });
     expect(lastWrittenLocal()).not.toHaveProperty('group');
+  });
+});
+
+describe('a connection to a file', () => {
+  const notes = {
+    name: 'notes',
+    engine: DatabaseEngine.SQLite as const,
+    file: '/data/notes.db',
+  };
+
+  test('is stored with its file, and no password to encrypt', async () => {
+    mockExistsSync.mockReturnValue(false);
+
+    await addConnectionToConfig(notes);
+
+    expect(
+      (JSON.parse(configurationWrites()[0]) as Configuration).connections
+    ).toStrictEqual({ notes: { ...notes, slug: 'notes' } });
+    expect(safeStorage.encryptStringAsync).not.toHaveBeenCalled();
+  });
+
+  test('is read back as it was stored, with no port', () => {
+    mockExistingConfig({
+      version: 1,
+      theme: DEFAULT_THEME.name,
+      locale: DEFAULT_LOCALE,
+      connections: { notes: { ...notes, slug: 'notes' } },
+    });
+
+    expect(getConfiguration().connections.notes).toStrictEqual({
+      ...notes,
+      slug: 'notes',
+    });
+  });
+
+  test('replaces a server and its password, keeping what the app remembers', async () => {
+    mockExistingConfig();
+    setActiveDatabase('local', 'main');
+
+    await editConnection('local', { ...notes, name: 'local' });
+
+    expect(getConfiguration().connections.local).toStrictEqual({
+      ...notes,
+      name: 'local',
+      slug: 'local',
+      appState: { activeDatabase: 'main', configByDatabase: {} },
+    });
+  });
+});
+
+describe('picking a database file', () => {
+  type Handler = (event: { sender: object }, payload: unknown) => unknown;
+  const handlers = new Map<string, Handler>();
+  const window = {};
+
+  bindIpcMain({
+    handle: (channel: string, handler: Handler) => {
+      handlers.set(channel, handler);
+    },
+  } as unknown as Electron.IpcMain);
+
+  function pick(defaultPath: unknown): unknown {
+    return handlers.get(CONFIGURATION_CHANNEL.PICK_DATABASE_FILE)?.(
+      { sender: {} },
+      defaultPath
+    );
+  }
+
+  afterEach(() => {
+    vi.mocked(dialog.showOpenDialog).mockReset();
+  });
+
+  test('answers the file picked, the dialog opening on the one typed', async () => {
+    vi.mocked(BrowserWindow.fromWebContents).mockReturnValue(
+      window as BrowserWindow
+    );
+    vi.mocked(dialog.showOpenDialog).mockResolvedValue({
+      canceled: false,
+      filePaths: ['/data/notes.db'],
+    });
+
+    await expect(pick('/data/old.db')).resolves.toBe('/data/notes.db');
+    expect(dialog.showOpenDialog).toHaveBeenCalledWith(
+      window,
+      expect.objectContaining({
+        defaultPath: '/data/old.db',
+        properties: ['openFile'],
+      })
+    );
+  });
+
+  test('answers null when the dialog is cancelled', async () => {
+    vi.mocked(dialog.showOpenDialog).mockResolvedValue({
+      canceled: true,
+      filePaths: [],
+    });
+
+    await expect(pick(undefined)).resolves.toBeNull();
+  });
+
+  test('refuses a starting point that is not a path', () => {
+    expect(() => pick({ path: '/data' })).toThrow();
+    expect(dialog.showOpenDialog).not.toHaveBeenCalled();
   });
 });
 
@@ -1298,9 +1409,9 @@ describe('stored passwords', () => {
   test('the configuration holds the ciphertext, and never decrypts it', () => {
     mockExistingConfig();
 
-    expect(getConfiguration().connections.local.password).toBe(
-      STORED_CIPHERTEXT
-    );
+    expect(getConfiguration().connections.local).toMatchObject({
+      password: STORED_CIPHERTEXT,
+    });
     expect(safeStorage.decryptStringAsync).not.toHaveBeenCalled();
   });
 
@@ -1313,7 +1424,9 @@ describe('stored passwords', () => {
 
     expect(dialog.showErrorBox).not.toHaveBeenCalled();
     expect(writtenConfig().theme).toBe('dracula');
-    expect(writtenConfig().connections.local.password).toBe(STORED_CIPHERTEXT);
+    expect(writtenConfig().connections.local).toMatchObject({
+      password: STORED_CIPHERTEXT,
+    });
   });
 
   test('adding a connection is the write that needs to encrypt, and says so', async () => {
@@ -1352,11 +1465,15 @@ describe('stored passwords', () => {
     expect(configurationWrites()).toStrictEqual([]);
 
     // the edit was refused, so it must not ride along the next unrelated write
-    expect(getConfiguration().connections.local.host).toBe('localhost');
+    expect(getConfiguration().connections.local).toMatchObject({
+      host: 'localhost',
+    });
 
     await changeTheme('dracula');
 
-    expect(writtenConfig().connections.local.host).toBe('localhost');
+    expect(writtenConfig().connections.local).toMatchObject({
+      host: 'localhost',
+    });
   });
 
   test('an empty password field keeps the stored ciphertext', async () => {
@@ -1375,8 +1492,8 @@ describe('stored passwords', () => {
 
     const written = writtenConfig().connections.local;
 
-    expect(written.host).toBe('somewhere-else');
-    expect(written.password).toBe(STORED_CIPHERTEXT);
+    expect(written).toMatchObject({ host: 'somewhere-else' });
+    expect(written).toMatchObject({ password: STORED_CIPHERTEXT });
     expect(safeStorage.encryptStringAsync).not.toHaveBeenCalled();
   });
 
@@ -1412,9 +1529,9 @@ describe('stored passwords', () => {
       password: 'new-password',
     });
 
-    expect(writtenConfig().connections.local.password).toBe(
-      Buffer.from('encrypted-new-password').toString('base64')
-    );
+    expect(writtenConfig().connections.local).toMatchObject({
+      password: Buffer.from('encrypted-new-password').toString('base64'),
+    });
   });
 });
 
@@ -1500,7 +1617,7 @@ describe('unreadable configuration file', () => {
     expect(configurationWrites()).toStrictEqual([PREVIOUS]);
     expect(configuration.locale).toBe('fr');
     // restored, then read as any file is
-    expect(configuration.connections.local.port).toBe(3306);
+    expect(configuration.connections.local).toMatchObject({ port: 3306 });
     expect(configuration.connections.local.engine).toBe(DatabaseEngine.MySQL);
   });
 

@@ -107,3 +107,5 @@ Refonte du design Tiana Tables/
 # website build
 website/dist
 var/plans
+# SQLite development file (dev/fixtures/sqlite/load.mjs)
+/dev/tiana_dev.sqlite

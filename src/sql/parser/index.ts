@@ -47,13 +47,28 @@ class QuietPostgreSQL extends PostgreSQL {
  * the last input it saw, so sharing one instance between completion, syntax
  * validation and highlighting means they parse the editor content once.
  */
+const postgreSql = new QuietPostgreSQL();
+
 const PARSERS: Record<DatabaseEngine, SqlParser> = {
   [DatabaseEngine.MySQL]: new QuietMySQL(),
-  [DatabaseEngine.PostgreSQL]: new QuietPostgreSQL(),
+  [DatabaseEngine.PostgreSQL]: postgreSql,
+  // dt-sql-parser has no SQLite: PostgreSQL's quotes names as it does, and completes its tables and columns
+  [DatabaseEngine.SQLite]: postgreSql,
+};
+
+/** Whether the grammar is the engine's own, so that a syntax error it finds is one the server would report. */
+const OWN_GRAMMAR: Readonly<Record<DatabaseEngine, boolean>> = {
+  [DatabaseEngine.MySQL]: true,
+  [DatabaseEngine.PostgreSQL]: true,
+  [DatabaseEngine.SQLite]: false,
 };
 
 export function getParser(engine: DatabaseEngine): SqlParser {
   return PARSERS[engine];
+}
+
+export function reportsSyntaxErrors(engine: DatabaseEngine): boolean {
+  return OWN_GRAMMAR[engine];
 }
 
 /** A token of the content, as `getAllTokens` hands it. */
@@ -74,6 +89,19 @@ export enum TokenKind {
 }
 
 /** A dollar-quoted string is three tokens on PostgreSQL, each one a literal. */
+const POSTGRES_LITERAL_TYPES: ReadonlySet<number> = new Set([
+  PostgreSqlLexer.StringConstant,
+  PostgreSqlLexer.EscapeStringConstant,
+  PostgreSqlLexer.UnicodeEscapeStringConstant,
+  PostgreSqlLexer.BeginDollarStringConstant,
+  PostgreSqlLexer.DollarText,
+  PostgreSqlLexer.EndDollarStringConstant,
+  PostgreSqlLexer.BinaryStringConstant,
+  PostgreSqlLexer.HexadecimalStringConstant,
+  PostgreSqlLexer.Integral,
+  PostgreSqlLexer.Numeric,
+]);
+
 const LITERAL_TYPES: Record<DatabaseEngine, ReadonlySet<number>> = {
   [DatabaseEngine.MySQL]: new Set([
     MySqlLexer.STRING_LITERAL,
@@ -87,18 +115,8 @@ const LITERAL_TYPES: Record<DatabaseEngine, ReadonlySet<number>> = {
     MySqlLexer.HEXADECIMAL_LITERAL,
     MySqlLexer.BIT_STRING,
   ]),
-  [DatabaseEngine.PostgreSQL]: new Set([
-    PostgreSqlLexer.StringConstant,
-    PostgreSqlLexer.EscapeStringConstant,
-    PostgreSqlLexer.UnicodeEscapeStringConstant,
-    PostgreSqlLexer.BeginDollarStringConstant,
-    PostgreSqlLexer.DollarText,
-    PostgreSqlLexer.EndDollarStringConstant,
-    PostgreSqlLexer.BinaryStringConstant,
-    PostgreSqlLexer.HexadecimalStringConstant,
-    PostgreSqlLexer.Integral,
-    PostgreSqlLexer.Numeric,
-  ]),
+  [DatabaseEngine.PostgreSQL]: POSTGRES_LITERAL_TYPES,
+  [DatabaseEngine.SQLite]: POSTGRES_LITERAL_TYPES,
 };
 
 export function tokenKind(engine: DatabaseEngine, token: SqlToken): TokenKind {

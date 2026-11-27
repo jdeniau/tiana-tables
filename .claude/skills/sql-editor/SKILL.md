@@ -8,13 +8,15 @@ description: >
 
 Three layers, three different jobs. Keep them straight — most of the traps below come from confusing them.
 
-| Layer                  | Job                                                                                         |
-| ---------------------- | ------------------------------------------------------------------------------------------- |
-| `monaco-editor`        | the editor: models, markers, themes, provider registries                                    |
-| `monaco-sql-languages` | registers the `mysql` and `pgsql` languages and their **Monarch tokenizers** (lexical only) |
-| `dt-sql-parser`        | the real **grammar** of each engine (ANTLR): entities, suggestions, syntax errors           |
+| Layer                  | Job                                                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `monaco-editor`        | the editor: models, markers, themes, provider registries                                                                    |
+| `monaco-sql-languages` | registers the `mysql` and `pgsql` languages and their **Monarch tokenizers** (lexical only); our `sqlite` borrows `pgsql`'s |
+| `dt-sql-parser`        | the real **grammar** of each engine (ANTLR): entities, suggestions, syntax errors                                           |
 
 Monaco stays in charge; the two SQL packages are plugged into it.
+
+**SQLite has no grammar of its own in either package.** `useCompletion.tsx` registers a `sqlite` language whose loader is `pgsql`'s tokenizer, and `PARSERS` (`src/sql/parser/index.ts`) hands it PostgreSQL's grammar, which quotes names as SQLite does and completes its tables and columns. `OWN_GRAMMAR` is `false` for it, so `reportsSyntaxErrors` keeps PostgreSQL's errors off valid SQLite (`INSERT OR REPLACE`, `PRAGMA`); the unknown-column warnings, read from the schema, stay.
 
 ## What we deliberately do NOT use
 

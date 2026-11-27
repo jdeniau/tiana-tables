@@ -4,7 +4,7 @@ import type {
   QueryResult as MySqlResult,
   SslOptions,
 } from 'mysql2/promise';
-import type { Driver } from '..';
+import type { Driver, ServerConnectionParams } from '..';
 import type { ResultField } from '../../resultField';
 import { asSqlError } from '../../sqlError';
 import { SslMode } from '../../sslMode';
@@ -87,7 +87,7 @@ const SSL_OPTIONS: Readonly<Record<SslMode, SslOptions | undefined>> = {
   [SslMode.VerifyFull]: { rejectUnauthorized: true, verifyIdentity: true },
 };
 
-export const mysqlDriver: Driver = {
+export const mysqlDriver: Driver<ServerConnectionParams> = {
   async connect(params, options) {
     // loaded only when a connection is actually opened, to keep app startup light
     const { createConnection } = await import('mysql2/promise');

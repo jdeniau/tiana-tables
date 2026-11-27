@@ -1,11 +1,12 @@
-import { dialog } from 'electron';
+import { BrowserWindow, type OpenDialogOptions, dialog } from 'electron';
 import { existsSync, readFileSync } from 'node:fs';
 import log from 'electron-log';
 import { sync as writeFileAtomicSync } from 'write-file-atomic';
+import { z } from 'zod';
 import { changeLanguage as changeI18nLanguage, t } from '../i18n';
 import { WindowState } from '../main-process/windowState';
 import { CONFIGURATION_CHANNEL } from '../preload/configurationChannel';
-import { DatabaseEngine } from '../sql/engine';
+import { DatabaseEngine, opensFile } from '../sql/engine';
 import { ConnectionObjectWithoutSlug } from '../sql/types';
 import type { DateDisplay } from './dateDisplay';
 import { EncryptionUnavailableError, encryptPassword } from './encryption';
@@ -44,7 +45,7 @@ function getBaseConfig(): Configuration {
 }
 
 /**
- * The connection as it is stored, password encrypted.
+ * The connection as it is stored, a server's password encrypted.
  * `null` when the OS refused to encrypt: the user has been told, and nothing must be written.
  * An empty password field on an edit keeps the stored ciphertext, so changing a port does not ask for the password again.
  */
@@ -53,7 +54,11 @@ async function encryptSubmittedConnection(
   slug: string,
   stored: EncryptedConnectionObject | undefined
 ): Promise<EncryptedConnectionObject | null> {
-  if (connection.password === '' && stored) {
+  if (opensFile(connection)) {
+    return { ...connection, slug, appState: stored?.appState };
+  }
+
+  if (connection.password === '' && stored && !opensFile(stored)) {
     return {
       ...connection,
       slug,
@@ -115,6 +120,22 @@ function loadConfiguration(): Configuration {
   return normalizeConfiguration(parsed.config);
 }
 
+function normalizeConnection(
+  connection: EncryptedConnectionObject
+): EncryptedConnectionObject {
+  if (opensFile(connection)) {
+    return connection;
+  }
+
+  return {
+    ...connection,
+    // nothing checks what the file holds, and an older file names no engine: MySQL was all the app talked to
+    engine: connection.engine ?? DatabaseEngine.MySQL,
+    // the form submitted the port as text until it had a number field, so older files hold a string
+    port: Number(connection.port),
+  };
+}
+
 // the passwords stay as they are stored: they are decrypted when a connection is opened, never on the way in or out of the file
 function normalizeConfiguration(config: Configuration): Configuration {
   return {
@@ -122,13 +143,7 @@ function normalizeConfiguration(config: Configuration): Configuration {
     connections: Object.fromEntries(
       Object.entries(config.connections ?? {}).map(([slug, connection]) => [
         slug,
-        {
-          ...connection,
-          // nothing checks what the file holds, and no file names an engine yet: MySQL is all the app has ever talked to
-          engine: connection.engine ?? DatabaseEngine.MySQL,
-          // the form submitted the port as text until it had a number field, so older files hold a string
-          port: Number(connection.port),
-        },
+        normalizeConnection(connection),
       ])
     ),
   };
@@ -618,6 +633,33 @@ const IPC_EVENT_BINDING = {
   [CONFIGURATION_CHANNEL.SET_DATE_DISPLAY]: setDateDisplay,
 } as const;
 
+const defaultPathSchema = z.string().optional();
+
+/** The database file the user picks, `null` when they cancel. */
+async function pickDatabaseFile(
+  window: BrowserWindow | null,
+  defaultPath: string | undefined
+): Promise<string | null> {
+  const options: OpenDialogOptions = {
+    defaultPath,
+    properties: ['openFile'],
+    filters: [
+      {
+        name: t('connection.form.file.filter'),
+        extensions: ['db', 'sqlite', 'sqlite3', 'db3'],
+      },
+      { name: t('connection.form.file.anyFile'), extensions: ['*'] },
+    ],
+  };
+
+  // a cancelled dialog answers no path
+  const { filePaths } = await (window
+    ? dialog.showOpenDialog(window, options)
+    : dialog.showOpenDialog(options));
+
+  return filePaths[0] ?? null;
+}
+
 export function bindIpcMain(ipcMain: Electron.IpcMain): void {
   for (const [channel, handler] of Object.entries(IPC_EVENT_BINDING)) {
     ipcMain.handle(channel, (event, ...args: Array<unknown>) =>
@@ -626,6 +668,15 @@ export function bindIpcMain(ipcMain: Electron.IpcMain): void {
       handler(...args)
     );
   }
+
+  ipcMain.handle(
+    CONFIGURATION_CHANNEL.PICK_DATABASE_FILE,
+    (event, payload: unknown) =>
+      pickDatabaseFile(
+        BrowserWindow.fromWebContents(event.sender),
+        defaultPathSchema.parse(payload)
+      )
+  );
 }
 
 export const testables = {

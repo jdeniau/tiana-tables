@@ -2,7 +2,7 @@
 export default {
   'meta.title': 'Tiana Tables: a SQL client for developers',
   'meta.description':
-    'A MySQL, MariaDB and PostgreSQL client for developers, on Linux, macOS and Windows. Browse, query and edit your data efficiently. Easy-to-use and pretty.',
+    'A MySQL, MariaDB, PostgreSQL and SQLite client for developers, on Linux, macOS and Windows. Browse, query and edit your data efficiently. Easy-to-use and pretty.',
   'nav.label': 'Sections',
   'nav.editor': 'Editor',
   'nav.browse': 'Browse',
@@ -19,7 +19,8 @@ export default {
   'theme.dark': 'Dark',
   'theme.light': 'Light',
 
-  'hero.eyebrow': 'MySQL · MariaDB · PostgreSQL · Linux, macOS, Windows',
+  'hero.eyebrow':
+    'MySQL · MariaDB · PostgreSQL · SQLite · Linux, macOS, Windows',
   'hero.title': 'A SQL client for developers',
   'hero.title.short': 'A SQL client for devs',
   'hero.lead':
@@ -28,7 +29,7 @@ export default {
   'hero.source': 'Source on GitHub',
   'hero.other': 'Other platforms',
   'spec.engines': 'Engines',
-  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL',
+  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL, SQLite',
   'spec.runsOn': 'Runs on',
   'spec.runsOn.value': 'Linux, macOS, Windows',
   'spec.connects': 'Connects',
@@ -119,7 +120,7 @@ export default {
   'databases.supported': 'supported',
   'databases.outOfScope': 'out of scope',
   'databases.text':
-    'A PostgreSQL connection opens one database, and lists its schemas where a MySQL server lists its databases. Another engine that shares enough of the SQL standard can be discussed in an issue.',
+    'A PostgreSQL connection opens one database, and lists its schemas where a MySQL server lists its databases. A SQLite connection opens a file. Another engine that shares enough of the SQL standard can be discussed in an issue.',
 
   'charts.title': 'Charts',
   'charts.meta': 'bar or line, from any result',

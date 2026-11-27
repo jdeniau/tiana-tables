@@ -82,6 +82,9 @@ interface Config {
   ): Promise<Configuration>;
 
   deleteConnection(connectionSlug: string): Promise<Configuration>;
+
+  /** the database file the user picks in the system's dialog, `null` when they cancel */
+  pickDatabaseFile(defaultPath?: string): Promise<string | null>;
 }
 
 export const config: Config = {
@@ -103,4 +106,5 @@ export const config: Config = {
   setDateDisplay: bindChannel(CONFIGURATION_CHANNEL.SET_DATE_DISPLAY),
   editConnection: bindChannel(CONFIGURATION_CHANNEL.EDIT_CONNECTION),
   deleteConnection: bindChannel(CONFIGURATION_CHANNEL.DELETE_CONNECTION),
+  pickDatabaseFile: bindChannel(CONFIGURATION_CHANNEL.PICK_DATABASE_FILE),
 };

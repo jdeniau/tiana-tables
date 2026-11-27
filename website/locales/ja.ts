@@ -3,7 +3,7 @@ import { SiteMessages } from './type';
 const ja: SiteMessages = {
   'meta.title': 'Tiana Tables：開発者のための SQL クライアント',
   'meta.description':
-    '開発者のための MySQL、MariaDB、PostgreSQL クライアント。Linux、macOS、Windows で動きます。データの閲覧、クエリ、編集を効率よく行えます。使いやすく、見た目もきれいです。',
+    '開発者のための MySQL、MariaDB、PostgreSQL、SQLite クライアント。Linux、macOS、Windows で動きます。データの閲覧、クエリ、編集を効率よく行えます。使いやすく、見た目もきれいです。',
   'nav.label': 'セクション',
   'nav.editor': 'エディター',
   'nav.browse': '閲覧',
@@ -20,7 +20,8 @@ const ja: SiteMessages = {
   'theme.dark': 'ダーク',
   'theme.light': 'ライト',
 
-  'hero.eyebrow': 'MySQL · MariaDB · PostgreSQL · Linux, macOS, Windows',
+  'hero.eyebrow':
+    'MySQL · MariaDB · PostgreSQL · SQLite · Linux, macOS, Windows',
   'hero.title': '開発者のための SQL クライアント',
   'hero.title.short': '開発者向け SQL クライアント',
   'hero.lead':
@@ -29,7 +30,7 @@ const ja: SiteMessages = {
   'hero.source': 'GitHub のソースコード',
   'hero.other': 'ほかのプラットフォーム',
   'spec.engines': 'データベース',
-  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL',
+  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL, SQLite',
   'spec.runsOn': '対応 OS',
   'spec.runsOn.value': 'Linux, macOS, Windows',
   'spec.connects': '接続',
@@ -126,7 +127,7 @@ const ja: SiteMessages = {
   'databases.supported': '対応',
   'databases.outOfScope': '対象外',
   'databases.text':
-    'PostgreSQL の接続は 1 つのデータベースを開き、MySQL サーバーならデータベースが並ぶ場所に、そのスキーマを並べます。SQL 標準に十分近いほかのエンジンは、issue で相談できます。',
+    'PostgreSQL の接続は 1 つのデータベースを開き、MySQL サーバーならデータベースが並ぶ場所に、そのスキーマを並べます。SQLite の接続はファイルを開きます。SQL 標準に十分近いほかのエンジンは、issue で相談できます。',
 
   'charts.title': 'グラフ',
   'charts.meta': '棒グラフか折れ線グラフ、どんな結果からでも',

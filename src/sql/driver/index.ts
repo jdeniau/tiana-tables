@@ -9,7 +9,7 @@ import type { QueryResult, SqlBoundValues } from '../types';
  * the stored connection: the configuration holds fields no driver should see,
  * and a new one must not start reaching it by accident.
  */
-interface ConnectionParams {
+export interface ServerConnectionParams {
   host: string;
   port: number;
   user: string;
@@ -22,7 +22,12 @@ interface ConnectionParams {
   stream?: Duplex;
 }
 
-interface ConnectOptions {
+/** What SQLite needs: the file it opens, which is never created. */
+export interface FileConnectionParams {
+  file: string;
+}
+
+export interface ConnectOptions {
   connectTimeoutMs: number;
   /** the socket is gone, so the stack can forget the connection */
   onClosed(): void;
@@ -48,43 +53,51 @@ export interface DriverConnection {
   isConnectionLost(error: unknown): boolean;
 }
 
-export interface Driver {
-  connect(
-    params: ConnectionParams,
-    options: ConnectOptions
-  ): Promise<DriverConnection>;
+export interface Driver<Params> {
+  connect(params: Params, options: ConnectOptions): Promise<DriverConnection>;
 }
 
-const IMPORTS: Record<DatabaseEngine, () => Promise<Driver>> = {
-  [DatabaseEngine.MySQL]: () =>
-    import('./mysql/index').then((m) => m.mysqlDriver),
-  [DatabaseEngine.PostgreSQL]: () =>
-    import('./postgres/index').then((m) => m.postgresDriver),
+/** What the driver of each engine is given to connect. */
+interface ParamsByEngine {
+  [DatabaseEngine.MySQL]: ServerConnectionParams;
+  [DatabaseEngine.PostgreSQL]: ServerConnectionParams;
+  [DatabaseEngine.SQLite]: FileConnectionParams;
+}
+
+type DriverOf<Engine extends DatabaseEngine> = Driver<ParamsByEngine[Engine]>;
+
+/** An import run the first time it is asked for, so that parallel handshakes share it. */
+function once<Value>(load: () => Promise<Value>): () => Promise<Value> {
+  let pending: Promise<Value> | undefined;
+
+  return () => (pending ??= load());
+}
+
+const IMPORTS: {
+  [Engine in DatabaseEngine]: () => Promise<DriverOf<Engine>>;
+} = {
+  [DatabaseEngine.MySQL]: once(() =>
+    import('./mysql/index').then((m) => m.mysqlDriver)
+  ),
+  [DatabaseEngine.PostgreSQL]: once(() =>
+    import('./postgres/index').then((m) => m.postgresDriver)
+  ),
+  [DatabaseEngine.SQLite]: once(() =>
+    import('./sqlite/index').then((m) => m.sqliteDriver)
+  ),
 };
 
-const loaded = new Map<DatabaseEngine, Promise<Driver>>();
-
 /**
- * The driver of an engine, imported the first time a connection to it opens.
- *
- * Lazily, so that neither driver weighs on app startup, and memoised so that
- * parallel handshakes share one import.
+ * The driver of an engine, imported the first time a connection to it opens,
+ * so that no driver weighs on app startup.
  */
-export function loadDriver(engine: DatabaseEngine): Promise<Driver> {
-  const pending = loaded.get(engine);
-
-  if (pending) {
-    return pending;
-  }
-
+export function loadDriver<Engine extends DatabaseEngine>(
+  engine: Engine
+): Promise<DriverOf<Engine>> {
   const load = IMPORTS[engine];
 
   // nothing validates the configuration file, so an unknown engine reaches here
   invariant(load, `No driver for engine "${engine}"`);
 
-  const driver = load();
-
-  loaded.set(engine, driver);
-
-  return driver;
+  return load();
 }

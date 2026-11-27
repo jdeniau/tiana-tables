@@ -3,6 +3,7 @@ import {
   type IconType,
   SiMysql,
   SiPostgresql,
+  SiSqlite,
 } from '@icons-pack/react-simple-icons';
 import { styled } from 'styled-components';
 import { useTranslation } from '../../../i18n';
@@ -13,6 +14,7 @@ import { space } from '../../theme';
 const ICON_BY_ENGINE: Readonly<Record<DatabaseEngine, IconType>> = {
   [DatabaseEngine.MySQL]: SiMysql,
   [DatabaseEngine.PostgreSQL]: SiPostgresql,
+  [DatabaseEngine.SQLite]: SiSqlite,
 };
 
 /**
