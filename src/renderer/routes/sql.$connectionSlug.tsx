@@ -13,6 +13,7 @@ import { PANEL } from '../../configuration/panels';
 import { useTranslation } from '../../i18n';
 import type { DatabaseEngine } from '../../sql/engine';
 import { hasLimitClause } from '../../sql/hasLimitClause';
+import type { QueryHistoryContent } from '../../sql/history/recordedStatement';
 import { toRecordedStatement } from '../../sql/history/toRecordedStatement';
 import { RunMode, toRunMode } from '../../sql/runMode';
 import { splitStatements, statementAtOffset } from '../../sql/splitStatements';
@@ -120,11 +121,24 @@ async function recordInHistory(
         statement
       );
 
+      const queryKey = queryKeys.queryHistory(connectionSlug, databaseName);
+
       if (isReloadDue(runs)) {
         // not awaited: the results wait for the write, not for the editor to load it again
-        void queryClient.invalidateQueries({
-          queryKey: queryKeys.queryHistory(connectionSlug, databaseName),
-        });
+        void queryClient.invalidateQueries({ queryKey });
+      } else {
+        // the order waits for the next load, not the text: the ghost text proposes it at once
+        queryClient.setQueryData<QueryHistoryContent>(
+          queryKey,
+          (content) =>
+            content && {
+              ...content,
+              runs: [
+                statement.sql,
+                ...content.runs.filter((text) => text !== statement.sql),
+              ],
+            }
+        );
       }
     }
   } catch (error) {

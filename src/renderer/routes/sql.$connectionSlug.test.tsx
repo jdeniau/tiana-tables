@@ -265,6 +265,24 @@ describe('action', () => {
     }
   );
 
+  test('adds the text that ran to what the editor learnt, between two refreshes', async () => {
+    const queryClient = createQueryClient();
+    const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
+
+    queryClient.setQueryData(learnt, {
+      runs: ['SELECT * FROM article', 'SELECT 1'],
+      blocks: [],
+    });
+    vi.mocked(window.queryHistory.record).mockResolvedValue(101);
+
+    await runAction('shop', 'SELECT 1', { queryClient });
+
+    expect(queryClient.getQueryData(learnt)).toEqual({
+      runs: ['SELECT 1', 'SELECT * FROM article'],
+      blocks: [],
+    });
+  });
+
   test('answers what ran even when the history cannot record it', async () => {
     const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
