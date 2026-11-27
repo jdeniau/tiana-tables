@@ -74,6 +74,6 @@ describe('the ghost text', () => {
     const filter = 'SELECT * FROM `lecture` WHERE ';
 
     expect(ghostTextAt('s|', filter)).toEqual([]);
-    expect(ghostTextAt('|', filter)).toEqual(['lecture.lu = 1']);
+    expect(ghostTextAt('|', filter)).toEqual(['`lecture`.lu = 1']);
   });
 });
