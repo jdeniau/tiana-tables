@@ -375,6 +375,36 @@ describe('a clause of the history', () => {
     );
   });
 
+  it.each([
+    [
+      'produit.prix > (SELECT AVG(prix) FROM produit)',
+      'p.prix > (SELECT AVG(prix) FROM produit)',
+    ],
+    [
+      '(produit.prix > (SELECT AVG(prix) FROM produit))',
+      '(p.prix > (SELECT AVG(prix) FROM produit))',
+    ],
+    [
+      'abs(produit.prix) > (SELECT AVG(prix) FROM produit)',
+      'abs(p.prix) > (SELECT AVG(prix) FROM produit)',
+    ],
+  ])(
+    'qualifies by the alias of the query a table its subquery reads again: %s',
+    (condition, expected) => {
+      const continuation = new HistoryContinuation({
+        runs: [],
+        blocks: blocksOf(`SELECT * FROM produit WHERE ${condition}`),
+      });
+
+      expect(
+        continuation.after(
+          'SELECT * FROM produit p WHERE ',
+          DatabaseEngine.MySQL
+        )
+      ).toBe(expected);
+    }
+  );
+
   it('reads the tables of the query outside its subqueries', () => {
     const continuation = new HistoryContinuation({
       runs: [],

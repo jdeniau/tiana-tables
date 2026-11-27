@@ -350,7 +350,7 @@ function rewrite(
       : declared;
   }
 
-  const ownAliases = subqueryAliases(tokens, words, tableOf);
+  const ownReferences = subqueryReferences(tokens, tableOf);
   let text = '';
   let from = first.start;
 
@@ -359,7 +359,7 @@ function rewrite(
     const table = tableOf.get(word);
     let replacement: string | undefined;
 
-    if (index < start || table === undefined || ownAliases.has(word)) {
+    if (index < start || table === undefined || ownReferences.has(index)) {
       continue;
     } else if (index === declaration && joinedAlias !== undefined) {
       replacement = joinedAlias;
@@ -385,24 +385,42 @@ function rewrite(
   return (text + block.sql.slice(from)).trimEnd();
 }
 
-/** the aliases a subquery of the block declares, which stay its own: `EXISTS (SELECT 1 FROM commentaire c …)` */
-function subqueryAliases(
+/** the tokens naming what a subquery of the block declares, inside that subquery: `EXISTS (SELECT 1 FROM commentaire c …)` */
+function subqueryReferences(
   tokens: ReadonlyArray<SqlToken>,
-  words: ReadonlyArray<string>,
   tableOf: ReadonlyMap<string, string>
-): Set<string> {
-  const declared = new Set<string>();
-  let depth = 0;
+): Set<number> {
+  const names = tokens.map((token) => unquote(token.text ?? ''));
+  // by the index of the `(` that opens it, what each parenthesis declares
+  const declared = new Map<number, Set<string>>();
+  const enclosing: Array<ReadonlyArray<number>> = [];
+  const open: Array<number> = [];
 
-  for (const [index, token] of tokens.entries()) {
-    const word = unquote(token.text ?? '');
+  for (const [index, name] of names.entries()) {
+    if (name === ')') {
+      open.pop();
+    }
 
-    depth += word === '(' ? 1 : word === ')' ? -1 : 0;
+    const innermost = open.at(-1);
 
-    if (depth > 0 && tableOf.has(word) && words[index + 1] !== '.') {
-      declared.add(word);
+    enclosing.push([...open]);
+
+    if (name === '(') {
+      open.push(index);
+    } else if (
+      innermost !== undefined &&
+      tableOf.has(name) &&
+      names[index + 1] !== '.'
+    ) {
+      declared.set(innermost, (declared.get(innermost) ?? new Set()).add(name));
     }
   }
 
-  return declared;
+  return new Set(
+    names.flatMap((name, index) =>
+      enclosing[index]?.some((paren) => declared.get(paren)?.has(name))
+        ? [index]
+        : []
+    )
+  );
 }
