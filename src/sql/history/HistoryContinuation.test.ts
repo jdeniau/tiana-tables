@@ -175,6 +175,47 @@ describe('a clause of the history', () => {
     expect(blockAfter('SELECT * FROM article a ORDER BY ')).toBe('a.vues DESC');
   });
 
+  it('proposes a clause that names a bare column on the tables it ran on only', () => {
+    const continuation = new HistoryContinuation({
+      runs: [],
+      blocks: [
+        ...blocksOf('SELECT * FROM article WHERE id = 3', 5),
+        ...blocksOf(
+          'SELECT * FROM article a JOIN commentaire c ON c.article_id = a.id WHERE statut = 1 ORDER BY date_creation',
+          3
+        ),
+        ...blocksOf(
+          'SELECT * FROM article a JOIN commentaire c ON c.article_id = a.id WHERE a.statut = 1',
+          2
+        ),
+      ],
+    });
+    const after = (typed: string): string | null =>
+      continuation.after(typed, DatabaseEngine.MySQL);
+
+    expect(after('SELECT * FROM article a WHERE ')).toBe('id = 3');
+    expect(
+      after(
+        'SELECT * FROM article a JOIN commentaire c ON c.article_id = a.id WHERE '
+      )
+    ).toBe('statut = 1');
+    expect(
+      after(
+        'SELECT * FROM article a JOIN auteur au ON au.id = a.auteur_id WHERE '
+      )
+    ).toBe('a.statut = 1');
+    expect(after('SELECT * FROM utilisateur u ORDER BY ')).toBeNull();
+    expect(
+      new HistoryContinuation({
+        runs: [],
+        blocks: blocksOf('SELECT * FROM article WHERE id = 3'),
+      }).after(
+        'SELECT * FROM article a JOIN article p ON p.id = a.parent_id WHERE ',
+        DatabaseEngine.MySQL
+      )
+    ).toBeNull();
+  });
+
   it('proposes the most run FROM as it ran', () => {
     expect(blockAfter('SELECT * FROM ')).toBe('auteur');
     expect(blockAfter('SELECT COUNT(*) FROM ')).toBe('auteur');

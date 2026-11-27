@@ -73,16 +73,6 @@ export class HistoryUsage {
   }
 }
 
-/** the words of a shape, in lower case like every name here */
-export function wordsOf(shape: string): Array<string> {
-  return shape.split(' ').map((word) => unquote(word).toLowerCase());
-}
-
-/** the tables aliases stand for, in lower case like every name here */
-export function tablesOf(aliases: Record<string, string>): Set<string> {
-  return new Set(Object.values(aliases).map((table) => table.toLowerCase()));
-}
-
 /** the table a `JOIN` block joins, `undefined` when it is not one the statement read */
 export function joinedTable(
   words: ReadonlyArray<string>,

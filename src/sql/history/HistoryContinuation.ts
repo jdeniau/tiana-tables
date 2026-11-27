@@ -1,7 +1,8 @@
 import type { DatabaseEngine } from '../engine';
 import { CODE_CHANNEL, type SqlToken, getParser } from '../parser';
 import { extractTableAliases, generateTableAlias, unquote } from '../tableName';
-import { joinedTable, qualifiers, tablesOf, wordsOf } from './HistoryUsage';
+import { joinedTable, qualifiers } from './HistoryUsage';
+import { namesBareColumn, tablesOf, wordsOf } from './bareColumn';
 import {
   Clause,
   type HistoryBlock,
@@ -30,6 +31,8 @@ type Candidate = {
   joined: string | undefined;
   /** the tables its columns belong to, which the query must hold */
   reads: ReadonlySet<string>;
+  /** whether it names a column without its table, which only the same tables, each read once, keep unambiguous */
+  exact: boolean;
 };
 
 /**
@@ -48,7 +51,7 @@ export class HistoryContinuation {
       const tables = tablesOf(block.aliases);
 
       if (block.clause === Clause.From) {
-        return [{ block, joined: undefined, reads: new Set() }];
+        return [{ block, joined: undefined, reads: new Set(), exact: false }];
       }
 
       if (block.clause === Clause.Join) {
@@ -59,16 +62,20 @@ export class HistoryContinuation {
             block,
             joined,
             reads: qualifiers(words, tables).difference(new Set([joined])),
+            exact: false,
           },
         ];
       }
 
-      // a bare column belongs to the only table, and is anyone's past it
+      const exact = namesBareColumn(words, tables);
+
       return [
         {
           block,
           joined: undefined,
-          reads: tables.size === 1 ? tables : qualifiers(words, tables),
+          reads:
+            exact || tables.size === 1 ? tables : qualifiers(words, tables),
+          exact,
         },
       ];
     });
@@ -120,11 +127,13 @@ export class HistoryContinuation {
 
     const aliases = extractTableAliases(typed, engine);
     const tables = tablesOf(aliases);
+    const readsEachOnce = tables.size === Object.keys(aliases).length;
 
-    for (const { block, joined, reads } of this.candidates) {
+    for (const { block, joined, reads, exact } of this.candidates) {
       if (
         block.clause === clause &&
         reads.isSubsetOf(tables) &&
+        (!exact || (readsEachOnce && tables.isSubsetOf(reads))) &&
         (joined === undefined || !tables.has(joined))
       ) {
         const text = rewrite(block, joined, aliases, engine);
