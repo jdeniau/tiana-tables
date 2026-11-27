@@ -17,6 +17,8 @@ export type RecordedBlock = {
   sql: string;
   /** what tells it apart in the history: its values as `?`, its aliases as their table */
   shape: string;
+  /** the tables of the statement, sorted, when the clause names a column without its table: none otherwise */
+  tables: Array<string>;
 };
 
 /** A statement that ran, as the history records it. */

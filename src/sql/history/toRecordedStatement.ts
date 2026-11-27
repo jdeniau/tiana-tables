@@ -7,6 +7,7 @@ import {
   tokenKind,
 } from '../parser';
 import { extractTableAliases, unquote } from '../tableName';
+import { namesBareColumn, tablesOf, wordsOf } from './bareColumn';
 import {
   Clause,
   type RecordedBlock,
@@ -89,14 +90,21 @@ export function toRecordedStatement(
   const isSelect = words[0] === 'SELECT';
   const aliases = isSelect ? extractTableAliases(sql, engine) : {};
   const shapes = shapeWords(tokens, words, engine, aliases);
+  const tables = [...new Set(Object.values(aliases))].sort();
+  const names = tablesOf(aliases);
 
   const blocks = isSelect
     ? cutClauses(tokens, words, engine).map(
-        ({ clause, start, end }): RecordedBlock => ({
-          clause,
-          sql: textOf(sql, tokens.slice(start, end)),
-          shape: joinShape(shapes.slice(start, end)),
-        })
+        ({ clause, start, end }): RecordedBlock => {
+          const shape = joinShape(shapes.slice(start, end));
+
+          return {
+            clause,
+            sql: textOf(sql, tokens.slice(start, end)),
+            shape,
+            tables: namesBareColumn(wordsOf(shape), names) ? tables : [],
+          };
+        }
       )
     : [];
 

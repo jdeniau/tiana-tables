@@ -132,6 +132,7 @@ describe('recording a statement', () => {
           clause: Clause.Join,
           sql: sql.slice(sql.indexOf('JOIN')),
           shape: 'JOIN auteur ON auteur . id = article . auteur_id',
+          tables: [],
         },
       ],
     });
@@ -173,7 +174,12 @@ describe('recording a statement', () => {
       ...statement(`SELECT * FROM ${table} WHERE id = 3`, ''),
       aliases: { [table]: table },
       blocks: [
-        { clause: Clause.Where, sql: 'WHERE id = 3', shape: 'WHERE id = ?' },
+        {
+          clause: Clause.Where,
+          sql: 'WHERE id = 3',
+          shape: 'WHERE id = ?',
+          tables: [table],
+        },
       ],
     });
 
@@ -211,12 +217,13 @@ describe('recording a statement', () => {
           'SELECT * FROM article JOIN auteur ON auteur.id = article.auteur_id',
           ''
         ),
-        aliases: { auteur: 'auteur', article: 'article' },
+        aliases: { article: 'article', auteur: 'auteur' },
         blocks: [
           {
             clause: Clause.Join,
             sql: 'JOIN auteur ON auteur.id = article.auteur_id',
             shape: 'JOIN auteur ON auteur . id = article . auteur_id',
+            tables: [],
           },
         ],
       },
@@ -224,7 +231,7 @@ describe('recording a statement', () => {
     );
 
     expect(rows('SELECT tables, run_count FROM block')).toEqual([
-      { tables: '["article","auteur"]', run_count: 5 },
+      { tables: '[]', run_count: 5 },
     ]);
   });
 

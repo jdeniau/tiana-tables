@@ -60,7 +60,12 @@ const recordedStatementSchema: z.ZodType<RecordedStatement> = z.object({
   shape: z.string(),
   aliases: z.record(z.string(), z.string()),
   blocks: z.array(
-    z.object({ clause: z.enum(Clause), sql: z.string(), shape: z.string() })
+    z.object({
+      clause: z.enum(Clause),
+      sql: z.string(),
+      shape: z.string(),
+      tables: z.array(z.string()),
+    })
   ),
 });
 
@@ -184,9 +189,7 @@ function record(
       .where(and(eq(run.statementId, id), notInArray(run.id, latestRuns)))
       .run();
 
-    const tables = [...new Set(Object.values(recorded.aliases))].sort();
-
-    for (const { clause, shape, sql: text } of recorded.blocks) {
+    for (const { clause, shape, sql: text, tables } of recorded.blocks) {
       tx.insert(block)
         .values({
           history,

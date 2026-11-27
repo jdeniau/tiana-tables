@@ -7,7 +7,7 @@ import {
 import { MySqlLexer } from 'dt-sql-parser/dist/lib/mysql/MySqlLexer';
 import { PostgreSqlLexer } from 'dt-sql-parser/dist/lib/postgresql/PostgreSqlLexer';
 import { DatabaseEngine } from '../engine';
-import { SQL_RESERVED_KEYWORDS } from '../keywords';
+import { isReservedKeyword } from '../keywords';
 
 /** What the app asks of a grammar: the same four methods on every engine. */
 export type SqlParser = Pick<
@@ -101,9 +101,6 @@ const LITERAL_TYPES: Record<DatabaseEngine, ReadonlySet<number>> = {
   ]),
 };
 
-/** the lexers read a column named `password` or `name` as a keyword */
-const KEYWORDS: ReadonlySet<string> = new Set(SQL_RESERVED_KEYWORDS);
-
 export function tokenKind(engine: DatabaseEngine, token: SqlToken): TokenKind {
   // the MySQL lexer reads a backquoted name as a string literal
   if (token.text?.startsWith('`')) {
@@ -114,7 +111,8 @@ export function tokenKind(engine: DatabaseEngine, token: SqlToken): TokenKind {
     return TokenKind.Literal;
   }
 
-  return KEYWORDS.has(token.text?.toUpperCase() ?? '')
+  // the lexers' own keywords take in a column named `password` or `name`
+  return isReservedKeyword(token.text ?? '')
     ? TokenKind.Keyword
     : TokenKind.Other;
 }

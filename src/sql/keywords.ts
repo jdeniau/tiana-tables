@@ -521,3 +521,10 @@ export const SQL_RESERVED_KEYWORDS = [
   ...MYSQL_RESERVED_KEYWORDS,
   ...POSTGRESQL_RESERVED_KEYWORDS,
 ];
+
+const RESERVED_KEYWORDS: ReadonlySet<string> = new Set(SQL_RESERVED_KEYWORDS);
+
+/** whether a word, in any case, is reserved by SQL, MySQL or PostgreSQL */
+export function isReservedKeyword(word: string): boolean {
+  return RESERVED_KEYWORDS.has(word.toUpperCase());
+}

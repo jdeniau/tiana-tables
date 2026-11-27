@@ -54,7 +54,7 @@ export const block = sqliteTable(
     sql: text().notNull(),
     /** the tables the aliases of `sql` stand for */
     aliases: text({ mode: 'json' }).$type<Record<string, string>>().notNull(),
-    /** the tables of the statement, sorted: `WHERE id = ?` read on two tables is two blocks */
+    /** those of `RecordedBlock`: `WHERE id = ?` read on two tables is two blocks, `FROM article` joined to either one */
     tables: text({ mode: 'json' }).$type<Array<string>>().notNull().default([]),
     runCount: integer('run_count').notNull(),
     lastRunAt: integer('last_run_at').notNull(),

@@ -71,26 +71,79 @@ describe('the clauses of a SELECT', () => {
         clause: Clause.Select,
         sql: 'SELECT LEFT(a.titre, 3)',
         shape: 'SELECT LEFT ( article . titre , ? )',
+        tables: [],
       },
-      { clause: Clause.From, sql: 'FROM article a', shape: 'FROM article' },
+      {
+        clause: Clause.From,
+        sql: 'FROM article a',
+        shape: 'FROM article',
+        tables: [],
+      },
       {
         clause: Clause.Join,
         sql: 'LEFT OUTER JOIN auteur au ON au.id = a.auteur_id',
         shape: 'LEFT OUTER JOIN auteur ON auteur . id = article . auteur_id',
+        tables: [],
       },
       {
         clause: Clause.Where,
         sql: "WHERE a.statut = 'publie'",
         shape: 'WHERE article . statut = ?',
+        tables: [],
       },
       {
         clause: Clause.OrderBy,
         sql: 'ORDER BY a.id DESC',
         shape: 'ORDER BY article . id DESC',
+        tables: [],
       },
-      { clause: Clause.Limit, sql: 'LIMIT 10', shape: 'LIMIT ?' },
+      { clause: Clause.Limit, sql: 'LIMIT 10', shape: 'LIMIT ?', tables: [] },
     ]);
     expect(recorded?.aliases).toEqual({ a: 'article', au: 'auteur' });
+  });
+
+  test('name the tables of the statement where they name a column without its table', () => {
+    const recorded = toRecordedStatement(
+      'SELECT a.titre, count(*) AS n FROM auteur au JOIN article a ON a.auteur_id = au.id WHERE statut = 1 GROUP BY a.titre',
+      MySQL
+    );
+
+    expect(
+      recorded?.blocks.map(({ clause, tables }) => [clause, tables])
+    ).toEqual([
+      [Clause.Select, []],
+      [Clause.From, []],
+      [Clause.Join, []],
+      [Clause.Where, ['article', 'auteur']],
+      [Clause.GroupBy, []],
+    ]);
+  });
+
+  test('name no table for the type of a PostgreSQL cast', () => {
+    const recorded = toRecordedStatement(
+      "SELECT * FROM article a WHERE a.meta::jsonb = '{}'",
+      PostgreSQL
+    );
+
+    expect(recorded?.blocks.at(-1)).toMatchObject({
+      shape: 'WHERE article . meta :: jsonb = ?',
+      tables: [],
+    });
+  });
+
+  test('name no table for a database nor a function', () => {
+    const recorded = toRecordedStatement(
+      "SELECT * FROM blog.article a WHERE date_format(a.created_at, '%Y') = '2026'",
+      MySQL
+    );
+
+    expect(
+      recorded?.blocks.map(({ shape, tables }) => [shape, tables])
+    ).toEqual([
+      ['SELECT *', []],
+      ['FROM blog . article', []],
+      ['WHERE date_format ( article . created_at , ? ) = ?', []],
+    ]);
   });
 
   test('keep a subquery inside the clause it is written in', () => {
