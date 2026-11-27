@@ -45,13 +45,13 @@ describe('tables', () => {
   it('counts the tables named like a keyword, which the shape writes in upper case', () => {
     const usage = new HistoryUsage(
       blocksOf(
-        'SELECT * FROM user u JOIN role r ON r.id = u.role_id WHERE u.status = 1'
+        'SELECT * FROM user u JOIN language l ON l.id = u.language_id WHERE u.status = 1'
       )
     );
 
     expect(usage.ofTable('user')).toBe(1);
-    expect(usage.ofTable('role')).toBe(1);
-    expect(usage.ofJoin('user', 'role')).toBe(1);
+    expect(usage.ofTable('language')).toBe(1);
+    expect(usage.ofJoin('user', 'language')).toBe(1);
     expect(usage.ofColumn('user', 'status')).toBe(1);
   });
 });
@@ -76,10 +76,10 @@ describe('columns', () => {
 
   it('counts a column named like a keyword, which the shape writes in upper case', () => {
     const usage = new HistoryUsage(
-      blocksOf('SELECT a.status FROM article a ORDER BY a.status')
+      blocksOf('SELECT a.date FROM article a ORDER BY a.date')
     );
 
-    expect(usage.ofColumn('article', 'status')).toBe(2);
+    expect(usage.ofColumn('article', 'date')).toBe(2);
   });
 
   it('counts the bare names of a statement that reads one table, not its functions', () => {
