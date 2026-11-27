@@ -42,10 +42,14 @@ type Candidate = {
 export class HistoryContinuation {
   private readonly runs: ReadonlyArray<string>;
 
+  /** the runs as `endOfPrefix` compares them, to skip at once those that cannot match */
+  private readonly comparableRuns: ReadonlyArray<string>;
+
   private readonly candidates: ReadonlyArray<Candidate>;
 
   constructor({ runs, blocks }: QueryHistoryContent) {
     this.runs = runs;
+    this.comparableRuns = runs.map(comparable);
     this.candidates = blocks.flatMap((block): Array<Candidate> => {
       const words = wordsOf(block.shape);
       const tables = tablesOf(block.aliases);
@@ -96,7 +100,13 @@ export class HistoryContinuation {
   }
 
   private fromRuns(typed: string, engine: DatabaseEngine): string | null {
-    for (const run of this.runs) {
+    const prefix = comparable(typed);
+
+    for (const [index, run] of this.runs.entries()) {
+      if (!this.comparableRuns[index]?.startsWith(prefix)) {
+        continue;
+      }
+
       const end = endOfPrefix(run, typed);
 
       if (end !== -1 && run.slice(end).trim() !== '') {
@@ -172,6 +182,11 @@ function endOfPrefix(run: string, typed: string): number {
   }
 
   return position;
+}
+
+/** a text whatever its case and however long its blanks, as `endOfPrefix` reads it */
+function comparable(text: string): string {
+  return text.toLowerCase().replace(/\s+/g, ' ');
 }
 
 function skipBlanks(text: string, from: number): number {
