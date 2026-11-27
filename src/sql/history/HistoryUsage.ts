@@ -62,12 +62,15 @@ export class HistoryUsage {
 
       add(this.tables, joined, runCount);
 
-      const others = new Set(
+      const named = new Set(
         words.filter(
           (word, index) =>
             word !== joined && tables.has(word) && words[index + 1] === '.'
         )
       );
+      // of two tables, the join joins the other, which `USING ( auteur_id )` or `NATURAL JOIN` never names
+      const others =
+        tables.size === 2 ? tables.difference(new Set([joined])) : named;
 
       for (const other of others) {
         add(this.joins, key(joined, other), runCount);

@@ -135,6 +135,29 @@ describe('joins', () => {
     expect(usage.ofJoin('article', 'auteur')).toBe(3);
   });
 
+  it('joins the other of two tables, which its condition may not name', () => {
+    const usage = new HistoryUsage([
+      ...blocksOf(
+        'SELECT * FROM article a JOIN auteur au USING (auteur_id)',
+        3
+      ),
+      ...blocksOf(
+        'SELECT * FROM commentaire c JOIN auteur au ON au.id = auteur_id',
+        2
+      ),
+      ...blocksOf('SELECT * FROM commande NATURAL JOIN ligne_commande'),
+      ...blocksOf(
+        'SELECT * FROM article a JOIN blog b ON b.id = a.blog_id JOIN tag t USING (article_id)'
+      ),
+    ]);
+
+    expect(usage.ofJoin('auteur', 'article')).toBe(3);
+    expect(usage.ofJoin('auteur', 'commentaire')).toBe(2);
+    expect(usage.ofJoin('ligne_commande', 'commande')).toBe(1);
+    // of three tables, `USING` does not say which the join joins
+    expect(usage.ofJoin('tag', 'article')).toBe(0);
+  });
+
   it('joins only the tables whose columns the condition reads, not a column named like a table', () => {
     const usage = new HistoryUsage(
       blocksOf(
