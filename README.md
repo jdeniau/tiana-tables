@@ -4,7 +4,7 @@
 </h1>
 
 <p align="center">
-  <strong>A MySQL, MariaDB and PostgreSQL desktop client for developers.</strong><br />
+  <strong>A MySQL, MariaDB, PostgreSQL and SQLite desktop client for developers.</strong><br />
   Browse, query and edit your data on Linux, macOS and Windows.
 </p>
 
@@ -104,11 +104,13 @@ Download the latest build for your platform from the
 
 ## Database support
 
-Tiana Tables supports MySQL, MariaDB and PostgreSQL.
+Tiana Tables supports MySQL, MariaDB, PostgreSQL and SQLite.
 
 A PostgreSQL connection opens one database, and the app browses its schemas the
 way it browses the databases of a MySQL server: the schema list is where the
 database list would be.
+
+A SQLite connection opens a file picked with Browse…, which must exist: the app never creates one. It lists the `main` database only, not the ones attached to it, and a virtual table (a full-text index, say) is read but not edited. The editor colours and completes SQLite with the PostgreSQL grammar, so it underlines no syntax error, and it cuts a `CREATE TRIGGER` at the `;` of its body: a trigger cannot be created from the editor yet. A SQLite query runs in the app's main process: while a long one runs, the window stays drawn, but opening a table or running another query, on any connection, waits for it to end.
 
 A connection can be encrypted, with the modes libpq names: `Required` encrypts
 and takes the server certificate as it comes (the `sslmode=require` of a

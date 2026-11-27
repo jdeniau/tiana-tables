@@ -3,7 +3,7 @@ import { SiteMessages } from './type';
 const zhCn: SiteMessages = {
   'meta.title': 'Tiana Tables：面向开发者的 SQL 客户端',
   'meta.description':
-    '面向开发者的 MySQL、MariaDB 和 PostgreSQL 客户端，支持 Linux、macOS 和 Windows。高效地浏览、查询和编辑你的数据。简单易用，界面美观。',
+    '面向开发者的 MySQL、MariaDB、PostgreSQL 和 SQLite 客户端，支持 Linux、macOS 和 Windows。高效地浏览、查询和编辑你的数据。简单易用，界面美观。',
   'nav.label': '目录',
   'nav.editor': '编辑器',
   'nav.browse': '浏览',
@@ -20,7 +20,8 @@ const zhCn: SiteMessages = {
   'theme.dark': '深色',
   'theme.light': '浅色',
 
-  'hero.eyebrow': 'MySQL · MariaDB · PostgreSQL · Linux, macOS, Windows',
+  'hero.eyebrow':
+    'MySQL · MariaDB · PostgreSQL · SQLite · Linux, macOS, Windows',
   'hero.title': '面向开发者的 SQL 客户端',
   'hero.title.short': '开发者的 SQL 客户端',
   'hero.lead':
@@ -29,7 +30,7 @@ const zhCn: SiteMessages = {
   'hero.source': 'GitHub 上的源码',
   'hero.other': '其他平台',
   'spec.engines': '数据库',
-  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL',
+  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL, SQLite',
   'spec.runsOn': '系统',
   'spec.runsOn.value': 'Linux, macOS, Windows',
   'spec.connects': '连接',
@@ -113,7 +114,7 @@ const zhCn: SiteMessages = {
   'databases.supported': '支持',
   'databases.outOfScope': '不在范围内',
   'databases.text':
-    'PostgreSQL 连接会打开一个数据库，并在 MySQL 服务器列出数据库的地方，列出它的模式（schema）。其他与 SQL 标准足够接近的引擎，可以在 issue 中讨论。',
+    'PostgreSQL 连接会打开一个数据库，并在 MySQL 服务器列出数据库的地方，列出它的模式（schema）。SQLite 连接会打开一个文件。其他与 SQL 标准足够接近的引擎，可以在 issue 中讨论。',
 
   'charts.title': '图表',
   'charts.meta': '柱状图或折线图，来自任意结果',

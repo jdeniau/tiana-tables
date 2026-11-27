@@ -89,11 +89,11 @@ yarn website:build    # Build the website into website/dist
 - **Node 26 builds and tests; Electron's own Node, 24.21.0 in Electron 44, runs the app.** `Temporal` comes from V8: Node 26's ships it, as does the Chromium V8 under Electron's Node (a plain Node 24 has none), so the tests run on the same API with no polyfill. `@types/node` follows Electron's Node, 24: a newer API would type-check and then fail in the app (`node:quic` → `ERR_UNKNOWN_BUILTIN_MODULE`). Node ships corepack no more since 25: `npm install -g corepack && corepack enable yarn`.
 - **The Electron binary is not downloaded by `yarn install`** (no `postinstall` since Electron 42): the `electron` bin fetches it on first run, `start` / `package` / `make` / `publish` chain `install-electron` themselves, and a script calling `electron-forge` directly runs `yarn install-electron` first.
 - **In a cloud session, install the dependencies first**, fetching Yarn from npm: `COREPACK_NPM_REGISTRY=https://registry.npmjs.org yarn install` (the proxy refuses `repo.yarnpkg.com`). A hook that fails with no output is a tool that could not start: check `node_modules` before re-reading the edit.
-- **Dev databases**: `docker compose up -d --wait` starts `tiana-dev-mysql` (MariaDB 11, `127.0.0.1:13306`, `root` / `devpassword`) and `tiana-dev-postgres` (PostgreSQL 18, `127.0.0.1:15432`, `postgres` / `devpassword`), both with database `tiana_dev` holding the same "Le Fil" dataset (details in `dev/fixtures/README.md`). **Never open a connection whose name lacks `(dev)`**, and name every connection created `… (dev)`. Never `docker compose down -v` without being asked.
+- **Dev databases**: `docker compose up -d --wait` starts `tiana-dev-mysql` (MariaDB 11, `127.0.0.1:13306`, `root` / `devpassword`) and `tiana-dev-postgres` (PostgreSQL 18, `127.0.0.1:15432`, `postgres` / `devpassword`), both with database `tiana_dev` holding the same "Le Fil" dataset (details in `dev/fixtures/README.md`). `node dev/fixtures/sqlite/load.mjs` writes it, with the SQLite verification tables, to `dev/tiana_dev.sqlite`, rebuilt aside and swapped in: reopen a connection holding the previous file. **Never open a connection whose name lacks `(dev)`**, and name every connection created `… (dev)`. Never `docker compose down -v` without being asked.
 
 ## Architecture
 
-Tiana Tables is an **Electron desktop app** for browsing and querying MySQL/MariaDB and PostgreSQL databases, in the standard three-process model:
+Tiana Tables is an **Electron desktop app** for browsing and querying MySQL/MariaDB and PostgreSQL databases and SQLite files, in the standard three-process model:
 
 - **Main process** (`src/main.ts`) — app lifecycle, window management, config, IPC handlers. Imports from `src/configuration/`, `src/sql/`, `src/ssh/` and `src/main-process/`.
 - **Preload script** (`src/preload.ts`, `src/preload/`) — the secure bridge, exposing typed APIs to the renderer via `contextBridge`.
@@ -119,15 +119,15 @@ Credentials are encrypted with the **asynchronous** `safeStorage` API, and the c
 
 ### SQL engines
 
-A connection has an **engine** (`DatabaseEngine`, `src/sql/engine.ts`): MySQL (MariaDB included) or PostgreSQL. What differs lives in three places keyed by engine, and nowhere else — no `if (engine === …)` in between: `src/sql/dialect/` (SQL text, no driver import, so the renderer loads it), `src/sql/driver/` (main process only, lazily imported), `src/sql/parser/` with `MonacoEditor/language.ts` (the editor's grammar). **The UI's "database" is a PostgreSQL schema**, so routing and contexts are the same for both engines. Adding or changing an engine: the `sql-engines` skill.
+A connection has an **engine** (`DatabaseEngine`, `src/sql/engine.ts`): MySQL (MariaDB included), PostgreSQL or SQLite. A server engine connects to a host, a file engine opens a file (`ServerConnection | FileConnection`, told apart by `opensFile`). What differs lives in three places keyed by engine, and nowhere else — no `if (engine === …)` in between: `src/sql/dialect/` (SQL text, no driver import, so the renderer loads it), `src/sql/driver/` (main process only, lazily imported), `src/sql/parser/` with `MonacoEditor/language.ts` (the editor's grammar). **The UI's "database" is a PostgreSQL schema, and SQLite's `main`**, so routing and contexts are the same for every engine. SQLite runs synchronously in the main process (`node:sqlite`): a long query holds every IPC call until it ends. Adding or changing an engine: the `sql-engines` skill.
 
 ### SQL statements
 
-**A query sent to the server is always a single statement**: `multipleStatements` stays off on mysql2, the PostgreSQL driver always uses the extended protocol. When the editor holds several statements, `src/sql/splitStatements.ts` splits them: the one **under the caret** is sent, and the submit button can run them all in order, stopping at the first error (`RunMode`, `src/sql/runMode.ts`). The caret statement is decided in the action, from the content plus the caret offset (`RawSqlEditorHandle`). Split on the `;` tokens of `getAllTokens` (lexing never fails, and a token's `channel` tells code from comments) — never with `splitSQLByStatement`, which returns `null` on any syntax error.
+**A query sent to the server is always a single statement**: `multipleStatements` stays off on mysql2, the PostgreSQL driver always uses the extended protocol, the SQLite driver refuses a second statement itself. When the editor holds several statements, `src/sql/splitStatements.ts` splits them: the one **under the caret** is sent, and the submit button can run them all in order, stopping at the first error (`RunMode`, `src/sql/runMode.ts`). The caret statement is decided in the action, from the content plus the caret offset (`RawSqlEditorHandle`). Split on the `;` tokens of `getAllTokens` (lexing never fails, and a token's `channel` tells code from comments) — never with `splitSQLByStatement`, which returns `null` on any syntax error.
 
 ### SQL editor
 
-Monaco, with `monaco-sql-languages` for the `mysql` / `pgsql` languages and their tokenizers, and `dt-sql-parser` for the grammar. The completion and diagnostics of `monaco-sql-languages` are **disabled** (their worker never answers) and rebuilt on `dt-sql-parser` in `useCompletion.tsx`. **The schema held is the current database only**, so a table qualified by another database is never coloured, and unknown columns are warnings on qualified references to a resolved table only — never on bare columns (subqueries, CTEs, expression aliases). Everything else: the `sql-editor` skill.
+Monaco, with `monaco-sql-languages` for the `mysql` / `pgsql` languages and their tokenizers (`sqlite` borrows `pgsql`'s), and `dt-sql-parser` for the grammar. The completion and diagnostics of `monaco-sql-languages` are **disabled** (their worker never answers) and rebuilt on `dt-sql-parser` in `useCompletion.tsx`. **The schema held is the current database only**, so a table qualified by another database is never coloured, and unknown columns are warnings on qualified references to a resolved table only — never on bare columns (subqueries, CTEs, expression aliases). Everything else: the `sql-editor` skill.
 
 ### Translations
 
@@ -145,6 +145,7 @@ Monaco, with `monaco-sql-languages` for the `mysql` / `pgsql` languages and thei
 | Monaco Editor              | SQL editor (VS Code's editor)                                |
 | mysql2/promise             | MySQL/MariaDB driver (main process)                          |
 | pg                         | PostgreSQL driver (main process)                             |
+| node:sqlite                | SQLite driver (main process, synchronous)                    |
 | zod                        | Parsing what a server answers (main process)                 |
 | styled-components 6        | CSS-in-JS                                                    |
 | i18next + react-i18next    | EN/FR internationalization (ICU messages)                    |

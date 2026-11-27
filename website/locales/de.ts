@@ -3,7 +3,7 @@ import { SiteMessages } from './type';
 const de: SiteMessages = {
   'meta.title': 'Tiana Tables: ein SQL-Client für Entwickler:innen',
   'meta.description':
-    'Ein MySQL-, MariaDB- und PostgreSQL-Client für Entwickler:innen, unter Linux, macOS und Windows. Sieh dir deine Daten an, frag sie ab und bearbeite sie effizient. Einfach zu bedienen und schön.',
+    'Ein MySQL-, MariaDB-, PostgreSQL- und SQLite-Client für Entwickler:innen, unter Linux, macOS und Windows. Sieh dir deine Daten an, frag sie ab und bearbeite sie effizient. Einfach zu bedienen und schön.',
   'nav.label': 'Abschnitte',
   'nav.editor': 'Editor',
   'nav.browse': 'Durchsuchen',
@@ -20,7 +20,8 @@ const de: SiteMessages = {
   'theme.dark': 'Dunkel',
   'theme.light': 'Hell',
 
-  'hero.eyebrow': 'MySQL · MariaDB · PostgreSQL · Linux, macOS, Windows',
+  'hero.eyebrow':
+    'MySQL · MariaDB · PostgreSQL · SQLite · Linux, macOS, Windows',
   'hero.title': 'Ein SQL-Client für Entwickler:innen',
   'hero.title.short': 'Ein SQL-Client für Devs',
   'hero.lead':
@@ -29,7 +30,7 @@ const de: SiteMessages = {
   'hero.source': 'Code auf GitHub',
   'hero.other': 'Andere Plattformen',
   'spec.engines': 'Datenbanken',
-  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL',
+  'spec.engines.value': 'MySQL, MariaDB, PostgreSQL, SQLite',
   'spec.runsOn': 'Systeme',
   'spec.runsOn.value': 'Linux, macOS, Windows',
   'spec.connects': 'Verbindung',
@@ -121,7 +122,7 @@ const de: SiteMessages = {
   'databases.supported': 'unterstützt',
   'databases.outOfScope': 'nicht vorgesehen',
   'databases.text':
-    'Eine PostgreSQL-Verbindung öffnet eine Datenbank und listet deren Schemas dort auf, wo ein MySQL-Server seine Datenbanken auflistet. Ein anderes Datenbanksystem, das dem SQL-Standard nahe genug ist, kann in einem Issue besprochen werden.',
+    'Eine PostgreSQL-Verbindung öffnet eine Datenbank und listet deren Schemas dort auf, wo ein MySQL-Server seine Datenbanken auflistet. Eine SQLite-Verbindung öffnet eine Datei. Ein anderes Datenbanksystem, das dem SQL-Standard nahe genug ist, kann in einem Issue besprochen werden.',
 
   'charts.title': 'Diagramme',
   'charts.meta': 'Balken oder Linien, aus jedem Ergebnis',
