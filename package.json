@@ -62,7 +62,7 @@
     "electron-log": "^5.4.4",
     "electron-squirrel-startup": "^1.0.1",
     "fuse.js": "^7.5.0",
-    "i18next": "^23.16.8",
+    "i18next": "^26.3.4",
     "i18next-icu": "^2.5.0",
     "intl-messageformat": "^11.2.15",
     "monaco-editor": "^0.57.0",
