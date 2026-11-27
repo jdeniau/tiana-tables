@@ -147,6 +147,12 @@ describe('a clause of the history', () => {
     );
   });
 
+  it('proposes no join where the query takes no condition', () => {
+    expect(blockAfter('SELECT * FROM article a NATURAL JOIN ')).toBeNull();
+    expect(blockAfter('SELECT * FROM article a NATURAL LEFT JOIN ')).toBeNull();
+    expect(blockAfter('SELECT * FROM article a CROSS JOIN ')).toBeNull();
+  });
+
   it('renames the joined table when the query already uses its alias', () => {
     expect(
       blockAfter(

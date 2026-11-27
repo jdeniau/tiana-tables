@@ -26,6 +26,21 @@ const OPENING_WORDS: ReadonlyMap<string, Clause> = new Map([
   ['LIMIT', Clause.Limit],
 ]);
 
+/** the words before a `JOIN` that make it take no `ON`, which every join of the history has */
+const JOINS_WITHOUT_CONDITION: ReadonlySet<string> = new Set([
+  'NATURAL',
+  'CROSS',
+]);
+
+/** the words that may stand between `NATURAL` and its `JOIN` */
+const JOIN_SIDES: ReadonlySet<string> = new Set([
+  'LEFT',
+  'RIGHT',
+  'FULL',
+  'INNER',
+  'OUTER',
+]);
+
 const BLANK = /\s/;
 
 /** a clause of the history, with what the query must hold for it to be proposed */
@@ -132,6 +147,7 @@ export class HistoryContinuation {
 
     if (
       clause === undefined ||
+      (clause === Clause.Join && takesNoCondition(words)) ||
       !BLANK.test(typed.at(-1) ?? '') ||
       words[0] !== 'SELECT' ||
       depthAtEnd(words) !== 0
@@ -211,6 +227,17 @@ function codeTokens(sql: string, engine: DatabaseEngine): Array<SqlToken> {
 
 function upperCase(token: SqlToken): string {
   return (token.text ?? '').toUpperCase();
+}
+
+/** whether the `JOIN` the words end on is a `NATURAL` or a `CROSS` one */
+function takesNoCondition(words: ReadonlyArray<string>): boolean {
+  let index = words.length - 2;
+
+  while (JOIN_SIDES.has(words[index] ?? '')) {
+    index--;
+  }
+
+  return JOINS_WITHOUT_CONDITION.has(words[index] ?? '');
 }
 
 /** the clause the words end by opening: `JOIN` after `LEFT`, `BY` after `ORDER` */
