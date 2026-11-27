@@ -93,7 +93,7 @@ describe('columns', () => {
     expect(usage.ofColumn('article', 'total')).toBe(0);
   });
 
-  it('counts a bare column named like a keyword only where it is compared, as the history keys its clause', () => {
+  it('counts a bare column named like a keyword where it is compared or a key of the order, as the history keys its clause', () => {
     const usage = new HistoryUsage([
       ...blocksOf(
         "SELECT titre FROM seance WHERE position > 2 AND debut > DATE '2026-01-01'"
@@ -101,7 +101,7 @@ describe('columns', () => {
       ...blocksOf('SELECT titre FROM seance ORDER BY position'),
     ]);
 
-    expect(usage.ofColumn('seance', 'position')).toBe(1);
+    expect(usage.ofColumn('seance', 'position')).toBe(2);
     expect(usage.ofColumn('seance', 'date')).toBe(0);
     expect(usage.ofColumn('seance', 'order')).toBe(0);
   });
