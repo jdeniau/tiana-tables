@@ -102,7 +102,9 @@ export function toRecordedStatement(
             clause,
             sql: textOf(sql, tokens.slice(start, end)),
             shape,
-            tables: namesBareColumn(wordsOf(shape), names) ? tables : [],
+            tables: namesBareColumn(wordsOf(shape), names, shape.split(' '))
+              ? tables
+              : [],
           };
         }
       )

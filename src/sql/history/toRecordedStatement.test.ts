@@ -137,6 +137,18 @@ describe('the clauses of a SELECT', () => {
     }
   );
 
+  test.each([
+    ['SELECT * FROM seance s ORDER BY `date` DESC', MySQL],
+    ['SELECT * FROM seance s ORDER BY "user"', PostgreSQL],
+  ])(
+    'name the tables of the statement for a quoted column named like a keyword: %s',
+    (sql, engine) => {
+      const recorded = toRecordedStatement(sql, engine);
+
+      expect(recorded?.blocks.at(-1)?.tables).toEqual(['seance']);
+    }
+  );
+
   test('name no table for the type of a PostgreSQL cast', () => {
     const recorded = toRecordedStatement(
       "SELECT * FROM article a WHERE a.meta::jsonb = '{}'",

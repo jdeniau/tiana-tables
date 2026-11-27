@@ -17,14 +17,16 @@ export function tablesOf(aliases: Record<string, string>): Set<string> {
 /** the comparisons that make a reserved word before them a column: `WHERE date > ?`, unlike `DATE '2026-01-01'` */
 const COMPARISON = /^(?:[<>=!]+|in|is|like|ilike|between)$/;
 
-/** whether a clause names a column without its table */
+/** whether a clause names a column without its table, `written` holding its words as the shape writes them */
 export function namesBareColumn(
   words: ReadonlyArray<string>,
-  tables: ReadonlySet<string>
+  tables: ReadonlySet<string>,
+  written: ReadonlyArray<string>
 ): boolean {
   return words.some(
-    (word, index) =>
-      (!isReservedKeyword(word) || isCompared(words, index)) &&
+    (_, index) =>
+      // `date` may be the keyword of `DATE '2026-01-01'`, `` `date` `` is a column
+      (!isReservedKeyword(written[index] ?? '') || isCompared(words, index)) &&
       isBareName(words, index, tables)
   );
 }
