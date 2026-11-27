@@ -50,16 +50,20 @@ const es: SiteMessages = {
   'editor.title': 'Editor SQL',
   'editor.meta': 'Monaco, el editor de VS Code',
   'editor.lead':
-    'Conoce la gramática de tu motor y el esquema de tu base de datos, así que hace más que colorear palabras clave.',
+    'Conoce la gramática de tu motor, el esquema de tu base de datos y las consultas que ejecutaste en ella: lo suficiente para escribir la siguiente contigo.',
+  'editor.builder.title': 'El query builder tab, tab, tab',
+  'editor.builder.text':
+    'Empieza una consulta: tras el cursor, el editor muestra la siguiente cláusula que escribiría tu historial, y Tab la escribe. El historial se queda en tu máquina.',
   'editor.items': [
-    'Completa tablas, columnas y alias. Después de <code>a.</code>, obtienes las columnas de esa tabla y nada más.',
+    'El autocompletado muestra primero lo que más usas: las tablas que lees, las que unes con las de la consulta, las columnas que eliges. Y solo lo que encaja en el cursor: después de <code>a.</code>, las columnas de esa tabla; en otro sitio, las palabras clave válidas allí.',
     'Al completar una tabla en <code>FROM</code> o <code>JOIN</code>, escribe su alias, y la cláusula <code>ON</code> cuando una clave foránea la vincula con una tabla que ya está en la consulta.',
-    'Solo sugiere las palabras clave válidas en la posición del cursor.',
     'Subraya los errores de sintaxis mientras escribes y avisa de columnas desconocidas como <code>u.emial</code>. Nunca en SQL válido.',
     'Ejecuta la sentencia bajo el cursor, o todas en orden, y se detiene en el primer error.',
   ],
   'editor.label':
-    'Consulta SQL con la lista de autocompletado abierta después de a.',
+    'Editor SQL que escribe una consulta desde el historial, un Tab por cláusula',
+  'editor.caption':
+    'Un historial de ejemplo, donde <code>commentaire</code>, <code>article</code> y <code>lecture</code> son las que más se usaron: el autocompletado las muestra primero.',
 
   'browse.title': 'Explorar',
   'browse.meta': 'cuadrícula virtualizada, renderizado instantáneo',

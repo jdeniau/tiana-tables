@@ -50,15 +50,20 @@ const de: SiteMessages = {
   'editor.title': 'SQL-Editor',
   'editor.meta': 'Monaco, der Editor von VS Code',
   'editor.lead':
-    'Er kennt den SQL-Dialekt und das Schema deiner Datenbank, also kann er mehr, als Schlüsselwörter einzufärben.',
+    'Er kennt den SQL-Dialekt und das Schema deiner Datenbank, und die Abfragen, die du darauf ausgeführt hast: genug, um die nächste mit dir zu schreiben.',
+  'editor.builder.title': 'Der Tab-Tab-Tab-Query-Builder',
+  'editor.builder.text':
+    'Fang eine Abfrage an: Hinter dem Cursor zeigt der Editor die nächste Klausel, die dein Verlauf schreiben würde, und Tab schreibt sie. Der Verlauf bleibt auf deinem Rechner.',
   'editor.items': [
-    'Vervollständigt Tabellen, Spalten und Aliase. Nach <code>a.</code> bekommst du die Spalten dieser Tabelle und nichts anderes.',
+    'Die Vervollständigung zeigt zuerst, was du am meisten nutzt: die Tabellen, die du liest, die, die du mit denen der Abfrage verbindest, die Spalten, die du auswählst. Und nur, was an den Cursor passt: nach <code>a.</code> die Spalten dieser Tabelle, anderswo die dort gültigen Schlüsselwörter.',
     'Wird eine Tabelle in <code>FROM</code> oder <code>JOIN</code> vervollständigt, schreibt er ihren Alias dazu, und die <code>ON</code>-Klausel, wenn ein Fremdschlüssel sie mit einer Tabelle verbindet, die schon in der Abfrage steht.',
-    'Schlägt nur die Schlüsselwörter vor, die an der Cursorposition gültig sind.',
     'Unterstreicht Syntaxfehler beim Tippen und warnt bei unbekannten Spalten wie <code>u.emial</code>. Nie bei gültigem SQL.',
     'Führt die Anweisung unter dem Cursor aus, oder alle der Reihe nach, bis zum ersten Fehler.',
   ],
-  'editor.label': 'SQL-Abfrage mit geöffneter Vervollständigungsliste nach a.',
+  'editor.label':
+    'SQL-Editor, der eine Abfrage aus dem Verlauf schreibt, ein Tab pro Klausel',
+  'editor.caption':
+    'Ein Beispielverlauf, in dem <code>commentaire</code>, <code>article</code> und <code>lecture</code> am häufigsten liefen: Die Vervollständigung zeigt sie zuerst.',
 
   'browse.title': 'Durchsuchen',
   'browse.meta': 'virtualisiertes Grid, sofortiges Rendering',

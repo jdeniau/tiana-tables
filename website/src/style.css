@@ -310,6 +310,18 @@ code {
   padding-block: 10px;
   border-bottom: 1px solid var(--rule);
 }
+.feature {
+  display: grid;
+  gap: var(--s2);
+  max-width: 62ch;
+}
+.feature h3 {
+  margin: 0;
+  font: 600 18px/1.2 var(--display);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--em);
+}
 .stage {
   padding-block: var(--s6);
   padding-inline: var(--pad);
@@ -958,11 +970,20 @@ h1 .title-dot {
     opacity: 0;
   }
 }
+/* what the history proposes past the caret, as Monaco draws it: in italics, at 0.7 */
+.code .ghost-text {
+  font-style: italic;
+  opacity: 0.7;
+}
+.code > span.ghost-line::before {
+  content: none;
+}
 .suggest {
   position: absolute;
-  left: 140px;
-  top: 102px;
-  width: 260px;
+  /* under the caret, which stands after `FROM ` on the second line */
+  left: calc(52px + 5ch - var(--s1));
+  top: calc(var(--s2) + 2 * 22px + 2px);
+  width: 240px;
   border: 1px solid var(--rule);
   background: var(--bg);
   font-size: 13px;
@@ -979,22 +1000,52 @@ h1 .title-dot {
   background: var(--sel);
   color: var(--em);
 }
-.suggest small {
-  margin-left: auto;
-  font-size: 11px;
-  color: var(--muted);
-}
+/* Monaco's icon of a variable, which the completion gives a table: a pill between brackets */
 .suggest i {
-  width: 9px;
-  height: 9px;
-  border: 1.5px solid var(--base0C);
-  transform: rotate(45deg) scale(0.85);
+  position: relative;
+  width: 12px;
+  height: 11px;
+  border: 1.5px solid var(--base0D);
+  clip-path: polygon(
+    0 0,
+    3px 0,
+    3px 1.5px,
+    calc(100% - 3px) 1.5px,
+    calc(100% - 3px) 0,
+    100% 0,
+    100% 100%,
+    calc(100% - 3px) 100%,
+    calc(100% - 3px) calc(100% - 1.5px),
+    3px calc(100% - 1.5px),
+    3px 100%,
+    0 100%
+  );
   flex: none;
 }
-@media (max-width: 480px) {
-  .suggest {
-    left: 100px;
-    width: 210px;
+.suggest i::after {
+  content: '';
+  position: absolute;
+  inset: 1.5px 1px;
+  border: 1.5px solid var(--base0D);
+  border-radius: 2px;
+}
+/* the key the loop presses: the screen shows no keyboard */
+.keypress {
+  position: absolute;
+  right: var(--s3);
+  bottom: var(--s3);
+  padding: 2px var(--s2);
+  border: 1px solid var(--rule);
+  background: var(--sel);
+  color: var(--em);
+  font: 13px var(--mono);
+  opacity: 0;
+  animation: keypress 1.1s ease-out;
+}
+@keyframes keypress {
+  10%,
+  65% {
+    opacity: 1;
   }
 }
 
