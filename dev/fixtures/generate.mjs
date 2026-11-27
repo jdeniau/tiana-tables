@@ -1,9 +1,9 @@
 // Generates the rows of the "Le Fil" development dataset (a French news site), as the INSERTs of
-// one dialect: `node generate.mjs mysql` or `node generate.mjs postgres`. Seeded: the same command
-// always produces the same file, and both dialects hold the same rows.
+// one dialect: `node generate.mjs mysql`, `postgres` or `sqlite`. Seeded: the same command
+// always produces the same file, and every dialect holds the same rows.
 const dialect = process.argv[2];
-if (dialect !== 'mysql' && dialect !== 'postgres') {
-  console.error('usage: node generate.mjs mysql|postgres');
+if (!['mysql', 'postgres', 'sqlite'].includes(dialect)) {
+  console.error('usage: node generate.mjs mysql|postgres|sqlite');
   process.exit(1);
 }
 
@@ -106,7 +106,7 @@ function quote(v) {
   if (v instanceof Day) return `'${v.toISOString().slice(0, 10)}'`;
   if (v instanceof Date)
     return `'${v.toISOString().slice(0, 19).replace('T', ' ')}'`;
-  // MySQL reads a backslash as an escape, PostgreSQL as itself
+  // MySQL reads a backslash as an escape, PostgreSQL and SQLite as itself
   const s =
     dialect === 'mysql' ? String(v).replaceAll('\\', '\\\\') : String(v);
   return `'${s.replaceAll("'", "''")}'`;
@@ -1940,11 +1940,15 @@ insert(
 // ---------------------------------------------------------------------- output
 if (dialect === 'mysql') {
   OUT.unshift('SET NAMES utf8mb4;', 'SET FOREIGN_KEY_CHECKS = 1;');
-} else {
+} else if (dialect === 'postgres') {
   // the rows carry their ids: move each identity past them
   for (const [table, next] of nextIds)
     OUT.push(`ALTER TABLE ${table} ALTER COLUMN id RESTART WITH ${next};`);
   OUT.unshift("SET client_encoding = 'UTF8';", 'BEGIN;');
+  OUT.push('COMMIT;');
+} else {
+  // a rowid takes the one after the largest by itself
+  OUT.unshift('BEGIN;');
   OUT.push('COMMIT;');
 }
 process.stdout.write(`${OUT.join('\n')}\n`);
