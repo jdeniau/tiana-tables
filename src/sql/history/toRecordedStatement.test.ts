@@ -106,6 +106,19 @@ describe('the clauses of a SELECT', () => {
     ]);
   });
 
+  test('are not cut at a FROM or a GROUP that opens none', () => {
+    const recorded = toRecordedStatement(
+      'SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY prix) FROM article a WHERE a.parent_id IS DISTINCT FROM a.id',
+      PostgreSQL
+    );
+
+    expect(recorded?.blocks.map(({ sql }) => sql)).toEqual([
+      'SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY prix)',
+      'FROM article a',
+      'WHERE a.parent_id IS DISTINCT FROM a.id',
+    ]);
+  });
+
   test('stop at the end of the first SELECT of a compound one', () => {
     const recorded = toRecordedStatement(
       'SELECT id FROM article UNION SELECT id FROM auteur',

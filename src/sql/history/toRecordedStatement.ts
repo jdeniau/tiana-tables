@@ -199,9 +199,7 @@ function cutClauses(
       break;
     }
 
-    const clause = opensJoin(words, index)
-      ? Clause.Join
-      : CLAUSE_KEYWORDS.get(word);
+    const clause = clauseAt(words, index);
 
     if (clause !== undefined) {
       starts.push({ clause, start: index });
@@ -213,6 +211,28 @@ function cutClauses(
     start,
     end: starts[position + 1]?.start ?? end,
   }));
+}
+
+/** the clause of a `SELECT` the keyword at `index` opens */
+function clauseAt(
+  words: ReadonlyArray<string>,
+  index: number
+): Clause | undefined {
+  if (opensJoin(words, index)) {
+    return Clause.Join;
+  }
+
+  const word = words[index] ?? '';
+
+  // `WITHIN GROUP (…)` and `IS DISTINCT FROM` open no clause
+  if (
+    (word === 'GROUP' && words[index + 1] !== 'BY') ||
+    (word === 'FROM' && words[index - 1] === 'DISTINCT')
+  ) {
+    return undefined;
+  }
+
+  return CLAUSE_KEYWORDS.get(word);
 }
 
 /** `LEFT` in `LEFT OUTER JOIN`, but neither its `OUTER` nor its `JOIN`, nor the function `LEFT(name, 3)` */
