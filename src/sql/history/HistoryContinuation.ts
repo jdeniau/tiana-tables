@@ -254,11 +254,11 @@ function rewrite(
       table.toLowerCase(),
     ])
   );
+  // a table the query reads twice keeps the alias it first had
   const aliasOf = new Map(
-    Object.entries(aliases).map(([alias, table]) => [
-      table.toLowerCase(),
-      alias,
-    ])
+    Object.entries(aliases)
+      .reverse()
+      .map(([alias, table]) => [table.toLowerCase(), alias])
   );
 
   // `JOIN blog . auteur au`: the alias follows the last part of the name

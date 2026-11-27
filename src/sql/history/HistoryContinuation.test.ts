@@ -263,6 +263,14 @@ describe('a clause of the history', () => {
     ).toBe('commentaire c ON c.article_id = a.id');
   });
 
+  it('qualifies a column with the first alias of a table the query reads twice', () => {
+    expect(
+      blockAfter(
+        'SELECT * FROM article a JOIN article p ON p.id = a.parent_id WHERE '
+      )
+    ).toBe('a.statut = 1');
+  });
+
   it('reads the tables of the query outside its subqueries', () => {
     const continuation = new HistoryContinuation({
       runs: [],
