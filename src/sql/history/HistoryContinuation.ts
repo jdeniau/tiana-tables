@@ -254,6 +254,11 @@ function takesNoCondition(words: ReadonlyArray<string>): boolean {
 
 /** the clause the words end by opening: `JOIN` after `LEFT`, `BY` after `ORDER` */
 function openedClause(words: ReadonlyArray<string>): Clause | undefined {
+  // `IS DISTINCT FROM` compares two values, it opens no clause
+  if (words.at(-1) === 'FROM' && words.at(-2) === 'DISTINCT') {
+    return undefined;
+  }
+
   return (
     OPENING_WORDS.get(words.at(-1) ?? '') ??
     OPENING_WORDS.get(words.slice(-2).join(' '))

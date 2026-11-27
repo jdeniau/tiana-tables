@@ -368,6 +368,15 @@ describe('a clause of the history', () => {
     ).toBeNull();
   });
 
+  it('reads no clause in the FROM of `IS DISTINCT FROM`', () => {
+    expect(
+      blockAfter('SELECT * FROM article a WHERE a.statut IS DISTINCT FROM ')
+    ).toBeNull();
+    expect(
+      blockAfter('SELECT * FROM article a WHERE a.statut IS NOT DISTINCT FROM ')
+    ).toBeNull();
+  });
+
   it('waits for the clause to open, in a SELECT, outside any subquery', () => {
     expect(blockAfter('SELECT * FROM article a WHERE')).toBeNull();
     expect(blockAfter('DELETE FROM ')).toBeNull();
