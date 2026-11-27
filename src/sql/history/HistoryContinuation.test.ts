@@ -101,6 +101,24 @@ describe('a text that ran', () => {
     expect(ranAfter([insert], 'INSERT INTO tag (nom) ')).toBe("VALUES ('sql')");
   });
 
+  it('cuts a compound SELECT at each of its clauses', () => {
+    const compound =
+      'SELECT id FROM article WHERE statut = 1 UNION SELECT id FROM brouillon WHERE auteur_id = 3 ORDER BY id';
+
+    expect(ranAfter([compound], 'SELECT id FROM article ')).toBe(
+      'WHERE statut = 1'
+    );
+    expect(
+      ranAfter([compound], 'SELECT id FROM article WHERE statut = 1 ')
+    ).toBe('UNION');
+    expect(
+      ranAfter(
+        [compound],
+        'SELECT id FROM article WHERE statut = 1 UNION SELECT id '
+      )
+    ).toBe('FROM brouillon');
+  });
+
   it('proposes nothing past what ran, nor for an empty statement', () => {
     expect(ranAfter([RUN], RUN)).toBeNull();
     expect(ranAfter([RUN], `${RUN} `)).toBeNull();

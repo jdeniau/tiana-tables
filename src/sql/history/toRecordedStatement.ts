@@ -148,7 +148,8 @@ export function clauseStarts(
     .indexes.filter(
       (index) =>
         clauseAt(words, index) !== undefined ||
-        WRITE_CLAUSE_KEYWORDS.has(words[index] ?? '')
+        WRITE_CLAUSE_KEYWORDS.has(words[index] ?? '') ||
+        SET_OPERATORS.has(words[index] ?? '')
     )
     .map((index) => tokens[index]?.start ?? 0);
 }
@@ -226,7 +227,7 @@ function cutClauses(
 ): Array<{ clause: Clause; start: number; end: number }> {
   const { indexes, end } = topLevelKeywords(tokens, words, engine);
   const starts = indexes.flatMap((start) => {
-    const clause = clauseAt(words, start);
+    const clause = start < end ? clauseAt(words, start) : undefined;
 
     return clause === undefined ? [] : [{ clause, start }];
   });
@@ -238,7 +239,7 @@ function cutClauses(
   }));
 }
 
-/** the keywords outside any parenthesis, up to the set operator that ends the first `SELECT` of a compound one */
+/** the keywords outside any parenthesis, and where the set operator that ends the first `SELECT` of a compound one stands */
 function topLevelKeywords(
   tokens: ReadonlyArray<SqlToken>,
   words: ReadonlyArray<string>,
@@ -246,6 +247,7 @@ function topLevelKeywords(
 ): { indexes: Array<number>; end: number } {
   const indexes: Array<number> = [];
   let depth = 0;
+  let end = words.length;
 
   for (const [index, word] of words.entries()) {
     if (word === '(') {
@@ -259,13 +261,13 @@ function topLevelKeywords(
     }
 
     if (SET_OPERATORS.has(word)) {
-      return { indexes, end: index };
+      end = Math.min(end, index);
     }
 
     indexes.push(index);
   }
 
-  return { indexes, end: words.length };
+  return { indexes, end };
 }
 
 /** the clause of a `SELECT` the keyword at `index` opens */
