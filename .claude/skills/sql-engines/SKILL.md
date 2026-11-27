@@ -26,7 +26,7 @@ Adding a member to `DatabaseEngine` stops the build until every `Record<Database
 1. `dialect/<engine>/`: `index.ts` (the `Dialect` object), `escape.ts`, `metadata.ts`, `guardedUpdate.ts`, each with its test file.
 2. `driver/<engine>/`: `index.ts` (the `Driver`), `fieldKind.ts`, with tests.
 3. The registration commit — `grep -rn "Record<DatabaseEngine" src` lists them: `DIALECTS` (`dialect/index.ts`), `IMPORTS` (`driver/index.ts`, a lazy `import()`), `PARSERS` and `OWN_GRAMMAR` (`parser/index.ts`), `LANGUAGES` (`MonacoEditor/language.ts`), `DEFAULTS` (port and user, `Connection/ConnectionForm.tsx`, a `Record<ServerEngine, …>` the grep misses), `ICON_BY_ENGINE` (`Connection/EngineIcon.tsx`, from `simple-icons`). Plus the ICU `select` `connection.engine.name` in `locales/en.ts` then `fr.ts`, and connection errors in `src/sql/connectionError.ts`.
-4. The docs: README ("Database support"), the "SQL engines" section of `CLAUDE.md`, this skill, the `sql-editor` skill.
+4. The docs: README ("Database support", one sentence for the user), the "SQL engines" section of `CLAUDE.md`, this skill, the `sql-editor` skill.
 
 `dialect.contract.test.ts` iterates `Object.values(DatabaseEngine)`, so the new dialect is held to the common rules as soon as it is registered.
 
