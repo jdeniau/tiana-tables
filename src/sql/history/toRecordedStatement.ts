@@ -57,7 +57,7 @@ const JOIN_MODIFIERS: ReadonlySet<string> = new Set([
 ]);
 
 /** the words before a `JOIN` that make it take no `ON`: its shape names neither the other table nor a column */
-const JOINS_WITHOUT_CONDITION: ReadonlySet<string> = new Set([
+export const JOINS_WITHOUT_CONDITION: ReadonlySet<string> = new Set([
   'NATURAL',
   'CROSS',
 ]);

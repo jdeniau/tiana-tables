@@ -12,7 +12,11 @@ import {
   type HistoryBlock,
   type QueryHistoryContent,
 } from './recordedStatement';
-import { SET_OPERATORS, clauseStarts } from './toRecordedStatement';
+import {
+  JOINS_WITHOUT_CONDITION,
+  SET_OPERATORS,
+  clauseStarts,
+} from './toRecordedStatement';
 
 /** the words a clause opens on, `JOIN` whatever its modifiers */
 const OPENING_WORDS: ReadonlyMap<string, Clause> = new Map([
@@ -24,12 +28,6 @@ const OPENING_WORDS: ReadonlyMap<string, Clause> = new Map([
   ['HAVING', Clause.Having],
   ['ORDER BY', Clause.OrderBy],
   ['LIMIT', Clause.Limit],
-]);
-
-/** the words before a `JOIN` that make it take no `ON`: no join of the history follows one, nor is one */
-const JOINS_WITHOUT_CONDITION: ReadonlySet<string> = new Set([
-  'NATURAL',
-  'CROSS',
 ]);
 
 /** the words that may stand between `NATURAL` and its `JOIN` */
@@ -85,6 +83,7 @@ export class HistoryContinuation {
       const exact = namesBareColumn(words, tables, block.shape.split(' '));
 
       if (block.clause === Clause.Join) {
+        // its `NATURAL` or `CROSS` would be lost before the `JOIN` the query types
         if (JOINS_WITHOUT_CONDITION.has(words[0]?.toUpperCase() ?? '')) {
           return [];
         }
