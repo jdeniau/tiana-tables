@@ -58,7 +58,7 @@ function isKey(words: ReadonlyArray<string>, index: number): boolean {
 }
 
 /** whether the word at `index` is a name without its table: neither a table, a function, an alias nor a type */
-function isBareName(
+export function isBareName(
   words: ReadonlyArray<string>,
   index: number,
   tables: ReadonlySet<string>

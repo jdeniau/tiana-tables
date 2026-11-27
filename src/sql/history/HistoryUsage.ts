@@ -1,10 +1,7 @@
-import { unquote } from '../tableName';
+import { isBareName, tablesOf, wordsOf } from './bareColumn';
 import { Clause, type HistoryBlock } from './recordedStatement';
 
 const JOIN_KEYWORDS: ReadonlySet<string> = new Set(['join', 'straight_join']);
-
-/** what a shape holds besides names: punctuation, operators, the `?` of a value */
-const NOT_A_NAME = /^[^\p{L}_`"[]/u;
 
 /**
  * How many runs of the history read each table and column, and joined each pair of tables,
@@ -37,10 +34,8 @@ export class HistoryUsage {
   }
 
   private count({ clause, shape, aliases, runCount }: HistoryBlock): void {
-    const words = shape.split(' ').map((word) => unquote(word).toLowerCase());
-    const tables = new Set(
-      Object.values(aliases).map((table) => table.toLowerCase())
-    );
+    const words = wordsOf(shape);
+    const tables = tablesOf(aliases);
 
     if (clause === Clause.From) {
       for (const table of new Set(words.filter((word) => tables.has(word)))) {
@@ -91,19 +86,9 @@ function columnsOf(
   const columns = new Set<string>();
 
   for (const [index, word] of words.entries()) {
-    const before = words[index - 1];
-    const after = words[index + 1];
-
-    if (before === '.' && tables.has(words[index - 2] ?? '')) {
+    if (words[index - 1] === '.' && tables.has(words[index - 2] ?? '')) {
       columns.add(key(words[index - 2] ?? '', word));
-    } else if (
-      onlyTable !== undefined &&
-      before !== '.' &&
-      after !== '.' &&
-      after !== '(' &&
-      !tables.has(word) &&
-      !NOT_A_NAME.test(word)
-    ) {
+    } else if (onlyTable !== undefined && isBareName(words, index, tables)) {
       columns.add(key(onlyTable, word));
     }
   }

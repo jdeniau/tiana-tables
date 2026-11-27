@@ -82,14 +82,15 @@ describe('columns', () => {
     expect(usage.ofColumn('article', 'date')).toBe(2);
   });
 
-  it('counts the bare names of a statement that reads one table, not its functions', () => {
+  it('counts the bare names of a statement that reads one table, not its functions nor its aliases', () => {
     const usage = new HistoryUsage(
-      blocksOf('SELECT titre, count(id) FROM article GROUP BY titre')
+      blocksOf('SELECT titre, count(id) AS total FROM article GROUP BY titre')
     );
 
     expect(usage.ofColumn('article', 'titre')).toBe(2);
     expect(usage.ofColumn('article', 'id')).toBe(1);
     expect(usage.ofColumn('article', 'count')).toBe(0);
+    expect(usage.ofColumn('article', 'total')).toBe(0);
   });
 
   it('leaves out the bare names of a statement that reads several tables', () => {
