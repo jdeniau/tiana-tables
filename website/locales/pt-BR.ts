@@ -50,12 +50,12 @@ const ptBr: SiteMessages = {
   'editor.title': 'Editor SQL',
   'editor.meta': 'Monaco, o editor do VS Code',
   'editor.lead':
-    'Ele conhece a gramática do seu SGBD (a do PostgreSQL para o SQLite) e o esquema do seu banco de dados: faz mais do que colorir palavras-chave.',
+    'Ele conhece a gramática do seu SGBD e o esquema do seu banco de dados: faz mais do que colorir palavras-chave.',
   'editor.items': [
     'Completa tabelas, colunas e aliases. Depois de <code>a.</code>, você recebe as colunas dessa tabela e nada mais.',
     'Ao completar uma tabela no <code>FROM</code> ou no <code>JOIN</code>, ele escreve o alias dela, e a cláusula <code>ON</code> quando uma chave estrangeira a liga a uma tabela que já está na consulta.',
     'Sugere só as palavras-chave válidas na posição do cursor.',
-    'Sublinha erros de sintaxe enquanto você digita, exceto no SQLite, e avisa sobre colunas desconhecidas como <code>u.emial</code>. Nunca em SQL válido.',
+    'Sublinha erros de sintaxe enquanto você digita e avisa sobre colunas desconhecidas como <code>u.emial</code>. Nunca em SQL válido.',
     'Executa a instrução sob o cursor, ou todas em ordem, parando no primeiro erro.',
   ],
   'editor.label':

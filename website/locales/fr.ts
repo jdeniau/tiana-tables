@@ -50,12 +50,12 @@ const fr: SiteMessages = {
   'editor.title': 'Éditeur SQL',
   'editor.meta': 'Monaco, l’éditeur de VS Code',
   'editor.lead':
-    'Il connaît la grammaire de votre moteur, celle de PostgreSQL pour SQLite, et le schéma de votre base : il fait plus que colorer les mots-clés.',
+    'Il connaît la grammaire de votre moteur et le schéma de votre base : il fait plus que colorer les mots-clés.',
   'editor.items': [
     'Il complète les tables, les colonnes et les alias. Après <code>a.</code>, vous obtenez les colonnes de cette table, et rien d’autre.',
     'Compléter une table dans un <code>FROM</code> ou un <code>JOIN</code> écrit son alias, et la clause <code>ON</code> quand une clé étrangère la relie à une table déjà dans la requête.',
     'Il ne propose que les mots-clés valides à la position du curseur.',
-    'Il souligne les erreurs de syntaxe pendant la frappe, sauf sur SQLite, et signale les colonnes inconnues comme <code>u.emial</code>. Jamais sur du SQL valide.',
+    'Il souligne les erreurs de syntaxe pendant la frappe, et signale les colonnes inconnues comme <code>u.emial</code>. Jamais sur du SQL valide.',
     'Il exécute la requête sous le curseur, ou toutes dans l’ordre, en s’arrêtant à la première erreur.',
   ],
   'editor.label': 'Requête SQL avec la liste de complétion ouverte après a.',

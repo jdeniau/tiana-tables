@@ -51,12 +51,12 @@ const de: SiteMessages = {
   'editor.title': 'SQL-Editor',
   'editor.meta': 'Monaco, der Editor von VS Code',
   'editor.lead':
-    'Er kennt den SQL-Dialekt (für SQLite den von PostgreSQL) und das Schema deiner Datenbank, also kann er mehr, als Schlüsselwörter einzufärben.',
+    'Er kennt den SQL-Dialekt und das Schema deiner Datenbank, also kann er mehr, als Schlüsselwörter einzufärben.',
   'editor.items': [
     'Vervollständigt Tabellen, Spalten und Aliase. Nach <code>a.</code> bekommst du die Spalten dieser Tabelle und nichts anderes.',
     'Wird eine Tabelle in <code>FROM</code> oder <code>JOIN</code> vervollständigt, schreibt er ihren Alias dazu, und die <code>ON</code>-Klausel, wenn ein Fremdschlüssel sie mit einer Tabelle verbindet, die schon in der Abfrage steht.',
     'Schlägt nur die Schlüsselwörter vor, die an der Cursorposition gültig sind.',
-    'Unterstreicht Syntaxfehler beim Tippen, außer bei SQLite, und warnt bei unbekannten Spalten wie <code>u.emial</code>. Nie bei gültigem SQL.',
+    'Unterstreicht Syntaxfehler beim Tippen und warnt bei unbekannten Spalten wie <code>u.emial</code>. Nie bei gültigem SQL.',
     'Führt die Anweisung unter dem Cursor aus, oder alle der Reihe nach, bis zum ersten Fehler.',
   ],
   'editor.label': 'SQL-Abfrage mit geöffneter Vervollständigungsliste nach a.',
