@@ -17,6 +17,15 @@ enum HiddenColumn {
   StoredGenerated = 3,
 }
 
+/**
+ * Whether a column is the rowid under its own name, which refuses NULL though its `notnull` says otherwise:
+ * a primary key with no index of its own (`INTEGER PRIMARY KEY`, but not `INTEGER PRIMARY KEY DESC`).
+ */
+const isRowid = (table: string, schema: string): string => `
+  c.pk > 0 AND NOT EXISTS (
+    SELECT 1 FROM pragma_index_list(${table}, ${schema}) AS i WHERE i.origin = 'pk'
+  )`;
+
 /** A truth as SQLite answers one: `0` or `1`. */
 const truth = z.union([z.literal(0), z.literal(1)]).transform((t) => t === 1);
 
@@ -40,6 +49,7 @@ const columnRow = z.object({
   type: z.string(),
   notnull: truth,
   hidden: z.number(),
+  is_rowid: truth,
 });
 
 const describedColumnRow = z.object({
@@ -51,6 +61,7 @@ const describedColumnRow = z.object({
   /** its position in the primary key, `0` outside it */
   pk: z.number(),
   hidden: z.number(),
+  is_rowid: truth,
   unique_alone: truth,
   first_of_index: truth,
 });
@@ -181,7 +192,13 @@ export const sqliteMetadata: DialectMetadata = {
   listColumns: (databaseName) =>
     readQuery('listColumns', {
       sql: `
-        SELECT t.name AS table_name, c.name, c.type, c."notnull", c.hidden
+        SELECT
+          t.name AS table_name,
+          c.name,
+          c.type,
+          c."notnull",
+          c.hidden,
+          ${isRowid('t.name', 't.schema')} AS is_rowid
         FROM pragma_table_list AS t
         JOIN pragma_table_xinfo(t.name, t.schema) AS c
         WHERE t.schema = :databaseName
@@ -195,7 +212,7 @@ export const sqliteMetadata: DialectMetadata = {
         rows.map((row) => ({
           table: row.table_name,
           name: row.name,
-          nullable: !row.notnull,
+          nullable: !row.notnull && !row.is_rowid,
           generated: isGenerated(row.hidden),
           binary: isBinaryType(row.type),
           // JSON is text here, with no type of its own to cast to
@@ -216,6 +233,7 @@ export const sqliteMetadata: DialectMetadata = {
           c.dflt_value,
           c.pk,
           c.hidden,
+          ${isRowid(':tableName', ':databaseName')} AS is_rowid,
           EXISTS (
             SELECT 1
             FROM pragma_index_list(:tableName, :databaseName) AS i
@@ -240,7 +258,7 @@ export const sqliteMetadata: DialectMetadata = {
         rows.map((row) => ({
           Column: row.name,
           Type: row.type,
-          Null: row.notnull ? 'NO' : 'YES',
+          Null: row.notnull || row.is_rowid ? 'NO' : 'YES',
           Key: columnKey(row),
           Default: row.dflt_value,
           Extra: columnExtra(row),

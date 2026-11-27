@@ -35,6 +35,8 @@ const SCHEMA = `
   CREATE INDEX child_order ON child (order_id, line_id);
   CREATE UNIQUE INDEX child_parent ON child (parent_id, parent_code);
   CREATE TABLE "we""ird.name" ("a""b" TEXT PRIMARY KEY, payload BLOB, untyped);
+  -- not the rowid, a quirk SQLite keeps for compatibility
+  CREATE TABLE descending (id INTEGER PRIMARY KEY DESC);
   CREATE VIEW child_view AS SELECT c.id, p.code FROM child c JOIN parent p ON p.id = c.parent_id;
   CREATE VIRTUAL TABLE notes USING fts5(body);
 `;
@@ -65,6 +67,7 @@ test('tables, views and virtual tables are listed, and nothing SQLite keeps for 
   expect(ask(sqliteMetadata.listTables('main')).sort()).toEqual([
     'child',
     'child_view',
+    'descending',
     'notes',
     'order',
     'parent',
@@ -119,6 +122,21 @@ describe('listColumns', () => {
     });
   });
 
+  // `UPDATE … SET id = NULL` answers `datatype mismatch` on the first, and is written on the others
+  test('the rowid refuses NULL under its own name, other primary keys of a rowid table accept it', () => {
+    expect(
+      [
+        columnsOf('parent')[0],
+        columnsOf('descending')[0],
+        columnsOf('we"ird.name')[0],
+      ].map(({ table, nullable }) => [table, nullable])
+    ).toEqual([
+      ['parent', false],
+      ['descending', true],
+      ['we"ird.name', true],
+    ]);
+  });
+
   test('a generated column is one, stored or not', () => {
     expect(
       columnsOf('child')
@@ -161,7 +179,7 @@ describe('describeTable', () => {
       {
         Column: 'id',
         Type: 'INTEGER',
-        Null: 'YES',
+        Null: 'NO',
         Key: 'PRI',
         Default: null,
         Extra: null,
