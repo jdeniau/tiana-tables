@@ -76,11 +76,16 @@ export class HistoryContinuation {
 
   /** the rest of the clause `typed` ends in, the statement from its start to the caret */
   after(typed: string, engine: DatabaseEngine): string | null {
-    if (typed.trim() === '') {
+    // a text that ran starts at its first word, without the comments above it
+    const start = codeTokens(typed, engine)[0]?.start;
+
+    if (start === undefined) {
       return null;
     }
 
-    return this.fromRuns(typed, engine) ?? this.fromBlocks(typed, engine);
+    const code = typed.slice(start);
+
+    return this.fromRuns(code, engine) ?? this.fromBlocks(code, engine);
   }
 
   private fromRuns(typed: string, engine: DatabaseEngine): string | null {

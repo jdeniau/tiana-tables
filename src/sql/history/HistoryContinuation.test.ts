@@ -67,6 +67,14 @@ describe('a text that ran', () => {
     );
   });
 
+  it('reads the statement from its first word, past the comments above it', () => {
+    expect(ranAfter([RUN], '-- les articles\nSELECT * FROM art')).toBe(
+      'icle a'
+    );
+    expect(ranAfter([RUN], '/* publiés */ SELECT * FROM art')).toBe('icle a');
+    expect(ranAfter([RUN], '-- les articles\n')).toBeNull();
+  });
+
   it('ends a word at a blank', () => {
     expect(ranAfter([RUN], 'SELECT * FROM art ')).toBeNull();
   });
