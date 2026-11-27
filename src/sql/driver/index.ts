@@ -22,6 +22,11 @@ interface ConnectionParams {
   stream?: Duplex;
 }
 
+/** What SQLite needs: the file it opens, which is never created. */
+export interface FileConnectionParams {
+  file: string;
+}
+
 interface ConnectOptions {
   connectTimeoutMs: number;
   /** the socket is gone, so the stack can forget the connection */
@@ -48,11 +53,8 @@ export interface DriverConnection {
   isConnectionLost(error: unknown): boolean;
 }
 
-export interface Driver {
-  connect(
-    params: ConnectionParams,
-    options: ConnectOptions
-  ): Promise<DriverConnection>;
+export interface Driver<Params = ConnectionParams> {
+  connect(params: Params, options: ConnectOptions): Promise<DriverConnection>;
 }
 
 const IMPORTS: Record<DatabaseEngine, () => Promise<Driver>> = {
