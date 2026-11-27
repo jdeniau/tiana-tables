@@ -2,13 +2,14 @@
  * @vitest-environment happy-dom
  */
 import { act } from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider, QueryObserver } from '@tanstack/react-query';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_THEME } from '../../configuration/themes';
 import { DatabaseEngine } from '../../sql/engine';
+import type { QueryHistoryContent } from '../../sql/history/recordedStatement';
 import { RunMode } from '../../sql/runMode';
 import type { SqlError } from '../../sql/sqlError';
 import { createQueryClient } from '../queryClient';
@@ -297,6 +298,39 @@ describe('action', () => {
     await vi.waitFor(() =>
       expect(queryClient.getQueryData(recent)).toEqual([])
     );
+  });
+
+  test('keeps the recent runs recorded while the history loads again', async () => {
+    const queryClient = createQueryClient();
+    const learnt = queryKeys.queryHistory('connectionSlug', 'shop');
+    const recent = queryKeys.recentRuns('connectionSlug', 'shop');
+    const load = Promise.withResolvers<QueryHistoryContent>();
+
+    queryClient.setQueryData(learnt, { runs: [], blocks: [] });
+
+    // the editor observes the history, which loads again once invalidated
+    const unsubscribe = new QueryObserver(queryClient, {
+      queryKey: learnt,
+      queryFn: () => load.promise,
+      staleTime: Infinity,
+    }).subscribe(() => {});
+
+    vi.mocked(window.queryHistory.record)
+      .mockResolvedValueOnce(120)
+      .mockResolvedValueOnce(121)
+      .mockResolvedValueOnce(122);
+
+    await runAction('shop', 'SELECT 1;\nSELECT 2;\nSELECT 3;', {
+      mode: RunMode.All,
+      queryClient,
+    });
+    load.resolve({ runs: ['SELECT 1'], blocks: [] });
+    await vi.waitFor(() => expect(queryClient.isFetching()).toBe(0));
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(queryClient.getQueryData(recent)).toEqual(['SELECT 3', 'SELECT 2']);
+
+    unsubscribe();
   });
 
   test('answers what ran even when the history cannot record it', async () => {

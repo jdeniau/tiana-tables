@@ -124,10 +124,19 @@ async function recordInHistory(
       const recentKey = queryKeys.recentRuns(connectionSlug, databaseName);
 
       if (isReloadDue(runs)) {
+        // the load holds the texts recorded so far, not those recorded while it runs
+        const loaded = new Set(
+          queryClient.getQueryData<Array<string>>(recentKey)
+        );
+
         // not awaited: the results wait for the write, not for the editor to load it again
         void queryClient
           .invalidateQueries({ queryKey })
-          .then(() => queryClient.setQueryData<Array<string>>(recentKey, []));
+          .then(() =>
+            queryClient.setQueryData<Array<string>>(recentKey, (recent = []) =>
+              recent.filter((text) => !loaded.has(text))
+            )
+          );
       } else {
         // the order waits for the next load, not the text: the ghost text proposes it at once
         queryClient.setQueryData<Array<string>>(recentKey, (recent = []) => [
