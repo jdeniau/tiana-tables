@@ -90,7 +90,7 @@ export class HistoryContinuation {
         ];
       }
 
-      const exact = namesBareColumn(words, tables);
+      const exact = namesBareColumn(words, tables, block.shape.split(' '));
 
       return [
         {
