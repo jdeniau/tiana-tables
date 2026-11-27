@@ -393,6 +393,21 @@ describe('a clause of the history', () => {
     ).toBe('a.vues DESC');
   });
 
+  it('proposes nothing in a comment, but on the line after it', () => {
+    expect(
+      blockAfter('SELECT * FROM article a WHERE -- the published ')
+    ).toBeNull();
+    expect(
+      blockAfter('SELECT * FROM article a WHERE # the published ')
+    ).toBeNull();
+    expect(blockAfter('SELECT * FROM article a WHERE -- the published\n')).toBe(
+      'a.statut = 1'
+    );
+    expect(blockAfter('SELECT * FROM article a WHERE /* published */ ')).toBe(
+      'a.statut = 1'
+    );
+  });
+
   it('reads no clause in the FROM of `IS DISTINCT FROM`', () => {
     expect(
       blockAfter('SELECT * FROM article a WHERE a.statut IS DISTINCT FROM ')

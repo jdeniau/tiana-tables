@@ -154,7 +154,8 @@ export class HistoryContinuation {
   }
 
   private fromBlocks(typed: string, engine: DatabaseEngine): string | null {
-    const tokens = codeTokens(typed, engine);
+    const allTokens = getParser(engine).getAllTokens(typed);
+    const tokens = allTokens.filter((token) => token.channel === CODE_CHANNEL);
     const start = lastSelect(tokens.map(upperCase));
     const words = tokens.slice(start).map(upperCase);
     const clause = openedClause(words);
@@ -162,7 +163,7 @@ export class HistoryContinuation {
     if (
       clause === undefined ||
       (clause === Clause.Join && takesNoCondition(words)) ||
-      !BLANK.test(typed.at(-1) ?? '') ||
+      !followsBlank(allTokens) ||
       words[0] !== 'SELECT' ||
       depthAtEnd(words) !== 0
     ) {
@@ -268,6 +269,13 @@ function openedClause(words: ReadonlyArray<string>): Clause | undefined {
     OPENING_WORDS.get(words.at(-1) ?? '') ??
     OPENING_WORDS.get(words.slice(-2).join(' '))
   );
+}
+
+/** whether the caret follows a blank of its own, out of a word, a comment (`WHERE -- the published |`) or a string */
+function followsBlank(tokens: ReadonlyArray<SqlToken>): boolean {
+  const text = tokens.at(-1)?.text ?? '';
+
+  return text.trim() === '' || text.endsWith('\n');
 }
 
 /** where the last `SELECT` of a compound one starts, which sees only its own tables */
