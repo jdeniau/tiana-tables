@@ -49,15 +49,19 @@ const zhCn: SiteMessages = {
   'editor.title': 'SQL 编辑器',
   'editor.meta': 'Monaco，VS Code 的编辑器',
   'editor.lead':
-    '它了解你的数据库引擎的语法和库表结构，所以不只是给关键字上色。',
+    '它了解你的数据库引擎的语法、库表结构，以及你在上面执行过的查询，足以和你一起写出下一条。',
+  'editor.builder.title': 'Tab、Tab、Tab 查询构建器',
+  'editor.builder.text':
+    '开始写一条查询：光标后会显示历史记录接下来会写的子句，按 Tab 即可写入。历史记录只保存在你的机器上。',
   'editor.items': [
-    '补全表名、列名和别名。在 <code>a.</code> 之后，只会列出这张表的列。',
+    '补全列表把你最常用的排在前面：你常读的表、常与查询中的表连接的表、常选的列。而且只列出适合光标位置的内容：在 <code>a.</code> 之后只有这张表的列，其他位置只有在那里有效的关键字。',
     '在 <code>FROM</code> 或 <code>JOIN</code> 中补全表名时，会写上它的别名；如果有外键把它和查询中已有的表关联起来，还会写上 <code>ON</code> 子句。',
-    '只提示在光标位置有效的关键字。',
     '输入时就给语法错误加下划线，并对 <code>u.emial</code> 这样的未知列发出警告。合法的 SQL 绝不会被误报。',
     '执行光标所在的语句，或按顺序执行全部语句，遇到第一个错误即停止。',
   ],
-  'editor.label': '在 a. 之后打开补全列表的 SQL 查询',
+  'editor.label': '根据历史记录写查询的 SQL 编辑器，每个子句按一次 Tab',
+  'editor.caption':
+    '示例历史记录中，<code>commentaire</code>、<code>article</code> 和 <code>lecture</code> 用得最多，所以补全列表把它们排在前面。',
 
   'browse.title': '浏览',
   'browse.meta': '虚拟化表格，即时渲染',

@@ -49,16 +49,20 @@ const ptBr: SiteMessages = {
   'editor.title': 'Editor SQL',
   'editor.meta': 'Monaco, o editor do VS Code',
   'editor.lead':
-    'Ele conhece a gramática do seu SGBD e o esquema do seu banco de dados: faz mais do que colorir palavras-chave.',
+    'Ele conhece a gramática do seu SGBD, o esquema do seu banco de dados e as consultas que você executou nele: o bastante para escrever a próxima com você.',
+  'editor.builder.title': 'O query builder tab, tab, tab',
+  'editor.builder.text':
+    'Comece uma consulta: depois do cursor, o editor mostra a próxima cláusula que o seu histórico escreveria, e o Tab a escreve. O histórico fica na sua máquina.',
   'editor.items': [
-    'Completa tabelas, colunas e aliases. Depois de <code>a.</code>, você recebe as colunas dessa tabela e nada mais.',
+    'O autocompletar mostra primeiro o que você mais usa: as tabelas que você lê, as que você junta às da consulta, as colunas que você escolhe. E só o que cabe no cursor: depois de <code>a.</code>, as colunas dessa tabela; em outros lugares, as palavras-chave válidas ali.',
     'Ao completar uma tabela no <code>FROM</code> ou no <code>JOIN</code>, ele escreve o alias dela, e a cláusula <code>ON</code> quando uma chave estrangeira a liga a uma tabela que já está na consulta.',
-    'Sugere só as palavras-chave válidas na posição do cursor.',
     'Sublinha erros de sintaxe enquanto você digita e avisa sobre colunas desconhecidas como <code>u.emial</code>. Nunca em SQL válido.',
     'Executa a instrução sob o cursor, ou todas em ordem, parando no primeiro erro.',
   ],
   'editor.label':
-    'Consulta SQL com a lista de autocompletar aberta depois de a.',
+    'Editor SQL escrevendo uma consulta a partir do histórico, um Tab por cláusula',
+  'editor.caption':
+    'Um histórico de exemplo, em que <code>commentaire</code>, <code>article</code> e <code>lecture</code> foram as mais usadas: o autocompletar as mostra primeiro.',
 
   'browse.title': 'Navegar',
   'browse.meta': 'grade virtualizada, renderização instantânea',
