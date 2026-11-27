@@ -149,6 +149,34 @@ describe('the clauses of a SELECT', () => {
     }
   );
 
+  test.each([
+    'SELECT * FROM commande NATURAL JOIN ligne_commande',
+    'SELECT * FROM commande NATURAL LEFT JOIN ligne_commande',
+    'SELECT * FROM commande c CROSS JOIN ligne_commande lc',
+  ])(
+    'name the tables of the statement for a join without condition: %s',
+    (sql) => {
+      const recorded = toRecordedStatement(sql, MySQL);
+
+      expect(recorded?.blocks.at(-1)).toMatchObject({
+        clause: Clause.Join,
+        tables: ['commande', 'ligne_commande'],
+      });
+    }
+  );
+
+  test('name no table for a join whose condition qualifies its columns', () => {
+    const recorded = toRecordedStatement(
+      'SELECT * FROM commande c LEFT JOIN ligne_commande lc ON lc.commande_id = c.id',
+      MySQL
+    );
+
+    expect(recorded?.blocks.at(-1)).toMatchObject({
+      clause: Clause.Join,
+      tables: [],
+    });
+  });
+
   test('name no table for the type of a PostgreSQL cast', () => {
     const recorded = toRecordedStatement(
       "SELECT * FROM article a WHERE a.meta::jsonb = '{}'",

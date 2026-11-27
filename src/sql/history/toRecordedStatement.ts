@@ -49,6 +49,12 @@ const JOIN_MODIFIERS: ReadonlySet<string> = new Set([
   'NATURAL',
 ]);
 
+/** the words before a `JOIN` that make it take no `ON`: its shape names neither the other table nor a column */
+const JOINS_WITHOUT_CONDITION: ReadonlySet<string> = new Set([
+  'NATURAL',
+  'CROSS',
+]);
+
 /** what ends the first `SELECT` of a compound one: only its clauses are recorded */
 const SET_OPERATORS: ReadonlySet<string> = new Set([
   'UNION',
@@ -97,14 +103,17 @@ export function toRecordedStatement(
     ? cutClauses(tokens, words, engine).map(
         ({ clause, start, end }): RecordedBlock => {
           const shape = joinShape(shapes.slice(start, end));
+          const written = shape.split(' ');
+          const keepsTables =
+            namesBareColumn(wordsOf(shape), names, written) ||
+            (clause === Clause.Join &&
+              JOINS_WITHOUT_CONDITION.has(written[0] ?? ''));
 
           return {
             clause,
             sql: textOf(sql, tokens.slice(start, end)),
             shape,
-            tables: namesBareColumn(wordsOf(shape), names, shape.split(' '))
-              ? tables
-              : [],
+            tables: keepsTables ? tables : [],
           };
         }
       )
