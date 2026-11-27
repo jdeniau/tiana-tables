@@ -5,8 +5,12 @@ import type { HistoryBlock } from './recordedStatement';
 import { toRecordedStatement } from './toRecordedStatement';
 
 /** the clauses of a statement as the history loads them, after `runCount` runs */
-function blocksOf(sql: string, runCount = 1): Array<HistoryBlock> {
-  const recorded = toRecordedStatement(sql, DatabaseEngine.MySQL);
+function blocksOf(
+  sql: string,
+  runCount = 1,
+  engine = DatabaseEngine.MySQL
+): Array<HistoryBlock> {
+  const recorded = toRecordedStatement(sql, engine);
 
   return (recorded?.blocks ?? []).map((block) => ({
     ...block,
@@ -308,6 +312,27 @@ describe('a clause of the history', () => {
         'SELECT * FROM article a JOIN article p ON p.id = a.parent_id WHERE '
       )
     ).toBe('a.statut = 1');
+  });
+
+  it('qualifies a column with a table name as the query writes it, quotes kept', () => {
+    const { PostgreSQL } = DatabaseEngine;
+
+    expect(
+      new HistoryContinuation({
+        runs: [],
+        blocks: blocksOf(
+          'SELECT * FROM "Article" a WHERE a.statut = 1',
+          1,
+          PostgreSQL
+        ),
+      }).after('SELECT * FROM "Article" WHERE ', PostgreSQL)
+    ).toBe('"Article".statut = 1');
+    expect(
+      new HistoryContinuation({
+        runs: [],
+        blocks: blocksOf('SELECT * FROM `ligne-commande` l WHERE l.qte > 1'),
+      }).after('SELECT * FROM `ligne-commande` WHERE ', DatabaseEngine.MySQL)
+    ).toBe('`ligne-commande`.qte > 1');
   });
 
   it('proposes no clause of a statement that read a table twice, but its FROM', () => {

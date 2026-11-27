@@ -133,4 +133,17 @@ describe('extractOuterTableAliases', () => {
       expected
     );
   });
+
+  test('names a table without alias as the query writes it, quotes kept', () => {
+    expect(
+      extractOuterTableAliases(
+        'SELECT * FROM `ligne-commande` JOIN blog.`Tag` ON 1 JOIN auteur',
+        DatabaseEngine.MySQL
+      )
+    ).toEqual({
+      '`ligne-commande`': 'ligne-commande',
+      '`Tag`': 'Tag',
+      auteur: 'auteur',
+    });
+  });
 });
