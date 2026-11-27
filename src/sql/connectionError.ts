@@ -1,5 +1,6 @@
 import { NetworkErrorCode } from '../networkErrorCode';
 import { SshErrorCode } from '../ssh/sshErrorCode';
+import { SqliteErrorCode } from './driver/sqlite/sqliteErrorCode';
 
 /**
  * Why a connection could not be opened, in the terms the user can act on.
@@ -29,6 +30,8 @@ export enum ConnectionFailure {
   sshHostKeyChanged = 'sshHostKeyChanged',
   sshHostKeyRejected = 'sshHostKeyRejected',
   sshForwardFailed = 'sshForwardFailed',
+  cannotOpenFile = 'cannotOpenFile',
+  notADatabase = 'notADatabase',
   other = 'other',
 }
 
@@ -39,6 +42,7 @@ export const PASSWORD_UNREADABLE = 'PASSWORD_UNREADABLE';
 /** What the renderer needs to tell the user what happened, and to what. */
 export interface ConnectionErrorData {
   reason: ConnectionFailure;
+  /** the file, for an engine that opens one */
   host: string;
   /** absent for an SSH server whose port `~/.ssh/config` decides */
   port?: number;
@@ -165,6 +169,12 @@ export function classifyConnectionError(e: unknown): ConnectionFailure {
 
     case SshErrorCode.ForwardFailed:
       return ConnectionFailure.sshForwardFailed;
+
+    case SqliteErrorCode.CannotOpen:
+      return ConnectionFailure.cannotOpenFile;
+
+    case SqliteErrorCode.NotADatabase:
+      return ConnectionFailure.notADatabase;
 
     default:
       return ConnectionFailure.other;

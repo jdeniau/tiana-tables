@@ -63,6 +63,12 @@ const meta: Meta<typeof ConnectionPage> = {
                 user: 'root',
                 password: '',
               },
+              notes: {
+                name: 'notes',
+                engine: DatabaseEngine.SQLite,
+                slug: 'notes',
+                file: '/home/me/notes/notes.db',
+              },
               'client-b': {
                 name: 'client B',
                 engine: DatabaseEngine.MySQL,

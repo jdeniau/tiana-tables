@@ -3,7 +3,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_THEME } from '../../../configuration/themes';
 import type { EncryptedConnectionObject } from '../../../configuration/type';
 import { testables } from '../../../contexts/ConfigurationContext';
@@ -402,6 +402,109 @@ describe('ConnectionForm', () => {
 
     expect(await submit()).toMatchObject({
       ssh: { host: '127.0.0.1', port: 12222, user: 'dev' },
+    });
+  });
+
+  describe('on SQLite', () => {
+    const picked = vi.fn();
+
+    beforeEach(() => {
+      picked.mockReset();
+      // @ts-expect-error only the file picker is reached here
+      window.config = { pickDatabaseFile: picked };
+    });
+
+    afterEach(() => {
+      // @ts-expect-error reset, set again before the next test
+      window.config = undefined;
+    });
+
+    test('asks for a file alone, and submits nothing of a server', async () => {
+      const { field, choose, submit } = await renderForm();
+
+      await choose('SQLite');
+
+      expect(field('host')).toBeNull();
+      expect(field('user')).toBeNull();
+      expect(field('password')).toBeNull();
+
+      await act(async () => {
+        type(field('name')!, 'notes (dev)');
+        type(field('connection-file')!, '/data/notes.db');
+      });
+
+      expect(await submit()).toEqual({
+        name: 'notes (dev)',
+        engine: 'sqlite',
+        file: '/data/notes.db',
+      });
+    });
+
+    test('needs its file', async () => {
+      const { container, field, choose, addConnectionToConfig } =
+        await renderForm();
+
+      await choose('SQLite');
+      await act(async () => {
+        type(field('name')!, 'notes (dev)');
+        container.querySelector('form')!.requestSubmit();
+      });
+
+      await vi.waitFor(() =>
+        expect(field('connection-file')?.getAttribute('aria-invalid')).toBe(
+          'true'
+        )
+      );
+      expect(addConnectionToConfig).not.toHaveBeenCalled();
+    });
+
+    test('takes the file picked, the dialog opening on the one typed', async () => {
+      const { container, field, choose, button, click } = await renderForm();
+
+      await choose('SQLite');
+      await act(async () => {
+        type(field('connection-file')!, '/data/old.db');
+      });
+
+      picked.mockResolvedValue('/data/notes.db');
+      await click(button('Browse…', container));
+
+      expect(picked).toHaveBeenCalledWith('/data/old.db');
+      expect(field('connection-file')?.value).toBe('/data/notes.db');
+
+      // a cancelled dialog leaves the field as it was
+      picked.mockResolvedValue(null);
+      await click(button('Browse…', container));
+
+      expect(field('connection-file')?.value).toBe('/data/notes.db');
+    });
+
+    test('a connection saved on a file opens on it', async () => {
+      const { field, submit } = await renderForm({
+        connection: {
+          name: 'notes (dev)',
+          slug: 'notes-dev',
+          engine: DatabaseEngine.SQLite,
+          file: '/data/notes.db',
+        },
+      });
+
+      expect(field('connection-file')?.value).toBe('/data/notes.db');
+      expect(await submit()).toEqual({
+        name: 'notes (dev)',
+        engine: 'sqlite',
+        file: '/data/notes.db',
+      });
+    });
+
+    test('a server chosen again finds its port and user', async () => {
+      const { field, choose } = await renderForm();
+
+      await choose('SQLite');
+      await choose('PostgreSQL');
+
+      expect(field('port')?.value).toBe('5432');
+      expect(field('user')?.value).toBe('postgres');
     });
   });
 

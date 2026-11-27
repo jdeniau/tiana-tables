@@ -88,7 +88,7 @@ export default {
   'connection.delete.title': 'Delete {name}?',
   // ICU select on `DatabaseEngine`: product names, the same in every language
   'connection.engine.name':
-    '{engine, select, mysql {MySQL / MariaDB} postgresql {PostgreSQL} other {{engine}}}',
+    '{engine, select, mysql {MySQL / MariaDB} postgresql {PostgreSQL} sqlite {SQLite} other {{engine}}}',
   'connection.failed.back': 'Back to connections',
   // ICU select on the `ConnectionFailure` enum
   'connection.failed.reason':
@@ -110,6 +110,8 @@ export default {
     ' sshHostKeyChanged {The SSH server does not show the host key your known_hosts holds for it: it may have been reinstalled, or someone may stand in between. If it was reinstalled, remove its old key with ssh-keygen -R, then retry.}' +
     ' sshHostKeyRejected {The host key of the SSH server was not accepted.}' +
     ' sshForwardFailed {The SSH server could not reach the database. The host and port are the ones the SSH server sees.}' +
+    ' cannotOpenFile {This file could not be opened: it does not exist, it is a folder, or your account may not open it.}' +
+    ' notADatabase {This file is not an SQLite database.}' +
     ' other {The connection could not be opened.}}',
   'connection.failed.retry': 'Retry',
   'connection.failed.target': 'Connecting to {address} failed',
@@ -122,6 +124,10 @@ export default {
   'connection.form.color.none': 'No colour',
   'connection.form.color.palette': 'Theme colour {hex}',
   'connection.form.database.label': 'Database',
+  'connection.form.file.anyFile': 'All files',
+  'connection.form.file.browse': 'Browse…',
+  'connection.form.file.filter': 'SQLite databases',
+  'connection.form.file.label': 'File',
   'connection.form.group.label': 'Group',
   'connection.form.group.placeholder': 'No group',
   'connection.form.host.label': 'Host',

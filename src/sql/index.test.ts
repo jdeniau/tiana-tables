@@ -1,3 +1,7 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ConnectionFailure } from './connectionError';
 import { DatabaseEngine } from './engine';
@@ -534,6 +538,73 @@ describe('database-scoped queries on PostgreSQL', () => {
         values: ['app'],
       })
     );
+  });
+});
+
+describe('a connection to an SQLite file', () => {
+  let directory: string;
+  let file: string;
+
+  beforeEach(() => {
+    directory = mkdtempSync(join(tmpdir(), 'tiana-stack-'));
+    file = join(directory, 'notes.db');
+
+    const setup = new DatabaseSync(file);
+
+    setup.exec(`
+      CREATE TABLE tags (name TEXT PRIMARY KEY);
+      CREATE TABLE notes (id INTEGER PRIMARY KEY, body TEXT);
+      INSERT INTO notes VALUES (1, 'hello');
+    `);
+    setup.close();
+
+    mocks.connections = {
+      notes: {
+        name: 'notes',
+        slug: 'notes',
+        engine: DatabaseEngine.SQLite,
+        file,
+      },
+    };
+    connectionStack.onConnectionSlugChanged('notes', undefined);
+  });
+
+  afterEach(async () => {
+    await connectionStack.closeAllConnections();
+    rmSync(directory, { recursive: true });
+  });
+
+  test('lists one database, main, holding the tables of the file', async () => {
+    expect(await connectionStack.listDatabases()).toEqual({
+      result: ['main'],
+      error: undefined,
+    });
+    expect(await connectionStack.listTables('main')).toEqual({
+      result: ['notes', 'tags'],
+      error: undefined,
+    });
+  });
+
+  test('runs what the editor sends on the file', async () => {
+    const { result } = await connectionStack.executeQueryAndRetry(
+      'SELECT body FROM notes'
+    );
+
+    expect(result?.[0]).toEqual([{ body: 'hello' }]);
+  });
+
+  test('a file that is gone is told by its path', async () => {
+    rmSync(file);
+
+    const { error } = await connectionStack.listDatabases();
+
+    expect(error).toMatchObject({
+      detail: {
+        kind: 'connection',
+        reason: ConnectionFailure.cannotOpenFile,
+        host: file,
+      },
+    });
   });
 });
 

@@ -2,11 +2,13 @@ import invariant from 'tiny-invariant';
 import { DatabaseEngine } from '../engine';
 import { mysqlDialect } from './mysql';
 import { postgresDialect } from './postgres';
+import { sqliteDialect } from './sqlite';
 import type { Dialect } from './types';
 
 const DIALECTS: Record<DatabaseEngine, Dialect> = {
   [DatabaseEngine.MySQL]: mysqlDialect,
   [DatabaseEngine.PostgreSQL]: postgresDialect,
+  [DatabaseEngine.SQLite]: sqliteDialect,
 };
 
 /** The SQL text of an engine. Pure text, so both processes call it. */

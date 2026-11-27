@@ -1,3 +1,4 @@
+import { DatabaseEngine } from '../../engine';
 import { MAX_LABEL_LENGTH } from '../../selectLabels';
 import { toHexDigits } from '../hex';
 import {
@@ -15,7 +16,9 @@ function qualify(databaseName: string, tableName: string): string {
 }
 
 /** A connection opens one file, which the UI lists as its one database, `main`. */
-export const sqliteDialect: Omit<Dialect, 'engine'> = {
+export const sqliteDialect: Dialect = {
+  engine: DatabaseEngine.SQLite,
+
   escapeIdentifier,
 
   qualify,

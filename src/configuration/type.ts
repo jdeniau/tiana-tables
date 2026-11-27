@@ -67,10 +67,9 @@ type ConnectionAppState = {
 };
 
 /**
- * A connection as the configuration file holds it, password included: the ciphertext stays one from end to end, in memory as on disk.
+ * A connection as the configuration file holds it, a server's password included: the ciphertext stays one from end to end, in memory as on disk.
  * It is read back only when a connection is opened, so a keyring that cannot open it costs that connection and never the file.
  */
-export type EncryptedConnectionObject = {
-  password: string;
+export type EncryptedConnectionObject = ConnectionObject & {
   appState?: ConnectionAppState;
-} & Omit<ConnectionObject, 'password'>;
+};

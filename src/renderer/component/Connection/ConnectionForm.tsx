@@ -8,6 +8,7 @@ import {
   InputNumber,
   Modal,
   Segmented,
+  Space,
   Typography,
 } from 'antd';
 import type { TFunction } from 'i18next';
@@ -16,9 +17,18 @@ import type { EncryptedConnectionObject } from '../../../configuration/type';
 import { uniqueSlug } from '../../../configuration/utils';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
-import { DatabaseEngine } from '../../../sql/engine';
+import {
+  DatabaseEngine,
+  type ServerEngine,
+  isFileEngine,
+  opensFile,
+} from '../../../sql/engine';
 import { SslMode } from '../../../sql/sslMode';
-import type { ConnectionObjectWithoutSlug } from '../../../sql/types';
+import type {
+  ConnectionObjectWithoutSlug,
+  FileConnection,
+  ServerConnection,
+} from '../../../sql/types';
 import type { SshTunnel } from '../../../ssh/types';
 import { space } from '../../theme';
 import { ActionButton } from '../Style/ActionButton';
@@ -52,8 +62,8 @@ const LABEL = { letterSpacing: '0.1em', textTransform: 'uppercase' } as const;
 const ITEM = { marginBottom: 0 } as const;
 const PORT = { ...ITEM, width: 96 } as const;
 
-/** What a new connection starts with on each engine: its usual port and superuser. */
-const DEFAULTS: Record<DatabaseEngine, { port: number; user: string }> = {
+/** What a new connection starts with on each server engine: its usual port and superuser. */
+const DEFAULTS: Record<ServerEngine, { port: number; user: string }> = {
   [DatabaseEngine.MySQL]: { port: 3306, user: 'root' },
   [DatabaseEngine.PostgreSQL]: { port: 5432, user: 'postgres' },
 };
@@ -67,7 +77,12 @@ enum Route {
   Ssh = 'ssh',
 }
 
-type FormValues = ConnectionObjectWithoutSlug;
+/** Every field the form can show: only those mounted for the chosen engine are submitted. */
+type FormValues = Omit<ServerConnection, 'slug' | 'engine'> &
+  Omit<FileConnection, 'slug' | 'engine'> & { engine: DatabaseEngine };
+
+/** The label points at the input, which a compact group keeps from being the item's own control. */
+const FILE_INPUT_ID = 'connection-file';
 
 /** An emptied port reads `null`, an emptied user `''`: neither is stored, so `~/.ssh/config` decides. */
 function withoutBlankSshFields({ host, port, user }: SshTunnel): SshTunnel {
@@ -78,21 +93,48 @@ function withoutBlankSshFields({ host, port, user }: SshTunnel): SshTunnel {
   };
 }
 
+/** The connection the submitted fields describe, each engine keeping its own. */
+function toConnection({
+  engine,
+  name,
+  color,
+  group,
+  file,
+  ...server
+}: FormValues): ConnectionObjectWithoutSlug {
+  // a blank group is no group
+  const identity = { name, color, group: group?.trim() || undefined };
+
+  if (isFileEngine(engine)) {
+    return { ...identity, engine, file };
+  }
+
+  return {
+    ...server,
+    ...identity,
+    engine,
+    ...(server.ssh && { ssh: withoutBlankSshFields(server.ssh) }),
+  };
+}
+
 function ConnectionForm({ connection }: Props) {
   const engine = connection?.engine ?? DatabaseEngine.MySQL;
+  const server = connection && !opensFile(connection) ? connection : undefined;
+  const serverEngine = server?.engine ?? DatabaseEngine.MySQL;
   const initialValues: FormValues = {
     name: connection?.name ?? '',
     engine,
-    host: connection?.host ?? 'localhost',
-    port: connection?.port ?? DEFAULTS[engine].port,
-    user: connection?.user ?? DEFAULTS[engine].user,
-    database: connection?.database ?? DEFAULT_POSTGRES_DATABASE,
-    ssl: connection?.ssl ?? SslMode.Disable,
+    host: server?.host ?? 'localhost',
+    port: server?.port ?? DEFAULTS[serverEngine].port,
+    user: server?.user ?? DEFAULTS[serverEngine].user,
+    database: server?.database ?? DEFAULT_POSTGRES_DATABASE,
+    ssl: server?.ssl ?? SslMode.Disable,
     color: connection?.color,
     group: connection?.group,
-    ssh: connection?.ssh,
+    ssh: server?.ssh,
     // the stored password is a ciphertext the renderer never sees in clear: left empty, it is kept as it is
     password: '',
+    file: connection && opensFile(connection) ? connection.file : '',
   };
 
   const { t } = useTranslation();
@@ -103,29 +145,23 @@ function ConnectionForm({ connection }: Props) {
   const [form] = Form.useForm<FormValues>();
   const chosenEngine = Form.useWatch('engine', form) ?? engine;
   const chosenSsl = Form.useWatch('ssl', form) ?? initialValues.ssl;
-  const [route, setRoute] = useState(
-    connection?.ssh ? Route.Ssh : Route.Direct
-  );
+  const [route, setRoute] = useState(server?.ssh ? Route.Ssh : Route.Direct);
 
   // a field still holding the other engine's default follows the engine, one the user typed stays
-  const followEngine = (
-    changed: Partial<FormValues>,
-    values: FormValues
-  ): void => {
-    if (changed.engine === undefined) {
+  const followEngine = (changed: Partial<FormValues>): void => {
+    if (changed.engine === undefined || isFileEngine(changed.engine)) {
       return;
     }
 
     const next = DEFAULTS[changed.engine];
     const previous = Object.values(DEFAULTS).filter((d) => d !== next);
+    // read from the store: the values handed to `onValuesChange` leave out the fields a file engine unmounted
+    const port: unknown = form.getFieldValue('port');
+    const user: unknown = form.getFieldValue('user');
 
     form.setFieldsValue({
-      port: previous.some((d) => d.port === values.port)
-        ? next.port
-        : values.port,
-      user: previous.some((d) => d.user === values.user)
-        ? next.user
-        : values.user,
+      ...(previous.some((d) => d.port === port) && { port: next.port }),
+      ...(previous.some((d) => d.user === user) && { user: next.user }),
     });
   };
 
@@ -134,13 +170,18 @@ function ConnectionForm({ connection }: Props) {
     connection !== undefined ||
     Object.keys(configuration.connections).length > 0;
 
+  const browseFile = async (): Promise<void> => {
+    const file = await window.config.pickDatabaseFile(
+      form.getFieldValue('file') || undefined
+    );
+
+    if (file !== null) {
+      form.setFields([{ name: 'file', value: file, errors: [] }]);
+    }
+  };
+
   const handleSubmit = (values: FormValues): void => {
-    // a blank group is no group
-    const formData = {
-      ...values,
-      group: values.group?.trim() || undefined,
-      ...(values.ssh && { ssh: withoutBlankSshFields(values.ssh) }),
-    };
+    const formData = toConnection(values);
 
     if (connection) {
       // edit connection
@@ -228,142 +269,166 @@ function ConnectionForm({ connection }: Props) {
               </Form.Item>
             </Flex>
 
-            <Flex gap={space.sm}>
+            {isFileEngine(chosenEngine) ? (
               <Form.Item
-                name="host"
-                label={t('connection.form.host.label')}
-                rules={[{ required: true }]}
-                style={{ ...ITEM, flex: 1 }}
-              >
-                <Input />
-              </Form.Item>
-
-              <Form.Item
-                name="port"
-                label={t('connection.form.port.label')}
-                rules={[{ required: true }]}
-                style={PORT}
-              >
-                <InputNumber
-                  min={1}
-                  max={65535}
-                  precision={0}
-                  controls={false}
-                  style={{ width: '100%' }}
-                />
-              </Form.Item>
-            </Flex>
-
-            <Flex vertical gap={space.sm}>
-              <Form.Item
-                label={t('connection.form.route.label')}
-                extra={t('connection.form.route.help', { route })}
+                label={t('connection.form.file.label')}
+                htmlFor={FILE_INPUT_ID}
                 style={ITEM}
               >
-                <Segmented
-                  block
-                  value={route}
-                  onChange={setRoute}
-                  options={Object.values(Route).map((value) => ({
-                    value,
-                    label: t('connection.form.route.option', { route: value }),
-                  }))}
-                />
+                <Space.Compact block>
+                  <Form.Item name="file" rules={[{ required: true }]} noStyle>
+                    <Input id={FILE_INPUT_ID} />
+                  </Form.Item>
+
+                  <Button onClick={() => void browseFile()}>
+                    {t('connection.form.file.browse')}
+                  </Button>
+                </Space.Compact>
               </Form.Item>
-
-              {route === Route.Ssh && (
-                <>
-                  <Flex gap={space.sm}>
-                    <Form.Item
-                      name={['ssh', 'host']}
-                      label={t('connection.form.ssh.host.label')}
-                      rules={[{ required: true }]}
-                      style={{ ...ITEM, flex: 1 }}
-                    >
-                      <Input />
-                    </Form.Item>
-
-                    <Form.Item
-                      name={['ssh', 'port']}
-                      label={t('connection.form.port.label')}
-                      style={PORT}
-                    >
-                      <InputNumber
-                        placeholder="22"
-                        min={1}
-                        max={65535}
-                        precision={0}
-                        controls={false}
-                        style={{ width: '100%' }}
-                      />
-                    </Form.Item>
-                  </Flex>
+            ) : (
+              <>
+                <Flex gap={space.sm}>
+                  <Form.Item
+                    name="host"
+                    label={t('connection.form.host.label')}
+                    rules={[{ required: true }]}
+                    style={{ ...ITEM, flex: 1 }}
+                  >
+                    <Input />
+                  </Form.Item>
 
                   <Form.Item
-                    name={['ssh', 'user']}
-                    label={t('connection.form.ssh.user.label')}
+                    name="port"
+                    label={t('connection.form.port.label')}
+                    rules={[{ required: true }]}
+                    style={PORT}
+                  >
+                    <InputNumber
+                      min={1}
+                      max={65535}
+                      precision={0}
+                      controls={false}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                </Flex>
+
+                <Flex vertical gap={space.sm}>
+                  <Form.Item
+                    label={t('connection.form.route.label')}
+                    extra={t('connection.form.route.help', { route })}
+                    style={ITEM}
+                  >
+                    <Segmented
+                      block
+                      value={route}
+                      onChange={setRoute}
+                      options={Object.values(Route).map((value) => ({
+                        value,
+                        label: t('connection.form.route.option', {
+                          route: value,
+                        }),
+                      }))}
+                    />
+                  </Form.Item>
+
+                  {route === Route.Ssh && (
+                    <>
+                      <Flex gap={space.sm}>
+                        <Form.Item
+                          name={['ssh', 'host']}
+                          label={t('connection.form.ssh.host.label')}
+                          rules={[{ required: true }]}
+                          style={{ ...ITEM, flex: 1 }}
+                        >
+                          <Input />
+                        </Form.Item>
+
+                        <Form.Item
+                          name={['ssh', 'port']}
+                          label={t('connection.form.port.label')}
+                          style={PORT}
+                        >
+                          <InputNumber
+                            placeholder="22"
+                            min={1}
+                            max={65535}
+                            precision={0}
+                            controls={false}
+                            style={{ width: '100%' }}
+                          />
+                        </Form.Item>
+                      </Flex>
+
+                      <Form.Item
+                        name={['ssh', 'user']}
+                        label={t('connection.form.ssh.user.label')}
+                        style={ITEM}
+                      >
+                        <Input
+                          placeholder={t(
+                            'connection.form.ssh.user.placeholder'
+                          )}
+                        />
+                      </Form.Item>
+                    </>
+                  )}
+                </Flex>
+
+                <Form.Item
+                  name="ssl"
+                  label={t('connection.form.ssl.label')}
+                  extra={t('connection.form.ssl.help', { mode: chosenSsl })}
+                  style={ITEM}
+                >
+                  <Segmented
+                    block
+                    options={Object.values(SslMode).map((mode) => ({
+                      value: mode,
+                      label: t('connection.form.ssl.mode', { mode }),
+                    }))}
+                  />
+                </Form.Item>
+
+                {/* a PostgreSQL connection opens one database, whose schemas the app browses */}
+                {chosenEngine === DatabaseEngine.PostgreSQL && (
+                  <Form.Item
+                    name="database"
+                    label={t('connection.form.database.label')}
+                    rules={[{ required: true }]}
+                    style={ITEM}
+                  >
+                    <Input />
+                  </Form.Item>
+                )}
+
+                <Flex vertical gap={space.sm}>
+                  <Form.Item
+                    name="user"
+                    label={t('connection.form.user.label')}
+                    rules={[{ required: true }]}
+                    style={ITEM}
+                  >
+                    <Input />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="password"
+                    label={t('connection.form.password.label')}
                     style={ITEM}
                   >
                     <Input
-                      placeholder={t('connection.form.ssh.user.placeholder')}
+                      type="password"
+                      placeholder={
+                        connection
+                          ? t('connection.form.password.placeholder')
+                          : undefined
+                      }
                     />
                   </Form.Item>
-                </>
-              )}
-            </Flex>
-
-            <Form.Item
-              name="ssl"
-              label={t('connection.form.ssl.label')}
-              extra={t('connection.form.ssl.help', { mode: chosenSsl })}
-              style={ITEM}
-            >
-              <Segmented
-                block
-                options={Object.values(SslMode).map((mode) => ({
-                  value: mode,
-                  label: t('connection.form.ssl.mode', { mode }),
-                }))}
-              />
-            </Form.Item>
-
-            {/* a PostgreSQL connection opens one database, whose schemas the app browses */}
-            {chosenEngine === DatabaseEngine.PostgreSQL && (
-              <Form.Item
-                name="database"
-                label={t('connection.form.database.label')}
-                rules={[{ required: true }]}
-                style={ITEM}
-              >
-                <Input />
-              </Form.Item>
+                </Flex>
+              </>
             )}
-
-            <Flex vertical gap={space.sm}>
-              <Form.Item
-                name="user"
-                label={t('connection.form.user.label')}
-                rules={[{ required: true }]}
-                style={ITEM}
-              >
-                <Input />
-              </Form.Item>
-
-              <Form.Item
-                name="password"
-                label={t('connection.form.password.label')}
-                style={ITEM}
-              >
-                <Input
-                  type="password"
-                  placeholder={
-                    connection
-                      ? t('connection.form.password.placeholder')
-                      : undefined
-                  }
-                />
-              </Form.Item>
-            </Flex>
 
             <Flex align="center" justify="space-between">
               {canCancel ? (

@@ -44,6 +44,9 @@ describe('classifyConnectionError', () => {
     ['SSH_HOST_KEY_CHANGED', ConnectionFailure.sshHostKeyChanged],
     ['SSH_HOST_KEY_REJECTED', ConnectionFailure.sshHostKeyRejected],
     ['SSH_FORWARD_FAILED', ConnectionFailure.sshForwardFailed],
+    // the codes the SQLite driver gives an opening it refused
+    ['SQLITE_CANTOPEN', ConnectionFailure.cannotOpenFile],
+    ['SQLITE_NOTADB', ConnectionFailure.notADatabase],
     ['EHOSTUNREACH', ConnectionFailure.other],
   ])('%s is a %s', (code, reason) => {
     expect(

@@ -7,6 +7,7 @@ import { styled } from 'styled-components';
 import { EncryptedConnectionObject } from '../../../configuration/type';
 import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useTranslation } from '../../../i18n';
+import { opensFile } from '../../../sql/engine';
 import { foreground, size, space } from '../../theme';
 import ButtonLink from '../ButtonLink';
 import {
@@ -52,6 +53,17 @@ const Edit = styled(ButtonLink)`
   }
 `;
 
+/** Where the connection leads: its file, or the account, server and database it opens. */
+function addressOf(connection: EncryptedConnectionObject): string {
+  if (opensFile(connection)) {
+    return connection.file;
+  }
+
+  const { user, host, port, database } = connection;
+
+  return `${user}@${host}:${port}${database ? `/${database}` : ''}`;
+}
+
 /**
  * The connection the router is on its way to, if any.
  *
@@ -85,9 +97,7 @@ function ConnectionPage(): JSX.Element {
   }
 
   // the same Menu as the sidebar's tables, so the rows are the same rows
-  const connectionItem = (
-    connection: EncryptedConnectionObject
-  ): MenuItem => ({
+  const connectionItem = (connection: EncryptedConnectionObject): MenuItem => ({
     key: connection.slug,
     label: (
       <Open
@@ -102,10 +112,7 @@ function ConnectionPage(): JSX.Element {
           </RegionGroup>
         ) : (
           <RegionGroup>
-            <RegionMeta>
-              {connection.user}@{connection.host}:{connection.port}
-              {connection.database ? `/${connection.database}` : ''}
-            </RegionMeta>
+            <RegionMeta>{addressOf(connection)}</RegionMeta>
             <RegionMeta>
               <EngineIcon engine={connection.engine} />
             </RegionMeta>
